@@ -1,0 +1,251 @@
+<div class="p-4">
+  <h1>Ficha Médica</h1>
+  <h4>
+    Nueva Ficha Médica >
+    <a mat-button color="primary" matTooltip="Ver Perfil"
+      >{{data.patient.name}} {{data.patient.surname}} {{data.patient.secondSurname}}</a>
+      <p>Fecha Ingreso: {{data.patient.admissionDate}}</p>
+      <p>Programa: {{data.patient.program}}</p>
+      <p>Teéfono: {{data.patient.phone}}</p>
+      <mat-divider class="mb-4"></mat-divider>
+
+      <p>Diagnóstico @if(medicalRecord){
+        {{medicalRecord.date}} {{medicalRecord.intervention}}
+        } @else {
+          Sin registro anterior
+        }
+      </p>
+      <p>Último Esquema Farmacológico:
+        @if(medicalRecord){
+          {{medicalRecord.date}} {{medicalRecord.intervention}}
+          } @else {
+            Sin registro anterior
+          }
+
+      </p>
+
+  </h4>
+
+  <div class="container p-4">
+    <form
+      [formGroup]="medicalRecordForm"
+      autocomplete="off"
+      (ngSubmit)="onSave()"
+    >
+      <div class="grid">
+        <div class="col-3">
+          <mat-form-field class="w-full" appearance="outline">
+            <mat-label>Fecha</mat-label>
+            <input matInput formControlName="date" [matDatepicker]="picker" />
+            <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
+            <mat-datepicker-toggle
+              matIconSuffix
+              [for]="picker"
+            ></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field>
+        </div>
+        <div class="col-3">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Tipo de entrada</mat-label>
+            <mat-select formControlName="entryType">
+              <mat-option value="Psicólogo">A  Distancia</mat-option>
+              <mat-option value="Psicólogo">Presencial</mat-option>
+              <mat-option value="Psicólogo">No se presenta</mat-option>
+              <mat-option value="Médico">Información</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <span *ngIf="isValidField('entryType')" class="text-red-500">
+            Campo requerido
+          </span>
+        </div>
+
+        <div class="col-3">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>SISTRAT</mat-label>
+            <mat-select formControlName="entryType">
+              <mat-option value="Psicólogo">COD1234</mat-option>
+              <mat-option value="Psicólogo">COD5643</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <span *ngIf="isValidField('entryType')" class="text-red-500">
+            Campo requerido
+          </span>
+        </div>
+
+        <!-- <div class="col-3">
+          <mat-form-field appearance="outline" class="w-full mr-2">
+            <mat-label>Programa</mat-label>
+            <mat-select formControlName="program">
+              <mat-option value="15">PR - Problación General</mat-option>
+              <mat-option value="15">PR - Problación General</mat-option>
+              <mat-option value="15">PR - Problación General</mat-option>
+            </mat-select>
+            <span *ngIf="isValidField('program')" class="text-red-500">
+              Debe seleccionar un programa
+            </span>
+          </mat-form-field>
+        </div> -->
+        <!-- <div class="col-3">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Paciente</mat-label>
+          <mat-select formControlName="patient">
+            <mat-option value="15">Guillermo Enrique Peña Ortega</mat-option>
+            <mat-option value="15">Guillermo Enrique Peña Ortega</mat-option>
+            <mat-option value="15">Guillermo Enrique Peña Ortega</mat-option>
+          </mat-select>
+          <span *ngIf="isValidField('patient')" class="text-red-500">
+            Debe seleccionar un paciente
+          </span>
+        </mat-form-field>
+      </div> -->
+        <!-- <div class="col-3">
+        <button
+          mat-flat-button
+          color="primary"
+          class="border-round-xl ml-1 mr-2 my-auto mat-elevation-z2 text-white"
+        >
+          <mat-icon>refresh</mat-icon>
+          Cargar fichas
+        </button>
+      </div> -->
+      </div>
+
+      <mat-divider class="mb-4"></mat-divider>
+      <div class="grid w-8">
+
+        <!-- <div class="col-6">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Sigla SISTRAT</mat-label>
+            <mat-select formControlName="sigla">
+              <mat-option value="Centro">CPSIC</mat-option>
+            </mat-select>
+            <span *ngIf="isValidField('sigla')" class="text-red-500">
+              El perfil es requerido
+            </span>
+          </mat-form-field>
+        </div> -->
+<!-- 
+        <div class="col-6">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Lugar</mat-label>
+            <mat-select formControlName="center">
+              <mat-option value="Centro">Centro</mat-option>
+              <mat-option value="Centro">Centro</mat-option>
+              <mat-option value="Centro">Centro</mat-option>
+            </mat-select>
+            <span *ngIf="isValidField('center')" class="text-red-500">
+              El perfil es requerido
+            </span>
+          </mat-form-field>
+        </div> -->
+
+        <!-- <div class="col-6">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Grupal</mat-label>
+            <mat-select formControlName="group">
+              <mat-option value="Centro">Si</mat-option>
+              <mat-option value="Centro">No</mat-option>
+            </mat-select>
+            <span *ngIf="isValidField('group')" class="text-red-500">
+              El perfil es requerido
+            </span>
+          </mat-form-field>
+        </div> -->
+        <!-- <div class="col-6">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Tiempo</mat-label>
+            <mat-select formControlName="time">
+              <mat-option value="15">15</mat-option>
+              <mat-option value="30">30</mat-option>
+              <mat-option value="45">45</mat-option>
+              <mat-option value="60">60</mat-option>
+            </mat-select>
+            <mat-icon matSuffix>schedule</mat-icon>
+
+            <span *ngIf="isValidField('time')" class="text-red-500">
+              El tiempo es requerido
+            </span>
+          </mat-form-field>
+        </div> -->
+        <div class="col-12">
+          <mat-form-field class="w-full" appearance="outline">
+            <mat-label>Elementos relevantes de la intervención</mat-label>
+            <textarea
+              formControlName="relevantElements"
+              rows="5"
+              matInput
+            ></textarea>
+
+            <span
+              *ngIf="isValidField('intervention')"
+              class="form-text text-danger"
+            >
+              El nombre es requerido
+            </span>
+            <mat-icon matSuffix>person</mat-icon>
+            <!-- <mat-hint>Hint</mat-hint> -->
+          </mat-form-field>
+        </div>
+        <div class="col-12">
+          <mat-form-field class="w-full" appearance="outline">
+            <mat-label>Diagnóstico</mat-label>
+            <textarea
+              matInput
+              formControlName="intervention"
+              placeholder="Sólo lo escribe un psiquiatra"
+            ></textarea>
+            <span
+              *ngIf="isValidField('intervention')"
+              class="form-text text-danger"
+            >
+              Campo requerido
+            </span>
+            <mat-icon matSuffix>description</mat-icon>
+            <!-- <mat-hint>Hint</mat-hint> -->
+          </mat-form-field>
+        </div>
+
+        <div class="col-12">
+          <mat-form-field class="w-full" appearance="outline">
+            <mat-label>Esquema Farmacológico</mat-label>
+            <textarea
+              formControlName="relevantElements"
+              rows="5"
+              matInput
+            ></textarea>
+
+            <span
+              *ngIf="isValidField('intervention')"
+              class="form-text text-danger"
+            >
+              El nombre es requerido
+            </span>
+            <mat-icon matSuffix>person</mat-icon>
+            <!-- <mat-hint>Hint</mat-hint> -->
+          </mat-form-field>
+        </div>
+
+        
+
+        <div class="col-6">
+          <button
+            mat-stroked-button
+            color="primary"
+            mat-dialog-close
+            class="mr-1"
+          >
+            Cerrar
+          </button>
+          <button mat-flat-button type="submit" color="primary">
+            Registrar
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <!-- @if (loadingTransactions) {
+    <mat-spinner color="#0ca86b" diameter="40"></mat-spinner>
+  } -->
+  </div>
+</div>

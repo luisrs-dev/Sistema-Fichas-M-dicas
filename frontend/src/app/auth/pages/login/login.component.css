@@ -1,0 +1,40 @@
+.body{
+    display: flex;
+    justify-content: center;
+    height: 100%;
+    align-items: center;
+    background-color:  #f2f2f2;
+  }
+
+  mat-card{
+    background-color: #2da3f2 ;
+
+  }
+  
+  .login{
+    width: 100%;
+    max-width: 330px;
+    text-align: center;
+  }
+  
+  mat-card{
+    padding: 5%;
+  }
+  
+  .width-custom{
+    width: 65%;
+  }
+  
+  button{
+    margin-bottom: 2%;
+  }
+  .button{
+    height: 50px;
+  }
+
+  /* Media query para dispositivos móviles */
+@media (max-width: 767px) {
+    .mat-mdc-card .mdc-card {
+    padding: 0;
+    }
+  }

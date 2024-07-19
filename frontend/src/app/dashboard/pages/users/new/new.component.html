@@ -1,0 +1,85 @@
+<div class="container p-4">
+  <h1>Nuevo Profesional</h1>
+
+  <form [formGroup]="userForm" autocomplete="off" (ngSubmit)="onSave()">
+    
+    <div class="grid mt-4">
+      <div class="col flex flex-column">
+        <mat-form-field class="w-4" appearance="outline">
+          <mat-label>Nombre completo</mat-label>
+          <input
+            matInput
+            formControlName="name"
+            placeholder="Nombre profesional"
+          />
+          <span *ngIf="isValidField('name')" class="form-text text-danger">
+            El nombre es requerido
+          </span>
+          <mat-icon matSuffix>person</mat-icon>
+          <!-- <mat-hint>Hint</mat-hint> -->
+        </mat-form-field>
+        <mat-form-field class="w-4" appearance="outline">
+          <mat-label>Email</mat-label>
+          <input matInput 
+          formControlName="email"
+          
+          placeholder="Correo electrónico" />
+          <span *ngIf="isValidField('email')" class="text-red-500">
+            El email es requerido
+          </span>
+          <mat-icon matSuffix>email</mat-icon>
+          <!-- <mat-hint>Hint</mat-hint> -->
+        </mat-form-field>
+        <mat-form-field class="w-4 mb-2" appearance="outline">
+          <mat-label>Password</mat-label>
+          <input matInput
+          formControlName="password"
+          type="password" placeholder="Ingrese una clave" />
+          <span *ngIf="isValidField('password')" class="text-red-500">
+            El password es requerido
+          </span>
+          <mat-icon matSuffix>password</mat-icon>
+          <mat-hint
+            >Clave que usará el profesional para ingresar a su cuenta</mat-hint
+          >
+        </mat-form-field>
+        <mat-form-field class="w-4" appearance="outline">
+          <mat-label>Teléfono</mat-label>
+          <input matInput 
+          formControlName="phone"
+           placeholder="Ej: +56969691818" />
+           <span *ngIf="isValidField('phone')" class="text-red-500">
+            El teléfon es inválido
+          </span>
+
+          <mat-icon matSuffix>phone</mat-icon>
+          <!-- <mat-hint>Hint</mat-hint> -->
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-4">
+          <mat-label>Perfil</mat-label>
+          <mat-select formControlName="profile">
+            <mat-option value="Paciente">Psiquiatra</mat-option>
+            <mat-option value="Psicólogo">Psicólogo</mat-option>
+            <mat-option value="Médico">Terapeuta Ocupacional</mat-option>
+            <mat-option value="Administrador">Trabajador social</mat-option>
+            <mat-option value="Administrador">Técnico Enfermería</mat-option>
+            <mat-option value="Administrador">Técnico Social</mat-option>
+            <mat-option value="Administrador">Monitor</mat-option>
+          </mat-select>
+          <span *ngIf="isValidField('profile')" class="text-red-500">
+            El perfil es requerido
+          </span>
+        </mat-form-field>
+      </div>
+    </div>
+    <div>
+      <button mat-stroked-button color="primary" routerLink="../" class="mr-1">Volver</button>
+      <button mat-flat-button type="submit" color="primary">Registrar</button>
+    </div>
+  </form>
+
+  <!-- @if (loadingTransactions) {
+  <mat-spinner color="#0ca86b" diameter="40"></mat-spinner>
+} -->
+</div>

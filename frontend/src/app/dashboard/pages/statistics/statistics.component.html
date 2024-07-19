@@ -1,0 +1,30 @@
+<div class="grid pt-4">
+  <div class="col-12 md:col-6">
+    <!-- <transactions-by-bank [transactionsByBank]="transactionsByBank"></transactions-by-bank> -->
+    <graph
+      [chartTitle]="'Fichas Médicas'"
+      [categories]="['Abril', 'Mayo', 'Junio']"
+      [data]="[15, 35, 60]"
+      chartType="column"
+    >
+    </graph>
+  </div>
+  <div class="col-12 md:col-3">
+    <graph
+      [chartTitle]="'SISTRAT'"
+      [categories]="['Sistrat', 'GCP', 'CSP']"
+      [data]="[15, 35, 60]"
+      chartType="pie"
+    >
+    </graph>
+  </div>
+  <div class="col-12 md:col-3">
+    <graph
+      [chartTitle]="'SISTRAT'"
+      [categories]="['Sistrat', 'GCP', 'CSP']"
+      [data]="[15, 35, 60]"
+      chartType="pie"
+    >
+    </graph>
+  </div>
+</div>

@@ -1,0 +1,80 @@
+import { Routes } from '@angular/router';
+import { isAuthenticatedGuard } from './auth/guards/isAuthenticated.guard';
+
+export const routes: Routes = [
+  {
+    path: 'dashboard',
+    loadComponent: () => import('./dashboard/dashboard.component'),
+    data: { icon: 'dashboard' },
+    canActivate: [isAuthenticatedGuard],
+    children: [
+      
+      {
+        path: 'users',
+        title: 'Profesionales',
+        data: { icon: 'group', child: false },
+        loadComponent: () =>
+          import('./dashboard/pages/users/list/list.component'),
+      },
+      {
+        path: 'users/nuevo',
+        title: 'Nuevo Usiaro',
+        data: { icon: 'user', child: true },
+        loadComponent: () =>
+          import('./dashboard/pages/users/new/new.component'),
+      },
+      {
+        path: 'patients',
+        title: 'Pacientes',
+        data: { icon: 'group', child: false },
+        loadComponent: () =>
+          import('./dashboard/pages/patients/listPatients/listPatients.component'),
+      },
+      {
+        path: 'patients/nuevo',
+        title: 'Nuevo Paciente',
+        data: { icon: 'group', child: true },
+        loadComponent: () =>
+          import('./dashboard/pages/patients/newPatient/newPatient.component'),
+      },
+      {
+        path: 'patient/:id',
+        title: 'Información Paciente',
+        data: { icon: 'group', child: false },
+        loadComponent: () =>
+          import('./dashboard/pages/patients/detail/detail.component'),
+      },
+      {
+        path: 'fichas-medicas',
+        title: 'Fichas Médicas',
+        data: { icon: 'description', child: false },
+        loadComponent: () =>
+          import('./dashboard/pages/medicalRecord/list/list.component'),
+      },
+      {
+        path: 'fichas-medicas/nueva',
+        title: 'Nuevo Fiha Médica',
+        data: { icon: 'user', child: true },
+        loadComponent: () =>
+          import('./dashboard/pages/medicalRecord/new/new.component'),
+      },
+      {
+        path: 'estadisticas',
+        title: 'Estadísticas',
+        data: { icon: 'analytics', child: false },
+
+        loadComponent: () =>
+          import('./dashboard/pages/statistics/statistics.component'),
+      }
+    ],
+  },
+  {
+    path: 'login',
+    loadComponent: () => import('./auth/pages/login/login.component'),
+  },
+  {
+    path: '',
+    redirectTo: 'dashboard',
+    pathMatch: 'full',
+  },
+];

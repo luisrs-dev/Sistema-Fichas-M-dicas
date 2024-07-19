@@ -1,0 +1,75 @@
+/* You can add global styles to this file, and also import other style files */
+
+html, body { height: 100%; margin: 0; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.spacer{
+    flex: 1 1 auto;
+}
+
+.container {
+  background-color: #ffffff;
+  padding: 2%;
+  border-radius: 5px;
+  border-radius: 0.5rem;
+  border: 1px solid #c4c6d0;
+  height: 100% !important;
+}
+
+.buttons {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Mat Form Field Inputs */
+/* .mat-mdc-form-field-has-icon-suffix .mat-mdc-text-field-wrapper{
+  border-radius: 20px;
+  font-size: 10px;
+  border: 1px solid #ccc; 
+
+} */
+
+/* .mdc-text-field--filled:not(.mdc-text-field--disabled){
+    border-radius: 20px;
+    border: 1px solid #ccc; 
+}
+ */
+/* .mdc-text-field--filled:not(.mdc-text-field--disabled) {
+    background-color: white !important;
+} */
+
+/* mat-label{
+    font-size: 20px;
+} */
+/* ::ng-deep.mat-form-field-infix {
+    border: 0;
+    height: 45px;
+  }
+  ::ng-deep.mat-form-field-appearance-outline .mat-form-field-label{
+    top: 2.35em
+  }
+  mat-label{
+    font-size: 13px;
+  } */
+
+  /* Altura de mat-form-field con borde*/
+  /* .mat-mdc-form-field-type-mat-select:not(.mat-form-field-disabled) .mat-mdc-text-field-wrapper{
+    height: 40px;
+  } */
+  /* Altura de mat-form-field contenido */
+  /* .mat-mdc-form-field:not(.mat-form-field-disabled) .mat-mdc-floating-label.mdc-floating-label{
+    height: 40px;
+  } */
+
+  /* Altura DateRange y Filtro de tabla */
+  /* .mat-mdc-form-field-flex{
+    height: 40px;
+  } */
+
+  /* Flecha de selects */
+  /* .mat-mdc-select-arrow svg{
+    padding-bottom: 100%;
+  } */
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

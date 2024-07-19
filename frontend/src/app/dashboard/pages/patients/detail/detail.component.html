@@ -1,0 +1,87 @@
+<div class="container">
+  <h4>
+    Información Paciente >
+    <a mat-button color="primary" matTooltip="Ver Perfil">
+      @if(patient){
+        {{patient.name}} {{patient.surname}} {{patient.secondSurname}}
+      }</a>
+  </h4>
+
+  <h1>Historial Médico</h1>
+  <button
+    mat-flat-button
+    color="accent"
+    class="text-white mb-2 mat-elevation-z1"
+    (click)="newMedicalRecord()"
+  >
+    Nueva Ficha Médica
+  </button>
+
+  <div class="mat-elevation-z1 mt-4">
+    <mat-accordion class="example-headers-align">
+      @if (medicalRecords && medicalRecords.length > 0) { @for (medicalRecord of
+      medicalRecords; track $index) {
+      <mat-expansion-panel hideToggle>
+        <!-- <mat-expansion-panel [expanded]="step === 0" (opened)="setStep(0)" hideToggle> -->
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon class="mr-1">description</mat-icon>
+
+            Fecha Atención: {{ medicalRecord.date }} / {{ medicalRecord.sigla }}
+          </mat-panel-title>
+          <mat-panel-description>
+            Duracipón: {{ medicalRecord.time }} minutos
+            <mat-icon>keyboard_arrow_down</mat-icon>
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+        <mat-list>
+          <mat-list-item>
+            <span matListItemTitle>Centro</span>
+            <span matListItemLine>{{medicalRecord.center}}</span>
+          </mat-list-item>
+          <mat-list-item>
+            <span matListItemTitle>Tipo Entrada</span>
+            <span matListItemLine>{{medicalRecord.entryType}}</span>
+          </mat-list-item>
+          <mat-list-item>
+            <span matListItemTitle>Grupo</span>
+            <span matListItemLine>{{medicalRecord.group}}</span>
+          </mat-list-item>
+          <mat-list-item>
+            <span matListItemTitle>Intervención</span>
+            <span matListItemLine>{{medicalRecord.intervention}}</span>
+          </mat-list-item>
+          <mat-list-item>
+            <span matListItemTitle>Programa</span>
+            <span matListItemLine>{{medicalRecord.program}}</span>
+          </mat-list-item>
+
+          <mat-list-item>
+            <span matListItemTitle>Sigla</span>
+            <span matListItemLine>{{medicalRecord.sigla}}</span>
+          </mat-list-item>
+          <mat-list-item>
+            <span matListItemTitle>Tiempo</span>
+            <span matListItemLine>{{medicalRecord.time}}</span>
+          </mat-list-item>
+
+          <mat-list-item>
+            <span matListItemTitle>Elementos Relevantes</span>
+            <span matListItemLine>{{medicalRecord.center}}</span>
+          </mat-list-item>
+        </mat-list>
+
+        <!-- <mat-action-row>
+          <button mat-button color="warn" (click)="prevStep()">Eliminar</button>
+          <button mat-button color="primary" (click)="nextStep()">
+            Editar
+          </button>
+          <button mat-button color="primary" (click)="nextStep()">
+            Descargar
+          </button>
+        </mat-action-row> -->
+      </mat-expansion-panel>
+      } }
+    </mat-accordion>
+  </div>
+</div>

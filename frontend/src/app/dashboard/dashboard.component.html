@@ -1,0 +1,49 @@
+<mat-toolbar color="primary">
+  <!-- Barra superior -->
+  <button mat-icon-button (click)="toggleMenu()">
+    <mat-icon style="color: white" class="mat-18">menu</mat-icon>
+  </button>
+    <h1>FICLIN-A</h1>
+  <!-- <img src="../../assets/images/logo-blanco.png" height="40" alt="" /> -->
+  <span class="spacer"></span>
+
+  @if (!isMobile) {
+    <button class="text-white" mat-button (click)="onLogout()">Logout</button>
+  }
+</mat-toolbar>
+<mat-sidenav-container class="example-container" autosize>
+  <mat-sidenav
+    #sidenav
+    [ngStyle]="{ width: '250px', height: '100%' }"
+    [mode]="isMobile ? 'over' : 'side'"
+    [opened]="isMobile ? 'false' : 'true'"
+  >
+    <mat-toolbar>
+      <span>Menú</span>
+      <span class="spacer"></span>
+      <button mat-icon-button (click)="sidenav.toggle()">
+        <mat-icon class="mat-18">arrow_back</mat-icon>
+      </button>
+    </mat-toolbar>
+    <mat-nav-list>
+      @for (menuItem of menuItems; track $index) {
+        <mat-list-item
+          [routerLink]="menuItem.path"
+          (click)="isMobile ? sidenav.toggle() : false"
+        >
+          <mat-icon matListItemIcon class="mat-18">{{
+            menuItem.icon
+          }}</mat-icon>
+          {{ menuItem.title }}
+        </mat-list-item>
+      }
+      <mat-list-item (click)="onLogout()">
+        <mat-icon matListItemIcon class="mat-18">logout</mat-icon>
+        Logout
+      </mat-list-item>
+    </mat-nav-list>
+  </mat-sidenav>
+  <mat-sidenav-content class="p-4">
+    <router-outlet></router-outlet>
+  </mat-sidenav-content>
+</mat-sidenav-container>

@@ -1,0 +1,41 @@
+<div class="body">
+  <mat-card class="mat-elevation-z4">
+    <div class="login">
+      <form [formGroup]="myForm" (submit)="onSubmit()">
+        <img src="../../assets/images/logo.png" width="60%" />
+
+        <mat-form-field class="mt-4">
+          <mat-label>Usuario</mat-label>
+          <input
+            type="email"
+            formControlName="email"
+            matInput
+            placeholder="Nombre de usuario"
+          />
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Contraseña</mat-label>
+          <input
+            type="text"
+            type="password"
+            formControlName="password"
+            matInput
+            placeholder="Contraseña"
+          />
+        </mat-form-field>
+
+        <button
+          mat-raised-button
+          style="color: white"
+          type="submit"
+          class="button width-custom"
+          color="accent"
+          [disabled]="myForm.invalid"
+        >
+          Iniciar sesión
+          <mat-icon class="mat-18">login</mat-icon>
+        </button>
+      </form>
+    </div>
+  </mat-card>
+</div>
