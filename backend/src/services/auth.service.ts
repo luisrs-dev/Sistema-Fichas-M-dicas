@@ -28,7 +28,8 @@ const loginUser = async ({ email, password }: Auth) => {
     if (!userFetched) return { status: false, msg: "No existe usuario" };
   
     const passwordHash = userFetched.password;
-    const isCorrect = await verified(password, passwordHash);
+//    const isCorrect = await verified(password, passwordHash);
+const isCorrect = userFetched.password == password ?? false;
     if (!isCorrect) return { status: false, msg: "Credenciales incorrectas" };
     const token = jsonwebtoken.sign({ email }, JWT_SECRET, { expiresIn: "1h" });
     return { email, token, status: true, expiresIn: 3600 };

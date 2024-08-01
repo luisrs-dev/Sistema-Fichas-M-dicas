@@ -1,7 +1,7 @@
 export const environment = {
-  baseUrl: 'http://localhost:3002',
+  baseUrl: 'http://3.133.138.71:3002',
   userDefault: {
-    email: "lreyes@gmail.com",
+    email: "reyes.silva.luis@gmail.com",
     password: "12345"
   }
 };
