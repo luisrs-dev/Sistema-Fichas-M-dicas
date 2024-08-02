@@ -1,5 +1,5 @@
 import { CommonModule, formatDate } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -25,8 +25,7 @@ import Notiflix from 'notiflix';
   ],
   providers: [provideNativeDateAdapter()],
   templateUrl: './newPatient.component.html',
-  styleUrl: './newPatient.component.css',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: './newPatient.component.css'
 })
 export default class NewPatientComponent {
   private patientService = inject(PatientService);
@@ -34,7 +33,12 @@ export default class NewPatientComponent {
   private router = inject(Router);
 
   public isEditable: boolean = false;
+  public fichaDemanda: boolean = true;
+  public registroSistrat: boolean = true;
   public disableTabSistrat: boolean = true;
+  private changeDetectorRef = inject(ChangeDetectorRef); 
+
+
 
   public userForm: FormGroup = this.fb.group({
     admissionDate: [new Date(), [Validators.required]],
@@ -53,15 +57,15 @@ export default class NewPatientComponent {
   public sistratForm: FormGroup = this.fb.group({
     mainSubstance: ['1', [Validators.required]],
     previousTreatments: ['2', [Validators.required]],
-    atentionRequestDate: [new Date(), [Validators.required]],
+    atentionRequestDate: [new Date()],
     typeContact: ['1', [Validators.required]],
     whoRequest: ['1', [Validators.required]],
     whoDerives: ['3', [Validators.required]],
-    careOfferedDate: [new Date(), [Validators.required]],
+    careOfferedDate: [new Date()],
     estimatedMonth: [new Date(), [Validators.required]],
     demandIsNotAccepted: ['2', [Validators.required]],
-    firstAtentionDate: [new Date(), [Validators.required]],
-    atentionResolutiveDate: [new Date(), [Validators.required]],
+    firstAtentionDate: [new Date()],
+    atentionResolutiveDate: [new Date()],
     interventionAB: ['1', [Validators.required]],
     observations: [
       'Observacion para registrar',
@@ -70,7 +74,7 @@ export default class NewPatientComponent {
   });
 
   async onSave() {
-    Notiflix.Loading.circle();
+    Notiflix.Loading.circle('Registrando nuevo paciente...');
     if (this.userForm.invalid) {
       this.userForm.markAllAsTouched();
       Notiflix.Loading.remove();
@@ -80,39 +84,30 @@ export default class NewPatientComponent {
     this.patientService
       .addPatient(this.userForm.value)
       .subscribe(async (response: any) => {
-        console.log(response);
         await this.delay(2000);
-        this.disableTabSistrat = false;
+        this.fichaDemanda = false;
+        this.changeDetectorRef.detectChanges();
         Notiflix.Loading.remove();
-        // this.router.navigateByUrl('/dashboard/patients');
       });
   }
 
-  onSaveSISTRAT() {
-    Notiflix.Loading.circle();
+  onSaveFichaDemanda() {
     if (this.sistratForm.invalid) {
       this.sistratForm.markAllAsTouched();
-      Notiflix.Loading.remove();
       return;
     }
-
-
-    this.formatAllDates();
-
-    console.log(this.sistratForm.value);
-
-    Notiflix.Loading.remove();
-
+    
+    Notiflix.Loading.circle('Registrando ficha demanda...');
     const userId = localStorage.getItem('user') || '';
 
     this.patientService
       .addSistrat(userId, this.sistratForm.value)
       .subscribe(async (response: any) => {
-        console.log(response);
         await this.delay(2000);
         this.disableTabSistrat = false;
+        this.changeDetectorRef.detectChanges();
+
         Notiflix.Loading.remove();
-        // this.router.navigateByUrl('/dashboard/patients');
       });
   }
 
@@ -125,7 +120,6 @@ export default class NewPatientComponent {
     .subscribe(async (response: any) => {
       console.log(response);
       await this.delay(2000);
-      this.disableTabSistrat = false;
       Notiflix.Loading.remove();
       // this.router.navigateByUrl('/dashboard/patients');
     });

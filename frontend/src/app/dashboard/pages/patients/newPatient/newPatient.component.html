@@ -213,12 +213,12 @@
         <button mat-flat-button type="submit" color="primary">Registrar</button>
       </form>
     </mat-tab>
-    <mat-tab label="Ficha Demanda">
+    <mat-tab label="Ficha Demanda" [disabled]="fichaDemanda">
       <!-- <mat-tab label="Registrar en SISTRAT" [disabled]="disableTabSistrat"> -->
       <form
         [formGroup]="sistratForm"
         autocomplete="off"
-        (ngSubmit)="onSaveSISTRAT()"
+        (ngSubmit)="onSaveFichaDemanda()"
       >
         <div class="grid pt-4">
           <div class="col-4">
@@ -513,7 +513,7 @@
         <button mat-flat-button type="submit" color="primary">Registrar</button>
       </form>
     </mat-tab>
-    <mat-tab label="Registro SISTRAT">
+    <mat-tab label="Registro SISTRAT" [disabled]="disableTabSistrat">
 
       <button
       mat-stroked-button

@@ -18,6 +18,7 @@ import { AuthService } from './../../auth.service';
 import { AuthStatus } from './../../interfaces/auth-status.enum';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../../../environments/environment';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
 
 
 @Component({
@@ -28,11 +29,11 @@ import { environment } from '../../../../environments/environment';
     MaterialModule,
     ReactiveFormsModule,
     FormsModule,
-    SpinnerComponent,
+    SpinnerComponent, 
+    MatProgressBarModule
   ],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: './login.component.css'
 })
 export default class LoginComponent {
   private fb = inject(FormBuilder);
@@ -40,6 +41,7 @@ export default class LoginComponent {
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
   public authStatus: AuthStatus = AuthStatus.notAuthenticated;
+  public loading: boolean = false;
 
   public myForm: FormGroup = this.fb.group({
     email: [environment.userDefault.email, [Validators.required, Validators.email]],
@@ -47,6 +49,7 @@ export default class LoginComponent {
   });
 
   onSubmit(): void {
+    this.loading = true;
     this.authStatus = AuthStatus.checking;
     const { email, password } = this.myForm.value;
     if (this.myForm.invalid) {
@@ -55,12 +58,17 @@ export default class LoginComponent {
     }
 
     this.authService.login(email, password).subscribe({
-
-      next: () => this.router.navigateByUrl('/dashboard'),
+      next: () => {
+        this.router.navigateByUrl('/dashboard');
+      },
       error: (message) => {
+        this.loading = false;
         this.authStatus = AuthStatus.notAuthenticated;
         this.snackBar.open(`${message}`, 'Entendido', { duration: 3000});
       },
+      complete: () => {
+        this.loading = false;
+      }
     });
   }
 }

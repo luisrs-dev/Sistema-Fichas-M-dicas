@@ -35,6 +35,12 @@
           Iniciar sesión
           <mat-icon class="mat-18">login</mat-icon>
         </button>
+
+        @if (loading) {
+          <div class="w-6 pl-8">
+            <mat-progress-bar color="warn" style="width: 60%;" mode="indeterminate"></mat-progress-bar>
+          </div>
+        }
       </form>
     </div>
   </mat-card>
