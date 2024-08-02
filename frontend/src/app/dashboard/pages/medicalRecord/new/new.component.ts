@@ -27,7 +27,7 @@ import { User } from '../../../interfaces/user.interface';
 import { MedicalRecord } from '../../../interfaces/medicalRecord.interface';
 import { Patient } from '../../../interfaces/patient.interface';
 import { DatePipe } from '@angular/common';
-
+import { MatChipsModule } from '@angular/material/chips';
 
 @Component({
   selector: 'app-new',
@@ -42,9 +42,10 @@ import { DatePipe } from '@angular/common';
     MatFormFieldModule,
     MatInputModule,
     MatDividerModule,
+    MatChipsModule,
   ],
 
-  providers: [provideNativeDateAdapter()],
+  providers: [provideNativeDateAdapter(), DatePipe],
 
   templateUrl: './new.component.html',
   styleUrl: './new.component.css',
@@ -55,10 +56,10 @@ export default class NewMedicalRecord {
   private medicalRecordService = inject(MedicalRecordService);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
+  private datePipe = inject(DatePipe);
 
   public patient: Patient;
   public medicalRecord: MedicalRecord;
-  private datePipe = inject(DatePipe);
 
   constructor(
     @Inject(MAT_DIALOG_DATA)
@@ -67,9 +68,7 @@ export default class NewMedicalRecord {
 
   ngOnInit() {
     this.patient = this.data.patient;
-    this.medicalRecord = {...this.data.latestMedicalRecord, date: this.datePipe.transform(this.data.latestMedicalRecord.date, 'dd-MM-yyyy')!};
-    console.log({medicalRecord: this.medicalRecord});
-    
+    this.medicalRecord = { ...this.data.latestMedicalRecord };
   }
 
   public medicalRecordForm: FormGroup = this.fb.group({

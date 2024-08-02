@@ -19,7 +19,13 @@ import { Router, RouterModule } from '@angular/router';
 @Component({
   selector: 'app-new',
   standalone: true,
-  imports: [CommonModule, MaterialModule, FormsModule, ReactiveFormsModule, RouterModule],
+  imports: [
+    CommonModule,
+    MaterialModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RouterModule,
+  ],
   templateUrl: './new.component.html',
   styleUrl: './new.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,14 +47,11 @@ export default class NewComponent {
     if (this.userForm.invalid) {
       this.userForm.markAllAsTouched();
       return;
-    }    
-    this.userService.addUser(this.userForm.value)
-    .subscribe( (response: any) => {
-        console.log(response);
-    this.router.navigateByUrl('/dashboard/users');
-
-        
-    })
+    }
+    this.userService.addUser(this.userForm.value).subscribe((response: any) => {
+      console.log(response);
+      this.router.navigateByUrl('/dashboard/users');
+    });
   }
 
   isValidField(field: string): boolean {

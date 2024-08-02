@@ -46,7 +46,7 @@ export default class NewPatientComponent {
     birthDate: [new Date(), [Validators.required]],
     sex: ['2Masculino', [Validators.required]],
     region: ['27', [Validators.required]],
-    phone: ['2969186636', [Validators.required, Validators.minLength(3)]],
+    phone: ['2969186636', [Validators.required, Validators.minLength(6)]],
     phoneFamily: ['2969186636', [Validators.required, Validators.minLength(3)]],
   });
 

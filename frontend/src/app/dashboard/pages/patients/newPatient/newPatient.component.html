@@ -161,7 +161,7 @@
                 <mat-option value="16">DE ÑUBLE</mat-option>
               </mat-select>
               <span *ngIf="isValidField('region')" class="text-red-500">
-                Debe seleccionar un programa
+                Debe seleccionar una region
               </span>
             </mat-form-field>
           </div>
@@ -174,7 +174,7 @@
                 placeholder="Ej: +56969691818"
               />
               <span *ngIf="isValidField('phone')" class="text-red-500">
-                El teléfon es inválido
+                El teléfon es obligatorio
               </span>
 
               <mat-icon matSuffix>phone</mat-icon>
@@ -193,7 +193,7 @@
                 placeholder="Ej: +56969691818"
               />
               <span *ngIf="isValidField('phoneFamily')" class="text-red-500">
-                El teléfon es inválido
+                El teléfon es obligatorio
               </span>
 
               <mat-icon matSuffix>phone</mat-icon>

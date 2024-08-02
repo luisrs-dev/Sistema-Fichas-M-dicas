@@ -1,15 +1,14 @@
+import { environment } from '../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { environment } from '../../../../environments/environment';
 import { Observable } from 'rxjs';
-import { User } from '../../interfaces/user.interface';
 import { Patient } from '../../interfaces/patient.interface';
+import { User } from '../../interfaces/user.interface';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
-
 
   private http = inject(HttpClient);
   backend: string = environment.baseUrl;
@@ -26,10 +25,7 @@ export class UserService {
   }
 
   addUser(user: User): Observable<any>{
-    return this.http.post<any>(`${this.backend}/user`, user);
-
+    return this.http.post<any>(`${this.backend}/auth/register`, user);
   }
-
-  constructor() { }
 
 }

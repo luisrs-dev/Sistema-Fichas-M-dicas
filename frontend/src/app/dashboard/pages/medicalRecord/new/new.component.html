@@ -1,32 +1,39 @@
 <div class="p-4">
-  <h1>Ficha Médica</h1>
-  <h4>
+  <div class="container mb-3">
+    <h2>Antecedentes</h2>
     Nueva Ficha Médica >
     <a mat-button color="primary" matTooltip="Ver Perfil"
-      >{{data.patient.name}} {{data.patient.surname}} {{data.patient.secondSurname}}</a>
-      <p>Fecha Ingreso: {{data.patient.admissionDate}}</p>
-      <p>Programa: {{data.patient.program}}</p>
-      <p>Teéfono: {{data.patient.phone}}</p>
-      <mat-divider class="mb-4"></mat-divider>
+      >{{ data.patient.name }} {{ data.patient.surname }}
+      {{ data.patient.secondSurname }}</a
+    >
+    <p>Fecha Ingreso: {{ data.patient.admissionDate | date : "dd-MM-yyyy" }}</p>
+    <p>Programa: {{ data.patient.program }}</p>
+    <p>Teéfono: {{ data.patient.phone }}</p>
+    <mat-divider class="mb-1"></mat-divider>
 
-      <p>Diagnóstico @if(medicalRecord){
-        {{medicalRecord.date}} {{medicalRecord.intervention}}
-        } @else {
-          Sin registro anterior
-        }
-      </p>
-      <p>Último Esquema Farmacológico:
-        @if(medicalRecord){
-          {{medicalRecord.date}} {{medicalRecord.intervention}}
-          } @else {
-            Sin registro anterior
-          }
+    <mat-chip-set>
+      <mat-chip
+        >Diagnóstico @if(medicalRecord){
+        {{ medicalRecord.date | date : "dd-MM-yyyy" }}
+        }@else { Sin registro anterior }</mat-chip
+      >
+    </mat-chip-set>
 
-      </p>
+    <mat-divider class="mb-1"></mat-divider>
 
-  </h4>
+    <mat-chip-set>
+      <mat-chip
+        >Último Esquema Farmacológico @if(medicalRecord){
+        {{ medicalRecord.date | date : "dd-MM-yyyy" }}
+        }@else { Sin registro anterior }</mat-chip
+      >
+    </mat-chip-set>
+    <div>{{ medicalRecord.intervention }}</div>
+    <mat-divider class="mb-1"></mat-divider>
+  </div>
 
   <div class="container p-4">
+    <h2>Nueva Ficha Médica</h2>
     <form
       [formGroup]="medicalRecordForm"
       autocomplete="off"
@@ -49,7 +56,7 @@
           <mat-form-field appearance="outline" class="w-full">
             <mat-label>Tipo de entrada</mat-label>
             <mat-select formControlName="entryType">
-              <mat-option value="Psicólogo">A  Distancia</mat-option>
+              <mat-option value="Psicólogo">A Distancia</mat-option>
               <mat-option value="Psicólogo">Presencial</mat-option>
               <mat-option value="Psicólogo">No se presenta</mat-option>
               <mat-option value="Médico">Información</mat-option>
@@ -113,7 +120,6 @@
 
       <mat-divider class="mb-4"></mat-divider>
       <div class="grid w-8">
-
         <!-- <div class="col-6">
           <mat-form-field appearance="outline" class="w-full">
             <mat-label>Sigla SISTRAT</mat-label>
@@ -125,7 +131,7 @@
             </span>
           </mat-form-field>
         </div> -->
-<!-- 
+        <!-- 
         <div class="col-6">
           <mat-form-field appearance="outline" class="w-full">
             <mat-label>Lugar</mat-label>
@@ -225,8 +231,6 @@
             <!-- <mat-hint>Hint</mat-hint> -->
           </mat-form-field>
         </div>
-
-        
 
         <div class="col-6">
           <button

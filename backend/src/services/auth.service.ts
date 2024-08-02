@@ -6,18 +6,17 @@ import { Auth } from "../interfaces/auth.interface";
 
 const JWT_SECRET = process.env.JWT_SECRET || "token.010101";
 
-const registerNewUser = async ({ email, password, name }: User) => {
+const registerNewUser = async ({name, email, password, phone, profile}: User) => {
   const user = await UserModel.findOne({ email });
-  console.log({ user });
-
   if (user) return "ALREADY_EXIST";
 
   const passHash = await encrypt(password);
-
   const registerNewUser = await UserModel.create({
+    name,
     email,
     password: passHash,
-    name,
+    phone,
+    profile
   });
   return registerNewUser;
 };
