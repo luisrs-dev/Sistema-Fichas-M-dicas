@@ -46,7 +46,7 @@ export const routes: Routes = [
       },
       {
         path: 'fichas-medicas',
-        title: 'Fichas Médicas',
+        title: 'Fichas Clínicas',
         data: { icon: 'description', child: false },
         loadComponent: () =>
           import('./dashboard/pages/medicalRecord/list/list.component'),
@@ -65,6 +65,35 @@ export const routes: Routes = [
 
         loadComponent: () =>
           import('./dashboard/pages/statistics/statistics.component'),
+      },
+      {
+        path: 'permisos',
+        title: 'Permisos',
+        data: { icon: 'manage_accounts', parameter: true},
+        loadComponent: () =>
+          import('./dashboard/pages/parameters/permissions/list/permissions.component'),
+      },
+      {
+        path: 'programas',
+        title: 'Programas',
+        data: { icon: 'manage_accounts', parameter: true},
+    
+        loadComponent: () =>
+          import('./dashboard/pages/parameters/programs/list/programs.component'),
+      },
+      {
+        path: 'profesional-roles',
+        title: 'Cargos',
+        data: { icon: 'manage_accounts', parameter: true},
+        loadComponent: () =>
+          import('./dashboard/pages/parameters/profesionalRole/list/profesionalRole.component'),
+      },
+      {
+        path: 'prestaciones',
+        title: 'Prestaciones',
+        data: { icon: 'manage_accounts', parameter: true},
+        loadComponent: () =>
+          import('./dashboard/pages/parameters/services/list/service.component'),
       }
     ],
   },

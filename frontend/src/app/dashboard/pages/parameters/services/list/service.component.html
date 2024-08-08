@@ -1,0 +1,14 @@
+<div class="container">
+    <h1>Prestaciones</h1>
+    <button mat-flat-button color="primary" (click)="onAddService()">Agregar</button>
+
+    @if(searchResults$ | async; as permissions){
+        <!-- @for (permission of permissions; track $index) {
+            {{ permission.name }}
+        } -->
+        <basic-table [data]="permissions" [columns]="tableColumns"></basic-table>
+    }@else{
+        Cargando...
+    }
+    
+</div>

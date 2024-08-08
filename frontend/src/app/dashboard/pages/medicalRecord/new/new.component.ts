@@ -1,12 +1,10 @@
-import { catchError } from 'rxjs';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   Inject,
   inject,
 } from '@angular/core';
-import { MaterialModule } from '../../../../angular-material/material.module';
 import {
   FormBuilder,
   FormGroup,
@@ -14,20 +12,19 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatChipsModule } from '@angular/material/chips';
 import { provideNativeDateAdapter } from '@angular/material/core';
-import { MatDividerModule } from '@angular/material/divider';
-import { MedicalRecordService } from '../medicalRecord.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { User } from '../../../interfaces/user.interface';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router, RouterModule } from '@angular/router';
+import { MaterialModule } from '../../../../angular-material/material.module';
 import { MedicalRecord } from '../../../interfaces/medicalRecord.interface';
 import { Patient } from '../../../interfaces/patient.interface';
-import { DatePipe } from '@angular/common';
-import { MatChipsModule } from '@angular/material/chips';
+import { MedicalRecordService } from '../medicalRecord.service';
 
 @Component({
   selector: 'app-new',

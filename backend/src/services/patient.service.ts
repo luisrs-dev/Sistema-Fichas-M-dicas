@@ -3,10 +3,24 @@ import { Patient } from "../interfaces/patient.interface";
 import MedicalRecordModel from "../models/medicalRecord.model";
 import PatientModel from "../models/patient.model";
 import { addToSistrat } from "./sistratPlatform.service";
+import { Demand } from "../interfaces/demand.interface";
+import DemandModel from "../models/demand.model";
 
 const inerPatient = async (Patient: Patient) => {
   const responseInsert = await PatientModel.create(Patient);
   console.log("Paciente registrado");
+  console.log({ responseInsert });
+  return responseInsert;
+};
+
+
+const inerDemand = async (data:{userId:string, dataSistrat:Demand}) => {
+  console.log('inderDemand');
+    console.log(data.userId);
+    console.log(data.dataSistrat);
+    
+  const responseInsert = await DemandModel.create({...data.dataSistrat, patientId: data.userId});
+  console.log("Demanda registrada");
   console.log({ responseInsert });
   return responseInsert;
 };
@@ -19,14 +33,14 @@ const inerPatient = async (Patient: Patient) => {
 // };
 
 // TODO: definir interfaz dataSistrar
-const updatePatientSistrat = async (patientId: string, dataSistrat: any) => {
+const updatePatientSistrat = async (patientId: string, demanda: Demand) => {
   try {
     console.log({ patientId });
-    console.log({ dataSistrat });
+    console.log({ demanda });
 
     const responseUpdate = await PatientModel.findByIdAndUpdate(
       patientId,
-      { $set: dataSistrat },
+      { $set: demanda },
       { new: true, runValidators: true }
     );
     console.log("Paciente actualizado");
@@ -96,6 +110,7 @@ const findPatient = async (id: string) => {
 
 export {
   inerPatient,
+  inerDemand,
   updatePatientSistrat,
   recordToSistrat,
   allPatients,

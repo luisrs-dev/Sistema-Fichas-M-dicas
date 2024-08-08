@@ -14,17 +14,19 @@ import { Patient } from '../../../interfaces/patient.interface';
 import { Profile, User } from '../../../interfaces/user.interface';
 import { UserService } from '../../users/user.service';
 import { PatientService } from '../patient.service';
+import {MatIconModule} from '@angular/material/icon';
+import {MatMenuModule} from '@angular/material/menu';
 
 @Component({
   selector: 'app-list-patients',
   standalone: true,
-  imports: [CommonModule, MaterialModule, RouterLink],
+  imports: [CommonModule, MaterialModule, RouterLink, MatMenuModule, MatIconModule],
   templateUrl: './listPatients.component.html',
   styleUrl: './listPatients.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class ListPatientsComponent {
-  displayedColumns: string[] = ['name','program','phone','admissionDate',  'actions'];
+  displayedColumns: string[] = ['name','program','phone','admissionDate','fonasa',  'actions'];
   dataSource = new MatTableDataSource<Patient>([]);
 
   public patients: Patient[];

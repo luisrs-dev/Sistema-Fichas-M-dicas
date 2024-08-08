@@ -25,7 +25,8 @@
         <mat-icon class="mat-18">arrow_back</mat-icon>
       </button>
     </mat-toolbar>
-    <mat-nav-list>
+
+   <mat-nav-list>
       @for (menuItem of menuItems; track $index) {
         <mat-list-item
           [routerLink]="menuItem.path"
@@ -37,7 +38,22 @@
           {{ menuItem.title }}
         </mat-list-item>
       }
-      <mat-list-item (click)="onLogout()">
+      <mat-toolbar>
+        <span>Parámetros</span>
+        <span class="spacer"></span>
+      </mat-toolbar>
+
+      @for (menuParameter of menuParameters; track $index) {
+        <mat-list-item
+          [routerLink]="menuParameter.path"
+          (click)="isMobile ? sidenav.toggle() : false"
+        >
+          <mat-icon matListItemIcon class="mat-18">{{
+            menuParameter.icon
+          }}</mat-icon>
+          {{ menuParameter.title }}
+        </mat-list-item>
+      }      <mat-list-item (click)="onLogout()">
         <mat-icon matListItemIcon class="mat-18">logout</mat-icon>
         Cerrar sesión
       </mat-list-item>

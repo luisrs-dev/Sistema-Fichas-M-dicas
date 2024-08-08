@@ -3,7 +3,7 @@
 import { User } from "./user.interface";
 
 export interface LoginResponse {
-    user:  User;
+    id:  string;
     token: string;
     expiresIn: number;
 }

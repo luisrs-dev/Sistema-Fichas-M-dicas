@@ -1,5 +1,5 @@
 import { CommonModule, formatDate } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -7,11 +7,15 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { provideNativeDateAdapter } from '@angular/material/core';
-import { Router, RouterModule } from '@angular/router';
 import { MaterialModule } from '../../../../angular-material/material.module';
 import { PatientService } from '../patient.service';
+import { provideNativeDateAdapter } from '@angular/material/core';
+import { Router, RouterModule } from '@angular/router';
 import Notiflix from 'notiflix';
+import { Observable } from 'rxjs';
+import { ParametersService } from '../../parameters/parameters.service';
+import { Parameter, ParameterValue } from '../../parameters/interfaces/parameter.interface';
+import { UserService } from '../../users/user.service';
 
 @Component({
   selector: 'app-new-patient',
@@ -25,10 +29,12 @@ import Notiflix from 'notiflix';
   ],
   providers: [provideNativeDateAdapter()],
   templateUrl: './newPatient.component.html',
-  styleUrl: './newPatient.component.css'
+  styleUrl: './newPatient.component.css',
 })
 export default class NewPatientComponent {
   private patientService = inject(PatientService);
+  private parametersService = inject(ParametersService);
+  private userService = inject(UserService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
 
@@ -36,7 +42,9 @@ export default class NewPatientComponent {
   public fichaDemanda: boolean = true;
   public registroSistrat: boolean = true;
   public disableTabSistrat: boolean = true;
-  private changeDetectorRef = inject(ChangeDetectorRef); 
+  private changeDetectorRef = inject(ChangeDetectorRef);
+  public searchResults$: Observable<any>;
+  public programs: Parameter[];
 
 
 
@@ -52,6 +60,10 @@ export default class NewPatientComponent {
     region: ['27', [Validators.required]],
     phone: ['2969186636', [Validators.required, Validators.minLength(6)]],
     phoneFamily: ['2969186636', [Validators.required, Validators.minLength(3)]],
+    centerOrigin: [
+      'Carlos Trup',
+      [Validators.required, Validators.minLength(3)],
+    ],
   });
 
   public sistratForm: FormGroup = this.fb.group({
@@ -72,6 +84,15 @@ export default class NewPatientComponent {
       [Validators.required, Validators.minLength(3)],
     ],
   });
+
+  ngOnInit(){
+
+    const userId = localStorage.getItem('user');
+    this.userService.getUserById(userId!).subscribe(response => {
+      console.log(response.user);
+      this.programs = response.user.programs;
+    })
+  }
 
   async onSave() {
     Notiflix.Loading.circle('Registrando nuevo paciente...');
@@ -96,12 +117,12 @@ export default class NewPatientComponent {
       this.sistratForm.markAllAsTouched();
       return;
     }
-    
+
     Notiflix.Loading.circle('Registrando ficha demanda...');
     const userId = localStorage.getItem('user') || '';
 
     this.patientService
-      .addSistrat(userId, this.sistratForm.value)
+      .addFichaDemanda(userId, this.sistratForm.value)
       .subscribe(async (response: any) => {
         await this.delay(2000);
         this.disableTabSistrat = false;
@@ -109,43 +130,6 @@ export default class NewPatientComponent {
 
         Notiflix.Loading.remove();
       });
-  }
-
-  onRegisterToSistrat(){
-    const userId = localStorage.getItem('user')!;
-    console.log({userId});
-
-    this.patientService
-    .saveToSistrat(userId)
-    .subscribe(async (response: any) => {
-      console.log(response);
-      await this.delay(2000);
-      Notiflix.Loading.remove();
-      // this.router.navigateByUrl('/dashboard/patients');
-    });
-    
-
-
-  }
-
-  formatAllDates() {
-    const dateFields = [
-      'atentionRequestDate',
-      'careOfferedDate',
-      'estimatedMonth',
-      'firstAtentionDate',
-      'atentionResolutiveDate',
-    ];
-
-    dateFields.forEach((field) => {
-      const dateValue = this.sistratForm.get(field)?.value;
-      if (dateValue) {
-        const formattedDate = formatDate(dateValue, 'dd-MM-yyyy', 'en-US');
-        this.sistratForm
-          .get(field)
-          ?.setValue(formattedDate, { emitEvent: false });
-      }
-    });
   }
 
   back() {

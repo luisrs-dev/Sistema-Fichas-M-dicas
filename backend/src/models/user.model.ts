@@ -20,9 +20,17 @@ const UserSchema = new Schema<User>(
       // default: "Soy la descripción",
     },
     profile: {
-      type: String,
-      // default: "Soy la descripción",
+      type: Schema.Types.ObjectId,
+      ref: 'profesionalRole'
     },
+    permissions: [{
+      type: Schema.Types.ObjectId,
+      ref: 'permission'
+    }],
+    programs: [{
+      type: Schema.Types.ObjectId,
+      ref: 'program'
+    }]
   },
   { timestamps: true, versionKey: false }
 );

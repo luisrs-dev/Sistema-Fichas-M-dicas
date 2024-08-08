@@ -11,4 +11,5 @@ export interface Patient {
   region: string;
   phone: string;
   phoneFamily: string;
+  centerOrigin: string;
 }

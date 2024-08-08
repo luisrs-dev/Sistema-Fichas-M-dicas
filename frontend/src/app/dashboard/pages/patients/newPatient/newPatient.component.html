@@ -27,10 +27,9 @@
             <mat-form-field class="w-full" appearance="outline">
               <mat-label>Programa</mat-label>
               <mat-select formControlName="program">
-                <mat-option value="PG">PR - Problación General</mat-option>
-                <mat-option value="PRM"
-                  >PRM - Problación General Mujeres</mat-option
-                >
+                @for (program of programs; track $index) {
+                  <mat-option value={{program._id}}>{{program.name}}</mat-option>
+                }
               </mat-select>
               <span *ngIf="isValidField('program')" class="text-red-500">
                 Debe seleccionar un programa
@@ -197,6 +196,17 @@
               </span>
 
               <mat-icon matSuffix>phone</mat-icon>
+              <!-- <mat-hint>Hint</mat-hint> -->
+            </mat-form-field>
+          </div>
+          <div class="col-4">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Centro de origen</mat-label>
+              <input matInput formControlName="centerOrigin" placeholder="Centro de origen" />
+              <span *ngIf="isValidField('centerOrigin')" class="form-text text-danger">
+                El centro es requerido
+              </span>
+              <mat-icon matSuffix>person</mat-icon>
               <!-- <mat-hint>Hint</mat-hint> -->
             </mat-form-field>
           </div>
@@ -513,7 +523,7 @@
         <button mat-flat-button type="submit" color="primary">Registrar</button>
       </form>
     </mat-tab>
-    <mat-tab label="Registro SISTRAT" [disabled]="disableTabSistrat">
+    <!-- <mat-tab label="Registro SISTRAT" [disabled]="disableTabSistrat">
 
       <button
       mat-stroked-button
@@ -524,6 +534,6 @@
       Volver
     </button>
     <button mat-flat-button (click)="onRegisterToSistrat()" color="primary">Registrar</button>
-    </mat-tab>
+    </mat-tab> -->
   </mat-tab-group>
 </div>

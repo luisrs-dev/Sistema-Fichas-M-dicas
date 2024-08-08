@@ -14,7 +14,7 @@ export class AuthService {
   private readonly baseUrl: string = environment.baseUrl;
   private router = inject(Router);
 
-  private _currentUser = signal<User | null>(null);
+  // private _currentUser = signal<User | null>(null);
   private _authStatus = signal<AuthStatus>(AuthStatus.checking);
   private isAuthenticated: boolean = false;
 
@@ -25,15 +25,15 @@ export class AuthService {
     const body = { email, password };
 
     return this.http.post<LoginResponse>(url, body).pipe(
-      tap(({ user, token, expiresIn }) => {
+      tap(({ id, token, expiresIn }) => {
 
 
         if (!token) {
           throw new Error('Token no recibido del servidor');
         }
 
-        console.log({ user, token, expiresIn });        
-        this._currentUser.set(user);
+        console.log({ id, token, expiresIn });        
+        // this._currentUser.set(id);
         this._authStatus.set(AuthStatus.authenticated);
         localStorage.setItem('token', token);
         this.isAuthenticated = true;
@@ -41,7 +41,7 @@ export class AuthService {
         const now = new Date();
         const expirationDate = new Date(now.getTime() + expiresIn * 1000);
         
-        this.saveAuthData(token, expirationDate, email);
+        this.saveAuthData(token, expirationDate, id);
       }),
       map(() => true),
       catchError((err) => {
@@ -79,7 +79,7 @@ export class AuthService {
     
     if (expiresIn > 0) {
       this.isAuthenticated = true;
-      this._currentUser.set({email: authInformation.user!});
+      // this._currentUser.set({email: authInformation.user!});
     }else{
       this.logout();
     }

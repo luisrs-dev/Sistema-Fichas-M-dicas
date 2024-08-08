@@ -23,6 +23,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatStepperModule} from '@angular/material/stepper';
 import {MatTabsModule} from '@angular/material/tabs';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
 
 
 import {
@@ -55,7 +56,8 @@ import {
     MatBottomSheetModule,
     MatDividerModule,
     MatStepperModule,
-    MatTabsModule
+    MatTabsModule,
+    MatSlideToggleModule
   ],
 })
 export class MaterialModule {}

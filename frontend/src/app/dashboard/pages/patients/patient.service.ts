@@ -4,6 +4,7 @@ import { Observable, catchError, tap, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { MedicalRecord } from '../../interfaces/medicalRecord.interface';
 import { Patient } from '../../interfaces/patient.interface';
+import { Demand } from '../../interfaces/demand.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -31,8 +32,6 @@ export class PatientService {
     return this.http.post<any>(`${this.backend}/patient`, Patient)
       .pipe(
         tap( (user) => {
-          console.log(user);
-          
           localStorage.setItem('user', user._id)
         }
           // this._currentUser.set( user);
@@ -49,8 +48,10 @@ export class PatientService {
   /*
    TODO: definir interfaz para datos sistrat
   */
-  addSistrat(userId: string, dataSistrat: any): Observable<any>{
-    return this.http.post<any>(`${this.backend}/patient/sistrat`, {userId, dataSistrat})
+   addFichaDemanda(userId: string, dataSistrat: any): Observable<any>{
+    console.log({dataSistrat});
+    
+    return this.http.post<any>(`${this.backend}/patient/demanda`, {userId, dataSistrat})
       .pipe(
         catchError( err => throwError( () => err.error.message)) 
       )

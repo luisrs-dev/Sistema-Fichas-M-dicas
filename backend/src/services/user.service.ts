@@ -2,6 +2,8 @@ import { Types } from "mongoose";
 import { User } from "../interfaces/user.interface";
 import MedicalRecordModel from "../models/medicalRecord.model";
 import UserModel from "../models/user.model";
+import UserPermissionModel from "../models/parameters/userPermission.model";
+import UserProgramModel from "../models/parameters/userProgram.model";
 
 const inerUser = async (user: User) => {
   const responseInsert = await UserModel.create(user);
@@ -19,10 +21,8 @@ const usersByProfile = async (profile: string) => {
 };
 
 const findUser = async (id: string) => {
-  const responseUser = await UserModel.findOne({ _id: id });
-  const medicalRecords = await MedicalRecordModel.find({ patient: new Types.ObjectId(id) });
-
-  return {user: responseUser, medicalRecords};
+  const responseUser = await UserModel.findOne({ _id: id }).populate(['permissions','programs']);
+  return { user: responseUser };
 };
 
 // const updateCar = async (id: string, data: Car) => {

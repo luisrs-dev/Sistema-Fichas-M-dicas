@@ -32,6 +32,8 @@ export default class DashboardComponent implements OnInit {
   private mobileService = inject(MobileService);
 
   ngOnInit() {
+    console.log({routes});
+    
     this.observer.observe(['(max-width: 800px)']).subscribe((screenSize) => {
       this.mobileService.setMobileState(screenSize.matches);
       this.isMobile = screenSize.matches;
@@ -56,6 +58,7 @@ export default class DashboardComponent implements OnInit {
     .filter((route) => route && route.path)
     .filter((route) => !route.path?.includes(':'))
     .filter((route) => route.data && !route.data['child'])
+    .filter((route) => route.data && !route.data['parameter'])
     .map((route) => {
       return {
         path: route.path,
@@ -63,4 +66,19 @@ export default class DashboardComponent implements OnInit {
         icon: route.data?.['icon'],
       };
     });
+    
+    
+    public menuParameters = routes
+    .map((route) => route.children ?? [])
+    .flat()
+    .filter((route) => route && route.data  )
+    .filter((route) => route.data && route.data?.['parameter'])
+    .map((route) => {
+      return {
+        path: route.path,
+        title: route.title,
+        icon: route.data?.['icon'],
+      };
+    });
+
 }

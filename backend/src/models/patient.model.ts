@@ -43,39 +43,43 @@ const PatientSchema = new Schema<Patient>(
       type: String,
       required: true,
     },
-    mainSubstance: {
-      type: String
-    },
-    previousTreatments: {
-      type: String
-    },
-    atentionRequestDate: {
-      type: String
-    },
-    typeContact: {
-      type: String
-    },
-    whoRequest: {
-      type: String
-    },
-    whoDerives: {
-      type: String
-    },
-    careOfferedDate: {
-      type: String
-    },
-    estimatedMonth: {
-      type: String
-    },
-    demandIsNotAccepted: {
-      type: String
-    },
-    firstAtentionDate: {
+    centerOrigin: {
       type: String,
+      required: true,
     },
-    interventionAB: {
-      type: String,
-    },
+    // mainSubstance: {
+    //   type: String
+    // },
+    // previousTreatments: {
+    //   type: String
+    // },
+    // atentionRequestDate: {
+    //   type: String
+    // },
+    // typeContact: {
+    //   type: String
+    // },
+    // whoRequest: {
+    //   type: String
+    // },
+    // whoDerives: {
+    //   type: String
+    // },
+    // careOfferedDate: {
+    //   type: String
+    // },
+    // estimatedMonth: {
+    //   type: String
+    // },
+    // demandIsNotAccepted: {
+    //   type: String
+    // },
+    // firstAtentionDate: {
+    //   type: String,
+    // },
+    // interventionAB: {
+    //   type: String,
+    // },
   },
   { timestamps: true, versionKey: false }
 );

@@ -2,6 +2,7 @@ import { Request, Response, Router } from "express";
 import {
   getPatients,
   postPatient,
+  postDemand,
   postPatientSistrat,
   recordPatientSistrat,
   getPatientsByProfile,
@@ -16,6 +17,7 @@ router.get("/:id", getPatientsById);
 // router.get("/", logMiddleware, getItems);
 // router.get("/:id", getItem);
 router.post("/", postPatient);
+router.post("/demanda", postDemand);
 router.post("/sistrat", postPatientSistrat);
 router.post("/sistrat/record", recordPatientSistrat);
 // router.delete("/:id", deleteItem);

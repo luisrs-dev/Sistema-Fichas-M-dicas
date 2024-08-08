@@ -3,7 +3,7 @@ import { loginUser, registerNewUser } from "../services/auth.service";
 
 const registerController = async ({ body }: Request, res: Response) => {
   const responseUser = await registerNewUser(body);
-  res.send(responseUser);
+  res.send({status:'ok', responseUser});
 };
 
 const loginController = async ({ body }: Request, res: Response) => {

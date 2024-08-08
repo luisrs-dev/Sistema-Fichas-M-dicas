@@ -4,8 +4,16 @@
     Nueva Ficha Médica >
     <a mat-button color="primary" matTooltip="Ver Perfil"
       >{{ data.patient.name }} {{ data.patient.surname }}
-      {{ data.patient.secondSurname }}</a
-    >
+      {{ data.patient.secondSurname }}</a>
+
+      <div>
+        Código SISTRAT
+        <mat-chip-set>
+          <mat-chip
+            >AMCO220091998</mat-chip
+          >
+        </mat-chip-set>
+      </div>
     <p>Fecha Ingreso: {{ data.patient.admissionDate | date : "dd-MM-yyyy" }}</p>
     <p>Programa: {{ data.patient.program }}</p>
     <p>Teéfono: {{ data.patient.phone }}</p>
@@ -18,6 +26,8 @@
         }@else { Sin registro anterior }</mat-chip
       >
     </mat-chip-set>
+    <div>Este fue el útlimo diagnóstico registrado</div>
+
 
     <mat-divider class="mb-1"></mat-divider>
 
@@ -28,7 +38,7 @@
         }@else { Sin registro anterior }</mat-chip
       >
     </mat-chip-set>
-    <div>{{ medicalRecord.intervention }}</div>
+    <div>Este fue el útlimo esquema farmacolóigoc registrado</div>
     <mat-divider class="mb-1"></mat-divider>
   </div>
 

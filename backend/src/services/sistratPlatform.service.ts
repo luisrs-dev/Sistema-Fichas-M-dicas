@@ -1,7 +1,7 @@
 import puppeteer from "puppeteer";
 import { Patient } from "../interfaces/patient.interface";
 
-const addToSistrat = async (patient: Patient) => {
+const addToSistrat = async (patient: any) => {
   console.log({ patient });
 
   const browser = await puppeteer.launch({ headless: false }); // Cambia a true para ejecutar en modo headless

@@ -3,10 +3,11 @@ import { handleHttp } from "../utils/error.handle";
 import {
   allPatients,
   inerPatient,
+  inerDemand,
   updatePatientSistrat,
   recordToSistrat,
   PatientsByProfile,
-  findPatient
+  findPatient,
 } from "../services/patient.service";
 
 const getPatientsById = async ({ params }: Request, res: Response) => {
@@ -40,8 +41,6 @@ const getPatientsByProfile = async (req: Request, res: Response) => {
   }
 };
 
-
-
 // const updateItem = async ({ params, body }: Request, res: Response) => {
 //   try {
 //     const { id } = params;
@@ -71,11 +70,18 @@ const postPatient = async ({ body }: Request, res: Response) => {
   }
 };
 
-
+const postDemand = async ({ body }: Request, res: Response) => {
+  try {
+    const responseDemand = await inerDemand(body);
+    res.send(responseDemand);
+  } catch (error) {
+    handleHttp(res, "ERROR_POST_ITEM", error);
+  }
+};
 
 const postPatientSistrat = async (req: Request, res: Response) => {
   try {
-    const {userId, dataSistrat} = req.body;
+    const { userId, dataSistrat } = req.body;
     const responsePatient = await updatePatientSistrat(userId, dataSistrat);
     res.send(responsePatient);
   } catch (error) {
@@ -83,10 +89,9 @@ const postPatientSistrat = async (req: Request, res: Response) => {
   }
 };
 
-
 const recordPatientSistrat = async (req: Request, res: Response) => {
   try {
-    const {userId} = req.body;
+    const { userId } = req.body;
     const responsePatient = await recordToSistrat(userId);
     res.send(responsePatient);
   } catch (error) {
@@ -94,7 +99,12 @@ const recordPatientSistrat = async (req: Request, res: Response) => {
   }
 };
 
-
-
-export { postPatient, postPatientSistrat, recordPatientSistrat, getPatients, getPatientsByProfile, getPatientsById };
-// export { getItem, getItems, updateItem, postItem, deleteItem };
+export {
+  postPatient,
+  postDemand,
+  postPatientSistrat,
+  recordPatientSistrat,
+  getPatients,
+  getPatientsByProfile,
+  getPatientsById,
+};
