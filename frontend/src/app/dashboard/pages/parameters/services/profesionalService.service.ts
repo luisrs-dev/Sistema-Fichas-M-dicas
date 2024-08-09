@@ -20,7 +20,7 @@ export class ProfesionalServiceService {
     return this.http.get<any>(`${this.backend}/service`);
   }
 
-  addParameter(service: Service): Observable<any>{
+  addService(service: Service): Observable<any>{
     return this.http.post<any>(`${this.backend}/service`, service);
   }
 

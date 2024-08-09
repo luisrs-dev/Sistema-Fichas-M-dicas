@@ -11,6 +11,7 @@ import {
 } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { ParameterValue } from '../../interfaces/parameter.interface';
+import { ProfesionalServiceService } from '../profesionalService.service';
 
 @Component({
   selector: 'app-new',
@@ -20,7 +21,7 @@ import { ParameterValue } from '../../interfaces/parameter.interface';
   styleUrl: './new.component.css',
 })
 export class NewService {
-  private parametersService = inject(ParametersService);
+  private profesionalServiceService = inject(ProfesionalServiceService);
   private fb = inject(FormBuilder);
   private dialogRef = inject(MatDialogRef<NewService>);
 
@@ -32,10 +33,9 @@ export class NewService {
 
   onSave() {
     if (this.permissionForm.valid) {
-      this.parametersService
-        .addParameter(ParameterValue.Permission, this.permissionForm.value)
+      this.profesionalServiceService
+        .addService(this.permissionForm.value)
         .subscribe((response) => {
-          console.log(response);
           this.dialogRef.close(response); 
         });
     }
