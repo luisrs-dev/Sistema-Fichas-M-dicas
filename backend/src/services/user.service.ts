@@ -11,7 +11,7 @@ const inerUser = async (user: User) => {
 };
 
 const allUsers = async () => {
-  const responseUsers = await UserModel.find({});
+  const responseUsers = await UserModel.find({}).populate(['permissions','programs','profile']);
   return responseUsers;
 };
 

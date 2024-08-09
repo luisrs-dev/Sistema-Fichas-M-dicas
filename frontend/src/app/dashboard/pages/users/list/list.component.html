@@ -22,7 +22,7 @@
     </div>
     <div>
       <button
-        mat-icon-button
+        mat-icon-button 
         color="primary"
         matTooltip="Actualizar transacciones"
         matTooltipPosition="above"
@@ -80,6 +80,22 @@
     <th mat-header-cell *matHeaderCellDef mat-sort-header>Perfil</th>
     <td mat-cell *matCellDef="let element">{{ element.profile }}</td>
   </ng-container>
+
+    <!-- Symbol Column -->
+    <ng-container matColumnDef="permissions">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Permisos</th>
+      <td mat-cell *matCellDef="let element">
+        @for (permission of element.permissions; track $index; let last = $last) {
+          {{permission.name}}@if(last){}@else{,}}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="programs">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Programas</th>
+      <td mat-cell *matCellDef="let element">
+        @for (program of element.programs; track $index; let last = $last) {
+          {{program.name}}@if(last){}@else{,}}</td>
+    </ng-container>
+
 
   <!-- Symbol Column -->
   <ng-container matColumnDef="actions">

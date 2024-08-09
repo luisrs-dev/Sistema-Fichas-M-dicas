@@ -3,12 +3,15 @@
   <button mat-icon-button (click)="toggleMenu()">
     <mat-icon style="color: white" class="mat-18">menu</mat-icon>
   </button>
-    <h1>FICLIN-A</h1>
+  <h1>FICLIN-A</h1>
   <!-- <img src="../../assets/images/logo-blanco.png" height="40" alt="" /> -->
   <span class="spacer"></span>
 
   @if (!isMobile) {
-    <button class="text-white" mat-button (click)="onLogout()">Cerrar sesión</button>
+  <button class="text-white" mat-button>
+    <mat-icon>account_circle</mat-icon>
+    {{user.name}}
+  </button>
   }
 </mat-toolbar>
 <mat-sidenav-container class="example-container" autosize>
@@ -26,34 +29,34 @@
       </button>
     </mat-toolbar>
 
-   <mat-nav-list>
+    <mat-nav-list>
       @for (menuItem of menuItems; track $index) {
-        <mat-list-item
-          [routerLink]="menuItem.path"
-          (click)="isMobile ? sidenav.toggle() : false"
-        >
-          <mat-icon matListItemIcon class="mat-18">{{
-            menuItem.icon
-          }}</mat-icon>
-          {{ menuItem.title }}
-        </mat-list-item>
-      }
+      <mat-list-item
+        [routerLink]="menuItem.path"
+        (click)="isMobile ? sidenav.toggle() : false"
+      >
+        <mat-icon matListItemIcon class="mat-18">{{ menuItem.icon }}</mat-icon>
+        {{ menuItem.title }}
+      </mat-list-item>
+      } @if(isAdmin){
       <mat-toolbar>
         <span>Parámetros</span>
         <span class="spacer"></span>
       </mat-toolbar>
 
       @for (menuParameter of menuParameters; track $index) {
-        <mat-list-item
-          [routerLink]="menuParameter.path"
-          (click)="isMobile ? sidenav.toggle() : false"
-        >
-          <mat-icon matListItemIcon class="mat-18">{{
-            menuParameter.icon
-          }}</mat-icon>
-          {{ menuParameter.title }}
-        </mat-list-item>
-      }      <mat-list-item (click)="onLogout()">
+      <mat-list-item
+        [routerLink]="menuParameter.path"
+        (click)="isMobile ? sidenav.toggle() : false"
+      >
+        <mat-icon matListItemIcon class="mat-18">{{
+          menuParameter.icon
+        }}</mat-icon>
+        {{ menuParameter.title }}
+      </mat-list-item>
+      } }
+
+      <mat-list-item (click)="onLogout()">
         <mat-icon matListItemIcon class="mat-18">logout</mat-icon>
         Cerrar sesión
       </mat-list-item>

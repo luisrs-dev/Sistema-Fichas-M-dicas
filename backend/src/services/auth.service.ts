@@ -24,33 +24,22 @@ const registerNewUser = async ({user, permissions, programs}: any) => {
     permissions,
     programs
   });
-
-  // const newPermissions = new UserPermissionModel({
-  //   userId: newUser._id,
-  //   permissions: permissions
-  // });
-  // await newPermissions.save();
-
-  // const newPrograms = new UserProgramModel({
-  //   userId: newUser._id,
-  //   programs: programs
-  // });
-  // await newPrograms.save();
-
   return {status:'ok', };
 };
 
 const loginUser = async ({ email, password }: Auth) => {
   try {
-    const userFetched = await UserModel.findOne({ email });
+    const userFetched = await UserModel.findOne({ email }).populate(['permissions','programs','profile']);
     if (!userFetched) return { status: false, msg: "No existe usuario" };
   
     const passwordHash = userFetched.password;
     const isCorrect = await verified(password, passwordHash);
     if (!isCorrect) return { status: false, msg: "Credenciales incorrectas" };
     const token = jsonwebtoken.sign({ email }, JWT_SECRET, { expiresIn: "1h" });
-    return { id: userFetched._id, token, status: true, expiresIn: 3600 };
 
+    const { password: onlyPassword, ...userWithoutPass } = userFetched.toObject(); // Convertir a objeto plano
+
+    return { user: userWithoutPass, token, status: true, expiresIn: 3600 };
   } catch (error) {
     console.error("Error in loginUser:", error);
     return { status: false, msg: "Error interno del servidor" };

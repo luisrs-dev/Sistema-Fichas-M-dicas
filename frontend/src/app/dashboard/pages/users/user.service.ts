@@ -3,8 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { catchError, Observable, throwError } from 'rxjs';
 import { Patient } from '../../interfaces/patient.interface';
-import { User } from '../../interfaces/user.interface';
 import { Parameter } from '../parameters/interfaces/parameter.interface';
+import { User } from '../../../auth/interfaces/login-response.interface';
 
 @Injectable({
   providedIn: 'root'

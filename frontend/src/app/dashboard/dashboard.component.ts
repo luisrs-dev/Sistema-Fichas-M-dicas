@@ -13,6 +13,7 @@ import { MaterialModule } from '../angular-material/material.module';
 import { routes } from '../app.routes';
 import { AuthService } from './../auth/auth.service';
 import { MobileService } from './../shared/services/mobile.service';
+import { User } from '../auth/interfaces/login-response.interface';
 
 @Component({
   selector: 'app-dashboard',
@@ -30,9 +31,16 @@ export default class DashboardComponent implements OnInit {
   public authService = inject(AuthService);
   private observer = inject(BreakpointObserver);
   private mobileService = inject(MobileService);
+  public isAdmin: boolean = false;
+  public user: User;
 
   ngOnInit() {
     console.log({routes});
+    this.isAdmin = this.authService.isAdmin();
+    this.user = this.authService.getUser();
+    
+    console.log({isAdmin: this.isAdmin});
+    
     
     this.observer.observe(['(max-width: 800px)']).subscribe((screenSize) => {
       this.mobileService.setMobileState(screenSize.matches);

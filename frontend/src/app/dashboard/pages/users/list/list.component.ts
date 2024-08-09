@@ -1,4 +1,3 @@
-import { User } from './../../../../auth/interfaces/user.interface';
 import { UserService } from './../user.service';
 import { CommonModule } from '@angular/common';
 import {
@@ -13,6 +12,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { RouterLink } from '@angular/router';
+import { User } from '../../../../auth/interfaces/login-response.interface';
 
 @Component({
   selector: 'app-list',
@@ -23,7 +23,7 @@ import { RouterLink } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class ListComponent implements OnInit {
-  displayedColumns: string[] = [ 'name', 'email', 'phone', 'profile', 'actions'];
+  displayedColumns: string[] = [ 'name', 'email', 'phone', 'profile','permissions','programs', 'actions'];
   dataSource = new MatTableDataSource<User>([]);
 
   public users: User[];
