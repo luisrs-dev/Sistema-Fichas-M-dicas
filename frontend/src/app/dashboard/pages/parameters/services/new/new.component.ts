@@ -27,7 +27,7 @@ export class NewService {
 
 
   public permissionForm: FormGroup = this.fb.group({
-    name: ['', [Validators.required]],
+    description: ['', [Validators.required]],
     code: ['', [Validators.required]],
   });
 

@@ -1,31 +1,28 @@
 <form [formGroup]="permissionForm" (ngSubmit)="onSave()">
-<h2 mat-dialog-title>Nuevo permiso</h2>
-<mat-dialog-content>
+  <h2 mat-dialog-title>Nuevo permiso</h2>
+  <mat-dialog-content>
     <div class="pt-2">
       <mat-form-field class="w-full" appearance="outline">
         <mat-label>Servicio</mat-label>
-        <input matInput placeholder="Agregar nuevo..."
-        formControlName="name"
-        
+        <input
+          matInput
+          placeholder="Agregar nuevo..."
+          formControlName="description"
         />
       </mat-form-field>
     </div>
     <div>
-        <mat-form-field class="w-full" appearance="outline">
-          <mat-label>Código</mat-label>
-        
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Código</mat-label>
+
         <input matInput placeholder="Agregar nuevo..." formControlName="code" />
-        </mat-form-field>
-      </div>
-    <!-- <div>
-      <button mat-button>Cerrar</button>
-      <button mat-flat-button color="primary" type="submit">Guardar</button>
-    </div> -->
+      </mat-form-field>
+    </div>
   </mat-dialog-content>
   <mat-dialog-actions>
     <button mat-button mat-dialog-close>Cancel</button>
-    <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
-    <button mat-button color="primary" type="submit" [mat-dialog-close]="true">Registrar</button>
+    <button mat-button color="primary" type="submit" [mat-dialog-close]="true">
+      Registrar
+    </button>
   </mat-dialog-actions>
-  
 </form>
