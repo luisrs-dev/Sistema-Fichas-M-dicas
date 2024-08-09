@@ -17,6 +17,10 @@ export class UserService {
   getUsers(): Observable<User[]> {
     return this.http.get<any>(`${this.backend}/user`);
   }
+
+  getServicesByProfile(profile: string): Observable<any[]> {
+    return this.http.get<any>(`${this.backend}/user/services/${profile}`);
+  }
   getUserById(id: string):Observable<any>{
     return this.http.get<any>(`${this.backend}/user/${id}`);
   }

@@ -4,6 +4,7 @@ import MedicalRecordModel from "../models/medicalRecord.model";
 import UserModel from "../models/user.model";
 import UserPermissionModel from "../models/parameters/userPermission.model";
 import UserProgramModel from "../models/parameters/userProgram.model";
+import ProfesionalRoleModel from "../models/parameters/profesionalRole.model";
 
 const inerUser = async (user: User) => {
   const responseInsert = await UserModel.create(user);
@@ -25,6 +26,18 @@ const findUser = async (id: string) => {
   return { user: responseUser };
 };
 
+const findServicesByProfile = async (id: string) => {
+
+  try {
+    const role = await ProfesionalRoleModel.findById(id).populate('services');
+    return role?.services;
+  } catch (error) {
+    console.error("Error al buscar el rol profesional:", error);
+  }
+};
+
+
+
 // const updateCar = async (id: string, data: Car) => {
 //   /**
 //    ** findOneAndUpdate
@@ -42,4 +55,4 @@ const findUser = async (id: string) => {
 //   return responseItem;
 // };
 
-export { inerUser, allUsers, usersByProfile, findUser };
+export { inerUser, allUsers, usersByProfile, findUser, findServicesByProfile };

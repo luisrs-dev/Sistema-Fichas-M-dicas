@@ -79,10 +79,11 @@
 
         <div class="col-3">
           <mat-form-field appearance="outline" class="w-full">
-            <mat-label>SISTRAT</mat-label>
+            <mat-label>Prestación</mat-label>
             <mat-select formControlName="entryType">
-              <mat-option value="Psicólogo">COD1234</mat-option>
-              <mat-option value="Psicólogo">COD5643</mat-option>
+              @for (service of services; track $index) {
+                <mat-option value="{{service._id}}">{{service.description}}</mat-option>
+              }
             </mat-select>
           </mat-form-field>
           <span *ngIf="isValidField('entryType')" class="text-red-500">

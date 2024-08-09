@@ -3,7 +3,8 @@ import {
   getUsers,
   postUser,
   getUsersByProfile,
-  getUsersById
+  getUsersById,
+  getServicesByProfile
 } from "../controllers/user.controller";
 // import { logMiddleware } from "../middleware/log";
 const router = Router();
@@ -11,6 +12,7 @@ const router = Router();
 router.get("/", getUsers);
 router.get("/profile/:profile", getUsersByProfile);
 router.get("/:id", getUsersById);
+router.get("/services/:id", getServicesByProfile);
 // router.get("/", logMiddleware, getItems);
 // router.get("/:id", getItem);
 router.post("/", postUser);

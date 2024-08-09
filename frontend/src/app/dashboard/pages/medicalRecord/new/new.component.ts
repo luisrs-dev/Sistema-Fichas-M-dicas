@@ -19,11 +19,13 @@ import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router, RouterModule } from '@angular/router';
 import { MaterialModule } from '../../../../angular-material/material.module';
+import { AuthService } from '../../../../auth/auth.service';
+import { User } from '../../../../auth/interfaces/login-response.interface';
 import { MedicalRecord } from '../../../interfaces/medicalRecord.interface';
 import { Patient } from '../../../interfaces/patient.interface';
+import { UserService } from '../../users/user.service';
 import { MedicalRecordService } from '../medicalRecord.service';
 
 @Component({
@@ -52,11 +54,13 @@ export default class NewMedicalRecord {
   private fb = inject(FormBuilder);
   private medicalRecordService = inject(MedicalRecordService);
   private router = inject(Router);
-  private snackBar = inject(MatSnackBar);
-  private datePipe = inject(DatePipe);
+  private authService = inject(AuthService);
+  private userService = inject(UserService);
 
   public patient: Patient;
   public medicalRecord: MedicalRecord;
+  public user: User;
+  public services: any[];
 
   constructor(
     @Inject(MAT_DIALOG_DATA)
@@ -64,6 +68,17 @@ export default class NewMedicalRecord {
   ) {}
 
   ngOnInit() {
+    console.log('NewMedicalRecord');
+    
+    this.user = this.authService.getUser();
+    console.log(this.user);
+    
+    this.userService.getServicesByProfile(this.user.profile._id).subscribe( services => {
+      console.log({services});
+      this.services = services;
+      
+    })
+
     this.patient = this.data.patient;
     this.medicalRecord = { ...this.data.latestMedicalRecord };
   }

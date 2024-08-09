@@ -4,7 +4,8 @@ import {
   allUsers,
   inerUser,
   usersByProfile,
-  findUser
+  findUser,
+  findServicesByProfile
 } from "../services/user.service";
 
 const getUsersById = async ({ params }: Request, res: Response) => {
@@ -19,6 +20,21 @@ const getUsersById = async ({ params }: Request, res: Response) => {
     handleHttp(res, "ERROR_GET_ITEM", error);
   }
 };
+
+const getServicesByProfile = async ({ params }: Request, res: Response) => {
+  try {
+    const { id } = params;
+    const responseItem = await findServicesByProfile(id);
+    console.log({ responseItem });
+
+    const dataResponse = responseItem ?? "NOT_FOUND";
+    res.send(dataResponse);
+  } catch (error) {
+    handleHttp(res, "ERROR_GET_ITEM", error);
+  }
+};
+
+
 
 const getUsers = async (req: Request, res: Response) => {
   try {
@@ -70,5 +86,5 @@ const postUser = async ({ body }: Request, res: Response) => {
   }
 };
 
-export { postUser, getUsers, getUsersByProfile, getUsersById };
+export { postUser, getUsers, getUsersByProfile, getUsersById, getServicesByProfile };
 // export { getItem, getItems, updateItem, postItem, deleteItem };

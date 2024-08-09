@@ -11,6 +11,7 @@ export interface User {
     email:       string;
     password:    string;
     phone:       string;
+    profile: Profile;
     permissions: Permission[];
     programs:    Permission[];
     createdAt:   Date;
@@ -24,3 +25,13 @@ export interface Permission {
     createdAt: Date;
     updatedAt: Date;
 }
+
+export interface Profile {
+    _id:      string;
+    name:     string;
+    services: string[];
+    __v:      number;
+}
+
+
+
