@@ -5,17 +5,17 @@ import {
   ViewChild,
   inject,
 } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { RouterLink } from '@angular/router';
 import { MaterialModule } from '../../../../angular-material/material.module';
 import { Patient } from '../../../interfaces/patient.interface';
-import { Profile, User } from '../../../interfaces/user.interface';
-import { UserService } from '../../users/user.service';
 import { PatientService } from '../patient.service';
-import {MatIconModule} from '@angular/material/icon';
-import {MatMenuModule} from '@angular/material/menu';
+import { AuthService } from '../../../../auth/auth.service';
+import { User } from '../../../../auth/interfaces/login-response.interface';
 
 @Component({
   selector: 'app-list-patients',
@@ -31,13 +31,24 @@ export default class ListPatientsComponent {
 
   public patients: Patient[];
   private patientService = inject(PatientService);
+  private authService = inject(AuthService);
+  public canCreateUser: boolean = false;
+  public user: User;
+  public programs: string[];
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
 
   ngOnInit(): void {
-    this.patientService.getPatients().subscribe((patients) => {
+
+    this.canCreateUser = this.authService.canCreateUser();
+    this.user = this.authService.getUser();
+    this.programs = this.user.programs.map(program => program._id);
+
+    this.patientService.getPatients(this.programs).subscribe((patients) => {
       this.patients = patients;
+      console.log({patients});
+      
 
       this.dataSource.sort = this.sort;
       this.dataSource.paginator = this.paginator;

@@ -1,7 +1,7 @@
 export interface Patient {
   _id?: string;
   admissionDate: string;
-  program: string;
+  program: Program ;
   rut: string;
   name: string;
   surname: string;
@@ -12,4 +12,9 @@ export interface Patient {
   phone: string;
   phoneFamily: string;
   centerOrigin: string;
+}
+
+interface Program{
+  _id: string;
+  name: string;
 }

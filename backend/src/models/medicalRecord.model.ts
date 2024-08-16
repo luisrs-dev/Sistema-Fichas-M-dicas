@@ -4,47 +4,37 @@ import { MedicalRecord } from "../interfaces/medicalRecord.interface";
 const MedicalRecordSchema = new Schema<MedicalRecord>(
   {
     
-    center: {
-      type: String,
-      // required: true,
-    },
     date: {
       type: String,
-      // required: true,
     },
     entryType: {
       type: String,
-      // required: true,
     },
-    group: {
-      type: String,
-      // required: true,
-    },
-    intervention: {
-      type: String,
-      // required: true,
-    },
-    patient: {
+    service: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Service',
       required: true,
-    },
-    program: {
-      type: String,
-      // required: true,
     },
     relevantElements: {
       type: String,
-      // required: true,
     },
-    sigla: {
+    diagnostic: {
       type: String,
-      // required: true,
     },
-    time: {
-      type: String,
-      // required: true,
-    }
+    pharmacologicalScheme: {
+      type: String
+    },
+    patient: {
+      type: Schema.Types.ObjectId,
+      ref: 'Patients',
+      required: true,
+    },
+    registeredBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'users',
+      required: true,
+    },
+
   },
   { timestamps: true, versionKey: false }
 );

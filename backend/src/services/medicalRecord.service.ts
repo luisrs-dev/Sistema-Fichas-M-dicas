@@ -4,15 +4,20 @@ import MedicalRecordModel from "../models/medicalRecord.model";
 
 const insertMedicalRecord = async (medicalRecord: MedicalRecord) => {
 
-  console.log({medicalRecord});
-  
-
   const responseInsert = await MedicalRecordModel.create(medicalRecord);
   return responseInsert;
 };
 
 const allMedicalRecords = async () => {
-  const responseUsers = await MedicalRecordModel.find({});
+  const responseUsers = await MedicalRecordModel.find({}).populate([
+    { path: 'service' },
+    { path: 'registeredBy', select: 'name profile',
+      populate: { 
+        path: 'profile',
+        select: 'name'
+      }
+     }
+  ]);
   return responseUsers;
 };
 

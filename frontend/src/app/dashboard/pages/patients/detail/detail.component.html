@@ -3,8 +3,8 @@
     Información Paciente >
     <a mat-button color="primary" matTooltip="Ver Perfil">
       @if(patient){
-        {{patient.name}} {{patient.surname}} {{patient.secondSurname}}
-      }</a>
+      {{ patient.name }} {{ patient.surname }} {{ patient.secondSurname }} }</a
+    >
   </h4>
 
   <h1>Historial Médico</h1>
@@ -17,71 +17,61 @@
     Nueva Ficha Médica
   </button>
 
+  @if (medicalRecords && medicalRecords.length > 0) {
   <div class="mat-elevation-z1 mt-4">
     <mat-accordion class="example-headers-align">
-      @if (medicalRecords && medicalRecords.length > 0) { @for (medicalRecord of
-      medicalRecords; track $index) {
+      @for (medicalRecord of medicalRecords; track $index) {
       <mat-expansion-panel hideToggle>
-        <!-- <mat-expansion-panel [expanded]="step === 0" (opened)="setStep(0)" hideToggle> -->
         <mat-expansion-panel-header>
-          <mat-panel-title>
-            <mat-icon class="mr-1">description</mat-icon>
-
-            Fecha Atención: {{ medicalRecord.date }} / {{ medicalRecord.sigla }}
+          <mat-panel-title class="mr-1">
+            <mat-chip-set aria-label="Fish selection">
+              <mat-chip>{{ medicalRecord.date | date: "dd-MM-yyyy" }}</mat-chip>
+            </mat-chip-set>
+            <!--<mat-icon class="mr-1">description</mat-icon>-->
+            <span class="ml-2">{{ medicalRecord.service.description }}</span>
           </mat-panel-title>
+
+
           <mat-panel-description>
-            Duracipón: {{ medicalRecord.time }} minutos
-            <mat-icon>keyboard_arrow_down</mat-icon>
+            {{ medicalRecord.registeredBy.name }} - 
+            {{ medicalRecord.registeredBy.profile.name }}
+            <mat-icon>add_circle</mat-icon>
           </mat-panel-description>
+
+            <!--@if(medicalRecord.pharmacologicalScheme){
+            <mat-panel-description>
+              Esquema farmacológico
+              <mat-icon>add_circle</mat-icon>
+            </mat-panel-description>
+          }-->
         </mat-expansion-panel-header>
-        <mat-list>
-          <mat-list-item>
-            <span matListItemTitle>Centro</span>
-            <span matListItemLine>{{medicalRecord.center}}</span>
-          </mat-list-item>
-          <mat-list-item>
-            <span matListItemTitle>Tipo Entrada</span>
-            <span matListItemLine>{{medicalRecord.entryType}}</span>
-          </mat-list-item>
-          <mat-list-item>
-            <span matListItemTitle>Grupo</span>
-            <span matListItemLine>{{medicalRecord.group}}</span>
-          </mat-list-item>
-          <mat-list-item>
-            <span matListItemTitle>Intervención</span>
-            <span matListItemLine>{{medicalRecord.intervention}}</span>
-          </mat-list-item>
-          <mat-list-item>
-            <span matListItemTitle>Programa</span>
-            <span matListItemLine>{{medicalRecord.program}}</span>
-          </mat-list-item>
-
-          <mat-list-item>
-            <span matListItemTitle>Sigla</span>
-            <span matListItemLine>{{medicalRecord.sigla}}</span>
-          </mat-list-item>
-          <mat-list-item>
-            <span matListItemTitle>Tiempo</span>
-            <span matListItemLine>{{medicalRecord.time}}</span>
-          </mat-list-item>
-
-          <mat-list-item>
-            <span matListItemTitle>Elementos Relevantes</span>
-            <span matListItemLine>{{medicalRecord.center}}</span>
-          </mat-list-item>
-        </mat-list>
-
-        <!-- <mat-action-row>
-          <button mat-button color="warn" (click)="prevStep()">Eliminar</button>
-          <button mat-button color="primary" (click)="nextStep()">
-            Editar
-          </button>
-          <button mat-button color="primary" (click)="nextStep()">
-            Descargar
-          </button>
-        </mat-action-row> -->
+        <div class="medical-record-details">
+          <div class="record-item">
+            <strong>Fecha:</strong> {{ medicalRecord.date | date: "dd-MM-yyyy" }}
+          </div>
+          <div class="record-item">
+            <strong>Tipo entrada:</strong> {{ medicalRecord.entryType }}
+          </div>
+          <div class="record-item">
+            <strong>Prestación:</strong> {{ medicalRecord.service.description }}
+          </div>
+          <div class="record-item">
+            <strong>Elementos relevantes:</strong> {{ medicalRecord.relevantElements }}
+          </div>
+          <div class="record-item">
+            <strong>Diagnóstico:</strong> {{ medicalRecord.diagnostic }}
+          </div>
+          <div class="record-item" *ngIf="medicalRecord.pharmacologicalScheme">
+            <strong>Esquema farmacológico:</strong> {{ medicalRecord.pharmacologicalScheme }}
+          </div>
+        </div>
       </mat-expansion-panel>
-      } }
+      }
     </mat-accordion>
   </div>
+  }@else {
+  <div class="flex justify-content-center flex-wrap mt-8">
+    <h2 class="justify-content-center">Aún no registra historial clínicio</h2>
+  </div>
+  }
 </div>

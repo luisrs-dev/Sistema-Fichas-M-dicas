@@ -1,14 +1,30 @@
 export interface MedicalRecord {
-  center: string;
   date: string;
   entryType: string;
-  group: string;
-  intervention: string;
-  patient: string;
-  program: string;
+  service: Service;
   relevantElements: string;
-  sigla: string;
-  time: string;
-  createdAt: string;
-  updatedAt: string;
+  diagnostic: string;
+  pharmacologicalScheme: string;
+  patient: string;
+  registeredBy: RegisteredBy;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Service{
+  _id: string;
+  code: string;
+  description: string;
+}
+
+
+export interface RegisteredBy{
+  _id: string;
+  name: string;
+  profile: Profile;
+}
+
+export interface Profile{
+    _id: string;
+    name: string;
 }

@@ -7,38 +7,37 @@
       {{ data.patient.secondSurname }}</a>
 
       <div>
-        Código SISTRAT
         <mat-chip-set>
           <mat-chip
-            >AMCO220091998</mat-chip
+            >SISTRAT AMCO220091998</mat-chip
           >
         </mat-chip-set>
       </div>
     <p>Fecha Ingreso: {{ data.patient.admissionDate | date : "dd-MM-yyyy" }}</p>
-    <p>Programa: {{ data.patient.program }}</p>
+    <p>Programa: {{ data.patient.program.name }}</p>
     <p>Teéfono: {{ data.patient.phone }}</p>
     <mat-divider class="mb-1"></mat-divider>
 
     <mat-chip-set>
       <mat-chip
-        >Diagnóstico @if(medicalRecord){
-        {{ medicalRecord.date | date : "dd-MM-yyyy" }}
+        >Diagnóstico @if(latestMedicalRecordWithScheme){
+        {{ latestMedicalRecordWithScheme.date | date : "dd-MM-yyyy" }}
         }@else { Sin registro anterior }</mat-chip
       >
     </mat-chip-set>
-    <div>Este fue el útlimo diagnóstico registrado</div>
+    <div>{{latestMedicalRecordWithScheme.diagnostic}}</div>
 
 
     <mat-divider class="mb-1"></mat-divider>
 
     <mat-chip-set>
       <mat-chip
-        >Último Esquema Farmacológico @if(medicalRecord){
-        {{ medicalRecord.date | date : "dd-MM-yyyy" }}
+        >Último Esquema Farmacológico @if(latestMedicalRecordWithScheme){
+        {{ latestMedicalRecordWithScheme.date | date : "dd-MM-yyyy" }}
         }@else { Sin registro anterior }</mat-chip
       >
     </mat-chip-set>
-    <div>Este fue el útlimo esquema farmacolóigoc registrado</div>
+    <div>{{latestMedicalRecordWithScheme.pharmacologicalScheme}}</div>
     <mat-divider class="mb-1"></mat-divider>
   </div>
 
@@ -66,10 +65,10 @@
           <mat-form-field appearance="outline" class="w-full">
             <mat-label>Tipo de entrada</mat-label>
             <mat-select formControlName="entryType">
-              <mat-option value="Psicólogo">A Distancia</mat-option>
-              <mat-option value="Psicólogo">Presencial</mat-option>
-              <mat-option value="Psicólogo">No se presenta</mat-option>
-              <mat-option value="Médico">Información</mat-option>
+              <mat-option value="A Distancia">A Distancia</mat-option>
+              <mat-option value="Presencial">Presencial</mat-option>
+              <mat-option value="No se presenta">No se presenta</mat-option>
+              <mat-option value="Informacion">Información</mat-option>
             </mat-select>
           </mat-form-field>
           <span *ngIf="isValidField('entryType')" class="text-red-500">
@@ -77,114 +76,25 @@
           </span>
         </div>
 
-        <div class="col-3">
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Prestación</mat-label>
-            <mat-select formControlName="entryType">
-              @for (service of services; track $index) {
-                <mat-option value="{{service._id}}">{{service.description}}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-          <span *ngIf="isValidField('entryType')" class="text-red-500">
-            Campo requerido
-          </span>
-        </div>
-
-        <!-- <div class="col-3">
-          <mat-form-field appearance="outline" class="w-full mr-2">
-            <mat-label>Programa</mat-label>
-            <mat-select formControlName="program">
-              <mat-option value="15">PR - Problación General</mat-option>
-              <mat-option value="15">PR - Problación General</mat-option>
-              <mat-option value="15">PR - Problación General</mat-option>
-            </mat-select>
-            <span *ngIf="isValidField('program')" class="text-red-500">
-              Debe seleccionar un programa
+        @if(!hideServiceSelect){
+          <div class="col-3">
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Prestación</mat-label>
+              <mat-select formControlName="service">
+                @for (service of services; track $index) {
+                  <mat-option value="{{service._id}}">{{service.description}}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <span *ngIf="isValidField('service')" class="text-red-500">
+              Campo requerido
             </span>
-          </mat-form-field>
-        </div> -->
-        <!-- <div class="col-3">
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Paciente</mat-label>
-          <mat-select formControlName="patient">
-            <mat-option value="15">Guillermo Enrique Peña Ortega</mat-option>
-            <mat-option value="15">Guillermo Enrique Peña Ortega</mat-option>
-            <mat-option value="15">Guillermo Enrique Peña Ortega</mat-option>
-          </mat-select>
-          <span *ngIf="isValidField('patient')" class="text-red-500">
-            Debe seleccionar un paciente
-          </span>
-        </mat-form-field>
-      </div> -->
-        <!-- <div class="col-3">
-        <button
-          mat-flat-button
-          color="primary"
-          class="border-round-xl ml-1 mr-2 my-auto mat-elevation-z2 text-white"
-        >
-          <mat-icon>refresh</mat-icon>
-          Cargar fichas
-        </button>
-      </div> -->
+          </div>
+        }
       </div>
 
       <mat-divider class="mb-4"></mat-divider>
       <div class="grid w-8">
-        <!-- <div class="col-6">
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Sigla SISTRAT</mat-label>
-            <mat-select formControlName="sigla">
-              <mat-option value="Centro">CPSIC</mat-option>
-            </mat-select>
-            <span *ngIf="isValidField('sigla')" class="text-red-500">
-              El perfil es requerido
-            </span>
-          </mat-form-field>
-        </div> -->
-        <!-- 
-        <div class="col-6">
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Lugar</mat-label>
-            <mat-select formControlName="center">
-              <mat-option value="Centro">Centro</mat-option>
-              <mat-option value="Centro">Centro</mat-option>
-              <mat-option value="Centro">Centro</mat-option>
-            </mat-select>
-            <span *ngIf="isValidField('center')" class="text-red-500">
-              El perfil es requerido
-            </span>
-          </mat-form-field>
-        </div> -->
-
-        <!-- <div class="col-6">
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Grupal</mat-label>
-            <mat-select formControlName="group">
-              <mat-option value="Centro">Si</mat-option>
-              <mat-option value="Centro">No</mat-option>
-            </mat-select>
-            <span *ngIf="isValidField('group')" class="text-red-500">
-              El perfil es requerido
-            </span>
-          </mat-form-field>
-        </div> -->
-        <!-- <div class="col-6">
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Tiempo</mat-label>
-            <mat-select formControlName="time">
-              <mat-option value="15">15</mat-option>
-              <mat-option value="30">30</mat-option>
-              <mat-option value="45">45</mat-option>
-              <mat-option value="60">60</mat-option>
-            </mat-select>
-            <mat-icon matSuffix>schedule</mat-icon>
-
-            <span *ngIf="isValidField('time')" class="text-red-500">
-              El tiempo es requerido
-            </span>
-          </mat-form-field>
-        </div> -->
         <div class="col-12">
           <mat-form-field class="w-full" appearance="outline">
             <mat-label>Elementos relevantes de la intervención</mat-label>
@@ -195,7 +105,7 @@
             ></textarea>
 
             <span
-              *ngIf="isValidField('intervention')"
+              *ngIf="isValidField('relevantElements')"
               class="form-text text-danger"
             >
               El nombre es requerido
@@ -209,11 +119,11 @@
             <mat-label>Diagnóstico</mat-label>
             <textarea
               matInput
-              formControlName="intervention"
+              formControlName="diagnostic"
               placeholder="Sólo lo escribe un psiquiatra"
             ></textarea>
             <span
-              *ngIf="isValidField('intervention')"
+              *ngIf="isValidField('diagnostic')"
               class="form-text text-danger"
             >
               Campo requerido
@@ -227,13 +137,13 @@
           <mat-form-field class="w-full" appearance="outline">
             <mat-label>Esquema Farmacológico</mat-label>
             <textarea
-              formControlName="relevantElements"
+              formControlName="pharmacologicalScheme"
               rows="5"
               matInput
             ></textarea>
 
             <span
-              *ngIf="isValidField('intervention')"
+              *ngIf="isValidField('pharmacologicalScheme')"
               class="form-text text-danger"
             >
               El nombre es requerido

@@ -58,41 +58,48 @@ export default class NewMedicalRecord {
   private userService = inject(UserService);
 
   public patient: Patient;
-  public medicalRecord: MedicalRecord;
+  public latestMedicalRecordWithScheme: MedicalRecord;
   public user: User;
   public services: any[];
+  public hideServiceSelect: boolean = false;
 
   constructor(
     @Inject(MAT_DIALOG_DATA)
-    public data: { patient: Patient; latestMedicalRecord: MedicalRecord }
+    public data: { patient: Patient; latestMedicalRecordWithScheme: MedicalRecord | null }
   ) {}
 
   ngOnInit() {
-    console.log('NewMedicalRecord');
     
     this.user = this.authService.getUser();
-    console.log(this.user);
     
     this.userService.getServicesByProfile(this.user.profile._id).subscribe( services => {
-      console.log({services});
       this.services = services;
-      
     })
 
     this.patient = this.data.patient;
-    this.medicalRecord = { ...this.data.latestMedicalRecord };
+    this.latestMedicalRecordWithScheme = { ...this.data.latestMedicalRecordWithScheme! };
+
+    // Escucha los cambios en el campo entryType
+    this.medicalRecordForm.get('entryType')?.valueChanges.subscribe((value) => {
+      this.hideServiceSelect = value === 'Informacion';
+      if (this.hideServiceSelect) {
+        this.medicalRecordForm.get('service')?.reset();  // Resetea el campo service si se oculta
+      }
+    });
+
+
   }
 
   public medicalRecordForm: FormGroup = this.fb.group({
-    date: ['', [Validators.minLength(3)]],
+    date: [new Date(), [Validators.minLength(3)]],
     entryType: ['', []],
-    intervention: ['', [Validators.minLength(3)]],
+    service: ['', [Validators.minLength(3)]],
     relevantElements: [''],
+    diagnostic: [''],
+    pharmacologicalScheme: [''],
   });
 
   onSave() {
-    console.log('onsave');
-
     if (this.medicalRecordForm.invalid) {
       this.medicalRecordForm.markAllAsTouched();
       return;
@@ -101,6 +108,7 @@ export default class NewMedicalRecord {
       .addMedicalRecord({
         ...this.medicalRecordForm.value,
         patient: this.data.patient._id,
+        registeredBy: this.user._id 
       })
       .subscribe((user) => {
         console.log({ user });

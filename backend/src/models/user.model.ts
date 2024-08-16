@@ -15,10 +15,6 @@ const UserSchema = new Schema<User>(
       type: String,
       required: true,
     },
-    phone: {
-      type: String,
-      // default: "Soy la descripción",
-    },
     profile: {
       type: Schema.Types.ObjectId,
       ref: 'profesionalRole'

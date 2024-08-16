@@ -6,3 +6,18 @@
 .example-headers-align .mat-mdc-form-field + .mat-mdc-form-field {
   margin-left: 8px;
 }
+
+
+.medical-record-details {
+  padding: 16px;
+  background-color: #f9f9f9; /* Fondo claro para destacar el contenido */
+  border-radius: 4px; /* Bordes redondeados */
+}
+
+.record-item {
+  margin-bottom: 8px; /* Espacio entre los elementos */
+}
+
+.record-item strong {
+  color: black; /* Color del texto en negrita */
+}

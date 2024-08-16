@@ -69,8 +69,12 @@ const recordToSistrat = async (patientId: string) => {
   }
 };
 
-const allPatients = async () => {
-  const responsePatients = await PatientModel.find({});
+const allPatients = async (programs: string[]) => {
+  //const responsePatients = await PatientModel.find({});
+  const programArray = programs[0].split(',');
+  const responsePatients = await PatientModel.find({
+    program: { $in: programArray }
+  }).populate('program');
   return responsePatients;
 };
 
@@ -80,14 +84,18 @@ const PatientsByProfile = async (profile: string) => {
 };
 
 const findPatient = async (id: string) => {
-  const responsePatient = await PatientModel.findOne({ _id: id });
+  const responsePatient = await PatientModel.findOne({ _id: id }).populate('program');
   const medicalRecords = await MedicalRecordModel.find({
     patient: new Types.ObjectId(id),
-  });
-
-  console.log({responsePatient});
-  
-
+  }).populate([
+    { path: 'service' },
+    { path: 'registeredBy', select: 'name profile',
+      populate: { 
+        path: 'profile',
+        select: 'name'
+      }
+     }
+  ]);
   return { patient: responsePatient, medicalRecords };
 };
 

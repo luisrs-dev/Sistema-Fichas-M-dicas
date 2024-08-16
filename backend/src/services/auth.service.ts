@@ -19,7 +19,6 @@ const registerNewUser = async ({user, permissions, programs}: any) => {
     name: user.name,
     email: user.email,
     password: passHash,
-    phone: user.phone,
     profile: user.profile,
     permissions,
     programs

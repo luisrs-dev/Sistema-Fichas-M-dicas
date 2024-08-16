@@ -25,7 +25,14 @@ const getPatientsById = async ({ params }: Request, res: Response) => {
 
 const getPatients = async (req: Request, res: Response) => {
   try {
-    const responseItems = await allPatients();
+
+    const { programs } = req.query;
+
+    // Asegúrate de que `programs` sea un array, incluso si se pasa un solo valor
+    const programsArray = Array.isArray(programs) ? programs : [programs];
+    const validProgramsArray = programsArray.filter((p): p is string => typeof p === 'string');
+
+    const responseItems = await allPatients(validProgramsArray);
     res.send(responseItems);
   } catch (error) {
     handleHttp(res, "ERROR_GET_ITEMS", error);

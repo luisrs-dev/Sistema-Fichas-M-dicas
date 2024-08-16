@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, tap, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -15,12 +15,11 @@ export class PatientService {
   private http = inject(HttpClient);
   backend: string = environment.baseUrl;
 
-  getPatients(): Observable<Patient[]> {
-    return this.http.get<any>(`${this.backend}/patient`);
+  getPatients(programs: string[]): Observable<Patient[]> {
+    const params = new HttpParams().set('programs', programs.join(','));
+    return this.http.get<Patient[]>(`${this.backend}/patient`, { params });
   }
   getPatientById(id: string):Observable<{patient: Patient, medicalRecords: MedicalRecord[]}>{
-    console.log({id});
-    
     return this.http.get<{patient: Patient, medicalRecords: MedicalRecord[]}>(`${this.backend}/patient/${id}`);
   }
 

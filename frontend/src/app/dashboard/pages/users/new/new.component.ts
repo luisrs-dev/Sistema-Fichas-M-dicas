@@ -51,7 +51,6 @@ export default class NewComponent {
     name: ['', [Validators.required, Validators.minLength(3)]],
     email: ['', [Validators.required, Validators.minLength(3)]],
     password: ['', [Validators.required, Validators.minLength(3)]],
-    phone: ['', [Validators.required, Validators.minLength(3)]],
     profile: ['', [Validators.required, Validators.minLength(3)]],
   });
 

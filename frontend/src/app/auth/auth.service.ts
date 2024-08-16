@@ -105,4 +105,10 @@ export class AuthService {
     const user = this.getUser();
     return user && user.permissions && user.permissions.some((permission: Permission) => permission.value === 'admin');
   }
+
+  canCreateUser(): boolean{
+    const user = this.getUser();
+    return user && user.permissions && user.permissions.some((permission: Permission) => permission.value === 'editar-usuarios');
+
+  }
 }

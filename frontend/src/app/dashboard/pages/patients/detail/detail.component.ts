@@ -1,5 +1,5 @@
 import { UserService } from './../../users/user.service';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -32,6 +32,7 @@ import { PatientService } from '../patient.service';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    DatePipe
   ],
   templateUrl: './detail.component.html',
   styleUrl: './detail.component.css',
@@ -46,54 +47,38 @@ export default class DetailComponent {
   public patient: Patient;
   public medicalRecords: MedicalRecord[] = [];
 
-  step = 0;
-
   ngOnInit(): void {
     this.activatedRoute.params
       .pipe(switchMap(({ id }) => this.patientService.getPatientById(id)))
       .subscribe(({ patient, medicalRecords }) => {
-        console.log({ patient });
         this.patient = patient;
         this.medicalRecords = medicalRecords;
-        console.log(this.medicalRecords);
+        console.log({medicalRecords: this.medicalRecords});
         this.changeDetectorRef.detectChanges();
-
-        // if ( !hero ) return this.router.navigate([ '/heroes/list' ]);
-
-        // this.hero = hero;
-        // return;
       });
   }
-
-  // setStep(index: number) {
-  //   this.step = index;
-  // }
-
-  // nextStep() {
-  //   this.step++;
-  // }
-
-  // prevStep() {
-  //   this.step--;
-  // }
-
+  
   newMedicalRecord() {
-
     let latestMedicalRecord: MedicalRecord|null = null;
-    if(this.medicalRecords.length > 0){
-      latestMedicalRecord = this.medicalRecords.reduce(
-        (latest, current) => {
-          return new Date(latest.createdAt) > new Date(current.createdAt)
-            ? latest
-            : current;
-        }
-      );
-    }   
+    //if(this.medicalRecords.length > 0){
+    //  latestMedicalRecord = this.medicalRecords.reduce(
+    //    (latest, current) => {
+    //      return new Date(latest.createdAt) > new Date(current.createdAt)
+    //        ? latest
+    //        : current;
+    //    }
+    //  );
+    //}   
+
+    this.medicalRecords.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // Capturar el más reciente que tenga el campo pharmacologicalScheme registrado
+    const latestMedicalRecordWithScheme = this.medicalRecords.find(record => record.pharmacologicalScheme);
+
 
     this.dialog.open(NewMedicalRecord, {
       width: '80%',
       height: '95%',
-      data: { patient: this.patient, latestMedicalRecord },
+      data: { patient: this.patient, latestMedicalRecordWithScheme},
     });
   }
 }
