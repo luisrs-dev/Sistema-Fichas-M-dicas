@@ -83,7 +83,11 @@ const findPatient = async (id: string) => {
     patient: new Types.ObjectId(id),
   }).populate([
     { path: 'service' },
-    { path: 'patient' },
+    { path: 'patient', select: 'name profile', 
+      populate: {
+        path: 'program'
+      }
+     },
     { path: 'registeredBy', select: 'name profile',
       populate: { 
         path: 'profile',

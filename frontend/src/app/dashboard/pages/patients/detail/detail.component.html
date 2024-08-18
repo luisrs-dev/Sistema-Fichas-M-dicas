@@ -21,7 +21,7 @@
     <mat-icon style="color:white">print</mat-icon>
   </button>
 
-  @if (medicalRecords && medicalRecords.length > 0) {
+  @if (medicalRecords$ | async; as medicalRecords) {
   <div class="mat-elevation-z1 mt-4">
     <mat-accordion class="example-headers-align">
       @for (medicalRecord of medicalRecords; track $index) {

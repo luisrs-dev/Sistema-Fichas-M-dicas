@@ -12,13 +12,14 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { ActivatedRoute } from '@angular/router';
-import { switchMap } from 'rxjs';
+import { map, Observable, switchMap } from 'rxjs';
 import { MaterialModule } from '../../../../angular-material/material.module';
 import { PdfService } from '../../../../shared/services/Pdf.service';
 import { MedicalRecord } from '../../../interfaces/medicalRecord.interface';
 import { Patient } from '../../../interfaces/patient.interface';
 import NewMedicalRecord from '../../medicalRecord/new/new.component';
 import { PatientService } from '../patient.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-detail',
@@ -34,8 +35,7 @@ import { PatientService } from '../patient.service';
     DatePipe,
   ],
   templateUrl: './detail.component.html',
-  styleUrl: './detail.component.css',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: './detail.component.css'
 })
 export default class DetailComponent {
   public dialog = inject(MatDialog);
@@ -44,20 +44,27 @@ export default class DetailComponent {
   private changeDetectorRef = inject(ChangeDetectorRef);
   private pdfService = inject(PdfService);
   private datePipe = inject(DatePipe);
+  private snackBar = inject(MatSnackBar);
 
   public patient: Patient;
-  public medicalRecords: MedicalRecord[] = [];
+  public medicalRecords: MedicalRecord[] = [];  
+  public patientId: string;
+  public medicalRecords$: Observable<MedicalRecord[]>; // Observable que contendrá las fichas médicas
 
   ngOnInit(): void {
-    this.activatedRoute.params
-      .pipe(switchMap(({ id }) => this.patientService.getPatientById(id)))
-      .subscribe(({ patient, medicalRecords }) => {
-        this.patient = patient;
-        this.medicalRecords = medicalRecords;
-        console.log({ medicalRecords: this.medicalRecords });
-        this.changeDetectorRef.detectChanges();
-      });
+    this.patientId = this.activatedRoute.snapshot.paramMap.get('id') || '';
+    this.loadMedicalRecords();
   }
+
+    loadMedicalRecords() {
+      this.medicalRecords$ = this.patientService.getPatientById(this.patientId).pipe(
+        map(({patient, medicalRecords}) => {
+          this.patient = patient;
+          this.medicalRecords = medicalRecords;
+          return medicalRecords;
+        })
+      );
+    }
 
   newMedicalRecord() {
     this.medicalRecords.sort(
@@ -66,11 +73,31 @@ export default class DetailComponent {
     const latestMedicalRecordWithScheme = this.medicalRecords.find(
       (record) => record.pharmacologicalScheme
     );
-
-    this.dialog.open(NewMedicalRecord, {
+  
+    const dialogRef = this.dialog.open(NewMedicalRecord, {
       width: '80%',
       height: '95%',
       data: { patient: this.patient, latestMedicalRecordWithScheme },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        // Muestra un mensaje de éxito cuando se cierra el diálogo con éxito
+        this.snackBar.open('Registro exitoso', 'Cerrar', {
+          duration: 3000, // Duración en milisegundos
+        });
+
+        this.loadMedicalRecords();
+        //this.changeDetectorRef.detectChanges();
+
+
+        // Realiza otras acciones necesarias, como actualizar la lista de registros médicos, etc.
+      } else {
+        // Manejar el caso de fallo o cierre sin éxito si es necesario
+        this.snackBar.open('El registro no se pudo completar', 'Cerrar', {
+          duration: 3000,
+        });
+      }
     });
   }
 

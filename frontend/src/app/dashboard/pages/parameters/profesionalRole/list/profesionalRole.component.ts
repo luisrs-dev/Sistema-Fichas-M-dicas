@@ -1,14 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { MatTableModule } from '@angular/material/table';
 import { Observable } from 'rxjs';
 import { MaterialModule } from '../../../../../angular-material/material.module';
-import { BasicTableComponent } from '../../../../../shared/components/basic-table/basic-table.component';
-import { ParameterValue } from '../../interfaces/parameter.interface';
-import { ParametersService } from '../../parameters.service';
 import { NewProfesionalRole } from '../new/new.component';
 import { ProfesionalRoleService } from '../profesionalRole.service';
-import { MatTableModule } from '@angular/material/table';
 
 @Component({
   selector: 'app-programs',
@@ -22,18 +19,16 @@ export default class profesionalRoleComponent {
   private profesionalRoleService = inject(ProfesionalRoleService);
   public searchResults$: Observable<any>;
 
+  public profesionalRoles: any[] = [];
+
   displayedColumns: string[] = ['name', 'services'];
-  dataSource = ['csm','oro'];
+  dataSource = [];
   ngOnInit() {
     this.loadProfesionalRoles();
   }
 
   loadProfesionalRoles() {
-    this.profesionalRoleService.getProfesionalRoles().subscribe( profesionalRoles => {
-      console.log({profesionalRoles});
-      this.dataSource = profesionalRoles;
-      
-    })
+    this.searchResults$ =  this.profesionalRoleService.getProfesionalRoles();
     
   }
   

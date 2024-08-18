@@ -1,4 +1,4 @@
-<form [formGroup]="programForm" (ngSubmit)="onSave()">
+<form [formGroup]="serviceForm" (ngSubmit)="onSave()">
 <h2 mat-dialog-title>Nuevo cargo</h2>
 <mat-dialog-content>
     <div class="pt-2">
@@ -10,34 +10,23 @@
         />
       </mat-form-field>
     </div>
-    <div>
-      <mat-form-field class="example-chip-list">
-        <mat-label>Favorite Fruits</mat-label>
-        <mat-chip-grid #chipGrid aria-label="Fruit selection">
-          @for (fruit of fruits(); track $index) {
-            <mat-chip-row (removed)="remove(fruit)">
-              {{fruit}}
-              <button matChipRemove [attr.aria-label]="'remove ' + fruit">
-                <mat-icon>cancel</mat-icon>
-              </button>
-            </mat-chip-row>
-          }
-        </mat-chip-grid>
-        <input
-          name="currentFruit"
-          placeholder="New Fruit..."
-          #fruitInput
-          [matChipInputFor]="chipGrid"
-          [matAutocomplete]="auto"
-          [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
-          (matChipInputTokenEnd)="add($event)"
-        />
-        <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event)">
-          @for (fruit of filteredFruits(); track fruit) {
-            <mat-option [value]="fruit">{{fruit}}</mat-option>
-          }
-        </mat-autocomplete>
-      </mat-form-field>
+
+      <div class="grid">
+        <div class="col">
+          <h1>Prestaciones</h1>
+          <div>
+            @if(services$ | async; as services){
+              @for (service of services; track $index) {
+                <p>
+                  <mat-slide-toggle (change)="onPermissionChange(service, $event)">{{ service.description }}</mat-slide-toggle>
+                </p>
+              }  
+            }
+            @else{ 
+              Cargando...
+            }
+          </div>
+        </div>
       </div>
     <!-- <div>
       <button mat-button>Cerrar</button>
@@ -47,7 +36,7 @@
   <mat-dialog-actions>
     <button mat-button mat-dialog-close>Cancel</button>
     <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
-    <button mat-button color="primary" type="submit" [mat-dialog-close]="true">Registrar</button>
+    <button mat-button color="primary" type="submit" >Registrar</button>
   </mat-dialog-actions>
   
 </form>

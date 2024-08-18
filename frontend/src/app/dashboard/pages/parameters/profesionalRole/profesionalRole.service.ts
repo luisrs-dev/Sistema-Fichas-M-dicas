@@ -15,7 +15,7 @@ export class ProfesionalRoleService {
     return this.http.get<any>(`${this.backend}/profesional-role`);
   }
 
-  addProfesionalRole(name: string, services: string[]): Observable<any>{
+  add(name: string, services: string[]): Observable<any>{
     return this.http.post<any>(`${this.backend}/profesional-role`, {name, services});
   }
 

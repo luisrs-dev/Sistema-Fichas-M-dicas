@@ -15,7 +15,7 @@ import {
 import { MatChipsModule } from '@angular/material/chips';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -58,6 +58,9 @@ export default class NewMedicalRecord {
   private authService = inject(AuthService);
   private userService = inject(UserService);
 
+  private dialogRef= inject(MatDialogRef<NewMedicalRecord>); // Inyecta MatDialogRef para poder cerrar el diálogo
+
+
   public patient: Patient;
   public latestMedicalRecordWithScheme: MedicalRecord;
   public user: User;
@@ -80,7 +83,7 @@ export default class NewMedicalRecord {
 
     this.patient = this.data.patient;
     this.latestMedicalRecordWithScheme = { ...this.data.latestMedicalRecordWithScheme! };
-
+    
     if(this.data.patient.program.name.includes('PAI')){
       this.selectedEntryType=ValueEntryType.Distancia;      
     }
@@ -97,10 +100,10 @@ export default class NewMedicalRecord {
   }
 
   public medicalRecordForm: FormGroup = this.fb.group({
-    date: [new Date(), [Validators.minLength(3)]],
-    entryType: [this.setValueEntryType(), []],
-    service: ['', [Validators.minLength(3)]],
-    relevantElements: [''],
+    date: [new Date(), [Validators.minLength(3),Validators.required]],
+    entryType: [this.setValueEntryType(), [Validators.required]],
+    service: ['', [Validators.minLength(3), Validators.required]],
+    relevantElements: ['',[Validators.required]],
     diagnostic: [''],
     pharmacologicalScheme: [''],  
   });
@@ -123,7 +126,7 @@ export default class NewMedicalRecord {
       })
       .subscribe((user) => {
         console.log({ user });
-        this.router.navigate(['/dashboard/patient', this.data.patient._id]);
+        this.dialogRef.close(true);
       });
   }
 
