@@ -17,6 +17,10 @@
     Nueva Ficha Médica
   </button>
 
+  <button mat-mini-fab aria-label="Example icon button with a delete icon" (click)="generatePdf()" class="ml-2">
+    <mat-icon style="color:white">print</mat-icon>
+  </button>
+
   @if (medicalRecords && medicalRecords.length > 0) {
   <div class="mat-elevation-z1 mt-4">
     <mat-accordion class="example-headers-align">

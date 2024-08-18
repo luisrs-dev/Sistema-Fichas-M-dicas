@@ -1,4 +1,3 @@
-import { UserService } from './../../users/user.service';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -12,13 +11,13 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MaterialModule } from '../../../../angular-material/material.module';
-import { User } from '../../../interfaces/user.interface';
-import NewMedicalRecord from '../../medicalRecord/new/new.component';
 import { ActivatedRoute } from '@angular/router';
 import { switchMap } from 'rxjs';
+import { MaterialModule } from '../../../../angular-material/material.module';
+import { PdfService } from '../../../../shared/services/Pdf.service';
 import { MedicalRecord } from '../../../interfaces/medicalRecord.interface';
 import { Patient } from '../../../interfaces/patient.interface';
+import NewMedicalRecord from '../../medicalRecord/new/new.component';
 import { PatientService } from '../patient.service';
 
 @Component({
@@ -32,7 +31,7 @@ import { PatientService } from '../patient.service';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    DatePipe
+    DatePipe,
   ],
   templateUrl: './detail.component.html',
   styleUrl: './detail.component.css',
@@ -43,6 +42,8 @@ export default class DetailComponent {
   private activatedRoute = inject(ActivatedRoute);
   private patientService = inject(PatientService);
   private changeDetectorRef = inject(ChangeDetectorRef);
+  private pdfService = inject(PdfService);
+  private datePipe = inject(DatePipe);
 
   public patient: Patient;
   public medicalRecords: MedicalRecord[] = [];
@@ -53,32 +54,33 @@ export default class DetailComponent {
       .subscribe(({ patient, medicalRecords }) => {
         this.patient = patient;
         this.medicalRecords = medicalRecords;
-        console.log({medicalRecords: this.medicalRecords});
+        console.log({ medicalRecords: this.medicalRecords });
         this.changeDetectorRef.detectChanges();
       });
   }
-  
+
   newMedicalRecord() {
-    let latestMedicalRecord: MedicalRecord|null = null;
-    //if(this.medicalRecords.length > 0){
-    //  latestMedicalRecord = this.medicalRecords.reduce(
-    //    (latest, current) => {
-    //      return new Date(latest.createdAt) > new Date(current.createdAt)
-    //        ? latest
-    //        : current;
-    //    }
-    //  );
-    //}   
-
-    this.medicalRecords.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    // Capturar el más reciente que tenga el campo pharmacologicalScheme registrado
-    const latestMedicalRecordWithScheme = this.medicalRecords.find(record => record.pharmacologicalScheme);
-
+    this.medicalRecords.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+    const latestMedicalRecordWithScheme = this.medicalRecords.find(
+      (record) => record.pharmacologicalScheme
+    );
 
     this.dialog.open(NewMedicalRecord, {
       width: '80%',
       height: '95%',
-      data: { patient: this.patient, latestMedicalRecordWithScheme},
+      data: { patient: this.patient, latestMedicalRecordWithScheme },
     });
+  }
+
+  generatePdf() {
+    const medicalRecordsToPdf = this.medicalRecords.map((clinicalRecord) => {
+      return {
+        ...clinicalRecord,
+        date: this.datePipe.transform(clinicalRecord.date, 'dd-MM-yyyy')!,
+      };
+    });
+    this.pdfService.generateClinicalRecordsPdf(medicalRecordsToPdf);
   }
 }

@@ -14,14 +14,8 @@ const inerPatient = async (Patient: Patient) => {
 };
 
 
-const inerDemand = async (data:{userId:string, dataSistrat:Demand}) => {
-  console.log('inderDemand');
-    console.log(data.userId);
-    console.log(data.dataSistrat);
-    
+const inerDemand = async (data:{userId:string, dataSistrat:Demand}) => {    
   const responseInsert = await DemandModel.create({...data.dataSistrat, patientId: data.userId});
-  console.log("Demanda registrada");
-  console.log({ responseInsert });
   return responseInsert;
 };
 
@@ -89,6 +83,7 @@ const findPatient = async (id: string) => {
     patient: new Types.ObjectId(id),
   }).populate([
     { path: 'service' },
+    { path: 'patient' },
     { path: 'registeredBy', select: 'name profile',
       populate: { 
         path: 'profile',

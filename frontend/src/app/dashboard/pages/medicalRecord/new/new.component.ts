@@ -27,6 +27,7 @@ import { MedicalRecord } from '../../../interfaces/medicalRecord.interface';
 import { Patient } from '../../../interfaces/patient.interface';
 import { UserService } from '../../users/user.service';
 import { MedicalRecordService } from '../medicalRecord.service';
+import { ValueEntryType } from '../../../interfaces/entryType.interface';
 
 @Component({
   selector: 'app-new',
@@ -62,6 +63,7 @@ export default class NewMedicalRecord {
   public user: User;
   public services: any[];
   public hideServiceSelect: boolean = false;
+  public selectedEntryType: string | null = '';
 
   constructor(
     @Inject(MAT_DIALOG_DATA)
@@ -79,6 +81,10 @@ export default class NewMedicalRecord {
     this.patient = this.data.patient;
     this.latestMedicalRecordWithScheme = { ...this.data.latestMedicalRecordWithScheme! };
 
+    if(this.data.patient.program.name.includes('PAI')){
+      this.selectedEntryType=ValueEntryType.Distancia;      
+    }
+
     // Escucha los cambios en el campo entryType
     this.medicalRecordForm.get('entryType')?.valueChanges.subscribe((value) => {
       this.hideServiceSelect = value === 'Informacion';
@@ -92,12 +98,17 @@ export default class NewMedicalRecord {
 
   public medicalRecordForm: FormGroup = this.fb.group({
     date: [new Date(), [Validators.minLength(3)]],
-    entryType: ['', []],
+    entryType: [this.setValueEntryType(), []],
     service: ['', [Validators.minLength(3)]],
     relevantElements: [''],
     diagnostic: [''],
-    pharmacologicalScheme: [''],
+    pharmacologicalScheme: [''],  
   });
+  
+  setValueEntryType(){
+    const valueEntryType = this.data.patient.program.name.includes('PAI') ? ValueEntryType.Distancia : null;
+    return valueEntryType;
+  }
 
   onSave() {
     if (this.medicalRecordForm.invalid) {

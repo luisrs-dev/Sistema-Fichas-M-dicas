@@ -64,11 +64,14 @@
         <div class="col-3">
           <mat-form-field appearance="outline" class="w-full">
             <mat-label>Tipo de entrada</mat-label>
-            <mat-select formControlName="entryType">
-              <mat-option value="A Distancia">A Distancia</mat-option>
-              <mat-option value="Presencial">Presencial</mat-option>
-              <mat-option value="No se presenta">No se presenta</mat-option>
-              <mat-option value="Informacion">Información</mat-option>
+            <mat-select formControlName="entryType" [(value)]="selectedEntryType">
+              @if(data.patient.program.name.includes('PAI')){ 
+                <mat-option value="A Distancia">A Distancia</mat-option>
+              }@else{
+                <mat-option value="Presencial">Presencial</mat-option>
+                <mat-option value="No se presenta">No se presenta</mat-option>
+                <mat-option value="Informacion">Información</mat-option>
+              }
             </mat-select>
           </mat-form-field>
           <span *ngIf="isValidField('entryType')" class="text-red-500">

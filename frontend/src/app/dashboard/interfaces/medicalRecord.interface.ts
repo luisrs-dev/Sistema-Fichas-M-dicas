@@ -1,3 +1,5 @@
+import { Patient } from "./patient.interface";
+
 export interface MedicalRecord {
   date: string;
   entryType: string;
@@ -5,7 +7,7 @@ export interface MedicalRecord {
   relevantElements: string;
   diagnostic: string;
   pharmacologicalScheme: string;
-  patient: string;
+  patient: Patient;
   registeredBy: RegisteredBy;
   createdAt?: string;
   updatedAt?: string;
