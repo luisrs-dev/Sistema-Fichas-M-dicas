@@ -108,7 +108,7 @@ export class AuthService {
 
   canCreateUser(): boolean{
     const user = this.getUser();
-    return user && user.permissions && user.permissions.some((permission: Permission) => permission.value === 'crear-editar-usuarios');
+    return user && user.permissions && user.permissions.some((permission: Permission) => permission.value === 'crear-editar-usuario');
 
   }
 }
