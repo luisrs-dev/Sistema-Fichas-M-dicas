@@ -1,7 +1,8 @@
 <div class="container p-4 pb-6">
   <form [formGroup]="userForm" autocomplete="off" (ngSubmit)="onSave()">
     <div>
-      <h1>Nuevo Profesional</h1>
+      <h1>@if (edit) {Editando}@else{Nuevo} Profesional
+      </h1>
 
       <div class="grid mt-4">
         <div class="col flex flex-column">

@@ -148,10 +148,10 @@ export default class NewComponent {
   }
 
   isPermissionSelected(id: string){
-    return this.permissionUser.includes(id);
+    return this.edit ? this.permissionUser.includes(id): false;
   }
   
   isProgramSelected(id: string){
-    return this.programsUser.includes(id);
+    return this.edit ? this.programsUser.includes(id) : false;
   }
 }
