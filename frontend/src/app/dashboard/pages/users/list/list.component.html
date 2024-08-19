@@ -8,39 +8,19 @@
         color="primary"
         class="border-round-xl ml-1 mr-2 my-auto mat-elevation-z2 text-white"
       >
-        <mat-icon>person</mat-icon>
-        Crear usuario
+        <mat-icon>add_circle</mat-icon>
+        Nuevo profesional
       </button>
       <button
         mat-flat-button
         color="primary"
         class="border-round-xl ml-1 mr-2 my-auto mat-elevation-z2 text-white"
       >
-        <mat-icon>person</mat-icon>
+        <mat-icon>download</mat-icon>
         Exportar datos
       </button>
     </div>
-    <div>
-      <button
-        mat-icon-button 
-        color="primary"
-        matTooltip="Actualizar transacciones"
-        matTooltipPosition="above"
-        class="mr-2 mat-elevation-z2"
-      >
-        <mat-icon>refresh</mat-icon>
-      </button>
-      <button
-        mat-icon-button
-        color="primary"
-        class="button-with-icon"
-        matTooltip="Limpiar filtros"
-        matTooltipPosition="above"
-        class="mr-1 mat-elevation-z2"
-      >
-        <mat-icon>delete</mat-icon>
-      </button>
-    </div>
+
   </div>
   <!-- @if (loadingTransactions) {
   <mat-spinner color="#0ca86b" diameter="40"></mat-spinner>
@@ -67,12 +47,6 @@
   <ng-container matColumnDef="email">
     <th mat-header-cell *matHeaderCellDef mat-sort-header>email</th>
     <td mat-cell *matCellDef="let element">{{ element.email }}</td>
-  </ng-container>
-
-  <!-- Weight Column -->
-  <ng-container matColumnDef="phone">
-    <th mat-header-cell *matHeaderCellDef mat-sort-header>Teléfono</th>
-    <td mat-cell *matCellDef="let element">{{ element.phone }}</td>
   </ng-container>
 
   <!-- Symbol Column -->
@@ -104,7 +78,7 @@
   <ng-container matColumnDef="actions">
     <th mat-header-cell *matHeaderCellDef mat-sort-header></th>
     <td mat-cell *matCellDef="let element">
-      <button mat-icon-button matTooltip="Editar" color="primary">
+      <button mat-icon-button matTooltip="Editar" color="primary" (click)="editPatient(element._id)">
         <mat-icon>edit</mat-icon>
       </button>
       <button mat-icon-button matTooltip="Eliminar" color="warn">

@@ -2,7 +2,7 @@
   <h1>Pacientes</h1>
   <div class="buttons mb-4">
     <div>
-      @if(canCreateUser){
+      @if(canCreateUser || isAdmin){
         <button
           [routerLink]="['nuevo']"
           mat-flat-button

@@ -24,6 +24,13 @@ export const routes: Routes = [
           import('./dashboard/pages/users/new/new.component'),
       },
       {
+        path: 'users/nuevo/:id',
+        title: 'Nuevo Usiaro',
+        data: { icon: 'user', child: true },
+        loadComponent: () =>
+          import('./dashboard/pages/users/new/new.component'),
+      },
+      {
         path: 'patients',
         title: 'Pacientes',
         data: { icon: 'group', child: false },

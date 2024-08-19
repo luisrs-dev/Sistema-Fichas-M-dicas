@@ -11,8 +11,9 @@ import { MaterialModule } from '../../../../angular-material/material.module';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { User } from '../../../../auth/interfaces/login-response.interface';
+import { AuthService } from '../../../../auth/auth.service';
 
 @Component({
   selector: 'app-list',
@@ -23,11 +24,14 @@ import { User } from '../../../../auth/interfaces/login-response.interface';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class ListComponent implements OnInit {
-  displayedColumns: string[] = [ 'name', 'email', 'phone', 'profile','permissions','programs', 'actions'];
+  displayedColumns: string[] = [ 'name', 'email', 'profile','permissions','programs', 'actions'];
   dataSource = new MatTableDataSource<User>([]);
 
   public users: User[];
+  public isAdmin: boolean;
   private userService = inject(UserService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
@@ -38,6 +42,7 @@ export default class ListComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.isAdmin = this.authService.isAdmin();
     this.userService.getUsers().subscribe( users => {
       this.users = users;
 
@@ -46,12 +51,10 @@ export default class ListComponent implements OnInit {
       this.dataSource.data = this.users;
 
       this.paginator.pageSize = 10; // Define el número de elementos por página
-      console.log(this.users);      
     })
   }
 
-  // ngAfterViewInit() {
-  //   this.dataSource.paginator = this.paginator;
-  //   this.dataSource.sort = this.sort;
-  // }
+  editPatient(patientId: string) {
+    this.router.navigate([`dashboard/users/nuevo/${patientId}`]);
+  }
 }

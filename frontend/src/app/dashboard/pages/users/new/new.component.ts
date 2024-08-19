@@ -14,7 +14,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { UserService } from '../user.service';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ParametersService } from '../../parameters/parameters.service';
 import { Observable } from 'rxjs';
 import {
@@ -41,14 +41,23 @@ export default class NewComponent {
   private userService = inject(UserService);
   private parametersService = inject(ParametersService);
   private profesionalRoleService = inject(ProfesionalRoleService);
-  public permissions$: Observable<any>;
-  public programs$: Observable<any>;
-  public checkedPermissions: string[] = [];
-  public checkedPrograms: string[] = [];
-  public profesionalRoles: any;
-
+  private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
   private router = inject(Router);
+
+
+  public permissions$: Observable<any>;
+  public programs$: Observable<any>;
+
+  public checkedPermissions: string[] = [];
+  public checkedPrograms: string[] = [];
+
+  public permissionUser: string[];
+  public programsUser: string[];
+
+  public profesionalRoles: any;
+  public patientId: string;
+  public edit: boolean = false;
 
   public userForm: FormGroup = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(3)]],
@@ -58,6 +67,24 @@ export default class NewComponent {
   });
 
   ngOnInit() {
+
+    this.patientId = this.route.snapshot.paramMap.get('id')!;
+    if(this.patientId){  
+      this.edit = true;    
+      this.userService.getUserById(this.patientId).subscribe( response => {
+        
+        this.userForm.patchValue({
+          name: response.user.name || '', // Si el campo está vacío, se usa un string vacío como fallback
+          email: response.user.email || '',
+          profile: response.user.profile._id || '', 
+        });      
+        
+        this.permissionUser = response.user.permissions.map((permission: Parameter) => permission._id);
+        this.programsUser = response.user.programs.map((program: Parameter) => program._id);
+
+      })
+    }   
+
     this.permissions$ = this.parametersService.getParameters(
       ParameterValue.Permission
     );
@@ -118,5 +145,13 @@ export default class NewComponent {
       this.checkedPrograms.push(programChecked._id);
     }
     console.log({ checkedPrograms: this.checkedPrograms });
+  }
+
+  isPermissionSelected(id: string){
+    return this.permissionUser.includes(id);
+  }
+  
+  isProgramSelected(id: string){
+    return this.programsUser.includes(id);
   }
 }

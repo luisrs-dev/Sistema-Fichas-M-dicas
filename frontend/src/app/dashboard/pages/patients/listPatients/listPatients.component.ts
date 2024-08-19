@@ -33,6 +33,7 @@ export default class ListPatientsComponent {
   private patientService = inject(PatientService);
   private authService = inject(AuthService);
   public canCreateUser: boolean = false;
+  public isAdmin: boolean = false;
   public user: User;
   public programs: string[];
 
@@ -42,6 +43,7 @@ export default class ListPatientsComponent {
   ngOnInit(): void {
 
     this.canCreateUser = this.authService.canCreateUser();
+    this.isAdmin = this.authService.isAdmin();
     this.user = this.authService.getUser();
     this.programs = this.user.programs.map(program => program._id);
 

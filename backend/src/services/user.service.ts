@@ -22,8 +22,13 @@ const usersByProfile = async (profile: string) => {
 };
 
 const findUser = async (id: string) => {
-  const responseUser = await UserModel.findOne({ _id: id }).populate(['permissions','programs']);
-  return { user: responseUser };
+  try {
+    const responseUser = await UserModel.findOne({ _id: id }).populate(['permissions','programs','profile']);
+    return { user: responseUser };
+  } catch (error) {
+    return { status: false, msg: "Usuario no encontrado" };
+  }
+
 };
 
 const findServicesByProfile = async (id: string) => {
@@ -36,6 +41,26 @@ const findServicesByProfile = async (id: string) => {
   }
 };
 
+
+const updateUser = async (userId: Types.ObjectId, updatedData: Partial<User>) => {
+  try {
+    // Buscamos el usuario por ID y actualizamos con los nuevos datos
+    const responseUpdate = await UserModel.findByIdAndUpdate(
+      userId,         // ID del usuario que se quiere actualizar
+      updatedData,    // Datos que se quieren actualizar
+      { new: true }   // Esta opción devuelve el documento actualizado
+    );
+
+    // Verificamos si se realizó la actualización
+    if (!responseUpdate) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    return responseUpdate;
+  } catch (error: any) {
+    throw new Error(`Error al actualizar el usuario: ${error.message}`);
+  }
+};
 
 
 // const updateCar = async (id: string, data: Car) => {
@@ -55,4 +80,4 @@ const findServicesByProfile = async (id: string) => {
 //   return responseItem;
 // };
 
-export { inerUser, allUsers, usersByProfile, findUser, findServicesByProfile };
+export { inerUser, allUsers, usersByProfile, findUser, findServicesByProfile, updateUser};
