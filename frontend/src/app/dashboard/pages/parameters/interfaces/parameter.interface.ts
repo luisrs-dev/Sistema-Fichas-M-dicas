@@ -1,7 +1,7 @@
 export interface Parameter{
     _id: string,
     name: string;
-    value: string
+    value: string;
   }
   
   export enum ParameterValue{

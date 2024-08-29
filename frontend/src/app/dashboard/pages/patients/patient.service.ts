@@ -5,6 +5,7 @@ import { environment } from '../../../../environments/environment';
 import { MedicalRecord } from '../../interfaces/medicalRecord.interface';
 import { Patient } from '../../interfaces/patient.interface';
 import { Demand } from '../../interfaces/demand.interface';
+import { AuthService } from '../../../auth/auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,6 +14,7 @@ export class PatientService {
 
 
   private http = inject(HttpClient);
+  private authService = inject(AuthService);
   backend: string = environment.baseUrl;
 
   getPatients(programs: string[]): Observable<Patient[]> {
@@ -30,17 +32,8 @@ export class PatientService {
   addPatient(Patient: Patient): Observable<any>{
     return this.http.post<any>(`${this.backend}/patient`, Patient)
       .pipe(
-        tap( (user) => {
-          localStorage.setItem('user', user._id)
-        }
-          // this._currentUser.set( user);
-          // this._authStatus.set(AuthStatus.authenticated);
-          // this.isAuthenticated = true;
-          // console.log({ user, token});
-        ),
         catchError( err => throwError( () => console.log(err)
         )) 
-        // catchError( err => throwError( () => err.error.message)) 
       )
   }
 

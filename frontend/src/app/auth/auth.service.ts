@@ -54,7 +54,7 @@ export class AuthService {
     const token = localStorage.getItem('token');
     const expirationDate = localStorage.getItem('expiration');
     const user = localStorage.getItem('user');
-    if (!token || !expirationDate) {
+    if (!token || !expirationDate || !user) {
       return;
     }
     return {
@@ -67,7 +67,7 @@ export class AuthService {
   private saveAuthData(token: string, expirationDate: Date, user: User) {
     localStorage.setItem('token', token);
     localStorage.setItem('expiration', expirationDate.toISOString());
-    localStorage.setItem('user', JSON.stringify(user));
+    this.setUser(user);
   }
 
   autoAuthUser() {
@@ -95,15 +95,17 @@ export class AuthService {
   }
 
   getUser() {
-    if (!this.user) {
-      this.user = JSON.parse(localStorage.getItem('user') || '{}');
-    }
+    this.user = JSON.parse(localStorage.getItem('user') || '{}');
     return this.user;
+  }
+
+  setUser(user: User){
+    localStorage.setItem('user', JSON.stringify(user));
   }
 
   isAdmin(): boolean {
     const user = this.getUser();
-    return user && user.permissions && user.permissions.some((permission: Permission) => permission.value === 'admin');
+    return user.permissions.some((permission: Permission) => permission.value === 'admin');
   }
 
   canCreateUser(): boolean{

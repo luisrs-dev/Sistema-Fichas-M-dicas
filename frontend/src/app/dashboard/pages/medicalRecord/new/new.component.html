@@ -1,7 +1,7 @@
 <div class="p-4">
   <div class="container mb-3">
     <h2>Antecedentes</h2>
-    Nueva Ficha Médica >
+    Nueva Ficha Clínica >
     <a mat-button color="primary" matTooltip="Ver Perfil"
       >{{ data.patient.name }} {{ data.patient.surname }}
       {{ data.patient.secondSurname }}</a>
@@ -42,14 +42,14 @@
   </div>
 
   <div class="container p-4">
-    <h2>Nueva Ficha Médica</h2>
+    <h2>Nueva Ficha Clínica</h2>
     <form
       [formGroup]="medicalRecordForm"
       autocomplete="off"
       (ngSubmit)="onSave()"
     >
       <div class="grid">
-        <div class="col-3">
+        <div class="col-2">
           <mat-form-field class="w-full" appearance="outline">
             <mat-label>Fecha</mat-label>
             <input matInput formControlName="date" [matDatepicker]="picker" />
@@ -64,14 +64,13 @@
         <div class="col-3">
           <mat-form-field appearance="outline" class="w-full">
             <mat-label>Tipo de entrada</mat-label>
-            <mat-select formControlName="entryType" [(value)]="selectedEntryType">
+            <mat-select formControlName="entryType">
               @if(data.patient.program.name.includes('PAI')){ 
                 <mat-option value="A Distancia">A Distancia</mat-option>
-              }@else{
+              }
                 <mat-option value="Presencial">Presencial</mat-option>
                 <mat-option value="No se presenta">No se presenta</mat-option>
                 <mat-option value="Informacion">Información</mat-option>
-              }
             </mat-select>
           </mat-form-field>
           <span *ngIf="isValidField('entryType')" class="text-red-500">
@@ -94,6 +93,17 @@
             </span>
           </div>
         }
+
+        <div class="col-8">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Objetivo de intervención</mat-label>
+            <input formControlName="interventionObjective" matInput placeholder="Actividad">
+          </mat-form-field>
+          <span *ngIf="isValidField('interventionObjective')" class="text-red-500">
+            Campo requerido
+          </span>
+        </div>
+        
       </div>
 
       <mat-divider class="mb-4"></mat-divider>

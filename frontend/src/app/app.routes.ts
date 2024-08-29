@@ -12,7 +12,7 @@ export const routes: Routes = [
       {
         path: 'users',
         title: 'Profesionales',
-        data: { icon: 'group', child: false },
+        data: { icon: 'group', child: false, forAdmin: true },
         loadComponent: () =>
           import('./dashboard/pages/users/list/list.component'),
       },

@@ -2,6 +2,7 @@ import { Request, Response, Router } from "express";
 import {
   getUsers,
   postUser,
+  putUser,
   getUsersByProfile,
   getUsersById,
   getServicesByProfile
@@ -15,6 +16,7 @@ router.get("/:id", getUsersById);
 router.get("/services/:id", getServicesByProfile);
 // router.get("/", logMiddleware, getItems);
 // router.get("/:id", getItem);
+router.put("/", putUser);
 router.post("/", postUser);
 // router.delete("/:id", deleteItem);
 // router.put("/:id", updateItem);

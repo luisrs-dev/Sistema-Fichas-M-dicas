@@ -31,15 +31,13 @@ export default class DashboardComponent implements OnInit {
   public authService = inject(AuthService);
   private observer = inject(BreakpointObserver);
   private mobileService = inject(MobileService);
-  public isAdmin: boolean = false;
+  public isAdmin: boolean;
   public user: User;
 
   ngOnInit() {
     console.log({routes});
     this.isAdmin = this.authService.isAdmin();
     this.user = this.authService.getUser();
-    
-    console.log({isAdmin: this.isAdmin});
     
     
     this.observer.observe(['(max-width: 800px)']).subscribe((screenSize) => {

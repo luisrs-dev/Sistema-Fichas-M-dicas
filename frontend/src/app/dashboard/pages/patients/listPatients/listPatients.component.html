@@ -52,6 +52,17 @@
       </button>
     </div>
   </div>
+  <div class="">
+      <mat-form-field appearance="outline">
+        <mat-label>Filtrar por Programa</mat-label>
+        <mat-select (selectionChange)="filterByProgram($event.value)">
+          <mat-option value="">Todos</mat-option>
+          @for (program of user.programs; track $index) {
+            <mat-option value={{program.name}}>{{program.name}}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+  </div>
   <!-- @if (loadingTransactions) {
     <mat-spinner color="#0ca86b" diameter="40"></mat-spinner>
   } -->

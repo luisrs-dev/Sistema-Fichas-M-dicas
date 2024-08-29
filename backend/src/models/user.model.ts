@@ -15,6 +15,11 @@ const UserSchema = new Schema<User>(
       type: String,
       required: true,
     },
+    //Firma
+    signature: {
+      type: String,
+      required: true,
+    },
     profile: {
       type: Schema.Types.ObjectId,
       ref: 'profesionalRole'

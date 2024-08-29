@@ -7,14 +7,14 @@
     >
   </h4>
 
-  <h1>Historial Médico</h1>
+  <h1>Historial Clínico</h1>
   <button
     mat-flat-button
     color="accent"
     class="text-white mb-2 mat-elevation-z1"
     (click)="newMedicalRecord()"
   >
-    Nueva Ficha Médica
+    Nuevo registro
   </button>
 
   <button mat-mini-fab aria-label="Example icon button with a delete icon" (click)="generatePdf()" class="ml-2">
@@ -63,11 +63,18 @@
             <strong>Elementos relevantes:</strong> {{ medicalRecord.relevantElements }}
           </div>
           <div class="record-item">
-            <strong>Diagnóstico:</strong> {{ medicalRecord.diagnostic }}
+            <strong>Objetivo intervención:</strong> {{ medicalRecord.interventionObjective }}
           </div>
-          <div class="record-item" *ngIf="medicalRecord.pharmacologicalScheme">
-            <strong>Esquema farmacológico:</strong> {{ medicalRecord.pharmacologicalScheme }}
-          </div>
+          @if(medicalRecord.diagnostic){
+            <div class="record-item">
+              <strong>Diagnóstico:</strong> {{ medicalRecord.diagnostic }}
+            </div>
+          }
+          @if(medicalRecord.pharmacologicalScheme){
+            <div class="record-item" *ngIf="medicalRecord.pharmacologicalScheme">
+              <strong>Esquema farmacológico:</strong> {{ medicalRecord.pharmacologicalScheme }}
+            </div>
+          }
         </div>
       </mat-expansion-panel>
       }

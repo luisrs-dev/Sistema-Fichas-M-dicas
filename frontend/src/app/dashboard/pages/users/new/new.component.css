@@ -1,3 +1,16 @@
 :host {
   display: block;
 }
+
+.input-file {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 200px;
+  margin-top: 10px;
+  display: block; /* Asegura que la imagen sea un elemento de bloque */
+}

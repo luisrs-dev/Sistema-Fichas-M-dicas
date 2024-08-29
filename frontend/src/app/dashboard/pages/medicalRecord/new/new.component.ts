@@ -66,7 +66,6 @@ export default class NewMedicalRecord {
   public user: User;
   public services: any[];
   public hideServiceSelect: boolean = false;
-  public selectedEntryType: string | null = '';
 
   constructor(
     @Inject(MAT_DIALOG_DATA)
@@ -83,11 +82,6 @@ export default class NewMedicalRecord {
 
     this.patient = this.data.patient;
     this.latestMedicalRecordWithScheme = { ...this.data.latestMedicalRecordWithScheme! };
-    
-    if(this.data.patient.program.name.includes('PAI')){
-      this.selectedEntryType=ValueEntryType.Distancia;      
-    }
-
     // Escucha los cambios en el campo entryType
     this.medicalRecordForm.get('entryType')?.valueChanges.subscribe((value) => {
       this.hideServiceSelect = value === 'Informacion';
@@ -103,6 +97,7 @@ export default class NewMedicalRecord {
     date: [new Date(), [Validators.minLength(3),Validators.required]],
     entryType: [this.setValueEntryType(), [Validators.required]],
     service: ['', [Validators.minLength(3), Validators.required]],
+    interventionObjective: ['', [Validators.minLength(3), Validators.required]],
     relevantElements: ['',[Validators.required]],
     diagnostic: [''],
     pharmacologicalScheme: [''],  

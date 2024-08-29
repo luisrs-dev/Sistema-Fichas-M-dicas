@@ -23,6 +23,7 @@
     "angular-highcharts": "^17.0.1",
     "highcharts": "^11.4.1",
     "html2canvas": "^1.4.1",
+    "html2pdf.js": "^0.10.2",
     "jspdf": "^2.5.1",
     "moment": "^2.30.1",
     "notiflix": "^3.2.7",

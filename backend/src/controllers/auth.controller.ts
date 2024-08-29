@@ -1,8 +1,11 @@
 import { Request, Response } from "express";
 import { loginUser, registerNewUser } from "../services/auth.service";
 
-const registerController = async ({ body }: Request, res: Response) => {
-  const responseUser = await registerNewUser(body);
+const registerController = async (req: Request, res: Response) => {
+
+  const imageFile = req.file; // Accede al objeto req.file  
+  const { body } = req; 
+  const responseUser = await registerNewUser(body, imageFile);
   res.send({status:'ok', responseUser});
 };
 

@@ -10,7 +10,7 @@
   @if (!isMobile) {
   <button class="text-white" mat-button>
     <mat-icon>account_circle</mat-icon>
-    {{user.name}}
+    {{ user.name }}
   </button>
   }
 </mat-toolbar>
@@ -31,14 +31,32 @@
 
     <mat-nav-list>
       @for (menuItem of menuItems; track $index) {
-      <mat-list-item
-        [routerLink]="menuItem.path"
-        (click)="isMobile ? sidenav.toggle() : false"
-      >
-        <mat-icon matListItemIcon class="mat-18">{{ menuItem.icon }}</mat-icon>
-        {{ menuItem.title }}
-      </mat-list-item>
-      } @if(isAdmin){
+
+        @if(menuItem.title == 'Profesionales'){
+          @if(isAdmin){
+            <mat-list-item
+            [routerLink]="menuItem.path"
+            (click)="isMobile ? sidenav.toggle() : false"
+          >
+            <mat-icon matListItemIcon class="mat-18">{{ menuItem.icon }}</mat-icon>
+            {{ menuItem.title }}
+          </mat-list-item>
+
+          }
+
+
+        }@else{
+          <mat-list-item
+            [routerLink]="menuItem.path"
+            (click)="isMobile ? sidenav.toggle() : false"
+          >
+            <mat-icon matListItemIcon class="mat-18">{{ menuItem.icon }}</mat-icon>
+            {{ menuItem.title }}
+          </mat-list-item>
+
+        }
+      }
+       @if(isAdmin){
       <mat-toolbar>
         <span>Parámetros</span>
         <span class="spacer"></span>

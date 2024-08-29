@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   inject,
   type OnInit,
@@ -8,6 +9,7 @@ import {
 import { MaterialModule } from '../../../../angular-material/material.module';
 import {
   FormBuilder,
+  FormControl,
   FormGroup,
   FormsModule,
   ReactiveFormsModule,
@@ -22,6 +24,7 @@ import {
   ParameterValue,
 } from '../../parameters/interfaces/parameter.interface';
 import { ProfesionalRoleService } from '../../parameters/profesionalRole/profesionalRole.service';
+import { AuthService } from '../../../../auth/auth.service';
 
 @Component({
   selector: 'app-new',
@@ -44,7 +47,7 @@ export default class NewComponent {
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
   private router = inject(Router);
-
+  private changeDetectorRef = inject(ChangeDetectorRef);
 
   public permissions$: Observable<any>;
   public programs$: Observable<any>;
@@ -56,34 +59,53 @@ export default class NewComponent {
   public programsUser: string[];
 
   public profesionalRoles: any;
+  public selectedImage: string | ArrayBuffer | null = null; // Almacena la URL de la vista previa de la imagen
+  public imageFile: File | null = null; // Almacena el archivo seleccionado
+  public imagePath: string | null = null; 
+
   public patientId: string;
   public edit: boolean = false;
 
   public userForm: FormGroup = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(3)]],
     email: ['', [Validators.required, Validators.minLength(3)]],
-    password: ['', [Validators.required, Validators.minLength(3)]],
+    password: [
+      '',
+      this.edit ? [] : [Validators.required, Validators.minLength(3)],
+    ],
     profile: ['', [Validators.required, Validators.minLength(3)]],
+    image: [null, [Validators.required]], // Campo de firma agregado
   });
 
   ngOnInit() {
-
     this.patientId = this.route.snapshot.paramMap.get('id')!;
-    if(this.patientId){  
-      this.edit = true;    
-      this.userService.getUserById(this.patientId).subscribe( response => {
-        
+    if (this.patientId) {
+      // Se actualiza form para que password no sea requerido
+      // Cambio de clave debe hacerse en otro lugar
+      this.userForm.get('password')?.setValidators([]);
+      this.edit = true;
+      this.userService.getUserById(this.patientId).subscribe((response) => {
         this.userForm.patchValue({
           name: response.user.name || '', // Si el campo está vacío, se usa un string vacío como fallback
           email: response.user.email || '',
-          profile: response.user.profile._id || '', 
-        });      
-        
-        this.permissionUser = response.user.permissions.map((permission: Parameter) => permission._id);
-        this.programsUser = response.user.programs.map((program: Parameter) => program._id);
+          profile: response.user.profile._id || '',
+        });
 
-      })
-    }   
+        if(response.user.signature){
+          this.imagePath = `http://localhost:3002${response.user.signature}`
+        }
+
+        this.permissionUser = response.user.permissions.map(
+          (permission: Parameter) => permission._id
+        );
+        this.programsUser = response.user.programs.map(
+          (program: Parameter) => program._id
+        );
+
+        this.checkedPermissions = [...this.permissionUser];
+        this.checkedPrograms = [...this.programsUser];
+      });
+    }
 
     this.permissions$ = this.parametersService.getParameters(
       ParameterValue.Permission
@@ -94,7 +116,6 @@ export default class NewComponent {
     this.profesionalRoleService
       .getProfesionalRoles()
       .subscribe((profesionalRoles) => {
-        console.log({ profesionalRoles });
         this.profesionalRoles = profesionalRoles;
       });
   }
@@ -104,16 +125,37 @@ export default class NewComponent {
       this.userForm.markAllAsTouched();
       return;
     }
-    this.userService
-      .addUser(
-        this.userForm.value,
-        this.checkedPermissions,
-        this.checkedPrograms
-      )
-      .subscribe((response: any) => {
+
+    if (this.edit) {
+      console.log('Actualizar usuario');
+    } else {
+      const formData = new FormData();
+
+      Object.entries(this.userForm.value).forEach(([key, value]) => {
+        if (value instanceof File) {
+          formData.append(key, value); // Si es un archivo, lo añade como Blob
+        } else if (value !== null && value !== undefined) {
+          formData.append(key, value.toString()); // Convierte otros valores a string
+        }
+      });
+
+      this.checkedPermissions.forEach((permission) => {
+        formData.append('permissions', permission); // 'permissions' será el nombre de campo para estos datos
+      });
+
+      this.checkedPrograms.forEach((program) => {
+        formData.append('programs', program); // 'programs' será el nombre de campo para estos datos
+      });
+
+      formData.forEach((value, key) => {
+        console.log(`${key}: ${value}`);
+      });
+
+      this.userService.createUser(formData).subscribe((response: any) => {
         console.log(response);
         this.router.navigateByUrl('/dashboard/users');
       });
+    }
   }
 
   isValidField(field: string): boolean {
@@ -123,35 +165,70 @@ export default class NewComponent {
     );
   }
 
-  onPermissionChange(permissionChecked: Parameter, event: any) {
-    const newValue = event.checked;
-    if (!newValue) {
-      this.checkedPermissions = this.checkedPermissions.filter(
-        (permission) => permission != permissionChecked._id
-      );
-    } else {
-      this.checkedPermissions.push(permissionChecked._id);
+  onFileChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      this.userForm.patchValue({
+        image: file,
+      });
     }
-    console.log({ checkedPermissions: this.checkedPermissions });
   }
 
-  onProgramChange(programChecked: Parameter, event: any) {
+  onToggleChange(itemChecked: Parameter, event: any, checkedList: string[]) {
     const newValue = event.checked;
     if (!newValue) {
-      this.checkedPrograms = this.checkedPrograms.filter(
-        (prorgram) => prorgram != programChecked._id
-      );
+      // Filtra el item de la lista si no está marcado
+      const index = checkedList.indexOf(itemChecked._id);
+      if (index !== -1) {
+        checkedList.splice(index, 1);
+      }
     } else {
-      this.checkedPrograms.push(programChecked._id);
+      // Agrega el item a la lista si está marcado
+      checkedList.push(itemChecked._id);
     }
-    console.log({ checkedPrograms: this.checkedPrograms });
+    console.log({ checkedList });
   }
 
-  isPermissionSelected(id: string){
-    return this.edit ? this.permissionUser.includes(id): false;
+  // Funcion onToggleChange pero con filter
+  onItemChange(itemChecked: Parameter, event: any, checkedList: string[]) {
+    const newValue = event.checked;
+    if (!newValue) {
+      checkedList = checkedList.filter((id) => id !== itemChecked._id);
+    } else {
+      checkedList.push(itemChecked._id);
+    }
+    console.log({ checkedList });
   }
-  
-  isProgramSelected(id: string){
-    return this.edit ? this.programsUser.includes(id) : false;
+
+  // En modo editar Se verifica valor para marcar mat-slide-toogle
+  isParameterSelected(id: string, itemsUser: string[]) {
+    if (itemsUser?.length > 0) {
+      return this.edit ? itemsUser.includes(id) : false;
+    }
+    return false;
   }
+
+  //onFileSelected(event: Event): void {
+  //  const input = event.target as HTMLInputElement;
+  //  if (input.files && input.files[0]) {
+  //    const file = input.files[0];
+  //    console.log('Tipo de archivo:', file.type);
+
+  //    if (file.type === 'image/png' || file.type === 'image/jpeg') {
+  //      this.imageFile = file;
+
+  //      // Crear vista previa de la imagen
+  //      const reader = new FileReader();
+  //      reader.onload = (e) => {
+  //        this.selectedImage = reader.result;
+  //        console.log('Vista previa de la imagen:', this.selectedImage);
+  //        this.changeDetectorRef.detectChanges(); // Forzar la detección de cambios
+  //      };
+  //      reader.readAsDataURL(file);
+  //    } else {
+  //      alert('Por favor, seleccione un archivo JPG o PNG.');
+  //    }
+  //  }
+  //}
 }

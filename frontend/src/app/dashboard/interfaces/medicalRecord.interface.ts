@@ -5,6 +5,7 @@ export interface MedicalRecord {
   entryType: string;
   service: Service;
   relevantElements: string;
+  interventionObjective: string;
   diagnostic: string;
   pharmacologicalScheme: string;
   patient: Patient;
@@ -24,6 +25,7 @@ export interface RegisteredBy{
   _id: string;
   name: string;
   profile: Profile;
+  signature: string;
 }
 
 export interface Profile{

@@ -15,6 +15,9 @@ const MedicalRecordSchema = new Schema<MedicalRecord>(
       ref: 'Service',
       required: true,
     },
+    interventionObjective: {
+      type: String,
+    },
     relevantElements: {
       type: String,
     },

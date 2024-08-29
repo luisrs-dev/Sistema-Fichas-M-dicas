@@ -5,7 +5,8 @@ import {
   inerUser,
   usersByProfile,
   findUser,
-  findServicesByProfile
+  findServicesByProfile,
+  updateUser,
 } from "../services/user.service";
 
 const getUsersById = async ({ params }: Request, res: Response) => {
@@ -34,8 +35,6 @@ const getServicesByProfile = async ({ params }: Request, res: Response) => {
   }
 };
 
-
-
 const getUsers = async (req: Request, res: Response) => {
   try {
     const responseItems = await allUsers();
@@ -54,37 +53,30 @@ const getUsersByProfile = async (req: Request, res: Response) => {
   }
 };
 
-
-
-// const updateItem = async ({ params, body }: Request, res: Response) => {
-//   try {
-//     const { id } = params;
-//     const responseItem = await updateCar(id, body);
-
-//     res.send(responseItem);
-//   } catch (error) {
-//     handleHttp(res, "");
-//   }
-// };
-
-// const deleteItem = async ({ params }: Request, res: Response) => {
-//   try {
-//     const { id } = params;
-//     const responseItem = await deleteCar(id);
-//     res.send(responseItem);
-//   } catch (error) {
-//     handleHttp(res, "");
-//   }
-// };
-const postUser = async ({ body }: Request, res: Response) => {
+const postUser = async (req: Request, res: Response) => {
   try {
-    const responseUser = await inerUser(body);
 
+    console.log(req);
+    
+
+    //const imagePath = file ? file.path : null; // Obtiene la ruta del archivo subido
+
+    //const responseUser = await inerUser(body, imagePath);
+
+    res.send('responseUser');
+  } catch (error) {
+    handleHttp(res, "ERROR_POST_ITEM", error);
+  }
+};
+
+const putUser = async ({ body }: Request, res: Response) => {
+  try {
+    const responseUser = await updateUser(body);
     res.send(responseUser);
   } catch (error) {
     handleHttp(res, "ERROR_POST_ITEM", error);
   }
 };
 
-export { postUser, getUsers, getUsersByProfile, getUsersById, getServicesByProfile };
+export { postUser, putUser, getUsers, getUsersByProfile, getUsersById, getServicesByProfile };
 // export { getItem, getItems, updateItem, postItem, deleteItem };

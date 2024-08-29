@@ -1,15 +1,11 @@
 import jsonwebtoken from "jsonwebtoken";
-import { User } from "../interfaces/user.interface";
+import { Auth } from "../interfaces/auth.interface";
 import UserModel from "../models/user.model";
 import { encrypt, verified } from "../utils/bcrypt.handle";
-import { Auth } from "../interfaces/auth.interface";
-import UserPermissionModel from "../models/parameters/userPermission.model";
-import UserProgramModel from "../models/parameters/userProgram.model";
 
 const JWT_SECRET = process.env.JWT_SECRET || "token.010101";
 
-const registerNewUser = async ({user, permissions, programs}: any) => {
-  console.log({user, permissions, programs});
+const registerNewUser = async (user: any, imageFile: Express.Multer.File | undefined) => {
   
   const userFetched = await UserModel.findOne({ email: user.email });
   if (userFetched) return "ALREADY_EXIST";
@@ -20,8 +16,9 @@ const registerNewUser = async ({user, permissions, programs}: any) => {
     email: user.email,
     password: passHash,
     profile: user.profile,
-    permissions,
-    programs
+    permissions: user.permissions,
+    programs: user.programs,
+    signature: imageFile ? `/uploads/${imageFile.filename}` : null
   });
   return {status:'ok', };
 };

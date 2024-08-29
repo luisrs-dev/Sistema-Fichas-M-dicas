@@ -88,7 +88,7 @@ const findPatient = async (id: string) => {
         path: 'program'
       }
      },
-    { path: 'registeredBy', select: 'name profile',
+    { path: 'registeredBy', select: 'name profile signature',
       populate: { 
         path: 'profile',
         select: 'name'

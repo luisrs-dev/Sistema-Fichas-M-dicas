@@ -16,17 +16,31 @@ import { Patient } from '../../../interfaces/patient.interface';
 import { PatientService } from '../patient.service';
 import { AuthService } from '../../../../auth/auth.service';
 import { User } from '../../../../auth/interfaces/login-response.interface';
+import { Parameter } from '../../parameters/interfaces/parameter.interface';
 
 @Component({
   selector: 'app-list-patients',
   standalone: true,
-  imports: [CommonModule, MaterialModule, RouterLink, MatMenuModule, MatIconModule],
+  imports: [
+    CommonModule,
+    MaterialModule,
+    RouterLink,
+    MatMenuModule,
+    MatIconModule,
+  ],
   templateUrl: './listPatients.component.html',
   styleUrl: './listPatients.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class ListPatientsComponent {
-  displayedColumns: string[] = ['name','program','phone','admissionDate','fonasa',  'actions'];
+  displayedColumns: string[] = [
+    'name',
+    'program',
+    'phone',
+    'admissionDate',
+    'fonasa',
+    'actions',
+  ];
   dataSource = new MatTableDataSource<Patient>([]);
 
   public patients: Patient[];
@@ -35,22 +49,33 @@ export default class ListPatientsComponent {
   public canCreateUser: boolean = false;
   public isAdmin: boolean = false;
   public user: User;
-  public programs: string[];
+  public programsIds: string[];
+  public programs: Parameter[] = [];
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
 
   ngOnInit(): void {
+    this.dataSource.filterPredicate = (data: any, filter: string) => {
+      // Convertir el filtro a minúsculas para una comparación sin distinción de mayúsculas y minúsculas
+      const lowerCaseFilter = filter.trim().toLowerCase();
+
+      // Comparar los campos relevantes, incluyendo el nombre del programa
+      return (
+        data.name.toLowerCase().includes(lowerCaseFilter) ||
+        data.surname.toLowerCase().includes(lowerCaseFilter) ||
+        data.secondSurname.toLowerCase().includes(lowerCaseFilter) ||
+        data.program.name.toLowerCase().includes(lowerCaseFilter)
+      );
+    };
 
     this.canCreateUser = this.authService.canCreateUser();
     this.isAdmin = this.authService.isAdmin();
     this.user = this.authService.getUser();
-    this.programs = this.user.programs.map(program => program._id);
+    this.programsIds = this.user.programs.map((program) => program._id);
 
-    this.patientService.getPatients(this.programs).subscribe((patients) => {
+    this.patientService.getPatients(this.programsIds).subscribe((patients) => {
       this.patients = patients;
-      console.log({patients});
-      
 
       this.dataSource.sort = this.sort;
       this.dataSource.paginator = this.paginator;
@@ -58,6 +83,10 @@ export default class ListPatientsComponent {
 
       this.paginator.pageSize = 10; // Define el número de elementos por página
     });
+  }
+
+  filterByProgram(program: any) {
+    this.dataSource.filter = program.trim().toLowerCase();
   }
 
   applyFilter(event: Event) {

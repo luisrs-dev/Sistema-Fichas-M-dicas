@@ -1,8 +1,7 @@
 <div class="container p-4 pb-6">
   <form [formGroup]="userForm" autocomplete="off" (ngSubmit)="onSave()">
     <div>
-      <h1>@if (edit) {Editando}@else{Nuevo} Profesional
-      </h1>
+      <h1>@if (edit) {Editando}@else{Nuevo} Profesional</h1>
 
       <div class="grid mt-4">
         <div class="col flex flex-column">
@@ -33,35 +32,64 @@
             <!-- <mat-hint>Hint</mat-hint> -->
           </mat-form-field>
           @if(!edit){
-            <mat-form-field class="w-4 mb-2" appearance="outline">
-              <mat-label>Password</mat-label>
-              <input
-                matInput
-                formControlName="password"
-                type="password"
-                placeholder="Ingrese una clave"
-              />
-              <span *ngIf="isValidField('password')" class="text-red-500">
-                El password es requerido
-              </span>
-              <mat-icon matSuffix>password</mat-icon>
-              <mat-hint
-                >Clave que usará el profesional para ingresar a su
-                cuenta</mat-hint
-              >
-            </mat-form-field>
+          <mat-form-field class="w-4 mb-2" appearance="outline">
+            <mat-label>Password</mat-label>
+            <input
+              matInput
+              formControlName="password"
+              type="password"
+              placeholder="Ingrese una clave"
+            />
+            <span *ngIf="isValidField('password')" class="text-red-500">
+              El password es requerido
+            </span>
+            <mat-icon matSuffix>password</mat-icon>
+            <mat-hint
+              >Clave que usará el profesional para ingresar a su
+              cuenta</mat-hint
+            >
+          </mat-form-field>
           }
           <mat-form-field appearance="outline" class="w-4">
             <mat-label>Perfil</mat-label>
             <mat-select formControlName="profile">
               @for (profesionalRol of profesionalRoles; track $index) {
-                <mat-option value="{{profesionalRol._id}}">{{profesionalRol.name}}</mat-option>
+              <mat-option value="{{ profesionalRol._id }}">{{
+                profesionalRol.name
+              }}</mat-option>
               }
             </mat-select>
             <span *ngIf="isValidField('profile')" class="text-red-500">
               El perfil es requerido
             </span>
           </mat-form-field>
+
+          <input
+            type="file"
+            (change)="onFileChange($event)"
+            accept="image/png, image/jpeg"
+          />
+
+          @if(imagePath){
+            <div>
+              <img
+                [src]="imagePath"
+                alt="Vista previa de la imagen"
+                class="preview-image"
+              />
+            </div>
+          }
+          
+          <!-- Vista previa de la imagen -->
+          @if(selectedImage){
+          <div>
+            <img
+              [src]="selectedImage"
+              alt="Vista previa de la imagen"
+              class="preview-image"
+            />
+          </div>
+          }
         </div>
       </div>
     </div>
@@ -69,37 +97,31 @@
       <div class="col">
         <h1>Permisos</h1>
         <div>
-          @if(permissions$ | async; as permissions){
-            @for (permission of permissions; track $index) {
-              <p>
-                <mat-slide-toggle 
-                [checked]="isPermissionSelected(permission._id)" 
-                (change)="onPermissionChange(permission, $event)
-                ">{{ permission.name }}</mat-slide-toggle>
-              </p>
-            }  
-          }
-          @else{ 
-            Cargando...
-          }
+          @if(permissions$ | async; as permissions){ @for (permission of
+          permissions; track $index) {
+          <p>
+            <mat-slide-toggle
+              (change)="onToggleChange(permission, $event, checkedPermissions)"
+              [checked]="isParameterSelected(permission._id, permissionUser)"
+              >{{ permission.name }}</mat-slide-toggle
+            >
+          </p>
+          } } @else{ Cargando... }
         </div>
       </div>
       <div class="col">
         <h1>Programas habilitados</h1>
         <div>
-          @if(programs$ | async; as programs){
-            @for (program of programs; track $index) {
-              <p>
-                <mat-slide-toggle 
-                (change)="onProgramChange(program, $event)"
-                [checked]="isProgramSelected(program._id)" 
-                >{{ program.name }}</mat-slide-toggle>
-              </p>
-            }  
-          }
-          @else{ 
-            Cargando...
-          }
+          @if(programs$ | async; as programs){ @for (program of programs; track
+          $index) {
+          <p>
+            <mat-slide-toggle
+              (change)="onToggleChange(program, $event, checkedPrograms)"
+              [checked]="isParameterSelected(program._id, programsUser)"
+              >{{ program.name }}</mat-slide-toggle
+            >
+          </p>
+          } } @else{ Cargando... }
         </div>
       </div>
     </div>
@@ -111,7 +133,12 @@
       <button mat-stroked-button color="primary" routerLink="../" class="mr-1">
         Volver
       </button>
+      @if(edit){
+      <button mat-flat-button type="submit" color="primary">Actualizar</button>
+
+      }@else {
       <button mat-flat-button type="submit" color="primary">Registrar</button>
+      }
     </div>
 
     <!-- @if (loadingTransactions) {
