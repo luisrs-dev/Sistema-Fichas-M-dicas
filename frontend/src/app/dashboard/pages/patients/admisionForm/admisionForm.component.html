@@ -1,0 +1,18 @@
+<div class="container">
+  <mat-tab-group mat-stretch-tabs="false" mat-align-tabs="start" dynamicHeight>
+    <mat-tab label="Identificación de usuarios">
+      @if(patient){
+        <user-identification [patient]="patient"></user-identification>
+      }
+    </mat-tab>
+    <mat-tab label="Caracterización Sociodemográfica">
+      Inputs y otros2
+    </mat-tab>
+    <mat-tab label="Patrón de Consumo Problemático "> Inputs y otros3 </mat-tab>
+    <mat-tab label="Diagnóstico Clínico "> Inputs y otros4 </mat-tab>
+
+    <mat-tab label="Tratamiento/Convenio "> Tratamiento/Convenio </mat-tab>
+
+    <mat-tab label="Diagnósitco de Int. Social "> Inputs y otros3 </mat-tab>
+  </mat-tab-group>
+</div>

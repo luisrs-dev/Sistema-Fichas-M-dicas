@@ -52,6 +52,13 @@ export const routes: Routes = [
           import('./dashboard/pages/patients/detail/detail.component'),
       },
       {
+        path: 'patient/admision-form/:id',
+        title: 'Ficha de ingreso',
+        data: { icon: 'group', child: false },
+        loadComponent: () =>
+          import('./dashboard/pages/patients/admisionForm/admisionForm.component'),
+      },
+      {
         path: 'fichas-medicas',
         title: 'Fichas Clínicas',
         data: { icon: 'description', child: false },

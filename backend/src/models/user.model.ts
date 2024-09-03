@@ -17,8 +17,7 @@ const UserSchema = new Schema<User>(
     },
     //Firma
     signature: {
-      type: String,
-      required: true,
+      type: String
     },
     profile: {
       type: Schema.Types.ObjectId,

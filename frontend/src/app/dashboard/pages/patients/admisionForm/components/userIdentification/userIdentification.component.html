@@ -1,0 +1,277 @@
+@if(patient){
+    <form [formGroup]="userIdentificationForm" autocomplete="off" >
+        <div class="grid pt-4"></div>
+    
+        <div class="grid">
+          <div class="col-4">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Nombasasdres</mat-label>
+              <input matInput formControlName="name" placeholder="Nombre" />
+              <span *ngIf="isValidField('name')" class="form-text text-danger">
+                El nombre es requerido
+              </span>
+              <mat-icon matSuffix>person</mat-icon>
+              <!-- <mat-hint>Hint</mat-hint> -->
+            </mat-form-field>
+          </div>
+          <div class="col-4">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Apellido Paterno</mat-label>
+              <input matInput formControlName="surname" />
+              <span
+                *ngIf="isValidField('surname')"
+                class="form-text text-danger"
+              >
+                Requerido
+              </span>
+              <mat-icon matSuffix>person</mat-icon>
+              <!-- <mat-hint>Hint</mat-hint> -->
+            </mat-form-field>
+          </div>
+        </div>
+    
+        <div class="grid">
+          
+          <div class="col-4">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Apellido Materno</mat-label>
+              <input matInput formControlName="secondSurname" />
+              <span
+                *ngIf="isValidField('secondSurname')"
+                class="form-text text-danger"
+              >
+                Requerido
+              </span>
+              <mat-icon matSuffix>person</mat-icon>
+              <!-- <mat-hint>Hint</mat-hint> -->
+            </mat-form-field>
+          </div>
+          <div class="col-4">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Sexo</mat-label>
+              <mat-select formControlName="sex">
+                <mat-option value="1">Hombre</mat-option>
+                <mat-option value="2">Mujer</mat-option>
+              </mat-select>
+              <span *ngIf="isValidField('sex')" class="text-red-500">
+                Debe seleccionar un programa
+              </span>
+            </mat-form-field>
+          </div>
+          
+        </div>
+    
+        <div class="grid">
+          <div class="col-4">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Fecha Nacimiento</mat-label>
+              <input
+                matInput
+                [matDatepicker]="pickerBirthday"
+                formControlName="birthDate"
+              />
+              <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
+              <mat-datepicker-toggle
+                matIconSuffix
+                [for]="pickerBirthday"
+              ></mat-datepicker-toggle>
+              <mat-datepicker #pickerBirthday></mat-datepicker>
+            </mat-form-field>
+          </div>
+          <div class="col-4">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Origen de ingreso</mat-label>
+              <mat-select
+                formControlName="selorigen_ingreso"
+                id="selorigen_ingreso"
+              >
+                <mat-option value="1">Consulta Espontánea</mat-option>
+                <mat-option value="2"
+                  >Otro Centro Tratamiento Drogas</mat-option
+                >
+                <mat-option value="5">Estab. de APS </mat-option>
+                <mat-option value="6"
+                  >Otros de la Red de Salud General Privado</mat-option
+                >
+                <mat-option value="7" selected=""
+                  >Otros de la Red de Salud General Público</mat-option
+                >
+                <mat-option value="8">Juzgado de Familia</mat-option>
+                <mat-option value="9"
+                  >Juzgado con Competencia en Crimen</mat-option
+                >
+                <mat-option value="10">Juzgado de Garantía</mat-option>
+                <mat-option value="11">Juzgado de Policía</mat-option>
+                <mat-option value="12">Otros (fiscalía)</mat-option>
+                <mat-option value="13">Previene</mat-option>
+                <mat-option value="14">Establecimiento Educacional</mat-option>
+                <mat-option value="15"
+                  >Trabajo (empresa o empleador)</mat-option
+                >
+                <mat-option value="16"
+                  >Servicios Sociales u otros (iglesia, Mideplan, ser.
+                  comunitarios, etc.)</mat-option
+                >
+                <mat-option value="17">Otros</mat-option>
+                <mat-option value="18">Libertad Vigilada</mat-option>
+                <mat-option value="19">FONODROGAS</mat-option>
+              </mat-select>
+              <span *ngIf="isValidField('region')" class="text-red-500">
+                Debe seleccionar una region
+              </span>
+            </mat-form-field>
+          </div>
+    
+        </div>
+    
+        <div class="grid">
+          <div class="col-4">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Region</mat-label>
+              <mat-select formControlName="region">
+                <mat-option value="">Seleccione</mat-option>
+                <mat-option value="1">DE TARAPACA</mat-option>
+                <mat-option value="2">DE ANTOFAGASTA</mat-option>
+                <mat-option value="3">DE ATACAMA</mat-option>
+                <mat-option value="4">DE COQUIMBO</mat-option>
+                <mat-option value="5">DE VALPARAISO</mat-option>
+                <mat-option value="6"
+                  >DEL LIBERTADOR GENERAL BERNARDO OHIGGINS</mat-option
+                >
+                <mat-option value="7">DEL MAULE</mat-option>
+                <mat-option value="8">DEL BIO-BIO</mat-option>
+                <mat-option value="9">DE LA ARAUCANIA</mat-option>
+                <mat-option value="10">DE LOS LAGOS</mat-option>
+                <mat-option value="11"
+                  >DE AYSEN DEL GENERAL CARLOS IBAÑES DEL CAMPO</mat-option
+                >
+                <mat-option value="12"
+                  >DE MAGALLANES Y LA ANTARTICA CHILENA</mat-option
+                >
+                <mat-option value="13">METROPOLITANA</mat-option>
+                <mat-option value="14">DE LOS RIOS</mat-option>
+                <mat-option value="15">DE ARICA Y PARINACOTA</mat-option>
+                <mat-option value="16">DE ÑUBLE</mat-option>
+              </mat-select>
+              <span *ngIf="isValidField('region')" class="text-red-500">
+                Debe seleccionar una region
+              </span>
+            </mat-form-field>
+          </div>
+          <div class="col-4">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Teléfono</mat-label>
+              <input
+                matInput
+                formControlName="phone"
+                placeholder="Ej: +56969691818"
+              />
+              <span *ngIf="isValidField('phone')" class="text-red-500">
+                El teléfon es obligatorio
+              </span>
+    
+              <mat-icon matSuffix>phone</mat-icon>
+              <!-- <mat-hint>Hint</mat-hint> -->
+            </mat-form-field>
+          </div>
+        </div>
+    
+        <div class="grid">
+          <div class="col-4">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Identidad de Género</mat-label>
+              <mat-select
+                formControlName="identidad_genero"
+                id="selorigen_ingreso"
+              >
+                <mat-option value="1">Masculino</mat-option>
+                <mat-option value="2" selected="">Femenino</mat-option>
+                <mat-option value="4">Masculino Trans</mat-option>
+                <mat-option value="5">Femenino Trans</mat-option>
+                <mat-option value="7">No binario</mat-option>
+                <mat-option value="3">Otro género</mat-option>
+                <mat-option value="6">Ningún género</mat-option>
+                <mat-option value="8">Prefiero no decirlo</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div class="col-4">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Orientación sexual</mat-label>
+              <mat-select
+                formControlName="orientacion_sexual"
+                id="selorigen_ingreso"
+              >
+                <mat-option value="1">Asexual</mat-option>
+                <mat-option value="2">Bisexual</mat-option>
+                <mat-option value="3" selected="">Heterosexual</mat-option>
+                <mat-option value="4">Homosexual</mat-option>
+                <mat-option value="5">Pansexual</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+    
+        </div>
+    
+        <div class="grid">
+          <div class="col-4">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Orientación sexual</mat-label>
+              <mat-select formControlName="discapacidad" id="selorigen_ingreso">
+                <mat-option value="">Seleccione</mat-option>
+                <mat-option value="1">SI</mat-option>
+                <mat-option value="2" selected="">NO</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div class="col-4">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Teléfono Familiar</mat-label>
+              <input
+                matInput
+                formControlName="phoneFamily"
+                placeholder="Ej: +56969691818"
+              />
+              <span *ngIf="isValidField('phoneFamily')" class="text-red-500">
+                El teléfon es obligatorio
+              </span>
+    
+              <mat-icon matSuffix>phone</mat-icon>
+              <!-- <mat-hint>Hint</mat-hint> -->
+            </mat-form-field>
+          </div>
+          
+        </div>
+    
+        <div class="grid">
+          <div class="col-4">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Centro de origen</mat-label>
+              <input
+                matInput
+                formControlName="centerOrigin"
+                placeholder="Centro de origen"
+              />
+              <span
+                *ngIf="isValidField('centerOrigin')"
+                class="form-text text-danger"
+              >
+                El centro es requerido
+              </span>
+              <mat-icon matSuffix>person</mat-icon>
+              <!-- <mat-hint>Hint</mat-hint> -->
+            </mat-form-field>
+          </div>
+        </div>
+    
+        <button
+          mat-stroked-button
+          color="primary"
+          routerLink="../"
+          class="mr-1"
+        >
+          Volver
+        </button>
+        <button mat-flat-button type="submit" color="primary">Registrar</button>
+      </form>
+}
