@@ -1,0 +1,66 @@
+<form [formGroup]="socialDiagnosisForm" autocomplete="off">
+  <div class="grid pt-4"></div>
+
+  <div class="grid w-9">
+    <div class="col-10">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Diagnóstico global de necesidades de integración social2</mat-label>
+        <mat-select formControlName="sel_diagnostico_1">
+          <mat-option value="null">Seleccione una opción</mat-option>
+
+          <mat-option value="1">Altas</mat-option>
+          <mat-option value="2">Medias</mat-option>
+          <mat-option value="3">Bajas</mat-option>
+          <mat-option value="97">En estudio</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('sel_diagnostico_1')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    <div class="col-10">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Diagnóstico de necesidades de integración social en capital humano </mat-label>
+        <mat-select formControlName="sel_diagnostico_2">
+          <mat-option value="null">Seleccione una opción</mat-option>
+
+          <mat-option value="4">Altas</mat-option>
+          <mat-option value="5">Medias</mat-option>
+          <mat-option value="6">Bajas</mat-option>
+          <mat-option value="98">En estudio</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('sel_diagnostico_2')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    <div class="col-10">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Diagnóstico de necesidades de integración social en capital físico </mat-label>
+        <mat-select formControlName="sel_diagnostico_3">
+          <mat-option value="null">Seleccione una opción</mat-option>
+          <mat-option value="7">Altas</mat-option>
+          <mat-option value="8">Medias</mat-option>
+          <mat-option value="9">Bajas</mat-option>
+          <mat-option value="99">En estudio</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('sel_diagnostico_3')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    <div class="col-10">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Diagnóstico de necesidades de integración social en capital social </mat-label>
+        <mat-select formControlName="sel_diagnostico_4">
+          <mat-option value="null">Seleccione una opción</mat-option>
+          <mat-option value="10">Altas</mat-option>
+          <mat-option value="11">Medias</mat-option>
+          <mat-option value="12">Bajas</mat-option>
+          <mat-option value="100">En estudio</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('sel_diagnostico_4')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <button mat-stroked-button color="primary" routerLink="../" class="mr-1">Volver</button>
+  <button mat-flat-button type="submit" color="primary">Registrar</button>
+</form>

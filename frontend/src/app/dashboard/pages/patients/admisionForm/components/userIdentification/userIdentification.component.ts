@@ -58,4 +58,8 @@ export class UserIdentificationComponent {
       this.userIdentificationForm.controls[field].touched
     );
   }
+
+  getFormData() {
+    return this.userIdentificationForm.value;
+  }
 }

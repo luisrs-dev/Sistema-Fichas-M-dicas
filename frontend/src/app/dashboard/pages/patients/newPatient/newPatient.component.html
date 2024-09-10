@@ -510,8 +510,6 @@
           </div>
         </div>
 
-
-
         <button
           mat-stroked-button
           color="primary"
@@ -521,6 +519,9 @@
           Volver
         </button>
         <button mat-flat-button type="submit" color="primary">Registrar</button>
+        @if(demandRegistered){
+          <button mat-flat-button (click)="onSaveDemandOnSistrat()" color="primary">Registrar en SISTRAT</button>
+        }
       </form>
     </mat-tab>
     <!-- <mat-tab label="Registro SISTRAT" [disabled]="disableTabSistrat">

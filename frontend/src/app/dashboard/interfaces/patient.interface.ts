@@ -12,6 +12,8 @@ export interface Patient {
   phone: string;
   phoneFamily: string;
   centerOrigin: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface Program{

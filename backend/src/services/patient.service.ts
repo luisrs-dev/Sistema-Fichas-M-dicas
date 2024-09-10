@@ -5,6 +5,7 @@ import PatientModel from "../models/patient.model";
 import { addToSistrat } from "./sistratPlatform.service";
 import { Demand } from "../interfaces/demand.interface";
 import DemandModel from "../models/demand.model";
+import Sistrat from "./sistrat/sistrat.class";
 
 const inerPatient = async (Patient: Patient) => {
   const responseInsert = await PatientModel.create(Patient);
@@ -14,8 +15,8 @@ const inerPatient = async (Patient: Patient) => {
 };
 
 
-const inerDemand = async (data:{userId:string, dataSistrat:Demand}) => {    
-  const responseInsert = await DemandModel.create({...data.dataSistrat, patientId: data.userId});
+const inerDemand = async (patientId:string, dataSistrat:Demand) => {    
+  const responseInsert = await DemandModel.create({...dataSistrat, patientId});
   return responseInsert;
 };
 
@@ -46,14 +47,14 @@ const updatePatientSistrat = async (patientId: string, demanda: Demand) => {
   }
 };
 
-const recordToSistrat = async (patientId: string) => {
+const recordDemandToSistrat = async (patientId: string) => {
   try {
-    console.log({ patientId });
 
     const patient = await PatientModel.findOne({ _id: patientId });
-    console.log({ patient });
+    const demand = await DemandModel.findOne({ patientId });
 
-    addToSistrat(patient!);
+    const sistratPlatform = new Sistrat();
+    const pageCrearDemanda = sistratPlatform.crearDemanda(patient, demand);
     
     return;
     return patient;
@@ -62,6 +63,21 @@ const recordToSistrat = async (patientId: string) => {
     throw error;
   }
 };
+
+//const saveAdmissionForm = async (patientId: string, dataAdmissionForm: any) => {
+//  try {
+//    const patient = await PatientModel.findOne({ _id: patientId });
+//    const responseaddAdmissionForm = addAdmissionForm(patient, dataAdmissionForm);
+    
+//    return responseaddAdmissionForm;
+//  } catch (error) {
+//    console.error("Error al actualizar el paciente", error);
+//    throw error;
+//  }
+//};
+
+
+
 
 const allPatients = async (programs: string[]) => {
   //const responsePatients = await PatientModel.find({});
@@ -119,8 +135,9 @@ export {
   inerPatient,
   inerDemand,
   updatePatientSistrat,
-  recordToSistrat,
+  recordDemandToSistrat,
   allPatients,
   PatientsByProfile,
   findPatient,
+  //saveAdmissionForm
 };

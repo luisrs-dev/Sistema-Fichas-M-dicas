@@ -1,0 +1,204 @@
+<form [formGroup]="clinicalDiagnosisForm" autocomplete="off">
+  <div class="grid pt-4"></div>
+
+  <div class="grid w-9">
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Diagnostico TRS. consumo sustancia</mat-label>
+        <mat-select formControlName="seldiagn_consumo_sustancia">
+          <mat-option value="null">Seleccione una opción</mat-option>
+          <mat-option value="1">Consumo Perjudicial</mat-option>
+          <mat-option value="2">Dependencia</mat-option>
+          <mat-option value="3">Sin consumo problemático (CIP-CRC)</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('seldiagn_consumo_sustancia')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Intoxicación aguda </mat-label>
+        <mat-select formControlName="selintox_aguda">
+          <mat-option value="null">Seleccione una opción</mat-option>
+          <mat-option value="Si">Si</mat-option>
+          <mat-option value="No">No</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('selintox_aguda')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Sindrome de abstinencia / síndrome de privación </mat-label>
+        <mat-select formControlName="selsindrome_abstinencia">
+          <mat-option value="">Seleccione una opción</mat-option>
+          <mat-option value="Si">Si</mat-option>
+          <mat-option value="No">No</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('selsindrome_abstinencia')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    <div class="col-12">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Diagnóstico TRS. psiquiátrico CIE 10 (categoría 1)</mat-label>
+        <mat-select formControlName="seldiagn_psiquiatrico_cie">
+          <mat-option value="">Seleccione una opción</mat-option>
+          <mat-option value="1">Trastornos mentales orgánicos, incluidos los sintomáticos</mat-option>
+          <mat-option value="2">Esquizofrenia, trastorno esquizotípico y trastornos de ideas delirantes</mat-option>
+          <mat-option value="3">Trastornos del humor (afectivos).</mat-option>
+          <mat-option value="4">Trastornos neuróticos, secundarios a situaciones estresantes y somatomorfos</mat-option>
+          <mat-option value="5">Trastornos de la personalidad y del comportamiento del adulto</mat-option>
+          <mat-option value="6">Trastornos del comportamiento asociados a disfunciones fisiológicas y a factores somáticos</mat-option>
+          <mat-option value="7">Retraso Mental</mat-option>
+          <mat-option value="8">Trastornos del Desarrollo Psicológico</mat-option>
+          <mat-option value="9">Trs. del comportamiento y de las emociones de comienzo habitual en la infancia y adolescencia</mat-option>
+          <mat-option value="10">En estudio</mat-option>
+          <mat-option value="11">Sin trastorno</mat-option>
+          <mat-option value="12">Trastornos de la conducta alimentaria </mat-option>
+          <mat-option value="13">Trastornos de los hábitos y del control de los impulsos </mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('seldiagn_psiquiatrico_cie')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    <div class="col-12 mb-4">
+      <mat-radio-group formControlName="cie1">
+        <mat-radio-button class="" value="41">Otros trastornos de la personalidad y del comportamiento del adulto</mat-radio-button>
+        <mat-radio-button class="" value="36">Transformación persistente de la personalidad no atribuible a lesión o enfermedad cerebral</mat-radio-button>
+        <mat-radio-button class="" value="42">Trastorno de la personalidad y del comportamiento del adulto sin especificación</mat-radio-button><br>
+        <mat-radio-button class="" value="38">Trastornos de la identidad sexual</mat-radio-button><br>
+        <mat-radio-button class="" value="37">Trastornos de los hábitos y del control de los impulsos</mat-radio-button><br>
+        <mat-radio-button class="" value="34">Trastornos específicos de la personalidad</mat-radio-button><br>
+        <mat-radio-button class="" value="35">Trastornos mixtos y otros trastornos de la personalidad</mat-radio-button>
+        <mat-radio-button class="" value="40">Trastornos psicológicos y del comportamiento del desarrollo y orientación sexuales</mat-radio-button>
+      </mat-radio-group>
+      <span *ngIf="isValidField('cie1')" class="text-red-500"> Debe seleccionar una opción </span>
+    </div>
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Diagnóstico TRS. psiquiátrico cie 10 (categoría 2) </mat-label>
+        <mat-select formControlName="seldiagn_psiquiatrico_cie2">
+          <mat-option value="">Seleccione una opción</mat-option>
+          <mat-option value="1">Trastornos mentales orgánicos, incluidos los sintomáticos</mat-option>
+          <mat-option value="2">Esquizofrenia, trastorno esquizotípico y trastornos de ideas delirantes</mat-option>
+          <mat-option value="3">Trastornos del humor (afectivos).</mat-option>
+          <mat-option value="4">Trastornos neuróticos, secundarios a situaciones estresantes y somatomorfos</mat-option>
+          <mat-option value="5">Trastornos de la personalidad y del comportamiento del adulto</mat-option>
+          <mat-option value="6">Trastornos del comportamiento asociados a disfunciones fisiológicas y a factores somáticos</mat-option>
+          <mat-option value="7">Retraso Mental</mat-option>
+          <mat-option value="8">Trastornos del Desarrollo Psicológico</mat-option>
+          <mat-option value="9">Trs. del comportamiento y de las emociones de comienzo habitual en la infancia y adolescencia</mat-option>
+          <mat-option value="10">En estudio</mat-option>
+          <mat-option value="11">Sin trastorno</mat-option>
+          <mat-option value="12">Trastornos de la conducta alimentaria </mat-option>
+          <mat-option value="13">Trastornos de los hábitos y del control de los impulsos </mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('seldiagn_psiquiatrico_cie2')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Diagnóstico TRS. psiquiátrico cie 10 (categoría 3)</mat-label>
+        <mat-select formControlName="seldiagn_psiquiatrico_cie3">
+          <mat-option value="">Seleccione una opción</mat-option>
+          <mat-option value="1">Trastornos mentales orgánicos, incluidos los sintomáticos</mat-option>
+          <mat-option value="2">Esquizofrenia, trastorno esquizotípico y trastornos de ideas delirantes</mat-option>
+          <mat-option value="3">Trastornos del humor (afectivos).</mat-option>
+          <mat-option value="4">Trastornos neuróticos, secundarios a situaciones estresantes y somatomorfos</mat-option>
+          <mat-option value="5">Trastornos de la personalidad y del comportamiento del adulto</mat-option>
+          <mat-option value="6">Trastornos del comportamiento asociados a disfunciones fisiológicas y a factores somáticos</mat-option>
+          <mat-option value="7">Retraso Mental</mat-option>
+          <mat-option value="8">Trastornos del Desarrollo Psicológico</mat-option>
+          <mat-option value="9">Trs. del comportamiento y de las emociones de comienzo habitual en la infancia y adolescencia</mat-option>
+          <mat-option value="10">En estudio</mat-option>
+          <mat-option value="11">Sin trastorno</mat-option>
+          <mat-option value="12">Trastornos de la conducta alimentaria </mat-option>
+          <mat-option value="13">Trastornos de los hábitos y del control de los impulsos </mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('seldiagn_psiquiatrico_cie3')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Diagnóstico TRS. físico </mat-label>
+        <mat-select formControlName="seldiagn_fiscico">
+          <mat-option value="">Seleccione una opción</mat-option>
+          <mat-option value="2">Hepatitis alcohólica subaguda</mat-option>
+          <mat-option value="3">Hepatitis crónica</mat-option>
+          <mat-option value="4">Enfermedades somáticas</mat-option>
+          <mat-option value="5">Hepatitis B, C, D</mat-option>
+          <mat-option value="6">ETS</mat-option>
+          <mat-option value="8">Otras Enfermedades o Condiciones de Riesgo Vital</mat-option>
+          <mat-option value="9">Infecciosas relacionadas con uso de sustancias</mat-option>
+          <mat-option value="10">Traumatismos y secuelas secundarios</mat-option>
+          <mat-option value="11">Otras enfermedades o condiciones Fisicas Limitantes</mat-option>
+          <mat-option value="12">Patología de la gestión y del niño intrauterino</mat-option>
+          <mat-option value="13">Anemia: megaloblástica y ferropénica</mat-option>
+          <mat-option value="14">Cardiopatías: miocardiopatía dilatada por OH, arritmias, HTA</mat-option>
+          <mat-option value="15">Patología Bucal</mat-option>
+          <mat-option value="16">En estudio</mat-option>
+          <mat-option value="17">Sin trastorno</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('seldiagn_fiscico')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Otros problemas de atención de salud mental (categoría 1)</mat-label>
+        <mat-select formControlName="selotro_problema_atencion">
+          <mat-option value="">Seleccione una opción</mat-option>
+          <mat-option value="1">VIF</mat-option>
+          <mat-option value="2">Abuso Sexual</mat-option>
+          <mat-option value="3">Maltrato Infantil</mat-option>
+          <mat-option value="4">Prisionización</mat-option>
+          <mat-option value="5">Explotación Comercial Sexual Infantil</mat-option>
+          <mat-option value="6">Explotación Comercial Sexual </mat-option>
+          <mat-option value="7">Sin otros problemas de salud mental</mat-option>
+          <mat-option value="9">Riesgo Suicida</mat-option>
+          <mat-option value="8">Otros</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('selotro_problema_atencion')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Otros problemas de atención de salud mental (categoría 2)</mat-label>
+        <mat-select formControlName="selotro_problema_atencion2">
+          <mat-option value="">Seleccione una opción</mat-option>
+          <mat-option value="1">VIF</mat-option>
+          <mat-option value="2">Abuso Sexual</mat-option>
+          <mat-option value="3">Maltrato Infantil</mat-option>
+          <mat-option value="4">Prisionización</mat-option>
+          <mat-option value="5">Explotación Comercial Sexual Infantil</mat-option>
+          <mat-option value="6">Explotación Comercial Sexual </mat-option>
+          <mat-option value="7">Sin otros problemas de salud mental</mat-option>
+          <mat-option value="9">Riesgo Suicida</mat-option>
+          <mat-option value="8">Otros</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('selotro_problema_atencion2')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Compromiso biopsicosocial</mat-label>
+        <mat-select formControlName="selcompromiso_biopsicosocial">
+          <mat-option value="">Seleccione una opción</mat-option>
+          <mat-option value="Severo">Severo</mat-option>
+          <mat-option value="Moderado">Moderado</mat-option>
+          <mat-option value="Leve">Leve</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('selcompromiso_biopsicosocial')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <button mat-stroked-button color="primary" routerLink="../" class="mr-1">Volver</button>
+  <button mat-flat-button type="submit" color="primary">Registrar</button>
+</form>

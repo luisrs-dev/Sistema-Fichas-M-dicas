@@ -1,0 +1,74 @@
+<form [formGroup]="treatmentForm" autocomplete="off">
+  <div class="grid pt-4"></div>
+
+  <div class="grid w-9">
+    <div class="col-6">
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Fecha ingreso tratamiento</mat-label>
+        <input formControlName="txtfecha_ingreso_tratamiento" matInput [matDatepicker]="picker" />
+        <!--<mat-hint>MM/DD/YYYY</mat-hint>-->
+        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+      <span *ngIf="isValidField('txtfecha_ingreso_tratamiento')" class="text-red-500"> Debe seleccionar una opción </span>
+    </div>
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Ingreso convenio CONACE</mat-label>
+        <mat-select formControlName="txtfecha_ingreso_conace">
+          <mat-option value="null">Seleccione una opción</mat-option>
+          <mat-option value="Si">Si</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('txtfecha_ingreso_conace')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Tipo programa</mat-label>
+        <mat-select formControlName="seltipo_programa">
+          <mat-option value="null">Seleccione una opción</mat-option>
+          <mat-option value="2">Programa Específico Mujeres</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('seltipo_programa')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Tipo plan</mat-label>
+        <mat-select formControlName="seltipo_plan">
+          <mat-option value="null">Seleccione una opción</mat-option>
+          <mat-option value="18">M-PR</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('seltipo_plan')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>RUT del paciente</mat-label>
+        <input matInput formControlName="txtrut" />
+        <span *ngIf="isValidField('txtrut')" class="form-text text-danger"> Requerido </span>
+        <mat-icon matSuffix>person</mat-icon>
+        <!-- <mat-hint>Hint</mat-hint> -->
+      </mat-form-field>
+    </div>
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Consentimiento informado</mat-label>
+        <mat-select formControlName="selconcentimiento_informado">
+          <mat-option value="null">Seleccione una opción</mat-option>
+          <mat-option value="Si">Si</mat-option>
+          <mat-option value="No">No</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('selconcentimiento_informado')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <button mat-stroked-button color="primary" routerLink="../" class="mr-1">Volver</button>
+  <button mat-flat-button type="submit" color="primary">Registrar</button>
+</form>

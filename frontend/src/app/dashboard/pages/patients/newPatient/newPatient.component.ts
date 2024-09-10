@@ -17,6 +17,8 @@ import { ParametersService } from '../../parameters/parameters.service';
 import { Parameter, ParameterValue } from '../../parameters/interfaces/parameter.interface';
 import { UserService } from '../../users/user.service';
 import { AuthService } from '../../../../auth/auth.service';
+import moment from 'moment';
+import { Patient } from '../../../interfaces/patient.interface';
 
 @Component({
   selector: 'app-new-patient',
@@ -34,19 +36,17 @@ import { AuthService } from '../../../../auth/auth.service';
 })
 export default class NewPatientComponent {
   private patientService = inject(PatientService);
-  private parametersService = inject(ParametersService);
-  private userService = inject(UserService);
   private authService = inject(AuthService);
   private fb = inject(FormBuilder);
-  private router = inject(Router);
 
   public isEditable: boolean = false;
   public fichaDemanda: boolean = true;
   public registroSistrat: boolean = true;
-  public disableTabSistrat: boolean = true;
+  public demandRegistered: boolean = false;
   private changeDetectorRef = inject(ChangeDetectorRef);
   public searchResults$: Observable<any>;
   public programs: Parameter[];
+  public patient: Patient;
 
 
 
@@ -98,10 +98,15 @@ export default class NewPatientComponent {
       return;
     }
 
+    const dataUser = this.formatFormDates(this.userForm.value);
+
     this.patientService
-      .addPatient(this.userForm.value)
-      .subscribe(async (response: any) => {
-        await this.delay(2000);
+      .addPatient(dataUser)
+      .subscribe( (patient) => {
+
+        this.patient = patient;
+
+        //await this.delay(2000);
         this.fichaDemanda = false;
         this.changeDetectorRef.detectChanges();
         Notiflix.Loading.remove();
@@ -115,17 +120,29 @@ export default class NewPatientComponent {
     }
 
     Notiflix.Loading.circle('Registrando ficha demanda...');
-    const userId = localStorage.getItem('user') || '';
+    const dataUser = localStorage.getItem('user') || '';
+    const user = JSON.parse(dataUser); 
+    
+    const formDataFormated = this.formatFormDates(this.sistratForm.value); // Convertir fechas   
 
     this.patientService
-      .addFichaDemanda(userId, this.sistratForm.value)
+      .addFichaDemanda(this.patient._id!, formDataFormated)
       .subscribe(async (response: any) => {
         await this.delay(2000);
-        this.disableTabSistrat = false;
+        this.demandRegistered = true;
         this.changeDetectorRef.detectChanges();
-
         Notiflix.Loading.remove();
       });
+  }
+
+  onSaveDemandOnSistrat(){
+
+    this.patientService.addFichaDemandaToSistrat(this.patient._id!)
+      .subscribe( (response) => {
+        console.log('response on addFichaDemandaToSistrat');
+        console.log({response});
+        
+      })
   }
 
   back() {
@@ -142,4 +159,19 @@ export default class NewPatientComponent {
   private delay(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
+
+    // Método para convertir todas las fechas a 'DD-MM-YYYY'
+    formatFormDates(data: any): any {
+      const formValues = { ...data }; // Clonar los valores del formulario
+  
+      // Iterar sobre cada control del formulario
+      for (const key in formValues) {
+        if (formValues.hasOwnProperty(key) && formValues[key] instanceof Date) {
+          // Formatear las fechas usando moment.js
+          formValues[key] = moment(formValues[key]).format('DD/MM/YYYY');
+        }
+      }
+  
+      return formValues;
+    }
 }

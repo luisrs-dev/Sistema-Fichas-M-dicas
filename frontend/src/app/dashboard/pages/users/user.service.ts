@@ -1,9 +1,7 @@
-import { environment } from '../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { catchError, Observable, tap, throwError } from 'rxjs';
-import { Patient } from '../../interfaces/patient.interface';
-import { Parameter } from '../parameters/interfaces/parameter.interface';
+import { environment } from '../../../../environments/environment';
 import { User } from '../../../auth/interfaces/login-response.interface';
 
 @Injectable({

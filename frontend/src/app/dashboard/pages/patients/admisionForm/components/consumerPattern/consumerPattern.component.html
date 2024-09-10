@@ -1,0 +1,291 @@
+<form [formGroup]="consumerPatternForm" autocomplete="off">
+  <div class="grid pt-4"></div>
+
+  <div class="grid w-9">
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Sustancia principal</mat-label>
+        <mat-select formControlName="selsustancia_princial">
+          <mat-option value="null">Seleccione una opción</mat-option>
+          <mat-option value="">Seleccione</mat-option>
+          <mat-option value="1" data-index-number="">Alcohol</mat-option>
+          <mat-option value="15" data-index-number="">Anfetaminas</mat-option>
+          <mat-option value="3" data-index-number="">Cocaína</mat-option>
+          <mat-option value="5" data-index-number="">Crack</mat-option>
+          <mat-option value="7" data-index-number="">Extasis</mat-option>
+          <mat-option value="19" data-index-number="">Hipnóticos</mat-option>
+          <mat-option
+            value="6"
+            data-index-number='neopren, GHB, óxido nitroso (gas hilarante), "poppers", solventes, gasolina, diluyente'
+            >Inhalables</mat-option
+          >
+          <mat-option value="8" data-index-number="">LSD</mat-option>
+          <mat-option value="2" data-index-number="">Marihuana</mat-option>
+          <mat-option value="16" data-index-number="">Metanfetaminas y otros derivados</mat-option>
+          <mat-option value="21" data-index-number="">Otros</mat-option>
+          <mat-option value="11" data-index-number="">Otros Alucinógenos</mat-option>
+          <mat-option value="17" data-index-number="">Otros Estimulantes</mat-option>
+          <mat-option value="14" data-index-number="morfina, codeína, meperidina, demerol, tramadol, tramal."
+            >Otros Opioides Analgésicos</mat-option
+          >
+          <mat-option value="4" selected="" data-index-number="">Pasta Base</mat-option>
+          <mat-option
+            value="24"
+            data-index-number="diazepam, Valium, clonazepam, Ravotril, alprazolam, adax, barbit?os, fenobarbital."
+            >Tranquilizantes</mat-option
+          >
+          <mat-option
+            value="18"
+            data-index-number="diazepam, Valium, clonazepam, Ravotril, alprazolam, adax, barbitúricos, fenobarbital."
+            >Sedantes</mat-option
+          >
+          <mat-option value="25" data-index-number="">Sin especificar</mat-option>
+          <mat-option value="26" data-index-number="">Tussi/Ketamina</mat-option>
+          <mat-option value="27" data-index-number="">Fentanilo</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('selsustancia_princial')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Otra sustancia N°1</mat-label>
+        <mat-select formControlName="selotra_sustancia_1">
+          <mat-option value="null">Seleccione una opción</mat-option>
+          <mat-option value="">Seleccione</mat-option>
+          <mat-option value="1" selected="" data-index-number="">Alcohol</mat-option>
+          <mat-option value="15" data-index-number="">Anfetaminas</mat-option>
+          <mat-option value="3" data-index-number="">Cocaína</mat-option>
+          <mat-option value="5" data-index-number="">Crack</mat-option>
+          <mat-option value="7" data-index-number="">Extasis</mat-option>
+          <mat-option value="19" data-index-number="">Hipnóticos</mat-option>
+          <mat-option value="6" data-index-number='neopren, GHB, óxido nitroso (gas hilarante), "poppers", solventes, gasolina, diluyente'>Inhalables</mat-option>
+          <mat-option value="8" data-index-number="">LSD</mat-option>
+          <mat-option value="2" data-index-number="">Marihuana</mat-option>
+          <mat-option value="16" data-index-number="">Metanfetaminas y otros derivados</mat-option>
+          <mat-option value="21" data-index-number="">Otros</mat-option>
+          <mat-option value="11" data-index-number="">Otros Alucinógenos</mat-option>
+          <mat-option value="17" data-index-number="">Otros Estimulantes</mat-option>
+          <mat-option value="14" data-index-number="morfina, codeína, meperidina, demerol, tramadol, tramal.">Otros Opioides Analgésicos</mat-option>
+          <mat-option value="24" data-index-number="diazepam, Valium, clonazepam, Ravotril, alprazolam, adax, barbit?os, fenobarbital.">Tranquilizantes</mat-option>
+          <mat-option value="18" data-index-number="diazepam, Valium, clonazepam, Ravotril, alprazolam, adax, barbitúricos, fenobarbital.">Sedantes</mat-option>
+          <mat-option value="25" data-index-number="">Sin especificar</mat-option>
+          <mat-option value="26" data-index-number="">Tussi/Ketamina</mat-option>
+          <mat-option value="27" data-index-number="">Fentanilo</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('selotra_sustancia_1')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Otra sustancia N°2</mat-label>
+        <mat-select formControlName="selotra_sustancia_2">
+          <mat-option value="null">Seleccione una opción</mat-option>
+          <mat-option value="">Seleccione</mat-option>
+          <mat-option value="1" selected="" data-index-number="">Alcohol</mat-option>
+          <mat-option value="15" data-index-number="">Anfetaminas</mat-option>
+          <mat-option value="3" data-index-number="">Cocaína</mat-option>
+          <mat-option value="5" data-index-number="">Crack</mat-option>
+          <mat-option value="7" data-index-number="">Extasis</mat-option>
+          <mat-option value="19" data-index-number="">Hipnóticos</mat-option>
+          <mat-option
+            value="6"
+            data-index-number='neopren, GHB, óxido nitroso (gas hilarante), "poppers", solventes, gasolina, diluyente'
+            >Inhalables</mat-option
+          >
+          <mat-option value="8" data-index-number="">LSD</mat-option>
+          <mat-option value="2" data-index-number="">Marihuana</mat-option>
+          <mat-option value="16" data-index-number="">Metanfetaminas y otros derivados</mat-option>
+          <mat-option value="21" data-index-number="">Otros</mat-option>
+          <mat-option value="11" data-index-number="">Otros Alucinógenos</mat-option>
+          <mat-option value="17" data-index-number="">Otros Estimulantes</mat-option>
+          <mat-option value="14" data-index-number="morfina, codeína, meperidina, demerol, tramadol, tramal."
+            >Otros Opioides Analgésicos</mat-option
+          >
+          <mat-option
+            value="24"
+            data-index-number="diazepam, Valium, clonazepam, Ravotril, alprazolam, adax, barbit?os, fenobarbital."
+            >Tranquilizantes</mat-option
+          >
+          <mat-option
+            value="18"
+            data-index-number="diazepam, Valium, clonazepam, Ravotril, alprazolam, adax, barbitúricos, fenobarbital."
+            >Sedantes</mat-option
+          >
+          <mat-option value="25" data-index-number="">Sin especificar</mat-option>
+          <mat-option value="26" data-index-number="">Tussi/Ketamina</mat-option>
+          <mat-option value="27" data-index-number="">Fentanilo</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('selotra_sustancia_2')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Otra sustancia N°3</mat-label>
+        <mat-select formControlName="selotra_sustancia_3">
+          <mat-option value="null">Seleccione una opción</mat-option>
+          <mat-option value="">Seleccione</mat-option>
+          <mat-option value="1" selected="" data-index-number="">Alcohol</mat-option>
+          <mat-option value="15" data-index-number="">Anfetaminas</mat-option>
+          <mat-option value="3" data-index-number="">Cocaína</mat-option>
+          <mat-option value="5" data-index-number="">Crack</mat-option>
+          <mat-option value="7" data-index-number="">Extasis</mat-option>
+          <mat-option value="19" data-index-number="">Hipnóticos</mat-option>
+          <mat-option
+            value="6"
+            data-index-number='neopren, GHB, óxido nitroso (gas hilarante), "poppers", solventes, gasolina, diluyente'
+            >Inhalables</mat-option
+          >
+          <mat-option value="8" data-index-number="">LSD</mat-option>
+          <mat-option value="2" data-index-number="">Marihuana</mat-option>
+          <mat-option value="16" data-index-number="">Metanfetaminas y otros derivados</mat-option>
+          <mat-option value="21" data-index-number="">Otros</mat-option>
+          <mat-option value="11" data-index-number="">Otros Alucinógenos</mat-option>
+          <mat-option value="17" data-index-number="">Otros Estimulantes</mat-option>
+          <mat-option value="14" data-index-number="morfina, codeína, meperidina, demerol, tramadol, tramal."
+            >Otros Opioides Analgésicos</mat-option
+          >
+          <mat-option
+            value="24"
+            data-index-number="diazepam, Valium, clonazepam, Ravotril, alprazolam, adax, barbit?os, fenobarbital."
+            >Tranquilizantes</mat-option
+          >
+          <mat-option
+            value="18"
+            data-index-number="diazepam, Valium, clonazepam, Ravotril, alprazolam, adax, barbitúricos, fenobarbital."
+            >Sedantes</mat-option
+          >
+          <mat-option value="25" data-index-number="">Sin especificar</mat-option>
+          <mat-option value="26" data-index-number="">Tussi/Ketamina</mat-option>
+          <mat-option value="27" data-index-number="">Fentanilo</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('selotra_sustancia_3')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Frecuencia de consumo (sustancia principal)</mat-label>
+        <mat-select formControlName="selfrecuencia_consumo">
+          <mat-option value="">Seleccione una opción</mat-option>
+          <mat-option value="1" selected="">Todos los días</mat-option>
+          <mat-option value="2">4-6 días - semana</mat-option>
+          <mat-option value="3">2-3 días - semana</mat-option>
+          <mat-option value="4">1 días - semana</mat-option>
+          <mat-option value="5">Menos de 1 día - semana</mat-option>
+          <mat-option value="6">No consumió</mat-option>
+          <mat-option value="7">Desconocida</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('selfrecuencia_consumo')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Edad de inicio (sustancia principal)  </mat-label>
+        <input matInput formControlName="txtedad_inicio_consumo" placeholder="Nombre" />
+        <span *ngIf="isValidField('txtedad_inicio_consumo')" class="form-text text-danger">
+          Campo requerido
+        </span>
+        <mat-icon matSuffix>person</mat-icon>
+        <!-- <mat-hint>Hint</mat-hint> -->
+      </mat-form-field>
+    </div>
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Via de administracion (sustancia principal)</mat-label>
+        <mat-select formControlName="selvia_administracion">
+          <mat-option value="">Seleccione una opción</mat-option>
+          <mat-option value="1">Fumada o Pulmonar (aspiración de gases o vapores)</mat-option>
+          <mat-option value="2">Intranasal ( aspiración de polvo por la nariz)</mat-option>
+          <mat-option value="3">Inyectada (intravenosa o intramuscular)</mat-option>
+          <mat-option value="4">Oral (bebida o comida)</mat-option>
+          <mat-option value="5">Otros</mat-option>
+          <mat-option value="6">No sabe</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('selvia_administracion')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Sustancia de inicio </mat-label>
+        <mat-select formControlName="selsustancia_inicio">
+          <mat-option value="">Seleccione una opción</mat-option>
+          <mat-option value="">Seleccione</mat-option>
+          <mat-option value="1" selected="">Alcohol</mat-option>
+          <mat-option value="2">Marihuana</mat-option>
+          <mat-option value="3">Cocaína</mat-option>
+          <mat-option value="4">Pasta Base</mat-option>
+          <mat-option value="5">Crack</mat-option>
+          <mat-option value="6">Inhalables</mat-option>
+          <mat-option value="7">Extasis</mat-option>
+          <mat-option value="8">LSD</mat-option>
+          <mat-option value="9">Fenilciclidina</mat-option>
+          <mat-option value="10">Hongos</mat-option>
+          <mat-option value="11">Otros Alucinógenos</mat-option>
+          <mat-option value="12">Heroína</mat-option>
+          <mat-option value="13">Metadona</mat-option>
+          <mat-option value="14">Otros Opioides Analgésicos</mat-option>
+          <mat-option value="15">Anfetaminas</mat-option>
+          <mat-option value="16">Metanfetaminas y otros derivados</mat-option>
+          <mat-option value="17">Otros Estimulantes</mat-option>
+          <mat-option value="18">Sedantes</mat-option>
+          <mat-option value="19">Hipnóticos</mat-option>
+          <mat-option value="20">Esteroides Anabólicos</mat-option>
+          <mat-option value="21">Otros</mat-option>
+          <mat-option value="22">Sin sustancia principal (CIP-CRC)</mat-option>
+          <mat-option value="23">SIN CONSUMO</mat-option>
+          <mat-option value="24">Tranquilizantes</mat-option>
+          <mat-option value="25">Sin especificar</mat-option>
+          <mat-option value="26">Tussi/Ketamina</mat-option>
+          <mat-option value="27">Fentanilo</mat-option>
+          <!-- SISTRAT1.2 -->
+          <mat-option value="">Seleccione</mat-option>
+          <mat-option value="1" selected="" data-index-number="">Alcohol</mat-option>
+          <mat-option value="15" data-index-number="">Anfetaminas</mat-option>
+          <mat-option value="3" data-index-number="">Cocaína</mat-option>
+          <mat-option value="5" data-index-number="">Crack</mat-option>
+          <mat-option value="7" data-index-number="">Extasis</mat-option>
+          <mat-option value="19" data-index-number="">Hipnóticos</mat-option>
+          <mat-option value="6" data-index-number='neopren, GHB, óxido nitroso (gas hilarante), "poppers", solventes, gasolina, diluyente'>Inhalables</mat-option>
+          <mat-option value="8" data-index-number="">LSD</mat-option>
+          <mat-option value="2" data-index-number="">Marihuana</mat-option>
+          <mat-option value="16" data-index-number="">Metanfetaminas y otros derivados</mat-option>
+          <mat-option value="21" data-index-number="">Otros</mat-option>
+          <mat-option value="11" data-index-number="">Otros Alucinógenos</mat-option>
+          <mat-option value="17" data-index-number="">Otros Estimulantes</mat-option>
+          <mat-option value="14" data-index-number="morfina, codeína, meperidina, demerol, tramadol, tramal.">Otros Opioides Analgésicos</mat-option>
+          <mat-option value="4" data-index-number="">Pasta Base</mat-option>
+          <mat-option value="24" data-index-number="diazepam, Valium, clonazepam, Ravotril, alprazolam, adax, barbit?os, fenobarbital.">Tranquilizantes</mat-option>
+          <mat-option value="18" data-index-number="diazepam, Valium, clonazepam, Ravotril, alprazolam, adax, barbitúricos, fenobarbital.">Sedantes</mat-option>
+          <mat-option value="25" data-index-number="">Sin especificar</mat-option>
+          <mat-option value="26" data-index-number="">Tussi/Ketamina</mat-option>
+          <mat-option value="27" data-index-number="">Fentanilo</mat-option>
+
+
+        </mat-select>
+        <span *ngIf="isValidField('selsustancia_inicio')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Edad de inicio (sustancia inicial)</mat-label>
+        <input matInput formControlName="txtedad_inicio_consumo_inicial" placeholder="Nombre" />
+        <span *ngIf="isValidField('txtedad_inicio_consumo_inicial')" class="form-text text-danger">
+          Campo requerido
+        </span>
+        <mat-icon matSuffix>person</mat-icon>
+        <!-- <mat-hint>Hint</mat-hint> -->
+      </mat-form-field>
+    </div>
+  </div>
+
+
+
+  <button mat-stroked-button color="primary" routerLink="../" class="mr-1">Volver</button>
+  <button mat-flat-button type="submit" color="primary">Registrar</button>
+</form>

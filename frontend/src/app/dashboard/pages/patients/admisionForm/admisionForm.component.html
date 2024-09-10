@@ -1,18 +1,52 @@
 <div class="container">
-  <mat-tab-group mat-stretch-tabs="false" mat-align-tabs="start" dynamicHeight>
+
+  <div class="flex justify-content-between flex-wrap">
+    <div class="flex align-items-center justify-content-center border-round ">
+      <h4>
+        Ficha de ingreso > 
+        <a mat-button color="primary" matTooltip="Ver Perfil">
+          @if(patient){
+          {{ patient.name }} {{ patient.surname }} {{ patient.secondSurname }} }</a
+        >
+      </h4>
+    </div>
+
+    <div class="flex align-items-center justify-content-center border-round pb-2">
+      <button class="my-2" mat-raised-button color="primary" (click)="onSave()">
+        Registrar
+        <mat-icon>send</mat-icon>
+      </button>     
+    </div>
+  </div>
+
+  <mat-divider></mat-divider>
+
+
+
+  <mat-tab-group mat-stretch-tabs="false" mat-align-tabs="start" dynamicHeight class="mt-4">
     <mat-tab label="Identificación de usuarios">
       @if(patient){
         <user-identification [patient]="patient"></user-identification>
       }
     </mat-tab>
     <mat-tab label="Caracterización Sociodemográfica">
-      Inputs y otros2
+      <socio-demographic-form></socio-demographic-form>
     </mat-tab>
-    <mat-tab label="Patrón de Consumo Problemático "> Inputs y otros3 </mat-tab>
-    <mat-tab label="Diagnóstico Clínico "> Inputs y otros4 </mat-tab>
+    <mat-tab label="Patrón de Consumo Problemático ">
+      <consumer-pattern-form></consumer-pattern-form>
+    </mat-tab>
+    <mat-tab label="Diagnóstico Clínico ">
+      <clinical-diagnosis-form></clinical-diagnosis-form>
+    </mat-tab>
 
-    <mat-tab label="Tratamiento/Convenio "> Tratamiento/Convenio </mat-tab>
+    <mat-tab label="Tratamiento/Convenio "> 
+      <treatment-form></treatment-form>
+    </mat-tab>
 
-    <mat-tab label="Diagnósitco de Int. Social "> Inputs y otros3 </mat-tab>
+    <mat-tab label="Diagnósitco de Int. Social">
+      <social-diagnosis-form/>
+    </mat-tab>
   </mat-tab-group>
+
 </div>
+

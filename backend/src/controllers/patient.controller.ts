@@ -5,7 +5,7 @@ import {
   inerPatient,
   inerDemand,
   updatePatientSistrat,
-  recordToSistrat,
+  recordDemandToSistrat,
   PatientsByProfile,
   findPatient,
 } from "../services/patient.service";
@@ -48,26 +48,6 @@ const getPatientsByProfile = async (req: Request, res: Response) => {
   }
 };
 
-// const updateItem = async ({ params, body }: Request, res: Response) => {
-//   try {
-//     const { id } = params;
-//     const responseItem = await updateCar(id, body);
-
-//     res.send(responseItem);
-//   } catch (error) {
-//     handleHttp(res, "");
-//   }
-// };
-
-// const deleteItem = async ({ params }: Request, res: Response) => {
-//   try {
-//     const { id } = params;
-//     const responseItem = await deleteCar(id);
-//     res.send(responseItem);
-//   } catch (error) {
-//     handleHttp(res, "");
-//   }
-// };
 const postPatient = async ({ body }: Request, res: Response) => {
   try {
     const responsePatient = await inerPatient(body);
@@ -78,9 +58,36 @@ const postPatient = async ({ body }: Request, res: Response) => {
 };
 
 const postDemand = async ({ body }: Request, res: Response) => {
+  const { patientId, dataSistrat} = body;
+
   try {
-    const responseDemand = await inerDemand(body);
+    const responseDemand = await inerDemand(patientId, dataSistrat);
     res.send(responseDemand);
+  } catch (error) {
+    handleHttp(res, "ERROR_POST_ITEM", error);
+  }
+};
+
+const postDemandToSistrat = async ({body}: Request, response: Response) => {
+  const {patientId } = body;
+  try {
+    const responseDemandToSistrat = await recordDemandToSistrat(patientId);
+
+  } catch (error) {
+    
+  }
+}
+
+
+const postAdmissionForm = async ({ body }: Request, res: Response) => {
+  
+  const {userId, dataAdmissionForm} = body;
+  if(!userId){
+
+  }
+  try {
+    const responseAdmissionForm =' await saveAdmissionForm(userId, dataAdmissionForm)';
+    res.send(responseAdmissionForm);
   } catch (error) {
     handleHttp(res, "ERROR_POST_ITEM", error);
   }
@@ -96,22 +103,24 @@ const postPatientSistrat = async (req: Request, res: Response) => {
   }
 };
 
-const recordPatientSistrat = async (req: Request, res: Response) => {
-  try {
-    const { userId } = req.body;
-    const responsePatient = await recordToSistrat(userId);
-    res.send(responsePatient);
-  } catch (error) {
-    handleHttp(res, "ERROR_POST_ITEM", error);
-  }
-};
+//const recordPatientSistrat = async (req: Request, res: Response) => {
+//  try {
+//    const { userId } = req.body;
+//    const responsePatient = await recordToSistrat(userId);
+//    res.send(responsePatient);
+//  } catch (error) {
+//    handleHttp(res, "ERROR_POST_ITEM", error);
+//  }
+//};
 
 export {
   postPatient,
   postDemand,
+  postDemandToSistrat,
   postPatientSistrat,
-  recordPatientSistrat,
+  //recordPatientSistrat,
   getPatients,
   getPatientsByProfile,
   getPatientsById,
+  postAdmissionForm
 };
