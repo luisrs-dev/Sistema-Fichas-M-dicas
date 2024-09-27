@@ -1,8 +1,7 @@
 import { Browser, Page } from "puppeteer";
 //import puppeteer from "puppeteer-extra";
 import puppeteer from "puppeteer";
-import moment from 'moment';
-
+import moment from "moment";
 
 //import StealthPlugin from "puppeteer-extra-plugin-stealth";
 //import AnonymizeUAPlugin from "puppeteer-extra-plugin-anonymize-ua";
@@ -16,6 +15,13 @@ class Scrapper {
     const browser: Browser = await this.launchBrowser(false);
     const page: Page = await browser.newPage();
     await page.setDefaultNavigationTimeout(300000); // 5 minutos
+
+    // Ajustar el viewport para simular una pantalla de notebook
+    await page.setViewport({
+      width: 1366, // Ancho de un notebook común
+      height: 768, // Alto de un notebook común
+    });
+
     return page;
   }
 
@@ -33,6 +39,7 @@ class Scrapper {
 
     this.browser = await puppeteer.launch({
       headless: headless,
+      //slowMo: 300, sirve para darle tiempe a cada operacion
       userDataDir: userDataDir, // Establecer la carpeta de caché
       args: [
         "--no-sandbox",
@@ -73,35 +80,54 @@ class Scrapper {
   }
 
   async setDateValue(page: Page, selector: string, date: string): Promise<void> {
-    await page.evaluate((selector, date) => {
-      const input = document.querySelector(selector);
-      if (input) {
-        (input as HTMLInputElement).value = date;
-        const event = new Event('input', { bubbles: true });
-        input.dispatchEvent(event);
-      } else {
-        console.error(`El elemento con selector "${selector}" no fue encontrado.`);
-      }
-    }, selector, date);
+    this.waitForSeconds(1); // Esperar 1 segundo
+    await page.evaluate(
+      (selector, date) => {
+        const input = document.querySelector(selector);
+        if (input) {
+          (input as HTMLInputElement).value = date;
+          const event = new Event("input", { bubbles: true });
+          input.dispatchEvent(event);
+        } else {
+          console.error(`El elemento con selector "${selector}" no fue encontrado.`);
+        }
+      },
+      selector,
+      date
+    );
   }
 
-    // Método para seleccionar un valor en un select
-    async setSelectValue(page: Page, selector: string, value: string): Promise<void> {
-      await page.evaluate((selector, value) => {
-        const select = document.querySelector(selector) as HTMLSelectElement;
-        if (select) {
-          select.value = value;
-          const event = new Event('change', { bubbles: true }); // Despachar evento "change"
-          select.dispatchEvent(event);
-        } else {
-          console.error(`El elemento select con selector "${selector}" no fue encontrado.`);
-        }
-      }, selector, value);
+  // Método para seleccionar un valor en un select
+  async setSelectValue(page: Page, selector: string, value: string): Promise<void> {
+    try {
+      
+      await page.waitForSelector(selector, { visible: true, timeout: 10000 });
+  
+      await page.evaluate(
+        (selector, value) => {
+          const select = document.querySelector(selector) as HTMLSelectElement;
+          if (select) {
+            select.value = value;
+            const event = new Event("change", { bubbles: true }); // Despachar evento "change"
+            select.dispatchEvent(event);
+          } else {
+            console.error(`El elemento select con selector "${selector}" no fue encontrado.`);
+            throw new Error(`Elemento select no encontrado: ${selector}`);
+
+          }
+        },
+        selector,
+        value
+      );
+    } catch (error) {
+      throw new Error(`Error al setear valor de select: ${error}`);
+      
     }
+  }
 
   // Método actualizado con Moment.js para formatear la fecha
   formatDate(date: string): string {
-    return moment(date).format('YYYY-MM-DD'); // Formato requerido para el input tipo fecha
+    return moment(date).format("YYYY-MM-DD"); // Formato requerido para el input tipo fecha
   }
 
   // Método para esperar una cantidad de segundos

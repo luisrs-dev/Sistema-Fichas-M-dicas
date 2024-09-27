@@ -1,3 +1,36 @@
 :host {
   display: block;
 }
+
+.custom-icon {
+  color: #1e8ecd; /* Cambia el color del ícono a azul */
+  background-color: #1e8ecd; /* Fondo azul */
+  border-radius: 50%; /* Hace que el ícono sea circular */
+
+}
+
+.custom-icon-black {
+  color: #000000; /* Cambia el color del ícono a azul */
+  background-color: #000000; /* Fondo azul */
+  border-radius: 50%; /* Hace que el ícono sea circular */
+
+}
+
+.custom-icon-red {
+  color: red; /* Cambia el color del ícono a azul */
+  background-color: red; /* Fondo azul */
+  border-radius: 50%; /* Hace que el ícono sea circular */
+
+}
+
+.mat-row, .mat-header-row {
+  height: 32px; /* Reduce la altura de las filas */
+}
+
+.mat-cell, .mat-header-cell {
+  padding: 4px 8px; /* Ajusta el padding */
+  font-size: 12px; /* Reduce el tamaño de la fuente */
+}
+/*.mat-icon {
+  font-size: 16px;
+}*/

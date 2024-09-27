@@ -8,6 +8,10 @@ import {
   recordDemandToSistrat,
   PatientsByProfile,
   findPatient,
+  saveAdmissionForm,
+  saveAdmissionFormToSistrat,
+  updateAlertsFromSistrat,
+  updateFormCie10
 } from "../services/patient.service";
 
 const getPatientsById = async ({ params }: Request, res: Response) => {
@@ -25,12 +29,11 @@ const getPatientsById = async ({ params }: Request, res: Response) => {
 
 const getPatients = async (req: Request, res: Response) => {
   try {
-
     const { programs } = req.query;
 
     // Asegúrate de que `programs` sea un array, incluso si se pasa un solo valor
     const programsArray = Array.isArray(programs) ? programs : [programs];
-    const validProgramsArray = programsArray.filter((p): p is string => typeof p === 'string');
+    const validProgramsArray = programsArray.filter((p): p is string => typeof p === "string");
 
     const responseItems = await allPatients(validProgramsArray);
     res.send(responseItems);
@@ -58,38 +61,62 @@ const postPatient = async ({ body }: Request, res: Response) => {
 };
 
 const postDemand = async ({ body }: Request, res: Response) => {
-  const { patientId, dataSistrat} = body;
+  const { patientId, dataSistrat } = body;
 
   try {
-    const responseDemand = await inerDemand(patientId, dataSistrat);
-    res.send(responseDemand);
+    const patient = await inerDemand(patientId, dataSistrat);
+    res.send(patient);
   } catch (error) {
     handleHttp(res, "ERROR_POST_ITEM", error);
   }
 };
 
-const postDemandToSistrat = async ({body}: Request, response: Response) => {
-  const {patientId } = body;
-  try {
-    const responseDemandToSistrat = await recordDemandToSistrat(patientId);
+const postDemandToSistrat = async ({ body }: Request, response: Response) => {
+  const { patientId } = body;
 
-  } catch (error) {
-    
+  if (!patientId) {
+    return response.status(400).json({ error: "patientId es requerido." });
   }
-}
+  
 
+  try {
+    const status = await recordDemandToSistrat(patientId);
+    if(status.success){
+      response.status(200).json({ message: "Demanda registrada correctamente." }); // Respuesta exitosa
+    }
+    else {
+      return response.status(500).json({ message: "No se pudo registrar la demanda en Sistrat." });
+    }
+
+  } catch (error: any) {
+    console.error("Error en postDemandToSistrat:", error);
+    response.status(500).json({ error: error.message || "Error interno del servidor." }); // Respuesta de error
+  }
+};
 
 const postAdmissionForm = async ({ body }: Request, res: Response) => {
-  
-  const {userId, dataAdmissionForm} = body;
-  if(!userId){
-
+  const { patientId, dataAdmissionForm } = body;
+  if (!patientId) {
+    res.status(500).json({ success: true, message: "Usuario no existe para registrar ficha de ingreso" });
   }
   try {
-    const responseAdmissionForm =' await saveAdmissionForm(userId, dataAdmissionForm)';
-    res.send(responseAdmissionForm);
-  } catch (error) {
-    handleHttp(res, "ERROR_POST_ITEM", error);
+    const responseAdmissionForm = await saveAdmissionForm(patientId, dataAdmissionForm);
+    res.status(201).json({ success: true, message: "Ficha de ingreso creada con éxito" });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const postAdmissionFormSistrat = async ({ body }: Request, res: Response) => {
+  const { patientId } = body;
+  if (!patientId) {
+    res.status(500).json({ success: true, message: "Usuario no existe para registrar ficha de ingreso en SISTRAT" });
+  }
+  try {
+    const responseAdmissionForm = await saveAdmissionFormToSistrat(patientId);
+    res.status(201).json({ success: true, message: "Ficha de ingreso creada con éxito" });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -103,24 +130,46 @@ const postPatientSistrat = async (req: Request, res: Response) => {
   }
 };
 
-//const recordPatientSistrat = async (req: Request, res: Response) => {
-//  try {
-//    const { userId } = req.body;
-//    const responsePatient = await recordToSistrat(userId);
-//    res.send(responsePatient);
-//  } catch (error) {
-//    handleHttp(res, "ERROR_POST_ITEM", error);
-//  }
-//};
+const updateAlerts = async (req: Request, res: Response) => {
+  try {
+    const { patientId } = req.body;
+    console.log(`Paciente id desde update alert controllers: ${patientId}`);
+    
+    const responseUserWithAlerts = await updateAlertsFromSistrat(patientId);
+    res.send(responseUserWithAlerts);
+    
+
+  } catch (error) {
+    handleHttp(res, "ERROR_UPDATE_ALERTS", error);
+    
+  }
+}
+
+const formCie10 = async (req: Request, res: Response) => {
+  try {
+    const { patientId, optionSelected } = req.body;
+    console.log(`controller: ${optionSelected}`);
+    
+    
+    const responseFormCie10 = await updateFormCie10(patientId, optionSelected);
+    res.send(responseFormCie10);
+  
+  } catch (error) {
+    handleHttp(res, "ERROR_UPDATE_ALERTS", error);
+    
+  }
+}
 
 export {
   postPatient,
   postDemand,
   postDemandToSistrat,
   postPatientSistrat,
-  //recordPatientSistrat,
   getPatients,
   getPatientsByProfile,
   getPatientsById,
-  postAdmissionForm
+  postAdmissionForm,
+  postAdmissionFormSistrat,
+  updateAlerts,
+  formCie10
 };

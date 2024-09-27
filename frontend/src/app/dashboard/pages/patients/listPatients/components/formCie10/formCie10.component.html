@@ -1,0 +1,39 @@
+<div class="container">
+  <div class="grid">
+    <div class="col p-6">
+      <h1>Formulario de CIE 10</h1>
+      <form [formGroup]="form" autocomplete="off" (ngSubmit)="onSave()">
+          <mat-form-field class="w-full" appearance="outline">
+            <mat-label>DIAGNOSTICO TRS. PSIQUIATRICO CIE 10</mat-label>
+            <mat-select formControlName="seldiagn_psiquiatrico_cie">
+                <mat-option value="">Seleccione</mat-option>
+                <mat-option value="1">Trastornos mentales orgánicos, incluidos los sintomáticos</mat-option>
+                <mat-option value="2">Esquizofrenia, trastorno esquizotípico y trastornos de ideas delirantes</mat-option>
+                <mat-option value="3">Trastornos del humor (afectivos).</mat-option>
+                <mat-option value="4">Trastornos neuróticos, secundarios a situaciones estresantes y somatomorfos</mat-option>
+                <mat-option value="5">Trastornos de la personalidad y del comportamiento del adulto</mat-option>
+                <mat-option value="6">Trastornos del comportamiento asociados a disfunciones fisiológicas y a factores somáticos</mat-option>
+                <mat-option value="7">Retraso Mental</mat-option>
+                <mat-option value="8">Trastornos del Desarrollo Psicológico</mat-option>
+                <mat-option value="9">Trs. del comportamiento y de las emociones de comienzo habitual en la infancia y adolescencia</mat-option>
+                <mat-option value="10">En estudio</mat-option>
+                <mat-option value="11">Sin trastorno</mat-option>
+                <mat-option value="12">Trastornos de la conducta alimentaria</mat-option>
+                <mat-option value="13">Trastornos de los hábitos y del control de los impulsos</mat-option>
+            </mat-select>
+            <span *ngIf="isValidField('seldiagn_psiquiatrico_cie')" class="form-text text-danger">Campo requerido </span>
+          </mat-form-field>
+        
+          <button mat-flat-button type="submit" color="primary">
+            @if(loading){
+                <app-spinner diameter="20"></app-spinner>
+            }@else {
+                Enviar
+            }
+          </button>
+    
+    </form>
+
+    </div>
+  </div>
+</div>

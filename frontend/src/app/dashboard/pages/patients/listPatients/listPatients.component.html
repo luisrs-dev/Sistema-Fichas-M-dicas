@@ -3,65 +3,39 @@
   <div class="buttons mb-4">
     <div>
       @if(canCreateUser || isAdmin){
-        <button
-          [routerLink]="['nuevo']"
-          mat-flat-button
-          color="primary"
-          class="border-round-xl ml-1 mr-2 my-auto mat-elevation-z2 text-white"
-        >
-          <mat-icon>person</mat-icon>
-          Nuevo Paciente
-        </button>
-        <button
-          mat-flat-button
-          color="primary"
-          class="border-round-xl ml-1 mr-2 my-auto mat-elevation-z2 text-white"
-        >
-          <mat-icon>person</mat-icon>
-          Intervención Grupal
-        </button>
-        <button
-          mat-flat-button
-          color="primary"
-          class="border-round-xl ml-1 mr-2 my-auto mat-elevation-z2 text-white"
-        >
-          <mat-icon>person</mat-icon>
-          Exportar datos
-        </button>
+      <button [routerLink]="['nuevo']" mat-flat-button color="primary" class="border-round-xl ml-1 mr-2 my-auto mat-elevation-z2 text-white">
+        <mat-icon>person</mat-icon>
+        Nuevo Paciente
+      </button>
+      <button mat-flat-button color="primary" class="border-round-xl ml-1 mr-2 my-auto mat-elevation-z2 text-white">
+        <mat-icon>person</mat-icon>
+        Intervención Grupal
+      </button>
+      <button mat-flat-button color="primary" class="border-round-xl ml-1 mr-2 my-auto mat-elevation-z2 text-white">
+        <mat-icon>person</mat-icon>
+        Exportar datos
+      </button>
       }
     </div>
     <div>
-      <button
-        mat-icon-button
-        color="primary"
-        matTooltip="Actualizar transacciones"
-        matTooltipPosition="above"
-        class="mr-2 mat-elevation-z2"
-      >
+      <button mat-icon-button color="primary" matTooltip="Actualizar transacciones" matTooltipPosition="above" class="mr-2 mat-elevation-z2">
         <mat-icon>refresh</mat-icon>
       </button>
-      <button
-        mat-icon-button
-        color="primary"
-        class="button-with-icon"
-        matTooltip="Limpiar filtros"
-        matTooltipPosition="above"
-        class="mr-1 mat-elevation-z2"
-      >
+      <button mat-icon-button color="primary" class="button-with-icon" matTooltip="Limpiar filtros" matTooltipPosition="above" class="mr-1 mat-elevation-z2">
         <mat-icon>delete</mat-icon>
       </button>
     </div>
   </div>
   <div class="">
-      <mat-form-field appearance="outline">
-        <mat-label>Filtrar por Programa</mat-label>
-        <mat-select (selectionChange)="filterByProgram($event.value)">
-          <mat-option value="">Todos</mat-option>
-          @for (program of user.programs; track $index) {
-            <mat-option value={{program.name}}>{{program.name}}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Filtrar por Programa</mat-label>
+      <mat-select (selectionChange)="filterByProgram($event.value)">
+        <mat-option value="">Todos</mat-option>
+        @for (program of user.programs; track $index) {
+        <mat-option value="{{ program.name }}">{{ program.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
   </div>
   <!-- @if (loadingTransactions) {
     <mat-spinner color="#0ca86b" diameter="40"></mat-spinner>
@@ -69,21 +43,20 @@
   <span class="spacer"></span>
   <mat-form-field class="w-full">
     <mat-label>Buscar</mat-label>
-    <input
-      matInput
-      (keyup)="applyFilter($event)"
-      placeholder="Buscar profesional"
-      #input
-    />
+    <input matInput (keyup)="applyFilter($event)" placeholder="Buscar profesional" #input />
   </mat-form-field>
 
   <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z1">
+    <ng-container matColumnDef="codigoSistrat">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Codigo Usuario</th>
+      <td class="text-center" mat-cell *matCellDef="let element">{{ element.codigoSistrat || "-" }}</td>
+    </ng-container>
+
     <!-- Name Column -->
     <ng-container matColumnDef="name">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Nombre</th>
       <td mat-cell *matCellDef="let element">
-        {{ element.name }} {{ element.surname }} {{ element.secondSurname }}
-      </td>
+        {{ element.name }} {{ element.surname }} {{ element.secondSurname }}</td>
     </ng-container>
 
     <ng-container matColumnDef="program">
@@ -97,98 +70,93 @@
       <td mat-cell *matCellDef="let element">{{ element.phone }}</td>
     </ng-container>
 
-    <ng-container matColumnDef="admissionDate">
+    <!--<ng-container matColumnDef="admissionDate">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha Admisión</th>
       <td mat-cell *matCellDef="let element">{{ element.admissionDate }}</td>
-    </ng-container>
+    </ng-container>-->
 
     <ng-container matColumnDef="fonasa">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Fonasa</th>
-      <td mat-cell *matCellDef="let element">
+      <td class="text-center" mat-cell *matCellDef="let element">
+        @if(element.fonasa){
         <mat-icon color="accent">task_alt</mat-icon>
-        <mat-icon color="warn">error</mat-icon>
+        } @else {
+        <mat-icon color="warn">cancel</mat-icon>
+      }
       </td>
     </ng-container>
+
+    <ng-container matColumnDef="alertas">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Alertas</th>
+      <td class="text-center" mat-cell *matCellDef="let element">
+        @if(element.alertCie10){
+          <button mat-icon-button (click)="onDialogAlertCie10(element._id)" matTooltip="Han trascurrido 2 meses, corresponde confirmar si existe Diagnóstico de Trastorno Psiquiátrico CIE10">
+            <mat-icon class="custom-icon" 
+              >circle</mat-icon>            
+          </button>
+        } @if(element.alertConsentimiento){
+        <mat-icon class="custom-icon-black" matTooltip="TOP">circle</mat-icon>
+        }
+        
+      </td>
+    </ng-container>
+
 
     <!-- Symbol Column -->
     <ng-container matColumnDef="actions">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header></th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>F. Clínica</th>
       <td mat-cell *matCellDef="let element">
-        <button
-          mat-icon-button
-          matTooltip="Fichas Médicas"
-          [routerLink]="['/dashboard/patient', element._id]"
-          color="warn"
-        >
-          <mat-icon>description</mat-icon>
-        </button>
 
-        <button
-        mat-icon-button
-        matTooltip="Ficha de ingreso"
-        [routerLink]="['/dashboard/patient/admision-form', element._id]"
-        color="warn"
-      >
-        <mat-icon>description</mat-icon>
-      </button>
+        <!--@if(element.alertTreatment){
 
-        <button
-        mat-icon-button
-        [matMenuTriggerFor]="menuSistrat"
-        aria-label="Example icon-button with a menu"
-        color="primary"
-        matTooltip="SISTRAT"
-      >
-        <mat-icon>assignment</mat-icon>
-      </button>
-      <mat-menu #menuSistrat="matMenu">
-        <button mat-menu-item>
-          <mat-icon>edit</mat-icon>
-          <span>Ficha Ingreso</span>
-        </button>
-        <button mat-menu-item>
-          <mat-icon>delete</mat-icon>
-          <span>Sistrat</span>
-        </button>
-      </mat-menu>
+          <mat-chip class="pb-2">
+            <mat-icon class="pt-1" style="color:red" matTooltip="Este usuario ya está en tratamiento en otro Centro">error</mat-icon>
+            Tratamiento en otro centro
+          </mat-chip>
+          }-->
+            <button mat-icon-button matTooltip="Fichas Clínicas" [routerLink]="['/dashboard/patient', element._id]" color="primary" style="font-size: 12px !important">
+              <mat-icon>medical_information</mat-icon>
+            </button>
+    
+            
+            <button mat-icon-button matTooltip="Ficha Demanda" [routerLink]="['/dashboard/patient/demand', element._id]" color="primary">
+              <mat-icon>assignment_ind</mat-icon>
+            </button>
+            @if(element.registeredDemand){
+              <button mat-icon-button matTooltip="Ficha de ingreso" [routerLink]="['/dashboard/patient/admision-form', element._id]" color="primary">
+                <mat-icon>apartment</mat-icon>
+              </button>
+              }
+    
+              <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="Alertas" color="warn text-xs">
+                <mat-icon>autorenew</mat-icon>
+              </button>
+              <mat-menu #menu="matMenu">
+                <button mat-menu-item (click)="onUpdateAlerts(element._id)">
+                  <mat-icon>autorenew</mat-icon>
+                  <span>Alertas</span>
+                </button>
+                <button mat-menu-item (click)="onUpdateAlerts(element._id)">
+                  <mat-icon>autorenew</mat-icon>
+                  <span>Alerta Citación</span>
+                </button>
+              </mat-menu>
+          
 
-      <button
-          mat-icon-button
-          [matMenuTriggerFor]="menu"
-          aria-label="Example icon-button with a menu"
-          matTooltip="Ajustes"
-          color="primary"
 
-        >
-          <mat-icon>more_vert</mat-icon>
-        </button>
-        <mat-menu #menu="matMenu">
-          <button mat-menu-item>
-            <mat-icon>edit</mat-icon>
-            <span>Editar</span>
-          </button>
-          <button mat-menu-item>
-            <mat-icon>delete</mat-icon>
-            <span>Eliminar</span>
-          </button>
-        </mat-menu>
 
-      </td>
+    </td>
     </ng-container>
+
+
 
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
     <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 
     <!-- Row shown when there is no matching data. -->
     <tr class="mat-row" *matNoDataRow>
-      <td class="mat-cell" colspan="4">
-        No data matching the filter "{{ input.value }}"
-      </td>
+      <td class="mat-cell" colspan="4">No data matching the filter "{{ input.value }}"</td>
     </tr>
   </table>
-  <mat-paginator
-    [pageSizeOptions]="[5, 10, 25, 100]"
-    pageSize="10"
-    aria-label="Select page of users"
-  ></mat-paginator>
+  <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]" pageSize="10" aria-label="Select page of users"></mat-paginator>
 </div>

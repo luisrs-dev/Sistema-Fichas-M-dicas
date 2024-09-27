@@ -1,0 +1,12 @@
+<h1 mat-dialog-title>Secciones Inválidas</h1>
+    <div mat-dialog-content>
+      <p>Las siguientes secciones contienen errores:</p>
+      <ul>
+        <li *ngFor="let form of data.invalidForms">{{ form }}</li>
+      </ul>
+    </div>
+    <div mat-dialog-actions>
+      <button mat-button mat-dialog-close>Entendido</button>
+    </div>
+
+    

@@ -4,6 +4,7 @@ import { MaterialModule } from '../../../../../../angular-material/material.modu
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { provideNativeDateAdapter } from '@angular/material/core';
+import { FormBaseComponent } from '../form-base.component';
 
 @Component({
   selector: 'treatment-form',
@@ -13,23 +14,19 @@ import { provideNativeDateAdapter } from '@angular/material/core';
   templateUrl: './treatment.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TreatmentComponent {
+export class TreatmentComponent extends FormBaseComponent {
   private fb = inject(FormBuilder);
 
-  public treatmentForm: FormGroup = this.fb.group({
-    txtfecha_ingreso_tratamiento: ['', [Validators.required]],
-    txtfecha_ingreso_conace: ['', [Validators.required]],
-    seltipo_programa: ['', [Validators.required]],
-    seltipo_plan: ['', [Validators.required]],
-    txtrut: ['', [Validators.required]],
-    selconcentimiento_informado: ['', [Validators.required]],
-  });
-
-  isValidField(field: string): boolean {
-    return Boolean(this.treatmentForm.controls[field].errors) && this.treatmentForm.controls[field].touched;
-  }
-
-  getFormData() {
-    return this.treatmentForm.value;
+  ngOnInit() {
+    this.form = this.fb.group({
+      txtfecha_ingreso_tratamiento: ['', [Validators.required]],
+      selconvenio_conace: ['', [Validators.required]],
+      txtfecha_ingreso_conace: ['', [Validators.required]],
+      seltipo_programa: ['', [Validators.required]],
+      seltipo_plan: ['', [Validators.required]],
+      selprograma_tribunales: ['', [Validators.required]],
+      txtrut: ['', [Validators.required]],
+      selconcentimiento_informado: ['', [Validators.required]],
+    });
   }
 }

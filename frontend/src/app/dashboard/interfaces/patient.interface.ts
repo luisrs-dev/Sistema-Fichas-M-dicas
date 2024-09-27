@@ -12,6 +12,12 @@ export interface Patient {
   phone: string;
   phoneFamily: string;
   centerOrigin: string;
+  codigoSistrat?: string;
+  registeredDemand: boolean;
+  registeredAdmissionForm: boolean
+  alertCie10: boolean;
+  alertConsentimiento: boolean;
+  alertTreatment?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -1,12 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Observable } from 'rxjs';
 import { MaterialModule } from '../../../../../angular-material/material.module';
 import { BasicTableComponent } from '../../../../../shared/components/basic-table/basic-table.component';
 import { ParametersService } from '../../parameters.service';
 import { NewProgram } from '../new/new.component';
-import { ParameterValue } from '../../interfaces/parameter.interface';
+import { Parameter, ParameterValue } from '../../interfaces/parameter.interface';
 
 @Component({
   selector: 'app-programs',
@@ -18,16 +18,34 @@ import { ParameterValue } from '../../interfaces/parameter.interface';
 export default class ProgramsComponent {
   public dialog = inject(MatDialog);
   private parameterService = inject(ParametersService);
+  private changeDetectorRef = inject(ChangeDetectorRef);
+
   public searchResults$: Observable<any>;
+  public listPrograms: Parameter[];
 
   tableColumns = ['name', 'value'];
 
   ngOnInit() {
+    
+    this.parameterService.programs.subscribe( programs => {
+      if(programs){
+        console.log('{programs} en ngoninit');
+        console.log({programs});
+        
+        this.listPrograms = programs
+      }
+    })
     this.loadPrograms();
+
   }
 
   loadPrograms() {
-    this.searchResults$ = this.parameterService.getParameters(ParameterValue.Program);
+    this.parameterService.getParameters(ParameterValue.Program).subscribe( newPrograms => {
+      console.log({newPrograms});
+      this.listPrograms = newPrograms;
+          this.changeDetectorRef.detectChanges(); // Forzar la detección de cambios
+
+    })
   }
   
   onAddProgram() {
@@ -36,20 +54,10 @@ export default class ProgramsComponent {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      this.loadPrograms();
-
-      this.searchResults$.subscribe( response => {
-        console.log(response);
+      if(result){
+        console.log('afertclosed');
         
-      })
-      
-      if (result) {
         this.loadPrograms();
-        // this.searchResults$ = this.parameterService.getPermissions();
-
-        // this.parameterService.getPermissions().subscribe((permissions) => {
-        //   this.tableData = permissions;
-        // });
       }
     });
     

@@ -2,10 +2,10 @@ import { Types } from "mongoose";
 import { Patient } from "../interfaces/patient.interface";
 import MedicalRecordModel from "../models/medicalRecord.model";
 import PatientModel from "../models/patient.model";
-import { addToSistrat } from "./sistratPlatform.service";
 import { Demand } from "../interfaces/demand.interface";
 import DemandModel from "../models/demand.model";
 import Sistrat from "./sistrat/sistrat.class";
+import AdmissionFormModel from "../models/admissionForm.model";
 
 const inerPatient = async (Patient: Patient) => {
   const responseInsert = await PatientModel.create(Patient);
@@ -14,32 +14,65 @@ const inerPatient = async (Patient: Patient) => {
   return responseInsert;
 };
 
+const saveAdmissionForm = async (patientId: string, admissionFormData: any) => {
+  try {
+    const patient = await PatientModel.findOne({ _id: patientId });
 
-const inerDemand = async (patientId:string, dataSistrat:Demand) => {    
-  const responseInsert = await DemandModel.create({...dataSistrat, patientId});
-  return responseInsert;
+    if (!patient) {
+      throw new Error("Usuario no encontrado");
+    }
+
+    const admissionForm = { patientId, ...admissionFormData };
+    const responseInsert = await AdmissionFormModel.create(admissionForm);
+    return responseInsert;
+  } catch (error) {
+    throw new Error(`error admissionForm registrado: ${error}`);
+  }
 };
 
-// const inerPatientSistrat = async (dataSistrat: any) => {
-//   const responseInsert = await PatientModel.create(dataSistrat);
-//   console.log('Paciente registrado');
-//   console.log({responseInsert});
-//   return responseInsert;
-// };
+const saveAdmissionFormToSistrat = async (patientId: string) => {
+  try {
+    const sistratPlatform = new Sistrat();
+
+    const admissionForm = await AdmissionFormModel.findOne({ patientId });
+    const patient = await PatientModel.findOne({ _id: patientId });
+
+    if (patient && admissionForm) {
+      const statusAdmissionFormCreated = await sistratPlatform.registrarFichaIngreso(patient, admissionForm);
+    } else {
+      throw new Error("Falta información del paciente para registrar su ficha de ingreso");
+    }
+    return admissionForm;
+  } catch (error) {
+    throw new Error(`error admissionForm registrado: ${error}`);
+  }
+};
+
+const inerDemand = async (patientId: string, dataSistrat: Demand) => {
+  try {
+    const patient = await PatientModel.findOne({ _id: patientId });
+    if (!patient) {
+      throw new Error(`Error al registrar demanda: usuario no existe`);
+    }
+
+    const responseInsert = await DemandModel.create({ ...dataSistrat, patientId });
+    patient.registeredDemand = true;
+    await patient.save();
+
+    return patient;
+  } catch (error) {
+    throw new Error(`Error al registrar demanda: ${error}`);
+  }
+};
 
 // TODO: definir interfaz dataSistrar
 const updatePatientSistrat = async (patientId: string, demanda: Demand) => {
   try {
-    console.log({ patientId });
-    console.log({ demanda });
-
     const responseUpdate = await PatientModel.findByIdAndUpdate(
       patientId,
       { $set: demanda },
       { new: true, runValidators: true }
     );
-    console.log("Paciente actualizado");
-    console.log({ responseUpdate });
     return responseUpdate;
   } catch (error) {
     console.error("Error al actualizar el paciente", error);
@@ -47,44 +80,38 @@ const updatePatientSistrat = async (patientId: string, demanda: Demand) => {
   }
 };
 
-const recordDemandToSistrat = async (patientId: string) => {
+const recordDemandToSistrat = async (patientId: string): Promise<{success:boolean}> => {
   try {
-
     const patient = await PatientModel.findOne({ _id: patientId });
     const demand = await DemandModel.findOne({ patientId });
 
+    if (!patient) {
+      throw new Error(`Paciente con ID ${patientId} no encontrado.`);
+    }
+
+    if (!demand) {
+      throw new Error(`Demanda para el paciente con ID ${patientId} no encontrada.`);
+    }
+
     const sistratPlatform = new Sistrat();
-    const pageCrearDemanda = sistratPlatform.crearDemanda(patient, demand);
-    
-    return;
-    return patient;
+    const createdDemand = await sistratPlatform.crearDemanda(patient, demand);
+    if(createdDemand){
+      return {success: true} 
+    }else{
+      throw new Error("Error al registrar demanda en SISTRAT");
+    }
+
   } catch (error) {
-    console.error("Error al actualizar el paciente", error);
+    console.error("Error al registrar demanda en SISTRAT", error);
     throw error;
   }
 };
 
-//const saveAdmissionForm = async (patientId: string, dataAdmissionForm: any) => {
-//  try {
-//    const patient = await PatientModel.findOne({ _id: patientId });
-//    const responseaddAdmissionForm = addAdmissionForm(patient, dataAdmissionForm);
-    
-//    return responseaddAdmissionForm;
-//  } catch (error) {
-//    console.error("Error al actualizar el paciente", error);
-//    throw error;
-//  }
-//};
-
-
-
-
 const allPatients = async (programs: string[]) => {
-  //const responsePatients = await PatientModel.find({});
-  const programArray = programs[0].split(',');
+  const programArray = programs[0].split(",");
   const responsePatients = await PatientModel.find({
-    program: { $in: programArray }
-  }).populate('program');
+    program: { $in: programArray },
+  }).populate("program");
   return responsePatients;
 };
 
@@ -94,42 +121,61 @@ const PatientsByProfile = async (profile: string) => {
 };
 
 const findPatient = async (id: string) => {
-  const responsePatient = await PatientModel.findOne({ _id: id }).populate('program');
+  const responsePatient = await PatientModel.findOne({ _id: id }).populate("program");
   const medicalRecords = await MedicalRecordModel.find({
     patient: new Types.ObjectId(id),
   }).populate([
-    { path: 'service' },
-    { path: 'patient', select: 'name surname secondSurname profile', 
+    { path: "service" },
+    {
+      path: "patient",
+      select: "name surname secondSurname profile",
       populate: {
-        path: 'program'
-      }
-     },
-    { path: 'registeredBy', select: 'name profile signature',
-      populate: { 
-        path: 'profile',
-        select: 'name'
-      }
-     }
+        path: "program",
+      },
+    },
+    {
+      path: "registeredBy",
+      select: "name profile signature",
+      populate: {
+        path: "profile",
+        select: "name",
+      },
+    },
   ]);
   return { patient: responsePatient, medicalRecords };
 };
 
-// const updateCar = async (id: string, data: Car) => {
-//   /**
-//    ** findOneAndUpdate
-//    ** Por defecto retorna el objeto encontrado antes de actualizar
-//    ** Con {new: true} devuelve el objeto actualizado
-//    */
-//   const responseItem = await PatientModel.findOneAndUpdate({ _id: id }, data, {
-//     new: true,
-//   });
-//   return responseItem;
-// };
+const updateAlertsFromSistrat = async (patientId: string) => {
+  try {
+    const patient = await PatientModel.findOne({ _id: patientId });
+    if (patient) {
+      const sistratPlatform = new Sistrat();
 
-// const deleteCar = async (id: string) => {
-//   const responseItem = await PatientModel.deleteOne({ _id: id });
-//   return responseItem;
-// };
+      const responseUserWithAlerts = await sistratPlatform.updateAlerts(patient);
+
+      return responseUserWithAlerts;
+    } else {
+      throw new Error("Paciente no registrado");
+    }
+  } catch (error) {}
+};
+
+const updateFormCie10 = async (patientId: string, optionSelected: string) => {
+  try {
+    const patient = await PatientModel.findOne({ _id: patientId });
+    if (patient) {
+      const sistratPlatform = new Sistrat();
+
+      const responseUserWithAlerts = await sistratPlatform.updateFormCie10(patient, optionSelected);
+
+      return responseUserWithAlerts;
+    } else {
+      throw new Error("Paciente no registrado");
+    }
+  } catch (error) {}
+};
+
+;
 
 export {
   inerPatient,
@@ -139,5 +185,8 @@ export {
   allPatients,
   PatientsByProfile,
   findPatient,
-  //saveAdmissionForm
+  saveAdmissionForm,
+  saveAdmissionFormToSistrat,
+  updateAlertsFromSistrat,
+  updateFormCie10
 };

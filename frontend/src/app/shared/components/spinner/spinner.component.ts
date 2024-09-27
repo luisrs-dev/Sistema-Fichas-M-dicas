@@ -6,6 +6,7 @@ import { MaterialModule } from '../../../angular-material/material.module';
   selector: 'app-spinner',
   standalone: true,
   imports: [CommonModule, MaterialModule],
+  styleUrl: 'spinner.component.css',
   template: `<mat-spinner
     class="spinner"
     diameter="{{ diameter || 30 }}"

@@ -9,6 +9,7 @@ import {
 } from '@angular/forms';
 import { MaterialModule } from '../../../../../../angular-material/material.module';
 import { Patient } from '../../../../../interfaces/patient.interface';
+import { FormBaseComponent } from '../form-base.component';
 
 @Component({
   selector: 'user-identification',
@@ -16,50 +17,46 @@ import { Patient } from '../../../../../interfaces/patient.interface';
   imports: [CommonModule, MaterialModule, FormsModule, ReactiveFormsModule],
   templateUrl: './userIdentification.component.html',
 })
-export class UserIdentificationComponent {
+export class UserIdentificationComponent extends FormBaseComponent {
   @Input() patient: Patient;
   private fb = inject(FormBuilder);
 
-  ngOnInit(): void {
-    if (this.patient) {
-      this.userIdentificationForm.patchValue({
-        name: this.patient.name,
-        surname: this.patient.surname,
-        secondSurname: this.patient.secondSurname,
-        birthDate: new Date(this.patient.birthDate),
-        sex: this.patient.sex,
-        region: this.patient.region,
-        phone: this.patient.phone,
-        phoneFamily: this.patient.phoneFamily,
-        centerOrigin: this.patient.centerOrigin,
-      });
-    }
+  constructor() {
+    super(); // Llamada al constructor de la clase base
   }
 
-  public userIdentificationForm: FormGroup = this.fb.group({
+
+  ngOnInit(): void {
+   // Inicialización del formulario
+   this.form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(3)]],
     surname: ['', [Validators.required, Validators.minLength(3)]],
     secondSurname: ['', [Validators.required, Validators.minLength(3)]],
-    birthDate: [new Date(), [Validators.required]],
     sex: ['', [Validators.required]],
+    birthDate: [new Date(), [Validators.required]],
     region: ['', [Validators.required]],
     selorigen_ingreso: ['', [Validators.required]],
     identidad_genero: ['', [Validators.required]],
     orientacion_sexual: ['', [Validators.required]],
     discapacidad: ['', [Validators.required]],
-    phone: ['', [Validators.required, Validators.minLength(6)]],
-    phoneFamily: ['', [Validators.required, Validators.minLength(3)]],
+    opcion_discapacidad: ['', [Validators.required]],
     centerOrigin: ['', [Validators.required, Validators.minLength(3)]],
   });
 
-  isValidField(field: string): boolean {
-    return (
-      Boolean(this.userIdentificationForm.controls[field].errors) &&
-      this.userIdentificationForm.controls[field].touched
-    );
+  // Si existe el paciente, se cargan los valores en el formulario
+  if (this.patient) {
+    this.form.patchValue({
+      name: this.patient.name,
+      surname: this.patient.surname,
+      secondSurname: this.patient.secondSurname,
+      birthDate: new Date(this.patient.birthDate),
+      sex: this.patient.sex,
+      region: this.patient.region,
+      phone: this.patient.phone,
+      phoneFamily: this.patient.phoneFamily,
+      centerOrigin: this.patient.centerOrigin,
+    });
+  }
   }
 
-  getFormData() {
-    return this.userIdentificationForm.value;
-  }
 }

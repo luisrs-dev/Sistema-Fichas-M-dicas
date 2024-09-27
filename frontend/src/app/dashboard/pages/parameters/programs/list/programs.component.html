@@ -2,11 +2,11 @@
     <h1>Programas</h1>
     <button mat-flat-button color="primary" (click)="onAddProgram()">Agregar</button>
 
-    @if(searchResults$ | async; as programs){
+    @if(listPrograms){
         <!-- @for (permission of programs; track $index) {
             {{ permission.name }}
         } -->
-        <basic-table [data]="programs" [columns]="tableColumns"></basic-table>
+        <basic-table [data]="listPrograms" [columns]="tableColumns"></basic-table>
     }@else{
         Cargando...
     }

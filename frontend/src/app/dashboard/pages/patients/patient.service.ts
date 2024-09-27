@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, tap, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, tap, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { MedicalRecord } from '../../interfaces/medicalRecord.interface';
 import { Patient } from '../../interfaces/patient.interface';
@@ -12,15 +12,33 @@ import { AuthService } from '../../../auth/auth.service';
 })
 export class PatientService {
   private http = inject(HttpClient);
-  private authService = inject(AuthService);
   backend: string = environment.baseUrl;
 
-  getPatients(programs: string[]): Observable<Patient[]> {
-    const params = new HttpParams().set('programs', programs.join(','));
-    return this.http.get<Patient[]>(`${this.backend}/patient`, { params });
+  private patientsSubject: BehaviorSubject<Patient[]>;
+  private _patient: BehaviorSubject<{patient:Patient, medicalRecords: MedicalRecord[]} | null>;
+  
+  constructor(){
+    this.patientsSubject = new BehaviorSubject<Patient[]>([]);
+    this._patient = new BehaviorSubject<{patient:Patient, medicalRecords: MedicalRecord[]} | null>(null);
   }
+
+  get patients(){
+    return this.patientsSubject.asObservable();
+  }
+
+  get patient(){
+    return this._patient.asObservable();
+  }
+
+
   getPatientById(id: string): Observable<{ patient: Patient; medicalRecords: MedicalRecord[] }> {
-    return this.http.get<{ patient: Patient; medicalRecords: MedicalRecord[] }>(`${this.backend}/patient/${id}`);
+    return this.http.get<{ patient: Patient; medicalRecords: MedicalRecord[] }>(`${this.backend}/patient/${id}`)
+    .pipe(
+      tap( ({patient, medicalRecords}) => {
+        this._patient.next({patient, medicalRecords})
+      }
+      )
+    );
   }
 
   getPatientsByProfile(profile: string): Observable<Patient[]> {
@@ -35,25 +53,50 @@ export class PatientService {
    TODO: definir interfaz para datos sistrat
   */
   addFichaDemanda(patientId: string, dataSistrat: any): Observable<any> {
-    console.log({ dataSistrat });
-
     return this.http.post<any>(`${this.backend}/patient/demanda`, { patientId, dataSistrat }).pipe(catchError((err) => throwError(() => err.error.message)));
   }
 
   addFichaDemandaToSistrat(patientId: string): Observable<any> {
-
     return this.http.post<any>(`${this.backend}/patient/demanda/sistrat`, { patientId }).pipe(catchError((err) => throwError(() => err.error.message)));
   }
 
-
-  addFichaIngreso(userId: string, dataAdmissionForm: any): Observable<any> {
-    return this.http.post<any>(`${this.backend}/patient/ficha-ingreso`, { userId, dataAdmissionForm }).pipe(catchError((err) => throwError(() => err.error.message)));
+  addFichaIngreso(patientId: string, dataAdmissionForm: any): Observable<any> {
+    return this.http.post<any>(`${this.backend}/patient/ficha-ingreso`, { patientId, dataAdmissionForm }).pipe(catchError((err) => throwError(() => err.error.message)));
   }
 
+  addFichaIngresoToSistrat(patientId: string): Observable<any> {
+    return this.http.post<any>(`${this.backend}/patient/ficha-ingreso/sistrat`, { patientId }).pipe(catchError((err) => throwError(() => err.error.message)));
+  }
 
   saveToSistrat(userId: string): Observable<any> {
     return this.http.post<any>(`${this.backend}/patient/sistrat/record`, { userId }).pipe(catchError((err) => throwError(() => err.error.message)));
   }
 
-  constructor() {}
+  updateAlertSistrat(patientId: string): Observable<any> {
+    return this.http.post<any>(`${this.backend}/patient/sistrat/alerts`, { patientId }).pipe(catchError((err) => throwError(() => err.error.message)));
+  }
+
+  getPatients(programsIds: string[]): Observable<Patient[]> {
+    let params = new HttpParams();
+    
+    if (programsIds.length > 0) {
+      params = params.set('programs', programsIds.join(',')); // Convertimos el array a string separado por comas
+    }
+
+    return this.http.get<Patient[]>(`${this.backend}/patient`, { params }).pipe(
+      tap(patients => {
+        this.patientsSubject.next(patients) // Actualizamos el BehaviorSubject
+      }) 
+    );
+  }
+
+  updatePatients(programsIds: string[]): void {
+    this.getPatients(programsIds).subscribe(); // Actualiza automáticamente el BehaviorSubject
+  }
+
+  setFormCie10(patientId: string, optionSelected: any){
+    console.log({optionSelected});
+    
+    return this.http.post<any>(`${this.backend}/patient/sistrat/formCie10`, { patientId, optionSelected }).pipe(catchError((err) => throwError(() => err.error.message)));
+  }
 }

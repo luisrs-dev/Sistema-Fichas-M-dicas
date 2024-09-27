@@ -1,4 +1,4 @@
-<form [formGroup]="treatmentForm" autocomplete="off">
+<form [formGroup]="form" autocomplete="off">
   <div class="grid pt-4"></div>
 
   <div class="grid w-9">
@@ -16,13 +16,27 @@
     <div class="col-6">
       <mat-form-field class="w-full" appearance="outline">
         <mat-label>Ingreso convenio CONACE</mat-label>
-        <mat-select formControlName="txtfecha_ingreso_conace">
+        <mat-select formControlName="selconvenio_conace">
           <mat-option value="null">Seleccione una opción</mat-option>
           <mat-option value="Si">Si</mat-option>
         </mat-select>
-        <span *ngIf="isValidField('txtfecha_ingreso_conace')" class="text-red-500"> Debe seleccionar una opción </span>
+        <span *ngIf="isValidField('selconvenio_conace')" class="text-red-500"> Debe seleccionar una opción </span>
       </mat-form-field>
     </div>
+
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Fecha ingreso convenio senda</mat-label>
+        <input matInput [matDatepicker]="pickerBirthday" formControlName="txtfecha_ingreso_conace" />
+        <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
+        <mat-datepicker-toggle matIconSuffix [for]="pickerBirthday"></mat-datepicker-toggle>
+        <mat-datepicker #pickerBirthday></mat-datepicker>
+      </mat-form-field>
+      <span *ngIf="isValidField('txtfecha_ingreso_conace')" class="text-red-500"> Debe seleccionar una opción </span>
+
+    </div>
+    
 
     <div class="col-6">
       <mat-form-field class="w-full" appearance="outline">
@@ -43,6 +57,17 @@
           <mat-option value="18">M-PR</mat-option>
         </mat-select>
         <span *ngIf="isValidField('seltipo_plan')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Usuario de tribunales tratamiento de drogas</mat-label>
+        <mat-select formControlName="selprograma_tribunales">
+          <mat-option value="null">Seleccione una opción</mat-option>
+          <mat-option value="18">M-PR</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('selprograma_tribunales')" class="text-red-500"> Debe seleccionar una opción </span>
       </mat-form-field>
     </div>
 

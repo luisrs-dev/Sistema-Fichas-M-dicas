@@ -1,41 +1,19 @@
 import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  inject,
-  type OnInit,
-} from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, type OnInit } from '@angular/core';
 import { MaterialModule } from '../../../../angular-material/material.module';
-import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  FormsModule,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UserService } from '../user.service';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ParametersService } from '../../parameters/parameters.service';
 import { Observable } from 'rxjs';
-import {
-  Parameter,
-  ParameterValue,
-} from '../../parameters/interfaces/parameter.interface';
+import { Parameter, ParameterValue } from '../../parameters/interfaces/parameter.interface';
 import { ProfesionalRoleService } from '../../parameters/profesionalRole/profesionalRole.service';
 import { AuthService } from '../../../../auth/auth.service';
 
 @Component({
   selector: 'app-new',
   standalone: true,
-  imports: [
-    CommonModule,
-    MaterialModule,
-    FormsModule,
-    ReactiveFormsModule,
-    RouterModule,
-  ],
+  imports: [CommonModule, MaterialModule, FormsModule, ReactiveFormsModule, RouterModule],
   templateUrl: './new.component.html',
   styleUrl: './new.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -61,7 +39,7 @@ export default class NewComponent {
   public profesionalRoles: any;
   public selectedImage: string | ArrayBuffer | null = null; // Almacena la URL de la vista previa de la imagen
   public imageFile: File | null = null; // Almacena el archivo seleccionado
-  public imagePath: string | null = null; 
+  public imagePath: string | null = null;
 
   public patientId: string;
   public edit: boolean = false;
@@ -69,12 +47,9 @@ export default class NewComponent {
   public userForm: FormGroup = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(3)]],
     email: ['', [Validators.required, Validators.minLength(3)]],
-    password: [
-      '',
-      this.edit ? [] : [Validators.required, Validators.minLength(3)],
-    ],
+    password: ['', this.edit ? [] : [Validators.required, Validators.minLength(3)]],
     profile: ['', [Validators.required, Validators.minLength(3)]],
-    image: [null, [Validators.required]], // Campo de firma agregado
+    image: [null, []], // Campo de firma agregado
   });
 
   ngOnInit() {
@@ -91,38 +66,30 @@ export default class NewComponent {
           profile: response.user.profile._id || '',
         });
 
-        if(response.user.signature){
-          this.imagePath = `http://localhost:3002${response.user.signature}`
+        if (response.user.signature) {
+          this.imagePath = `http://localhost:3002${response.user.signature}`;
         }
 
-        this.permissionUser = response.user.permissions.map(
-          (permission: Parameter) => permission._id
-        );
-        this.programsUser = response.user.programs.map(
-          (program: Parameter) => program._id
-        );
+        this.permissionUser = response.user.permissions.map((permission: Parameter) => permission._id);
+        this.programsUser = response.user.programs.map((program: Parameter) => program._id);
 
         this.checkedPermissions = [...this.permissionUser];
         this.checkedPrograms = [...this.programsUser];
       });
     }
 
-    this.permissions$ = this.parametersService.getParameters(
-      ParameterValue.Permission
-    );
-    this.programs$ = this.parametersService.getParameters(
-      ParameterValue.Program
-    );
-    this.profesionalRoleService
-      .getProfesionalRoles()
-      .subscribe((profesionalRoles) => {
-        this.profesionalRoles = profesionalRoles;
-      });
+    this.permissions$ = this.parametersService.getParameters(ParameterValue.Permission);
+    this.programs$ = this.parametersService.getParameters(ParameterValue.Program);
+    this.profesionalRoleService.getProfesionalRoles().subscribe((profesionalRoles) => {
+      this.profesionalRoles = profesionalRoles;
+    });
   }
 
   onSave() {
     if (this.userForm.invalid) {
       this.userForm.markAllAsTouched();
+      console.log('form invalido');
+
       return;
     }
 
@@ -159,10 +126,7 @@ export default class NewComponent {
   }
 
   isValidField(field: string): boolean {
-    return (
-      Boolean(this.userForm.controls[field].errors) &&
-      this.userForm.controls[field].touched
-    );
+    return Boolean(this.userForm.controls[field].errors) && this.userForm.controls[field].touched;
   }
 
   onFileChange(event: Event): void {

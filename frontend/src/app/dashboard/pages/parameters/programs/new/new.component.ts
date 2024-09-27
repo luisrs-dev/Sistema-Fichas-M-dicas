@@ -36,7 +36,7 @@ export class NewProgram {
         .addParameter(ParameterValue.Program, this.programForm.value)
         .subscribe((response) => {
           console.log(response);
-          this.dialogRef.close(response); 
+          this.dialogRef.close(response);
         });
     }
   }

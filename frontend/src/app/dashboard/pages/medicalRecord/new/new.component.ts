@@ -28,6 +28,7 @@ import { Patient } from '../../../interfaces/patient.interface';
 import { UserService } from '../../users/user.service';
 import { MedicalRecordService } from '../medicalRecord.service';
 import { ValueEntryType } from '../../../interfaces/entryType.interface';
+import { Report } from 'notiflix';
 
 @Component({
   selector: 'app-new',
@@ -54,7 +55,6 @@ import { ValueEntryType } from '../../../interfaces/entryType.interface';
 export default class NewMedicalRecord {
   private fb = inject(FormBuilder);
   private medicalRecordService = inject(MedicalRecordService);
-  private router = inject(Router);
   private authService = inject(AuthService);
   private userService = inject(UserService);
 
@@ -122,6 +122,7 @@ export default class NewMedicalRecord {
       .subscribe((user) => {
         console.log({ user });
         this.dialogRef.close(true);
+        Report.success('Registro exitoso', 'Ficha clínica registrada con éxito', 'Entendido');
       });
   }
 

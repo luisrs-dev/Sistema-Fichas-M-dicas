@@ -11,6 +11,13 @@ const PatientSchema = new Schema<Patient>(
       type: Schema.Types.ObjectId,
       ref: 'program'
     },
+    codigoSistrat: {
+      type: String
+    },
+    rut: {
+      type: String,
+      required: true,
+    },
     name: {
       type: String,
       required: true,
@@ -46,7 +53,32 @@ const PatientSchema = new Schema<Patient>(
     centerOrigin: {
       type: String,
       required: true,
+    },
+    registeredDemand: {
+      type: Boolean,
+      default: false
+    },
+    registeredAdmissionForm: {
+      type: Boolean,
+      default: false
+    },
+    fonasa: {
+      type: Boolean,
+      default: false
+    },
+    alertCie10: {
+      type: Boolean,
+      default: false
+    },
+    alertConsentimiento: {
+      type: Boolean,
+      default: false
+    },
+    alertTreatment: {
+      type: Boolean,
+      default: false
     }
+
   },
   { timestamps: true, versionKey: false }
 );

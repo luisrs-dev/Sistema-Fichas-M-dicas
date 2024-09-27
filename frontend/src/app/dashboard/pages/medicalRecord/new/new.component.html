@@ -9,18 +9,24 @@
       <div>
         <mat-chip-set>
           <mat-chip
-            >SISTRAT AMCO220091998</mat-chip
+            >Código usuario: {{data.patient.codigoSistrat ||'-'}}</mat-chip
           >
         </mat-chip-set>
       </div>
-    <p>Fecha Ingreso: {{ data.patient.admissionDate | date : "dd-MM-yyyy" }}</p>
+    <p>Fecha Ingreso: {{ data.patient.admissionDate }}</p>
     <p>Programa: {{ data.patient.program.name }}</p>
     <p>Teéfono: {{ data.patient.phone }}</p>
     <mat-divider class="mb-1"></mat-divider>
 
     <mat-chip-set>
       <mat-chip
-        >Diagnóstico @if(latestMedicalRecordWithScheme){
+        >Diagnóstico SISTRAT: Retraso Mental</mat-chip
+      >
+    </mat-chip-set>
+
+    <mat-chip-set>
+      <mat-chip
+        >Otro Diagnóstico: Último diagnóstico @if(latestMedicalRecordWithScheme){
         {{ latestMedicalRecordWithScheme.date | date : "dd-MM-yyyy" }}
         }@else { Sin registro anterior }</mat-chip
       >
@@ -28,7 +34,7 @@
     <div>{{latestMedicalRecordWithScheme.diagnostic}}</div>
 
 
-    <mat-divider class="mb-1"></mat-divider>
+    <!--<mat-divider class="mb-1"></mat-divider>-->
 
     <mat-chip-set>
       <mat-chip

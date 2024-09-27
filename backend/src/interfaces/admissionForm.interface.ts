@@ -1,0 +1,71 @@
+import { Types } from "mongoose";
+
+export interface AdmissionForm {
+  patientId: Types.ObjectId;
+  centerOrigin: string; 
+  cie1: string; 
+  discapacidad: string; 
+  opcion_discapacidad: string;
+  documentacion_regularizada: string; 
+  escolaridad_opc: string; 
+  identidad_genero: string; 
+  int_numero_hijos: string; 
+  name: string; 
+  orientacion_sexual: string; 
+  perso_dormitorio_vivienda: string; 
+  phone: string; 
+  phoneFamily: string; 
+  precariedad_vivienda: string; 
+  region: string; 
+  secondSurname: string; 
+  sel_diagnostico_1: string; 
+  sel_diagnostico_2: string; 
+  sel_diagnostico_3: string; 
+  sel_diagnostico_4: string; 
+  selcompromiso_biopsicosocial: string; 
+  selcon_quien_vive: string; 
+  selconcentimiento_informado: string; 
+  seldiagn_consumo_sustancia: string; 
+  seldiagn_fiscico: string; 
+  seldiagn_psiquiatrico_cie: string; 
+  seldiagn_psiquiatrico_cie2: string; 
+  seldiagn_psiquiatrico_cie3: string; 
+  seldonde_vive: string; 
+  selescolaridad: string; 
+  selestado_civil: string; 
+  selestado_ocupacional: string; 
+  selfecha_ult_trata: string; 
+  selfrecuencia_consumo: string; 
+  selintox_aguda: string; 
+  selmujer_embarazada: string; 
+  selnumero_hijos_ingreso: string; 
+  selnumero_tratamientos_anteriores: string; 
+  selorigen_ingreso: string; 
+  selotra_sustancia_1: string; 
+  selotra_sustancia_2: string; 
+  selotra_sustancia_3: string; 
+  selotro_problema_atencion: string; 
+  selotro_problema_atencion2: string; 
+  selparentesco: string; 
+  selsindrome_abstinencia: string; 
+  selsustancia_inicio: string; 
+  selsustancia_princial: string; 
+  seltenencia_vivienda: string; 
+  seltipo_plan: string; 
+  selprograma_tribunales: string;
+  seltipo_programa: string; 
+  selvia_administracion: string; 
+  sex: string; 
+  ss_basicos_vivienda: string; 
+  surname: string; 
+  tiene_menores_a_cargo: string; 
+  txtedad_inicio_consumo: string; 
+  txtedad_inicio_consumo_inicial: string; 
+  txtfecha_ingreso_conace: string; 
+  txtfecha_ingreso_tratamiento: string; 
+  selconvenio_conace: string
+  txtnacionalidad: string; 
+  txtrut: string;
+}
+
+
