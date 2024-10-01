@@ -2,7 +2,8 @@ import { Request, Response, Router } from "express";
 import {
   getMedicalRecords,
   getAllMedicalRecordsByUser,
-  postMedicalRecord
+  postMedicalRecord,
+  medicalRecordsByMonth
 } from "../controllers/medicalRecord.controller";
 // import { logMiddleware } from "../middleware/log";
 const router = Router();
@@ -11,6 +12,7 @@ router.get("/", getMedicalRecords);
 // router.get("/", logMiddleware, getItems);
 router.get("/:userId", getAllMedicalRecordsByUser );
 router.post("/", postMedicalRecord);
+router.get("/:year/:month", medicalRecordsByMonth);
 // router.delete("/:id", deleteItem);
 // router.put("/:id", updateItem);
 

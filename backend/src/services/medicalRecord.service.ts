@@ -30,27 +30,28 @@ const allMedicalRecordsUser = async (userId: string) => {
     throw error;
   }
 };
-// const findItem = async (id: string) => {
-//   const responseItem = await UserModel.find({ _id: id });
-//   return responseItem;
-// };
 
-// const updateCar = async (id: string, data: Car) => {
-//   /**
-//    ** findOneAndUpdate
-//    ** Por defecto retorna el objeto encontrado antes de actualizar
-//    ** Con {new: true} devuelve el objeto actualizado
-//    */
-//   const responseItem = await UserModel.findOneAndUpdate({ _id: id }, data, {
-//     new: true,
-//   });
-//   return responseItem;
-// };
+const getRecordsByMonthAndYear = async (month: number, year: number) => {
 
-// const deleteCar = async (id: string) => {
-//   const responseItem = await UserModel.deleteOne({ _id: id });
-//   return responseItem;
-// };
+  try {
+    
+    const startOfMonth = new Date(year, month - 1, 1); // Primer día del mes
+    const endOfMonth = new Date(year, month, 0); // Último día del mes
 
-export { allMedicalRecords, insertMedicalRecord, allMedicalRecordsUser };
+    const medicalRecords = await MedicalRecordModel.find({
+      date: {
+        $gte: startOfMonth.toISOString(),  // Fecha de inicio
+        $lt: endOfMonth.toISOString()      // Fecha final
+      }
+    }).populate("service registeredBy"); // Puedes usar populate para traer los detalles de `service` y `registeredBy`    
+
+    return medicalRecords;
+  } catch (error) {
+    throw new Error(`Error to fetch medical records: ${error}`);
+    
+  }
+
+};
+
+export { allMedicalRecords, insertMedicalRecord, allMedicalRecordsUser, getRecordsByMonthAndYear };
 

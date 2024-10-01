@@ -10,6 +10,13 @@ export const routes: Routes = [
     children: [
       
       {
+        path: 'home',
+        title: 'Bienvenido',
+        data: { icon: 'group', child: true, forAdmin: true },
+        loadComponent: () =>
+          import('./dashboard/pages/home/home.component'),
+      },
+      {
         path: 'users',
         title: 'Profesionales',
         data: { icon: 'group', child: false, forAdmin: true },
@@ -65,13 +72,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./dashboard/pages/patients/admisionForm/admisionForm.component'),
       },
-      {
-        path: 'fichas-medicas',
-        title: 'Fichas Clínicas',
-        data: { icon: 'description', child: false },
-        loadComponent: () =>
-          import('./dashboard/pages/medicalRecord/list/list.component'),
-      },
+      //{
+      //  path: 'fichas-medicas',
+      //  title: 'Fichas Clínicas',
+      //  data: { icon: 'description', child: false },
+      //  loadComponent: () =>
+      //    import('./dashboard/pages/medicalRecord/list/list.component'),
+      //},
       {
         path: 'fichas-medicas/nueva',
         title: 'Nuevo Fiha Médica',
@@ -124,7 +131,7 @@ export const routes: Routes = [
   },
   {
     path: '',
-    redirectTo: 'dashboard',
+    redirectTo: 'dashboard/home',
     pathMatch: 'full',
   },
 ];

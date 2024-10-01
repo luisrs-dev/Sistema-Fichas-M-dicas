@@ -1,32 +1,13 @@
 import { Request, Response } from "express";
 import { handleHttp } from "../utils/error.handle";
-import {
-  allMedicalRecords,
-  insertMedicalRecord,
-  allMedicalRecordsUser
-} from "../services/medicalRecord.service";
+import { allMedicalRecords, insertMedicalRecord, allMedicalRecordsUser, getRecordsByMonthAndYear } from "../services/medicalRecord.service";
+import { allServices } from "../services/service.service";
 
-// const getItem = async ({ params }: Request, res: Response) => {
-//   try {
-//     const { id } = params;
-//     const responseItem = await findItem(id);
-//     console.log({ responseItem });
-
-//     const dataResponse = responseItem.length > 0 ? responseItem : "NOT_FOUND";
-//     res.send(dataResponse);
-//   } catch (error) {
-//     handleHttp(res, "ERROR_GET_ITEM", error);
-//   }
-// };
-
-const getAllMedicalRecordsByUser = async (
-  { params }: Request,
-  res: Response
-) => {
+const getAllMedicalRecordsByUser = async ({ params }: Request, res: Response) => {
   try {
     const { _id } = params;
-    console.log({id: _id });
-    
+    console.log({ id: _id });
+
     const responseItems = await allMedicalRecordsUser(_id);
     res.send(responseItems);
   } catch (error) {
@@ -43,26 +24,6 @@ const getMedicalRecords = async (req: Request, res: Response) => {
   }
 };
 
-// const updateItem = async ({ params, body }: Request, res: Response) => {
-//   try {
-//     const { id } = params;
-//     const responseItem = await updateCar(id, body);
-
-//     res.send(responseItem);
-//   } catch (error) {
-//     handleHttp(res, "");
-//   }
-// };
-
-// const deleteItem = async ({ params }: Request, res: Response) => {
-//   try {
-//     const { id } = params;
-//     const responseItem = await deleteCar(id);
-//     res.send(responseItem);
-//   } catch (error) {
-//     handleHttp(res, "");
-//   }
-// };
 const postMedicalRecord = async ({ body }: Request, res: Response) => {
   try {
     const responseUser = await insertMedicalRecord(body);
@@ -73,5 +34,18 @@ const postMedicalRecord = async ({ body }: Request, res: Response) => {
   }
 };
 
-export { postMedicalRecord, getMedicalRecords, getAllMedicalRecordsByUser };
-// export { getItem, getItems, updateItem, postItem, deleteItem };
+const medicalRecordsByMonth = async ({ params }: Request, res: Response) => {
+  const { month, year } = params;
+  try {
+    const medicalRecords = await getRecordsByMonthAndYear(Number(month), Number(year));
+    res.status(200).json({
+      status: true,
+      message: "Fichas clínicas recuperadas",
+      medicalRecords
+    }); // Respuesta exitosa
+  } catch (error) {
+    handleHttp(res, "Error fetching medical records by month", error);
+  }
+};
+
+export { postMedicalRecord, getMedicalRecords, getAllMedicalRecordsByUser, medicalRecordsByMonth };

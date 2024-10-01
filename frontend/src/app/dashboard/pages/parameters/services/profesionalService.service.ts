@@ -3,7 +3,8 @@ import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../../../environments/environment';
 import { Observable } from 'rxjs';
 
-interface Service{
+export interface Service{
+  _id?: string;
   code: string;
   description: string;
 }
