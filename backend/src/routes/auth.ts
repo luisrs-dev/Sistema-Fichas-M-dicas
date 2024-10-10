@@ -1,6 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
-import {loginController, registerController} from "../controllers/auth.controller";
+import {loginController, registerController, updateController} from "../controllers/auth.controller";
 
 const router = Router();
 // Configuración de Multer para guardar archivos
@@ -17,5 +17,6 @@ const upload = multer({ storage: storage });
 
 router.post("/login", loginController);
 router.post("/register", upload.single('image'), registerController);
+router.put("/update", upload.single('image'), updateController);
 
 export { router };

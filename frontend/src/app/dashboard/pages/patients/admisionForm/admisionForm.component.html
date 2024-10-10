@@ -16,7 +16,7 @@
           <mat-icon>send</mat-icon>
         </button>
 
-        @if(!patient.alertTreatment){
+        @if(patient && !patient.alertTreatment){
         <button class="ml-1 my-2" mat-raised-button color="primary" (click)="onSaveSistrat()">
           Registrar en SISTRAT
         </button>

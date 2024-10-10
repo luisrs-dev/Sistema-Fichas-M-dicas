@@ -19,7 +19,6 @@ export class SocioDemographicComponent extends FormBaseComponent {
   ngOnInit() {
     this.form = this.fb.group({
       txtnacionalidad: ['', [Validators.required]],
-      documentacion_regularizada: ['', [Validators.required]],
       selestado_civil: ['', [Validators.required]],
       int_numero_hijos: ['', [Validators.required]],
       selnumero_hijos_ingreso: ['', [Validators.required]],

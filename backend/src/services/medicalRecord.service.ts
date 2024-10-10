@@ -43,7 +43,7 @@ const getRecordsByMonthAndYear = async (month: number, year: number) => {
         $gte: startOfMonth.toISOString(),  // Fecha de inicio
         $lt: endOfMonth.toISOString()      // Fecha final
       }
-    }).populate("service registeredBy"); // Puedes usar populate para traer los detalles de `service` y `registeredBy`    
+    }).populate("service registeredBy patient"); // Puedes usar populate para traer los detalles de `service` y `registeredBy`    
 
     return medicalRecords;
   } catch (error) {

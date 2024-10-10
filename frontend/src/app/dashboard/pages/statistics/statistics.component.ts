@@ -1,16 +1,15 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, type OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatTableDataSource } from '@angular/material/table';
+import { MaterialModule } from '../../../angular-material/material.module';
 import { SpinnerComponent } from '../../../shared/components/spinner/spinner.component';
-import { MedicalRecord } from '../../interfaces/medicalRecord.interface';
+import { MedicalRecord } from './../../interfaces/medicalRecord.interface';
 import { MedicalRecordService } from './../medicalRecord/medicalRecord.service';
 import { ProfesionalServiceService, Service } from './../parameters/services/profesionalService.service';
 import { GraphComponent } from './components/graph/graph.component';
-import { Transactions24HrsComponent } from './transactions24Hrs/transactions24Hrs.component';
-import { TransactionsByBankComponent } from './transactionsByBank/transactionsByBank.component';
-import { TransactionsLastWeekComponent } from './transactionsLastWeek/transactionsLastWeek.component';
-import { MatTableDataSource } from '@angular/material/table';
-import { MaterialModule } from '../../../angular-material/material.module';
+import { MatSelectChange } from '@angular/material/select';
 
 @Component({
   selector: 'app-statistics',
@@ -18,12 +17,10 @@ import { MaterialModule } from '../../../angular-material/material.module';
   imports: [
     CommonModule,
     SpinnerComponent,
-    TransactionsByBankComponent,
-    Transactions24HrsComponent,
-    TransactionsLastWeekComponent,
     GraphComponent,
     MatExpansionModule,
     MaterialModule,
+    FormsModule,
   ],
   templateUrl: './statistics.component.html',
   styleUrl: './statistics.component.css',
@@ -46,14 +43,44 @@ export default class StatisticsComponent implements OnInit {
   public daysInMonth: string[] = [];
   public displayedColumns: string[] = [];
   public patientNames: string[] = [];
+  public months: { value: number, viewValue: string }[] = [];
+
+
+  public years: number[] = [];
 
   dataSource: MatTableDataSource<any>; // Reemplaza con el tipo correcto para los datos
 
+  constructor() {
+    // Generar los últimos 10 años dinámicamente
+    const currentYear = new Date().getFullYear();
+    for (let i = 0; i < 10; i++) {
+      this.years.push(currentYear - i);
+    }
+  }
+
   ngOnInit() {
+
+    this.months = [
+      { value: 1, viewValue: 'Enero' },
+      { value: 2, viewValue: 'Febrero' },
+      { value: 3, viewValue: 'Marzo' },
+      { value: 4, viewValue: 'Abril' },
+      { value: 5, viewValue: 'Mayo' },
+      { value: 6, viewValue: 'Junio' },
+      { value: 7, viewValue: 'Julio' },
+      { value: 8, viewValue: 'Agosto' },
+      { value: 9, viewValue: 'Septiembre' },
+      { value: 10, viewValue: 'Octubre' },
+      { value: 11, viewValue: 'Noviembre' },
+      { value: 12, viewValue: 'Diciembre' },
+    ];
+
     this.selectedYear = new Date().getFullYear();
     this.selectedMonth = new Date().getMonth() + 1;
-
+    
     this.getServices();
+    this.getMedicalRecords();
+    //this.getMedicalRecords(this.selectedMonth, this.selectedYear);
 
     this.calculateDaysInMonth(this.selectedMonth, this.selectedYear);
 
@@ -63,20 +90,27 @@ export default class StatisticsComponent implements OnInit {
   getServices() {
     this.profesionalServiceService.getProfesionalServices().subscribe((services) => {
       this.services = services;
-      console.log({ services });
-      this.getMedicalRecords(this.selectedMonth, this.selectedYear);
     });
   }
 
-  getMedicalRecords(month: number, year: number) {
-    this.medicalRecordService.getMedialRecordsByMonthAndYear(9, year).subscribe((response) => {
+  getMedicalRecords() {
+    console.log(this.selectedMonth);
+    console.log(this.selectedYear);
+    
+    this.medicalRecordService.getMedialRecordsByMonthAndYear(this.selectedMonth, this.selectedYear).subscribe((response) => {
       this.medicalRecords = response.medicalRecords;
-      console.log({ medicalRecords: this.medicalRecords });
+      
       this.groupClinicalRecords();
       this.getPatientNames();
-
       this.cdRef.detectChanges();
     });
+  }
+
+  onSearchMedicalRecords(){
+    console.log('buscando');
+    
+    this.getMedicalRecords();
+
   }
 
   calculateDaysInMonth(month: number, year: number) {
@@ -128,16 +162,25 @@ export default class StatisticsComponent implements OnInit {
   getPatientNames() {
     this.patientNames = Array.from(new Set(this.medicalRecords.map((mr) => mr.registeredBy.name)));
     this.dataSource = new MatTableDataSource(this.patientNames);
-    console.log(this.patientNames);
   }
 
-  getDayRecord(name: string, day: string): number {
-    const isRecorded = this.medicalRecords.find((record) => {
+  getDayRecord(servie: Service, name: string, day: string): { records: number; patients: string } {
+    const records = this.medicalRecords.filter((record) => {
       const registeredByName = record.registeredBy?.name;
       // Extraemos el día de la propiedad date
       const recordDay = new Date(record.date).getUTCDate().toString(); // Convertimos a string para comparar con 'day'
-      return registeredByName === name && recordDay === day;
+      return record.service._id == servie._id && registeredByName === name && recordDay === day;
     });
-    return isRecorded ? 1 : 0;
+
+    let patients = '';
+    if (records.length > 0) {
+      patients = records.map((record) => record.patient?.name).join('');
+    }
+
+    return { records: records.length, patients };
+  }
+
+  onMonthChange(event: MatSelectChange) {
+    this.selectedMonth = event.value;
   }
 }

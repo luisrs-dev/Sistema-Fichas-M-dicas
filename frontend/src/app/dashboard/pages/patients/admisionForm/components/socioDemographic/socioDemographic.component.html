@@ -16,18 +16,6 @@
 
     <div class="col-6">
       <mat-form-field class="w-full" appearance="outline">
-        <mat-label>Documentación regularizada</mat-label>
-        <mat-select formControlName="documentacion_regularizada">
-          <mat-option value="null">Seleccione una opción</mat-option>
-          <mat-option value="1">Si</mat-option>
-          <mat-option value="2">No</mat-option>
-        </mat-select>
-        <span *ngIf="isValidField('documentacion_regularizada')" class="text-red-500"> Debe seleccionar una opción </span>
-      </mat-form-field>
-    </div>
-
-    <div class="col-6">
-      <mat-form-field class="w-full" appearance="outline">
         <mat-label>Estado conyugal</mat-label>
         <mat-select formControlName="selestado_civil">
           <mat-option value="">Seleccione</mat-option>

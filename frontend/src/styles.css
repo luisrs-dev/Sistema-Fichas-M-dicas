@@ -14,6 +14,9 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
   border-radius: 0.5rem;
   border: 1px solid #c4c6d0;
   height: 80% !important;
+
+  max-height: 80vh; /* Altura máxima relativa a la ventana del navegador */
+  overflow: auto;  
 }
 
 .buttons {

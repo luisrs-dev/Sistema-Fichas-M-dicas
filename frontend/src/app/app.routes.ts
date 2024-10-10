@@ -8,6 +8,11 @@ export const routes: Routes = [
     data: { icon: 'dashboard' },
     canActivate: [isAuthenticatedGuard],
     children: [
+      {
+        path: '',
+        redirectTo: 'home',
+        pathMatch: 'full',
+      },
       
       {
         path: 'home',

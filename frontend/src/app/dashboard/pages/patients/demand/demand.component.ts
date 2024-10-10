@@ -37,12 +37,12 @@ export default class DemandComponent {
     whoRequest: ['', [Validators.required]],
     whoDerives: ['', [Validators.required]],
     careOfferedDate: [new Date()],
-    estimatedMonth: [new Date(), [Validators.required]],
-    demandIsNotAccepted: ['', [Validators.required]],
+    estimatedMonth: [new Date(), []],
+    demandIsNotAccepted: ['', []],
     firstAtentionDate: [new Date()],
     atentionResolutiveDate: [new Date()],
-    interventionAB: ['', [Validators.required]],
-    observations: ['', [Validators.required, Validators.minLength(3)]],
+    interventionAB: ['', []],
+    observations: ['', []],
   });
 
   ngOnInit(): void {
@@ -90,7 +90,8 @@ export default class DemandComponent {
       },
       error: (error) => {
         Notiflix.Loading.remove(); 
-        Notiflix.Notify.failure(`Error registrando demanda. Error: ${error}`);
+        Notiflix.Report.failure('Error',`Error registrando demanda. Error: ${error}`, 'Entendido');
+        //Notiflix.Notify.failure(`Error registrando demanda. Error: ${error}`);
       }
 
     })   

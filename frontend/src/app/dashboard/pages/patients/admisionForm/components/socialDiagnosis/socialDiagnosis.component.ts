@@ -18,10 +18,10 @@ export class SocialDiagnosisComponent extends FormBaseComponent {
 
   ngOnInit(){
     this.form = this.fb.group({
-      sel_diagnostico_1: ['', [Validators.required]],
-      sel_diagnostico_2: ['', [Validators.required]],
-      sel_diagnostico_3: ['', [Validators.required]],
-      sel_diagnostico_4: ['', [Validators.required]],
+      sel_diagnostico_1: ['', []],
+      sel_diagnostico_2: ['', []],
+      sel_diagnostico_3: ['', []],
+      sel_diagnostico_4: ['', []],
     });
 
   }

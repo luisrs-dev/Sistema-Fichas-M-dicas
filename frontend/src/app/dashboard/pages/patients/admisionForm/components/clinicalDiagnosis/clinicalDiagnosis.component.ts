@@ -20,13 +20,13 @@ export class ClinicalDiagnosisComponent extends FormBaseComponent{
       selintox_aguda: ['', [Validators.required]],
       selsindrome_abstinencia: ['', [Validators.required]],
       seldiagn_psiquiatrico_cie: ['', [Validators.required]], 
-      cie1: ['', [Validators.required]],
-      seldiagn_psiquiatrico_cie2: ['', [Validators.required]],
-      seldiagn_psiquiatrico_cie3: ['', [Validators.required]],
+      //cie1: ['', [Validators.required]],
+      seldiagn_psiquiatrico_cie2: ['', []],
+      seldiagn_psiquiatrico_cie3: ['', []],
       seldiagn_fiscico: ['', [Validators.required]],
-      selotro_problema_atencion: ['', [Validators.required]],
-      selotro_problema_atencion2: ['', [Validators.required]],
-      selcompromiso_biopsicosocial: ['', [Validators.required]]
+      selotro_problema_atencion: ['', []],
+      selotro_problema_atencion2: ['', []],
+      selcompromiso_biopsicosocial: ['', []]
     });
 
   }

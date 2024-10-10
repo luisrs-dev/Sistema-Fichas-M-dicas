@@ -1,33 +1,59 @@
+@if(selectedMonth){
 <div class="container">
-  <h1>Fichas clínicass</h1>
+  <div class="flex align-content-start flex-wrap">
+    <div class="flex align-items-center justify-content-center w-12rem h-4rem bg-primary font-bold border-round m-2">
+      <h1>Estadísticas</h1>
+    </div>
+    <div class="flex align-items-center justify-content-center w-12rem h-4rem bg-primary font-bold border-round m-2">
+      <mat-form-field appearance="outline">
+        <mat-label>Mes</mat-label>
+        <mat-select [value]="selectedMonth" (selectionChange)="onMonthChange($event)">
+          @for (month of months; track $index) {
+          <mat-option [value]="month.value">{{ month.viewValue }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <div class="flex align-items-center justify-content-center w-12rem h-4rem bg-primary font-bold border-round m-2">
+      <mat-form-field appearance="outline">
+        <mat-label>Año</mat-label>
+        <mat-select [value]="selectedYear">
+          @for (year of years; track year) {
+          <mat-option [value]="year">{{ year }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <div class="flex align-items-center mb-3 font-bold">
+      <button mat-flat-button color="primary" (click)="onSearchMedicalRecords()">Consultar</button>
+    </div>
+  </div>
 
+  @if(medicalRecords.length > 0){
   <div>
-    <mat-accordion>
-      <!--services: {{services.length}}
-      medicalRecords: {{medicalRecords.length}}-->
+    <mat-accordion [multi]="true">
       @if(services.length > 0 && medicalRecords.length > 0){ @for(service of services; track $index){
-      <mat-expansion-panel hideToggle>
+      <mat-expansion-panel [expanded]="true">
         <mat-expansion-panel-header>
           <mat-panel-title>{{ service.code }} {{ service.description }}</mat-panel-title>
         </mat-expansion-panel-header>
 
-        <p>Tabla de {{ service.description }}</p>
+        <!--<p>Tabla de {{ service.description }}</p>-->
 
         <mat-table [dataSource]="dataSource" class="mat-elevation-z2">
           <ng-container matColumnDef="patientName">
-            <mat-header-cell *matHeaderCellDef>Paciente</mat-header-cell>
+            <mat-header-cell *matHeaderCellDef>Profesional</mat-header-cell>
             <mat-header-cell *matCellDef="let element">{{ element }}</mat-header-cell>
           </ng-container>
 
           <ng-container *ngFor="let day of daysInMonth" [matColumnDef]="day">
             <mat-header-cell *matHeaderCellDef>{{ day }}</mat-header-cell>
-            <mat-cell *matCellDef="let element">
-                @if(getDayRecord(element, day) == 1){
-                  <span style="font-size: 18px;color: red"><strong>1</strong></span>
-                }@else{
-                  0
-                }
-              <!--{{ getDayRecord(element, day) == 1; e }}-->
+            <mat-cell *matCellDef="let patient">
+              <!--{{getDayRecord(service, patient, day)}}-->
+
+              <div matTooltip="{{ getDayRecord(service, patient, day).patients }}" class="circle" [ngClass]="{ active: getDayRecord(service, patient, day).records > 0 }">
+                {{ getDayRecord(service, patient, day).records }}
+              </div>
             </mat-cell>
           </ng-container>
           <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
@@ -37,4 +63,14 @@
       } }
     </mat-accordion>
   </div>
+  } @else {
+  <div class="grid">
+    <div class="col"></div>
+    <div class="col mt-8">
+      <h1>No hay registros</h1>
+    </div>
+  </div>
+  }
 </div>
+
+}

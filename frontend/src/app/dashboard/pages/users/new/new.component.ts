@@ -89,34 +89,40 @@ export default class NewComponent {
     if (this.userForm.invalid) {
       this.userForm.markAllAsTouched();
       console.log('form invalido');
-
       return;
     }
 
-    if (this.edit) {
-      console.log('Actualizar usuario');
+    const formData = new FormData();
+
+
+    Object.entries(this.userForm.value).forEach(([key, value]) => {
+      if (value instanceof File) {
+        formData.append(key, value); // Si es un archivo, lo añade como Blob
+      } else if (value !== null && value !== undefined) {
+        formData.append(key, value.toString()); // Convierte otros valores a string
+      }
+    });
+
+    this.checkedPermissions.forEach((permission) => {
+      formData.append('permissions', permission); // 'permissions' será el nombre de campo para estos datos
+    });
+
+    this.checkedPrograms.forEach((program) => {
+      formData.append('programs', program); // 'programs' será el nombre de campo para estos datos
+    });
+
+    formData.forEach((value, key) => {
+      console.log(`${key}: ${value}`);
+    });
+
+    if (this.edit) {      
+      formData.append('patientId', this.patientId); // 'programs' será el nombre de campo para estos datos
+
+      this.userService.updateUser(formData).subscribe((response: any) => {
+        this.router.navigateByUrl('/dashboard/users');
+      });
     } else {
-      const formData = new FormData();
 
-      Object.entries(this.userForm.value).forEach(([key, value]) => {
-        if (value instanceof File) {
-          formData.append(key, value); // Si es un archivo, lo añade como Blob
-        } else if (value !== null && value !== undefined) {
-          formData.append(key, value.toString()); // Convierte otros valores a string
-        }
-      });
-
-      this.checkedPermissions.forEach((permission) => {
-        formData.append('permissions', permission); // 'permissions' será el nombre de campo para estos datos
-      });
-
-      this.checkedPrograms.forEach((program) => {
-        formData.append('programs', program); // 'programs' será el nombre de campo para estos datos
-      });
-
-      formData.forEach((value, key) => {
-        console.log(`${key}: ${value}`);
-      });
 
       this.userService.createUser(formData).subscribe((response: any) => {
         console.log(response);
@@ -172,27 +178,4 @@ export default class NewComponent {
     }
     return false;
   }
-
-  //onFileSelected(event: Event): void {
-  //  const input = event.target as HTMLInputElement;
-  //  if (input.files && input.files[0]) {
-  //    const file = input.files[0];
-  //    console.log('Tipo de archivo:', file.type);
-
-  //    if (file.type === 'image/png' || file.type === 'image/jpeg') {
-  //      this.imageFile = file;
-
-  //      // Crear vista previa de la imagen
-  //      const reader = new FileReader();
-  //      reader.onload = (e) => {
-  //        this.selectedImage = reader.result;
-  //        console.log('Vista previa de la imagen:', this.selectedImage);
-  //        this.changeDetectorRef.detectChanges(); // Forzar la detección de cambios
-  //      };
-  //      reader.readAsDataURL(file);
-  //    } else {
-  //      alert('Por favor, seleccione un archivo JPG o PNG.');
-  //    }
-  //  }
-  //}
 }

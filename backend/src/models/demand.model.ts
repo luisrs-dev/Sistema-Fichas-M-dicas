@@ -33,28 +33,23 @@ const DemandSchema = new Schema<Demand>(
       required: true,
     },
     estimatedMonth: {
-      type: String,
-      required: true,
+      type: String
     },
     demandIsNotAccepted: {
-      type: String,
-      required: true,
+      type: String
     },
     firstAtentionDate: {
       type: String,
       required: true,
     },
     atentionResolutiveDate: {
-      type: String,
-      required: true,
+      type: String
     },
     interventionAB: {
-      type: String,
-      required: true,
-    },
+      type: String
+        },
     observations: {
-      type: String,
-      required: true,
+      type: String
     },
   },
   { timestamps: true, versionKey: false }

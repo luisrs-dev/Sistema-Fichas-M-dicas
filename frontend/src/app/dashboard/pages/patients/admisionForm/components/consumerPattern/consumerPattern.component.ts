@@ -17,9 +17,9 @@ export class ConsumerPatternComponent extends FormBaseComponent {
   ngOnInit(){
     this.form = this.fb.group({
       selsustancia_princial: ['', [Validators.required]],
-      selotra_sustancia_1: ['', [Validators.required]],
-      selotra_sustancia_2: ['', [Validators.required]],
-      selotra_sustancia_3: ['', [Validators.required]],
+      selotra_sustancia_1: ['', []],
+      selotra_sustancia_2: ['', []],
+      selotra_sustancia_3: ['', []],
       selfrecuencia_consumo: ['', Validators.required],
       txtedad_inicio_consumo: ['', Validators.required],
       selvia_administracion: ['', Validators.required],

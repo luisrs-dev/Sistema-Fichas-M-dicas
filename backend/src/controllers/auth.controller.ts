@@ -1,11 +1,20 @@
 import { Request, Response } from "express";
-import { loginUser, registerNewUser } from "../services/auth.service";
+import { loginUser, registerNewUser, updateUser } from "../services/auth.service";
 
 const registerController = async (req: Request, res: Response) => {
 
   const imageFile = req.file; // Accede al objeto req.file  
   const { body } = req; 
   const responseUser = await registerNewUser(body, imageFile);
+  res.send({status:'ok', responseUser});
+};
+
+const updateController = async (req: Request, res: Response) => {
+  console.log('UPDATING...');
+  
+  const imageFile = req.file; // Accede al objeto req.file  
+  const { body } = req;    
+  const responseUser = await updateUser(body, imageFile);
   res.send({status:'ok', responseUser});
 };
 
@@ -21,4 +30,4 @@ const loginController = async ({ body }: Request, res: Response) => {
   }
 };
 
-export { registerController, loginController };
+export { registerController, updateController, loginController };
