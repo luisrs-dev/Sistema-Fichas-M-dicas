@@ -64,6 +64,17 @@ export class PatientService {
     return this.http.post<any>(`${this.backend}/patient/ficha-ingreso`, { patientId, dataAdmissionForm }).pipe(catchError((err) => throwError(() => err.error.message)));
   }
 
+  getFichaIngreso(patientId: string): Observable<any> {
+    return this.http.get<any>(`${this.backend}/patient/ficha-ingreso/${patientId}`).pipe(catchError((err) => throwError(() => err.error.message)));
+  }
+
+  
+  updateFichaIngreso(patientId: string, dataAdmissionForm: any): Observable<any> {
+    return this.http.put<any>(`${this.backend}/patient/ficha-ingreso`, { patientId, dataAdmissionForm }).pipe(catchError((err) => throwError(() => err.error.message)));
+  }
+
+  
+
   addFichaIngresoToSistrat(patientId: string): Observable<any> {
     return this.http.post<any>(`${this.backend}/patient/ficha-ingreso/sistrat`, { patientId }).pipe(catchError((err) => throwError(() => err.error.message)));
   }

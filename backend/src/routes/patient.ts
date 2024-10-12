@@ -8,7 +8,9 @@ import {
   postPatient,
   postPatientSistrat,
   //recordPatientSistrat,
+  getAdmissionForm,
   postAdmissionForm,
+  updateAdmissionForm,
   postAdmissionFormSistrat,
   updateAlerts,
   formCie10
@@ -22,7 +24,9 @@ router.get("/:id", getPatientsById);
 router.post("/", postPatient);
 router.post("/demanda", postDemand);
 router.post("/demanda/sistrat", postDemandToSistrat);
+router.get("/ficha-ingreso/:patientId", getAdmissionForm);
 router.post("/ficha-ingreso", postAdmissionForm);
+router.put("/ficha-ingreso", updateAdmissionForm);
 router.post("/ficha-ingreso/sistrat", postAdmissionFormSistrat);
 router.post("/sistrat", postPatientSistrat);
 router.post("/sistrat/alerts", updateAlerts);

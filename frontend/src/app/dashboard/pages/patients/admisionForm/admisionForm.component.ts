@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, ViewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { ActivatedRoute } from '@angular/router';
@@ -15,6 +15,7 @@ import { UserIdentificationComponent } from './components/userIdentification/use
 import { MatDialog } from '@angular/material/dialog';
 import { InvalidFormsDialogComponent } from './components/invalidFormsDialog/invalidFormsDialog.component';
 import Notiflix from 'notiflix';
+import { AdmissionForm } from '../../../interfaces/admissionForm.interface';
 
 @Component({
   selector: 'app-admision-form',
@@ -39,10 +40,14 @@ import Notiflix from 'notiflix';
 export default class AdmisionFormComponent {
   private activatedRoute = inject(ActivatedRoute);
   private patientService = inject(PatientService);
-  private patientId: string;
-  public patient: Patient;
-  public admissionFormRegistered: boolean = false;
   private dialog = inject(MatDialog);
+  private changeDetectorRef = inject(ChangeDetectorRef);
+
+  private patientId: string;
+  public patient: Patient | null = null;
+  public admissionForm: AdmissionForm | null = null;
+  public admissionFormRegistered: boolean = false;
+  public editMode: boolean = false;
 
   @ViewChild(UserIdentificationComponent) userIdentificationComponent!: UserIdentificationComponent;
   @ViewChild(SocioDemographicComponent) socioDemographicComponent!: SocioDemographicComponent;
@@ -53,11 +58,18 @@ export default class AdmisionFormComponent {
 
   ngOnInit(): void {
     this.patientId = this.activatedRoute.snapshot.paramMap.get('id') || '';
-    console.log(this.patientId);
-    
-    this.patientService.getPatientById(this.patientId).subscribe((response) => {
-      this.patient = response.patient;
+    console.log({patientId:this.patientId});
+
+    this.patientService.getFichaIngreso(this.patientId).subscribe((response) => {
+      console.log(response);
+
+      this.patient = response.data.patient;
+      this.admissionForm = response.data.admissionForm;
       console.log(this.patient);
+      console.log(this.admissionForm);
+      if (this.patient && this.patient.registeredAdmissionForm) {
+        this.editMode = true;
+      }
     });
   }
 
@@ -118,24 +130,51 @@ export default class AdmisionFormComponent {
     console.log('Datos combinados de todos los formularios:', dataAdmidssonForm);
     console.log(Object.keys(dataAdmidssonForm).length);
 
+    if (this.editMode) {
+      console.log('actualizar');
+      this.patientService.updateFichaIngreso(this.patient!._id!, dataAdmidssonForm).subscribe((response) => {
+        Notiflix.Notify.success('Ficha de ingreso actualizda');
+      });
+    }
 
-    this.patientService.addFichaIngreso(this.patient._id!, dataAdmidssonForm).subscribe((response) => {
-      console.log(response);
-      if (response.status) {
-        this.admissionFormRegistered = true;
-      }
-    });
+    if (!this.editMode) {
+      this.patientService.addFichaIngreso(this.patient!._id!, dataAdmidssonForm).subscribe((response) => {
+        if (response.patient.registeredAdmissionForm) {
+          Notiflix.Notify.success('Ficha de ingreso registrada');
+
+          this.admissionFormRegistered = true;
+          this.editMode = true;
+          this.changeDetectorRef.detectChanges();
+        }
+      });
+    }
   }
 
   onSaveSistrat() {
-    Notiflix.Loading.circle('Registrando Demanda en SISTRAT');
+    Notiflix.Confirm.show(
+      '¿Está seguro?',
+      'Esta acción es irreversible y no podrá modificar la información.',
+      'Si',
+      'No',
+      () => {
+        // Success
+        Notiflix.Loading.circle('Registrando Ficha de ingreso en SISTRAT');
 
-    this.patientService.addFichaIngresoToSistrat(this.patient._id!).subscribe((response) => {
-      console.log(response);
-      if (response.status) {
-        this.admissionFormRegistered = true;
-        Notiflix.Loading.remove();
+        this.patientService.addFichaIngresoToSistrat(this.patient!._id!).subscribe((response) => {
+          console.log(response);
+          if (response.status) {
+            this.admissionFormRegistered = true;
+            Notiflix.Loading.remove();
+          }
+        });
+        console.log('Registrar en SISTRAT');
+      },
+      () => {
+        // Cancel
+        console.log('Cancelado registro en SISTRAT');
       }
-    });
+    );
+
+    return;
   }
 }

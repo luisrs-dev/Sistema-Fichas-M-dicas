@@ -11,23 +11,25 @@ import { FormBaseComponent } from '../form-base.component';
   templateUrl: './clinicalDiagnosis.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ClinicalDiagnosisComponent extends FormBaseComponent{
+export class ClinicalDiagnosisComponent extends FormBaseComponent {
   private fb = inject(FormBuilder);
 
-  ngOnInit(){
+  ngOnInit() {
     this.form = this.fb.group({
-      seldiagn_consumo_sustancia: ['', [Validators.required]],
-      selintox_aguda: ['', [Validators.required]],
-      selsindrome_abstinencia: ['', [Validators.required]],
-      seldiagn_psiquiatrico_cie: ['', [Validators.required]], 
-      //cie1: ['', [Validators.required]],
+      seldiagn_consumo_sustancia: ['', []],
+      selintox_aguda: ['', []],
+      selsindrome_abstinencia: ['', []],
+      seldiagn_psiquiatrico_cie: ['', []],
+      //cie1: ['', []],
       seldiagn_psiquiatrico_cie2: ['', []],
       seldiagn_psiquiatrico_cie3: ['', []],
-      seldiagn_fiscico: ['', [Validators.required]],
+      seldiagn_fiscico: ['', []],
       selotro_problema_atencion: ['', []],
       selotro_problema_atencion2: ['', []],
-      selcompromiso_biopsicosocial: ['', []]
+      selcompromiso_biopsicosocial: ['', []],
     });
 
+    // Método de componente base
+    this.fillFormWithAdmissionData();
   }
 }

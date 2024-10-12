@@ -1,9 +1,10 @@
-import { optionsNacionality } from './optionsNationality';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, Input } from '@angular/core';
+import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MaterialModule } from '../../../../../../angular-material/material.module';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AdmissionForm } from '../../../../../interfaces/admissionForm.interface';
 import { FormBaseComponent } from '../form-base.component';
+import { optionsNacionality } from './optionsNationality';
 
 @Component({
   selector: 'socio-demographic-form',
@@ -14,28 +15,32 @@ import { FormBaseComponent } from '../form-base.component';
 })
 export class SocioDemographicComponent extends FormBaseComponent {
   private fb = inject(FormBuilder);
+
   public optionsNacionality: { name: string; value: string }[] = optionsNacionality;
 
   ngOnInit() {
     this.form = this.fb.group({
-      txtnacionalidad: ['', [Validators.required]],
-      selestado_civil: ['', [Validators.required]],
-      int_numero_hijos: ['', [Validators.required]],
-      selnumero_hijos_ingreso: ['', [Validators.required]],
-      selescolaridad: ['', [Validators.required]],
-      escolaridad_opc: ['1', [Validators.required]],
-      selmujer_embarazada: ['No', [Validators.required]],
-      tiene_menores_a_cargo: ['no', [Validators.required]],
-      selestado_ocupacional: ['', [Validators.required]],
-      selcon_quien_vive: ['', [Validators.required]],
-      selparentesco: ['', [Validators.required]],
-      seldonde_vive: ['', [Validators.required]],
-      perso_dormitorio_vivienda: ['', [Validators.required]],
-      precariedad_vivienda: ['', [Validators.required]],
-      ss_basicos_vivienda: ['', [Validators.required]],
-      seltenencia_vivienda: ['', [Validators.required]],
-      selnumero_tratamientos_anteriores: ['', [Validators.required]],
-      selfecha_ult_trata: ['', [Validators.required]],
+      txtnacionalidad: ['', []],
+      selestado_civil: ['', []],
+      int_numero_hijos: ['', []],
+      selnumero_hijos_ingreso: ['', []],
+      selescolaridad: ['', []],
+      escolaridad_opc: ['1', []],
+      selmujer_embarazada: ['No', []],
+      tiene_menores_a_cargo: ['no', []],
+      selestado_ocupacional: ['', []],
+      selcon_quien_vive: ['', []],
+      selparentesco: ['', []],
+      seldonde_vive: ['', []],
+      perso_dormitorio_vivienda: ['', []],
+      precariedad_vivienda: ['', []],
+      ss_basicos_vivienda: ['', []],
+      seltenencia_vivienda: ['', []],
+      selnumero_tratamientos_anteriores: ['', []],
+      selfecha_ult_trata: ['', []],
     });
+
+    // Método de componente base
+    this.fillFormWithAdmissionData()
   }
 }

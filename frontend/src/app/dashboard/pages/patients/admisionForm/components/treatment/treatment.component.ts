@@ -19,14 +19,17 @@ export class TreatmentComponent extends FormBaseComponent {
 
   ngOnInit() {
     this.form = this.fb.group({
-      txtfecha_ingreso_tratamiento: ['', [Validators.required]],
-      selconvenio_conace: ['', [Validators.required]],
-      txtfecha_ingreso_conace: ['', [Validators.required]],
-      seltipo_programa: ['', [Validators.required]],
-      seltipo_plan: ['', [Validators.required]],
-      selprograma_tribunales: ['', [Validators.required]],
-      txtrut: ['', [Validators.required]],
-      selconcentimiento_informado: ['', [Validators.required]],
+      txtfecha_ingreso_tratamiento: ['', []],
+      selconvenio_conace: ['', []],
+      txtfecha_ingreso_conace: ['', []],
+      seltipo_programa: ['', []],
+      seltipo_plan: ['', []],
+      selprograma_tribunales: ['', []],
+      txtrut: ['', []],
+      selconcentimiento_informado: ['', []],
     });
+
+    // Método de componente base
+    this.fillFormWithAdmissionData();
   }
 }

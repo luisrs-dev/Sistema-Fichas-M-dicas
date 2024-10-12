@@ -35,7 +35,6 @@ export default class DashboardComponent implements OnInit {
   public user: User;
 
   ngOnInit() {
-    console.log({routes});
     this.isAdmin = this.authService.isAdmin();
     this.user = this.authService.getUser();
     

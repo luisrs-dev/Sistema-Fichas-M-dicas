@@ -16,7 +16,7 @@ export class SocialDiagnosisComponent extends FormBaseComponent {
   private fb = inject(FormBuilder);
   public formComplete: boolean = false;
 
-  ngOnInit(){
+  ngOnInit() {
     this.form = this.fb.group({
       sel_diagnostico_1: ['', []],
       sel_diagnostico_2: ['', []],
@@ -24,7 +24,7 @@ export class SocialDiagnosisComponent extends FormBaseComponent {
       sel_diagnostico_4: ['', []],
     });
 
+    // Método de componente base
+    this.fillFormWithAdmissionData();
   }
-
-
 }

@@ -6,6 +6,8 @@ import { Demand } from "../interfaces/demand.interface";
 import DemandModel from "../models/demand.model";
 import Sistrat from "./sistrat/sistrat.class";
 import AdmissionFormModel from "../models/admissionForm.model";
+import mongoose from 'mongoose';
+
 
 const inerPatient = async (Patient: Patient) => {
   const responseInsert = await PatientModel.create(Patient);
@@ -24,11 +26,80 @@ const saveAdmissionForm = async (patientId: string, admissionFormData: any) => {
 
     const admissionForm = { patientId, ...admissionFormData };
     const responseInsert = await AdmissionFormModel.create(admissionForm);
-    return responseInsert;
+    if (!responseInsert) {
+      throw new Error("No fue posible registrar ficha de ingreso");
+    }
+
+    patient.registeredAdmissionForm = true;
+    patient.save();
+
+    return patient;
   } catch (error) {
     throw new Error(`error admissionForm registrado: ${error}`);
   }
 };
+
+
+
+
+const admisionFormmByPatient = async (patientId: string) => {
+
+  try {
+    const patient = await PatientModel.findOne({ _id: patientId });
+    const admissionForm = await AdmissionFormModel.findOne({ patientId });
+    if (!admissionForm) {
+      throw new Error("Formulario de admisión no encontrado");
+    }
+
+    console.log({patient, admissionForm});
+    
+    return {patient, admissionForm};
+  } catch (error) {
+    
+  }
+};
+
+
+const updateAF = async (patientId: string, admissionFormData: any) => {
+  //console.log('updateAF');
+  //console.log({admissionFormData});
+  
+  
+  try {
+    const patient = await PatientModel.findOne({ _id: patientId });
+    console.log(patient?.name);
+    console.log(patient?._id);
+    console.log('recibido');
+    console.log({patientId});
+    
+    
+    const patientObjectId = new mongoose.Types.ObjectId(patientId);
+
+
+    if (!patient) {
+      throw new Error("Usuario no encontrado");
+    }
+
+    const admissionForm = await AdmissionFormModel.findOne({ patientId });
+    console.log({admissionForm});
+  
+    const updatedAdmissionForm = await AdmissionFormModel.updateOne({ _id: admissionForm!._id }, admissionFormData);
+
+    if (!updatedAdmissionForm) {
+      throw new Error("Formulario de admisión no encontrado");
+    }
+
+    patient.registeredAdmissionForm = true;
+    patient.save();
+
+    // Retorna el formulario actualizado
+    return patient;
+  } catch (error) {
+    throw new Error(`Error al actualizar ficha de ingreso: ${error}`);
+  }
+};
+
+
 
 const saveAdmissionFormToSistrat = async (patientId: string) => {
   try {
@@ -185,8 +256,10 @@ export {
   allPatients,
   PatientsByProfile,
   findPatient,
+  admisionFormmByPatient,
   saveAdmissionForm,
   saveAdmissionFormToSistrat,
   updateAlertsFromSistrat,
-  updateFormCie10
+  updateFormCie10,
+  updateAF
 };

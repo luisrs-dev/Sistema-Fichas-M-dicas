@@ -12,46 +12,41 @@
     <div>
       <div class="flex align-items-center justify-content-end border-round pb-2">
         <button class="my-2" mat-raised-button color="primary" (click)="onSave()">
-          Guardar
-          <mat-icon>send</mat-icon>
+          @if(editMode){ Actualizar }@else { Guardar }
+          <mat-icon>save</mat-icon>
         </button>
 
-        @if(patient && !patient.alertTreatment){
-        <button class="ml-1 my-2" mat-raised-button color="primary" (click)="onSaveSistrat()">
-          Registrar en SISTRAT
-        </button>
-        }@else {
-        <mat-chip class="ml-1">Paciente Registrado en otro centro</mat-chip>
-
-        }
+        @if(patient){ @if(admissionFormRegistered || patient.registeredAdmissionForm){
+        <button class="ml-1 my-2" mat-raised-button color="primary" (click)="onSaveSistrat()">SISTRAT<mat-icon>save</mat-icon></button>
+        } }
       </div>
     </div>
 
     <mat-divider></mat-divider>
 
     <mat-tab-group mat-stretch-tabs="false" mat-align-tabs="start" dynamicHeight class="mt-4">
+      @if(patient && admissionForm){
       <mat-tab label="Identificación de usuarios">
-        @if(patient){
-        <user-identification [patient]="patient"></user-identification>
-        }
+
+
+        <user-identification [patient]="patient" [admissionForm]="admissionForm"/>
       </mat-tab>
       <mat-tab label="Caracterización Sociodemográfica">
-        <socio-demographic-form></socio-demographic-form>
+        <socio-demographic-form [admissionForm]="admissionForm"/>
       </mat-tab>
       <mat-tab label="Patrón de Consumo Problemático ">
-        <consumer-pattern-form></consumer-pattern-form>
+        <consumer-pattern-form [admissionForm]="admissionForm"/>
       </mat-tab>
       <mat-tab label="Diagnóstico Clínico ">
-        <clinical-diagnosis-form></clinical-diagnosis-form>
+        <clinical-diagnosis-form [admissionForm]="admissionForm"/>
       </mat-tab>
 
-      <mat-tab label="Tratamiento/Convenio ">
-        <treatment-form></treatment-form>
-      </mat-tab>
+      <mat-tab label="Tratamiento/Convenio "><treatment-form [admissionForm]="admissionForm"/></mat-tab>
 
-      <mat-tab label="Diagnósitco de Int. Social">
-        <social-diagnosis-form />
+      <mat-tab label="Diagnósitco de Int. Social"><social-diagnosis-form [admissionForm]="admissionForm"/>
       </mat-tab>
+    }
+
     </mat-tab-group>
   </div>
 </div>

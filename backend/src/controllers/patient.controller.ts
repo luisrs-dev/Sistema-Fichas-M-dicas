@@ -8,7 +8,9 @@ import {
   recordDemandToSistrat,
   PatientsByProfile,
   findPatient,
+  admisionFormmByPatient,
   saveAdmissionForm,
+  updateAF,
   saveAdmissionFormToSistrat,
   updateAlertsFromSistrat,
   updateFormCie10
@@ -94,18 +96,51 @@ const postDemandToSistrat = async ({ body }: Request, response: Response) => {
   }
 };
 
+
+const updateAdmissionForm = async ({ body }: Request, res: Response) => {
+  const { patientId, dataAdmissionForm } = body;
+  if (!patientId) {
+    res.status(500).json({ success: true, message: "Usuario no existe para actualizar ficha de ingreso" });
+  }
+  try {
+    const responseAdmissionForm = await updateAF(patientId, dataAdmissionForm);
+    res.status(200).json({ success: true, message: "Ficha de ingreso actualizada con éxito" });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
 const postAdmissionForm = async ({ body }: Request, res: Response) => {
   const { patientId, dataAdmissionForm } = body;
   if (!patientId) {
     res.status(500).json({ success: true, message: "Usuario no existe para registrar ficha de ingreso" });
   }
   try {
-    const responseAdmissionForm = await saveAdmissionForm(patientId, dataAdmissionForm);
-    res.status(201).json({ success: true, message: "Ficha de ingreso creada con éxito" });
+    const patient = await saveAdmissionForm(patientId, dataAdmissionForm);
+    res.status(201).json({ success: true, message: "Ficha de ingreso creada con éxito", patient });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+
+const getAdmissionForm = async (req: Request, res: Response) => {
+  try {
+
+    console.log('req.params.patientId');
+    console.log(req.params.patientId);
+    
+    const data = await admisionFormmByPatient(req.params.patientId);
+    res.status(200).json({ success: true, message: "Ficha de ingreso recuperada con éxito", data: data });
+  } catch (error) {
+    handleHttp(res, "ERROR_GET_ITEMS", error);
+  }
+};
+
+
+
 
 const postAdmissionFormSistrat = async ({ body }: Request, res: Response) => {
   const { patientId } = body;
@@ -168,6 +203,8 @@ export {
   getPatients,
   getPatientsByProfile,
   getPatientsById,
+  updateAdmissionForm,
+  getAdmissionForm,
   postAdmissionForm,
   postAdmissionFormSistrat,
   updateAlerts,
