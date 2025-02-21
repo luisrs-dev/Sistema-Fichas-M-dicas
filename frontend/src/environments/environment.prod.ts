@@ -1,5 +1,5 @@
 export const environment = {
-  baseUrl: '3.133.138.71:3002',
+  baseUrl: 'http://ficlin.cl/api',
   production: true,
   userDefault: {
     email: "",

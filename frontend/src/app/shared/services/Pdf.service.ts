@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import jsPDF from 'jspdf';
 import { MedicalRecord } from '../../dashboard/interfaces/medicalRecord.interface';
+import { environment } from '../../../environments/environment';
 
 interface ImageRecord {
   imgData: HTMLImageElement;
@@ -11,7 +12,7 @@ interface ImageRecord {
   providedIn: 'root',
 })
 export class PdfService {
-  private backendUrl = 'http://localhost:3002'; // Cambia esto a la URL de tu backend
+  private backendUrl = environment.baseUrl;
 
   async generateClinicalRecordsPdf(clinicalRecords: MedicalRecord[]) {
     const doc = new jsPDF();
@@ -94,7 +95,7 @@ export class PdfService {
       const image = images[index];
       if (image) {
         const imgData = image.imgData; // La imagen cargada
-        doc.addImage(imgData.src, 'PNG', 10, y - 20, 50, 20); // Ajusta la posición y el tamaño según sea necesario
+        doc.addImage(imgData.src, 'png', 10, y - 20, 50, 20); // Ajusta la posición y el tamaño según sea necesario
       }
 
       // Pie de página solo si es la segunda ficha en la página o la última ficha

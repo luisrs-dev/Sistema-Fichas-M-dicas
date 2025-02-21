@@ -49,8 +49,9 @@ Thumbs.db
 *.wmv
 
 **/package-lock.json
-**/cacheEureka
 
 .npm
 .ssh
 cache
+ecosystem.config.js
+.env

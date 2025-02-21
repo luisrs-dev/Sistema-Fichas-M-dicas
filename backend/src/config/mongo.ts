@@ -1,8 +1,6 @@
 import mongoose from 'mongoose';
 
- const uri = "mongodb://localhost:27017/ceadt";
-// const uri = "mongodb://admin:12345@localhost:27017/ceadt";
-//const uri = <string>process.env.DB_URI;
+const uri = process.env.DB_URI as string;
 
 const connectToDatabase = async () => {
   try {
