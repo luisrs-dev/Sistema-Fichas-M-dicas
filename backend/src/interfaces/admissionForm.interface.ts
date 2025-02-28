@@ -4,6 +4,8 @@ export interface AdmissionForm {
   patientId: Types.ObjectId;
   centerOrigin: string; 
   cie1: string; 
+  cie2: string; 
+  cie3: string; 
   discapacidad: string; 
   opcion_discapacidad: string;
   documentacion_regularizada: string; 

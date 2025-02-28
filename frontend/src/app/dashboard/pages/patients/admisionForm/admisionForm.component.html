@@ -25,28 +25,24 @@
     <mat-divider></mat-divider>
 
     <mat-tab-group mat-stretch-tabs="false" mat-align-tabs="start" dynamicHeight class="mt-4">
-      @if(patient && admissionForm){
+      @if(patient){
       <mat-tab label="Identificación de usuarios">
-
-
-        <user-identification [patient]="patient" [admissionForm]="admissionForm"/>
+        <user-identification [patient]="patient" [admissionForm]="admissionForm" />
       </mat-tab>
       <mat-tab label="Caracterización Sociodemográfica">
-        <socio-demographic-form [admissionForm]="admissionForm"/>
+        <socio-demographic-form [admissionForm]="admissionForm" />
       </mat-tab>
       <mat-tab label="Patrón de Consumo Problemático ">
-        <consumer-pattern-form [admissionForm]="admissionForm"/>
+        <consumer-pattern-form [admissionForm]="admissionForm" />
       </mat-tab>
       <mat-tab label="Diagnóstico Clínico ">
-        <clinical-diagnosis-form [admissionForm]="admissionForm"/>
+        <clinical-diagnosis-form [admissionForm]="admissionForm" />
       </mat-tab>
 
-      <mat-tab label="Tratamiento/Convenio "><treatment-form [admissionForm]="admissionForm"/></mat-tab>
+      <mat-tab label="Tratamiento/Convenio "><treatment-form [admissionForm]="admissionForm" /></mat-tab>
 
-      <mat-tab label="Diagnósitco de Int. Social"><social-diagnosis-form [admissionForm]="admissionForm"/>
-      </mat-tab>
-    }
-
+      <mat-tab label="Diagnósitco de Int. Social"><social-diagnosis-form [admissionForm]="admissionForm" /> </mat-tab>
+      }
     </mat-tab-group>
   </div>
 </div>

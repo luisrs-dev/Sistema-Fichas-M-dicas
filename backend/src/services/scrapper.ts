@@ -74,9 +74,14 @@ class Scrapper {
     await page.type(selector, text);
   }
 
-  async clickButton(page: Page, selector: string): Promise<void> {
-    await page.waitForSelector(selector, { visible: true });
-    await page.click(selector);
+  async clickButton(page: Page, selector: string, timeoutValue: number = 5000): Promise<void> {
+    try {
+      await page.waitForSelector(selector, { visible: true, timeout: timeoutValue });
+      await page.click(selector);
+      
+    } catch (error) {
+      console.error(`Error al hacer click en el selector: ${selector}`, error);            
+    }
   }
 
   async setDateValue(page: Page, selector: string, date: string): Promise<void> {

@@ -1,0 +1,7 @@
+<mat-radio-group class="radio-group" [name]="groupName" (change)="onSelectionChange($event.value)">
+  @for (option of optionList; track $index) {
+    <mat-radio-button [value]="option.value" class="radio-item">
+      {{ option.text }}
+    </mat-radio-button>
+  }
+</mat-radio-group>

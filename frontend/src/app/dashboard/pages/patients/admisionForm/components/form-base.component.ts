@@ -6,9 +6,9 @@ import { AdmissionForm } from '../../../../interfaces/admissionForm.interface';
 export abstract class FormBaseComponent {
   form: FormGroup;
   private changeDetectorRef = inject(ChangeDetectorRef);
-  @Input() admissionForm: AdmissionForm;
+  @Input() admissionForm: AdmissionForm | null;
 
-  
+
   // Método para verificar si el formulario es válido
   isValidForm(): boolean {
     this.form.markAllAsTouched();

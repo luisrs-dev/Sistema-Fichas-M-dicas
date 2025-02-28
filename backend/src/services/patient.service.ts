@@ -47,23 +47,30 @@ const admisionFormmByPatient = async (patientId: string) => {
   try {
     const patient = await PatientModel.findOne({ _id: patientId });
     const admissionForm = await AdmissionFormModel.findOne({ patientId });
-    if (!admissionForm) {
-      throw new Error("Formulario de admisión no encontrado");
-    }
-
-    console.log({patient, admissionForm});
-    
+   
     return {patient, admissionForm};
   } catch (error) {
     
   }
 };
 
+const demandByPatient = async (patientId: string) => {
+
+  try {
+    const patient = await PatientModel.findOne({ _id: patientId });
+    const demand = await DemandModel.findOne({ patientId });
+   
+    return {patient, demand};
+  } catch (error) {
+    console.log(`No hay registro de demanda para paciente con id ${patientId}`);
+        
+  }
+};
+
+
 
 const updateAF = async (patientId: string, admissionFormData: any) => {
-  //console.log('updateAF');
-  //console.log({admissionFormData});
-  
+   
   
   try {
     const patient = await PatientModel.findOne({ _id: patientId });
@@ -110,10 +117,10 @@ const saveAdmissionFormToSistrat = async (patientId: string) => {
 
     if (patient && admissionForm) {
       const statusAdmissionFormCreated = await sistratPlatform.registrarFichaIngreso(patient, admissionForm);
+      return statusAdmissionFormCreated;
     } else {
       throw new Error("Falta información del paciente para registrar su ficha de ingreso");
     }
-    return admissionForm;
   } catch (error) {
     throw new Error(`error admissionForm registrado: ${error}`);
   }
@@ -257,6 +264,7 @@ export {
   PatientsByProfile,
   findPatient,
   admisionFormmByPatient,
+  demandByPatient,
   saveAdmissionForm,
   saveAdmissionFormToSistrat,
   updateAlertsFromSistrat,

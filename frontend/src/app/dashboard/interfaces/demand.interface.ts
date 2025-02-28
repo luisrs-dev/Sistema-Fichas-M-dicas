@@ -1,3 +1,5 @@
+import { Patient } from "./patient.interface";
+
 export interface Demand {
     patientId: string;
     mainSubstance: string;
@@ -14,3 +16,14 @@ export interface Demand {
     interventionAB: string;
     observations: string;
   }
+
+  export interface DemandResponse {
+  success: boolean;
+  message: string;
+  data:    Data;
+}
+
+export interface Data {
+  patient: Patient;
+  demand:  Demand;
+}

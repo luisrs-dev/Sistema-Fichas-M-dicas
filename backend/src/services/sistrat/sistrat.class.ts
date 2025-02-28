@@ -57,7 +57,7 @@ class Sistrat {
 
     try {
       await this.listActiveDemands(page);
-      await this.scrapper.clickButton(page, "#crea_demanda");
+      await this.scrapper.clickButton(page, "#crea_demanda", 15000);
 
       await this.scrapper.waitAndType(page, "#txtrut", "171847931");
       await this.scrapper.waitAndType(page, "#txtnombre_usuario", patient.name);
@@ -87,13 +87,16 @@ class Sistrat {
 
       await this.scrapper.setDateValue(page, "#txt_1era_fecha_atencion_realizada", demand.firstAtentionDate);
       await this.scrapper.setDateValue(page, "#txt_fecha_ofrecida_de_atencion_resolutiva", demand.atentionResolutiveDate);
+      await this.scrapper.setDateValue(page, "#txt_fecha_atencion_ofrecida_citacion_en_el_establecimiento", demand.careOfferedDate);
 
       await this.scrapper.setSelectValue(page, "#sel_intervencion_a_b", demand.interventionAB);
       await this.scrapper.waitAndType(page, "#obs", demand.observations);
       await this.scrapper.setSelectValue(page, "#selcomuna", "150");
 
-      await this.listActiveDemands(page);
-      await this.setDataSistrat(page, patient);
+
+      await this.scrapper.waitForSeconds(90);
+      // await this.listActiveDemands(page);
+      // await this.setDataSistrat(page, patient);
 
       return true;
     } catch (error) {
@@ -108,7 +111,9 @@ class Sistrat {
 
   async listActiveDemands(page: Page) {
     try {
+      await this.scrapper.waitForSeconds(3);
       await this.scrapper.clickButton(page, "#flyout2");
+      await this.scrapper.waitForSeconds(3);
       await this.scrapper.clickButton(page, 'a[href="php/conv1/listado_demanda.php"].ui-corner-all');
     } catch (error) {
       throw new Error("Error al listar demandaas");
@@ -151,21 +156,28 @@ class Sistrat {
 
       console.log({ patientOnSistrat });
 
-      if (patientOnSistrat.codigoSistrat) {
-        const patientEntity = await PatientModel.findOne({ _id: patient._id });
-        if (patientEntity) {
-          patientEntity.codigoSistrat = patientOnSistrat.codigoSistrat;
-          await patientEntity.save();
+      if(!patientOnSistrat){
+        console.log(`Paciente ${patientName} no registrado en SISTRAT. `);
+        this.scrapper.closeBrowser();
+        return null;
+      }else{
+        if (patientOnSistrat?.codigoSistrat) {
+          const patientEntity = await PatientModel.findOne({ _id: patient._id });
+          if (patientEntity) {
+            patientEntity.codigoSistrat = patientOnSistrat.codigoSistrat;
+            await patientEntity.save();
+          }
+        }
+  
+        if (patientOnSistrat?.alertTreatment) {
+          const patientEntity = await PatientModel.findOne({ _id: patient._id });
+          if (patientEntity) {
+            patientEntity.alertTreatment = patientOnSistrat.alertTreatment;
+            await patientEntity.save();
+          }
         }
       }
 
-      if (patientOnSistrat.alertTreatment) {
-        const patientEntity = await PatientModel.findOne({ _id: patient._id });
-        if (patientEntity) {
-          patientEntity.alertTreatment = patientOnSistrat.alertTreatment;
-          await patientEntity.save();
-        }
-      }
     } catch (error) {
       throw new Error(`Error al setear datos desde SISTRAT. Error: ${error}`);
     }
@@ -174,66 +186,80 @@ class Sistrat {
   async registrarFichaIngreso(patient: Patient, admissionForm: AdmissionForm) {
     const data: RowData[] = []; // Cambiar aquí el tipo a RowData[]
 
-    this.gender = patient.sex;
+    this.gender = patient.sex;    
     let page: Page = await this.login();
 
-    await this.scrapper.clickButton(page, "#flyout2");
-    await this.scrapper.clickButton(page, 'a[href="php/conv1/listado_demanda.php"].ui-corner-all');
-
-    await page.waitForSelector("#table_pacientes", { visible: true });
-
-    const patientName = `${patient.name.trim()} ${patient.surname.trim()}`.toLowerCase();
-
-    const rowPatientSistrat: any = await page.evaluate((patientName) => {
-      const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
-
-      if (table) {
-        // Iteramos sobre las filas de la tabla, comenzando desde la segunda fila (i = 1)
-        for (let i = 1; i < table.rows.length; i++) {
-          const objCells = table.rows.item(i)?.cells;
-
-          if (objCells) {
-            // Obtenemos el texto de cada celda relevante
-            const patient = {
-              id: objCells.item(0)?.innerText || "", // Captura el texto de la primera celda (ID)
-              name: objCells.item(1)?.innerText?.toLowerCase() || "", // Captura el texto de la segunda celda (nombre)
-              codigoSistrat: objCells.item(2)?.innerText || false, // Captura el texto de la tercera celda (código Sistrat)
-            };
-
-            // Comparamos con el nombre que estamos buscando
-            if (patient.name == patientName) {
-              // Si el nombre coincide se da click en boton Crear Ficha Ingreso
-              const button = objCells.item(4)?.querySelector("span[name='crear_ficha_ingreso']") as HTMLElement;
-
-              if (button) {
-                // Realizamos el clic en el botón
-                button.click();
-                console.log(`Se hizo clic en el botón de crear ficha ingreso para ${patient.name}`);
-                return patient;
+    try {
+      await this.scrapper.clickButton(page, "#flyout2"); // Botón demandas activas
+      await this.scrapper.clickButton(page, 'a[href="php/conv1/listado_demanda.php"].ui-corner-all');
+  
+      // await page.waitForSelector("#table_pacientes", { visible: true, timeout: 5000 });
+      const patientName = `${patient.name.trim()} ${patient.surname.trim()}`.toLowerCase();
+      console.log(`registrarFichaIngreso patientName: ${patientName}`);
+      
+  
+      const rowPatientSistrat: any = await page.evaluate((patientName) => {
+        const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
+  
+        if (table) {
+          // Iteramos sobre las filas de la tabla, comenzando desde la segunda fila (i = 1)
+          for (let i = 1; i < table.rows.length; i++) {
+            const objCells = table.rows.item(i)?.cells;
+  
+            if (objCells) {
+              // Obtenemos el texto de cada celda relevante
+              const patient = {
+                id: objCells.item(0)?.innerText || "", // Captura el texto de la primera celda (ID)
+                name: objCells.item(1)?.innerText?.toLowerCase() || "", // Captura el texto de la segunda celda (nombre)
+                codigoSistrat: objCells.item(2)?.innerText || false, // Captura el texto de la tercera celda (código Sistrat)
+              };
+  
+              // Comparamos con el nombre que estamos buscando
+              if (patient.name == patientName) {
+                // Si el nombre coincide se da click en boton Crear Ficha Ingreso
+                const button = objCells.item(4)?.querySelector("span[name='crear_ficha_ingreso']") as HTMLElement;
+  
+                if (button) {
+                  // Realizamos el clic en el botón
+                  button.click();
+                  console.log(`Se hizo clic en el botón de crear ficha ingreso para ${patient.name}`);
+                  return patient;
+                }
+                break; // Salimos del bucle cuando encontramos y hacemos clic en el botón
               }
-              break; // Salimos del bucle cuando encontramos y hacemos clic en el botón
             }
           }
+        } else {
+          return null; // Tabla no encontrada
         }
-      } else {
-        return "Tabla no encontrada";
-      }
+        return data; // Devuelve los datos capturados
+      }, patientName);
 
-      return data; // Devuelve los datos capturados
-    }, patientName);
-
-    // Si se capturo el codigo sistrat se registrar en paciente
-    if (rowPatientSistrat.codigoSistrat) {
-      const patientEntity = await PatientModel.findOne({ _id: patient._id });
-      if (patientEntity) {
-        patientEntity.codigoSistrat = rowPatientSistrat.codigoSistrat;
-        await patientEntity.save();
+      console.log(`rowPatientSistrat resultado: ${rowPatientSistrat}`);
+      if(!rowPatientSistrat){
+        this.scrapper.closeBrowser();
+        return null;
       }
+  
+      // Si se capturo el codigo sistrat se registrar en paciente
+      if (rowPatientSistrat && rowPatientSistrat.codigoSistrat) {
+        const patientEntity = await PatientModel.findOne({ _id: patient._id });
+        if (patientEntity) {
+          patientEntity.codigoSistrat = rowPatientSistrat.codigoSistrat;
+          await patientEntity.save();
+        }
+      }
+  
+      if (rowPatientSistrat) {
+        await this.completeAdmissionForm(page, patient, admissionForm);
+      }
+      
+    } catch (error: any) {
+      throw new Error(`Error al registrar ficha de ingreso en función registrarFichaIngreso: ${error}`);
+      
     }
 
-    if (rowPatientSistrat) {
-      await this.completeAdmissionForm(page, patient, admissionForm);
-    }
+
   }
 
   async completeAdmissionForm(page: Page, patient: Patient, admissionForm: AdmissionForm) {
@@ -310,8 +336,11 @@ class Sistrat {
       await this.scrapper.setSelectValue(page, "#selintox_aguda", admissionForm.selintox_aguda);
       await this.scrapper.setSelectValue(page, "#selsindrome_abstinencia", admissionForm.selsindrome_abstinencia);
       await this.scrapper.setSelectValue(page, "#seldiagn_psiquiatrico_cie", admissionForm.seldiagn_psiquiatrico_cie);
+      await this.scrapper.setSelectValue(page, "#seldiagn_psiquiatrico_cie", admissionForm.cie1);
       await this.scrapper.setSelectValue(page, "#seldiagn_psiquiatrico_cie2", admissionForm.seldiagn_psiquiatrico_cie2);
+      await this.scrapper.setSelectValue(page, "#seldiagn_psiquiatrico_cie", admissionForm.cie2);
       await this.scrapper.setSelectValue(page, "#seldiagn_psiquiatrico_cie3", admissionForm.seldiagn_psiquiatrico_cie3);
+      await this.scrapper.setSelectValue(page, "#seldiagn_psiquiatrico_cie", admissionForm.cie3);
       await this.scrapper.setSelectValue(page, "#seldiagn_fiscico", admissionForm.seldiagn_fiscico);
       await this.scrapper.setSelectValue(page, "#selotro_problema_atencion", admissionForm.selotro_problema_atencion);
       await this.scrapper.setSelectValue(page, "#selotro_problema_atencion2", admissionForm.selotro_problema_atencion2);

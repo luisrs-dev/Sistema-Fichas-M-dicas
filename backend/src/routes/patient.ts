@@ -13,7 +13,8 @@ import {
   updateAdmissionForm,
   postAdmissionFormSistrat,
   updateAlerts,
-  formCie10
+  formCie10,
+  getDemand
 } from "../controllers/patient.controller";
 // import { logMiddleware } from "../middleware/log";
 const router = Router();
@@ -22,8 +23,11 @@ router.get("/", getPatients);
 router.get("/profile/:profile", getPatientsByProfile);
 router.get("/:id", getPatientsById);
 router.post("/", postPatient);
+
+router.get("/demanda/:patientId", getDemand);
 router.post("/demanda", postDemand);
 router.post("/demanda/sistrat", postDemandToSistrat);
+
 router.get("/ficha-ingreso/:patientId", getAdmissionForm);
 router.post("/ficha-ingreso", postAdmissionForm);
 router.put("/ficha-ingreso", updateAdmissionForm);

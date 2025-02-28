@@ -13,7 +13,8 @@ import {
   updateAF,
   saveAdmissionFormToSistrat,
   updateAlertsFromSistrat,
-  updateFormCie10
+  updateFormCie10,
+  demandByPatient
 } from "../services/patient.service";
 
 const getPatientsById = async ({ params }: Request, res: Response) => {
@@ -139,6 +140,15 @@ const getAdmissionForm = async (req: Request, res: Response) => {
   }
 };
 
+const getDemand = async (req: Request, res: Response) => {
+  try {    
+    const data = await demandByPatient(req.params.patientId);
+    res.status(200).json({ success: true, message: "Demanda recuperada con éxito", data: data });
+  } catch (error) {
+    handleHttp(res, "ERROR_GET_ITEMS", error);
+  }
+};
+
 
 
 
@@ -149,7 +159,11 @@ const postAdmissionFormSistrat = async ({ body }: Request, res: Response) => {
   }
   try {
     const responseAdmissionForm = await saveAdmissionFormToSistrat(patientId);
-    res.status(201).json({ success: true, message: "Ficha de ingreso creada con éxito" });
+    if(responseAdmissionForm){
+      res.status(201).json({ success: true, message: "Ficha de ingreso creada con éxito" });
+    }else{
+      res.status(400).json({ success: false, message: "No fue posible el registro en SISTRAT" });
+    }
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -208,5 +222,6 @@ export {
   postAdmissionForm,
   postAdmissionFormSistrat,
   updateAlerts,
-  formCie10
+  formCie10,
+  getDemand
 };

@@ -60,8 +60,10 @@ export default class AdmisionFormComponent {
     this.patientId = this.activatedRoute.snapshot.paramMap.get('id') || '';
     console.log({patientId:this.patientId});
 
+    // En el caso que paciente tenga ficha de ingreso registrada en ficlin,
+    // se obtiene el registro para rellenar los formularios para luego registrar en SISTRAT
     this.patientService.getFichaIngreso(this.patientId).subscribe((response) => {
-      console.log(response);
+      console.log('getFichaIngreso', response);
 
       this.patient = response.data.patient;
       this.admissionForm = response.data.admissionForm;
@@ -160,11 +162,22 @@ export default class AdmisionFormComponent {
         // Success
         Notiflix.Loading.circle('Registrando Ficha de ingreso en SISTRAT');
 
-        this.patientService.addFichaIngresoToSistrat(this.patient!._id!).subscribe((response) => {
-          console.log(response);
-          if (response.status) {
-            this.admissionFormRegistered = true;
+        this.patientService.addFichaIngresoToSistrat(this.patient!._id!).subscribe({
+          next: (response) => {
+            console.log(response);
+            if (response.status) {
+              this.admissionFormRegistered = true;
+            }
             Notiflix.Loading.remove();
+          },
+          error: (err) => {
+            console.error('Error al agregar ficha de ingreso a Sistrat:', err);
+            Notiflix.Loading.remove();
+            Notiflix.Report.failure(
+              'Error',
+              'Ocurrió un error al registrar en SISTRAT. Por favor, intenta nuevamente.',
+              'Cerrar'
+            );
           }
         });
         console.log('Registrar en SISTRAT');
