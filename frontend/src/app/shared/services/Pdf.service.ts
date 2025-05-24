@@ -53,7 +53,7 @@ export class PdfService {
       let y = index % 2 === 0 ? 20 : 150;
 
       // Encabezado
-      this.addHeader(doc, `Ficha Clínica de ${patientName}`, y);
+      this.addHeader(doc, `Ficha Clínica de ${patientName}`, y, record.date);
       y += 20; // Incrementa para dejar espacio bajo el encabezado
 
       // Tabla de información del paciente
@@ -68,7 +68,7 @@ export class PdfService {
       // Definir la estructura de la tabla
       const patientData = [
         ['Registrado por:', record.registeredBy.name],
-        ['Fecha de Ingreso:', record.date],
+        // ['Fecha de Ingreso:', record.date],
         [
           'Tipo de atención:',
           `${record.service.description} (${record.service.code})`,
@@ -94,7 +94,7 @@ export class PdfService {
       // Agregar la imagen de la firma si existe
       const image = images[index];
       if (image) {
-        const imgData = image.imgData; // La imagen cargada
+        const imgData = image.imgData; // La imagen cargadakkkk
         doc.addImage(imgData.src, 'png', 10, y - 20, 50, 20); // Ajusta la posición y el tamaño según sea necesario
       }
 
@@ -108,13 +108,14 @@ export class PdfService {
     doc.save(`Historial clinico - ${nombrePaciente}.pdf`);
   }
 
-  addHeader(doc: jsPDF, title: string, y: number) {
+  addHeader(doc: jsPDF, title: string, y: number, fechaIngreso: string) {
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
     doc.text('Centro de Salud Ficlin', 10, y);
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 150, y);
+    // doc.text(`fechaIngreso ${new Date().toLocaleDateString()}`, 150, y);
+    doc.text(`Fecha Ingreso: ${fechaIngreso}`, 150, y );
 
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');

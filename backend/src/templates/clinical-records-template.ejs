@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      @page {
+        size: A4;
+        margin: 0;
+      }
+
+      body {
+        font-family: "Arial", sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+
+      .page {
+        height: 297mm;
+        width: 210mm;
+        box-sizing: border-box;
+        padding: 0;
+        page-break-after: always;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .half {
+        height: 50%;
+        box-sizing: border-box;
+        border-bottom: 1px dashed #ccc;
+        padding: 20px;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 10px;
+      }
+
+      .header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+      }
+
+      .record {
+        /* border: 1px solid #ccc; */
+        border-radius: 5px;
+        /* background-color: #f9f9f9; */
+        padding: 10px;
+      }
+
+      /* --- */
+
+      .record-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      .record-table th,
+      .record-table td {
+        border: 1px solid #ccc;
+        padding: 6px 8px;
+        vertical-align: top;
+        text-align: left;
+      }
+
+      .record-table th {
+        /* background-color: #f2f2f2; */
+        width: 40%;
+        font-weight: bold;
+      }
+
+      .signature {
+        margin-top: 10px;
+      }
+
+      .signature img {
+        width: 120px;
+      }
+
+      p {
+        margin: 3px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <% for (let i = 0; i < clinicalRecords.length; i += 2) { const record1 = clinicalRecords[i]; const record2 = clinicalRecords[i + 1]; %>
+    <div class="page">
+      <!-- Mitad superior -->
+      <div class="half">
+        <header class="header">
+          <div>
+            <h3>Ficha Clínica Paciente</h3>
+          </div>
+          <div>
+            <img src="<%= logoUrl %>" width="200" />
+          </div>
+        </header>
+        <div class="record">
+          <h4><%= record1.patient.name %> <%= record1.patient.surname %></h4>
+          <table class="record-table">
+            <tr>
+              <th>Registrado por</th>
+              <td><%= record1.registeredBy.name %></td>
+            </tr>
+            <tr>
+              <th>Tipo de atención</th>
+              <td><%= record1.service.description %> (<%= record1.service.code %>)</td>
+            </tr>
+            <tr>
+              <th>Tipo de entrada</th>
+              <td><%= record1.entryType %></td>
+            </tr>
+            <tr>
+              <th>Elementos relevantes</th>
+              <td><%= record1.relevantElements %></td>
+            </tr>
+            <tr>
+              <th>Diagnóstico</th>
+              <td><%= record1.diagnostic || 'N/A' %></td>
+            </tr>
+            <tr>
+              <th>Esquema farmacológico</th>
+              <td><%= record1.pharmacologicalScheme || 'N/A' %></td>
+            </tr>
+          </table>
+          <% if (record1.registeredBy.signature) { %>
+          <div class="signature">
+            <img src="<%= process.env.BASE_URL + record1.registeredBy.signature %>" />
+            <p>Firma del profesional</p>
+          </div>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Mitad inferior -->
+      <% if (record2) { %>
+      <div class="half">
+        <header>
+          <div>
+            <h3>Historial Clínico</h3>
+          </div>
+          <div>
+            <img src="<%= logoUrl %>" width="100" />
+          </div>
+        </header>
+        <div class="record">
+          <h4><%= record1.patient.name %> <%= record1.patient.surname %></h4>
+          <table class="record-table">
+            <tr>
+              <th>Registrado por</th>
+              <td><%= record1.registeredBy.name %></td>
+            </tr>
+            <tr>
+              <th>Tipo de atención</th>
+              <td><%= record1.service.description %> (<%= record1.service.code %>)</td>
+            </tr>
+            <tr>
+              <th>Tipo de entrada</th>
+              <td><%= record1.entryType %></td>
+            </tr>
+            <tr>
+              <th>Elementos relevantes</th>
+              <td><%= record1.relevantElements %></td>
+            </tr>
+            <tr>
+              <th>Diagnóstico</th>
+              <td><%= record1.diagnostic || 'N/A' %></td>
+            </tr>
+            <tr>
+              <th>Esquema farmacológico</th>
+              <td><%= record1.pharmacologicalScheme || 'N/A' %></td>
+            </tr>
+          </table>
+          <% if (record1.registeredBy.signature) { %>
+          <div class="signature">
+            <img src="<%= process.env.BASE_URL + record1.registeredBy.signature %>" />
+            <p>Firma del profesional</p>
+          </div>
+          <% } %>
+        </div>
+      </div>
+      <% } %>
+    </div>
+    <% } %>
+  </body>
+</html>

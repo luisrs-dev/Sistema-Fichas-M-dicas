@@ -16,6 +16,9 @@
 # Log files
 *.log
 
+# Javascipt files
+*.js
+
 # Package files
 *.jar
 

@@ -32,14 +32,20 @@ export class PatientService {
 
 
   getPatientById(id: string): Observable<{ patient: Patient; medicalRecords: MedicalRecord[] }> {
-    return this.http.get<{ patient: Patient; medicalRecords: MedicalRecord[] }>(`${this.backend}/patient/${id}`)
-    .pipe(
-      tap( ({patient, medicalRecords}) => {
-        this._patient.next({patient, medicalRecords})
-      }
-      )
+    return this.http.get<{ patient: Patient; medicalRecords: MedicalRecord[] }>(`${this.backend}/patient/${id}`
     );
   }
+
+  getPdfByPatientId(id: string): Observable<any> {
+  // getPdfByPatientId(id: string): Observable<{ patient: Patient; medicalRecords: MedicalRecord[] }> {
+    return this.http.get<any>(`${this.backend}/generate-pdf/medical-records/${id}`,
+      {
+        responseType: 'blob' as 'json' // 👈 clave para evitar el error
+      }
+    );
+        // return this.http.get<{ patient: Patient; medicalRecords: MedicalRecord[] }>(`${this.backend}/medial-records/${id}`);
+  }
+
 
   getPatientsByProfile(profile: string): Observable<Patient[]> {
     return this.http.get<any>(`${this.backend}/patient/profile/${profile}`);

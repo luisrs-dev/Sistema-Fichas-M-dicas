@@ -14,6 +14,12 @@ node backend/src/scripts/init.js
 
 Se debe crear carpeta uploads en backend/src/uploads
 
+Crear archivo ecosystem.config.js
+Comando para crear archivo
+-> pm2 init simple
+
+Sobreescribir archhivo con este contenido
+
 module.exports = {
     apps: [
       {
