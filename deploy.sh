@@ -7,6 +7,7 @@ ng build --configuration=production
 
 cd ..
 cd backend
+npm install
 tsc
 # pm2 start dist/index.js
 pm2 start ecosystem.config.js --env production
