@@ -15,7 +15,7 @@
 
 # Log files
 *.log
-
+*.js
 # Package files
 *.jar
 
