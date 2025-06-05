@@ -1,0 +1,14 @@
+:host {
+  display: block;
+
+  .clinical-record{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 16px;
+  }
+
+  .container{
+    height: 120% !important;
+  }
+
+}

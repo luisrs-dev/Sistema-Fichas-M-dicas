@@ -7,7 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable, of, startWith, switchMap, pipe, map } from 'rxjs';
 import { MaterialModule } from '../../../../angular-material/material.module';
 import { PdfService } from '../../../../shared/services/Pdf.service';
@@ -27,7 +27,7 @@ interface State {
 @Component({
   selector: 'app-detail',
   standalone: true,
-  imports: [MaterialModule, MatExpansionModule, CommonModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, DatePipe],
+  imports: [MaterialModule, MatExpansionModule, CommonModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, DatePipe, RouterLink],
   templateUrl: './detail.component.html',
   styleUrl: './detail.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush, // 👈 Muy importante
@@ -38,6 +38,8 @@ export default class DetailComponent {
   private pdfService = inject(PdfService);
   private datePipe = inject(DatePipe);
   private snackBar = inject(MatSnackBar);
+  private router = inject(Router);
+
 
   patientId = signal<string | null>(null);
   private route = inject(ActivatedRoute);
@@ -112,5 +114,10 @@ export default class DetailComponent {
     //     };
     //   });
     //   this.pdfService.generateClinicalRecordsPdf(medicalRecordsToPdf);
+  }
+
+  onNewMedicalRecord(){
+    console.log('redirigiendo a  nueva ficha');
+    this.router.navigate(['dashboard/patient', this.patientId(), 'ficha-clinica', 'nueva']);
   }
 }

@@ -1,198 +1,205 @@
-<div class="p-4">
-  <div class="container mb-3">
-    <h2>Antecedentes</h2>
-    Nueva Ficha Clínica >
-    <a mat-button color="primary" matTooltip="Ver Perfil"
-      >{{ data.patient.name }} {{ data.patient.surname }}
-      {{ data.patient.secondSurname }}</a>
+<ng-container *ngIf="response$ | async as data; else loading">
 
-      <div>
-        <mat-chip-set>
-          <mat-chip
-            >Código usuario: {{data.patient.codigoSistrat ||'-'}}</mat-chip
+  <!-- <div *ngIf="patient$ | async as patient; else loading"> -->
+    <div class="p-4">
+      <div class="clinical-record mb-3">
+        <div class="container">
+          <h2>Nueva Ficha Clínica</h2>
+          <form
+            [formGroup]="medicalRecordForm"
+            autocomplete="off"
+            (ngSubmit)="onSave()"
           >
-        </mat-chip-set>
-      </div>
-    <p>Fecha Ingreso: {{ data.patient.admissionDate }}</p>
-    <p>Programa: {{ data.patient.program.name }}</p>
-    <p>Teéfono: {{ data.patient.phone }}</p>
-    <mat-divider class="mb-1"></mat-divider>
+            <div class="grid">
+              <div class="col-12">
+                <mat-form-field class="w-full" appearance="outline">
+                  <mat-label>Fecha</mat-label>
+                  <input matInput formControlName="date" [matDatepicker]="picker" />
+                  <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
+                  <mat-datepicker-toggle
+                    matIconSuffix
+                    [for]="picker"
+                  ></mat-datepicker-toggle>
+                  <mat-datepicker #picker></mat-datepicker>
+                </mat-form-field>
+              </div>
+              <!-- <div class="col-3">
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Tipo de entrada</mat-label>
+                  <mat-select formControlName="entryType">
+                    @if(data.patient.program.name.includes('PAI')){
+                      <mat-option value="A Distancia">A Distancia</mat-option>
+                    }
+                      <mat-option value="Presencial">Presencial</mat-option>
+                      <mat-option value="No se presenta">No se presenta</mat-option>
+                      <mat-option value="Informacion">Información</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <span *ngIf="isValidField('entryType')" class="text-red-500">
+                  Campo requerido
+                </span>
+              </div> -->
 
-    <mat-chip-set>
-      <mat-chip
-        >Diagnóstico SISTRAT: Retraso Mental</mat-chip
-      >
-    </mat-chip-set>
-
-    <mat-chip-set>
-      <mat-chip
-        >Otro Diagnóstico: Último diagnóstico @if(latestMedicalRecordWithScheme){
-        {{ latestMedicalRecordWithScheme.date | date : "dd-MM-yyyy" }}
-        }@else { Sin registro anterior }</mat-chip
-      >
-    </mat-chip-set>
-    <div>{{latestMedicalRecordWithScheme.diagnostic}}</div>
-
-
-    <!--<mat-divider class="mb-1"></mat-divider>-->
-
-    <mat-chip-set>
-      <mat-chip
-        >Último Esquema Farmacológico @if(latestMedicalRecordWithScheme){
-        {{ latestMedicalRecordWithScheme.date | date : "dd-MM-yyyy" }}
-        }@else { Sin registro anterior }</mat-chip
-      >
-    </mat-chip-set>
-    <div>{{latestMedicalRecordWithScheme.pharmacologicalScheme}}</div>
-    <mat-divider class="mb-1"></mat-divider>
-  </div>
-
-  <div class="container p-4">
-    <h2>Nueva Ficha Clínica</h2>
-    <form
-      [formGroup]="medicalRecordForm"
-      autocomplete="off"
-      (ngSubmit)="onSave()"
-    >
-      <div class="grid">
-        <div class="col-2">
-          <mat-form-field class="w-full" appearance="outline">
-            <mat-label>Fecha</mat-label>
-            <input matInput formControlName="date" [matDatepicker]="picker" />
-            <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
-            <mat-datepicker-toggle
-              matIconSuffix
-              [for]="picker"
-            ></mat-datepicker-toggle>
-            <mat-datepicker #picker></mat-datepicker>
-          </mat-form-field>
-        </div>
-        <div class="col-3">
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Tipo de entrada</mat-label>
-            <mat-select formControlName="entryType">
-              @if(data.patient.program.name.includes('PAI')){ 
-                <mat-option value="A Distancia">A Distancia</mat-option>
+              @if(!hideServiceSelect){
+                <div class="col-12">
+                  <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Prestación</mat-label>
+                    <mat-select formControlName="service">
+                      @for (service of services; track $index) {
+                        <mat-option value="{{service._id}}">{{service.description}}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                  <span *ngIf="isValidField('service')" class="text-red-500">
+                    Campo requerido
+                  </span>
+                </div>
               }
-                <mat-option value="Presencial">Presencial</mat-option>
-                <mat-option value="No se presenta">No se presenta</mat-option>
-                <mat-option value="Informacion">Información</mat-option>
-            </mat-select>
-          </mat-form-field>
-          <span *ngIf="isValidField('entryType')" class="text-red-500">
-            Campo requerido
-          </span>
+
+              <div class="col-12">
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Objetivo de intervención</mat-label>
+                  <input formControlName="interventionObjective" matInput placeholder="Actividad">
+                </mat-form-field>
+                <span *ngIf="isValidField('interventionObjective')" class="text-red-500">
+                  Campo requerido
+                </span>
+              </div>
+
+            </div>
+
+            <mat-divider class="mb-4"></mat-divider>
+            <div class="grid">
+              <div class="col-12">
+                <mat-form-field class="w-full" appearance="outline">
+                  <mat-label>Elementos relevantes de la intervención</mat-label>
+                  <textarea
+                    formControlName="relevantElements"
+                    rows="5"
+                    matInput
+                  ></textarea>
+
+                  <span
+                    *ngIf="isValidField('relevantElements')"
+                    class="form-text text-danger"
+                  >
+                    Este campo es requerido
+                  </span>
+                  <mat-icon matSuffix>person</mat-icon>
+                  <!-- <mat-hint>Hint</mat-hint> -->
+                </mat-form-field>
+              </div>
+
+               @if(user.profile.name == 'Psiquiatra'){
+                 <div class="col-12">
+                   <mat-form-field class="w-full" appearance="outline">
+                     <mat-label>Diagnóstico</mat-label>
+                     <textarea
+                       matInput
+                       formControlName="diagnostic"
+                       placeholder="Sólo lo escribe un psiquiatra"
+                     ></textarea>
+                     <span
+                       *ngIf="isValidField('diagnostic')"
+                       class="form-text text-danger"
+                     >
+                       Campo requerido
+                     </span>
+                     <mat-icon matSuffix>description</mat-icon>
+                     <!-- <mat-hint>Hint</mat-hint> -->
+                   </mat-form-field>
+                 </div>
+
+                 <div class="col-12">
+                   <mat-form-field class="w-full" appearance="outline">
+                     <mat-label>Esquema Farmacológico</mat-label>
+                     <textarea
+                       formControlName="pharmacologicalScheme"
+                       rows="5"
+                       matInput
+                     ></textarea>
+
+                     <span
+                       *ngIf="isValidField('pharmacologicalScheme')"
+                       class="form-text text-danger"
+                     >
+                       El nombre es requerido
+                     </span>
+                     <mat-icon matSuffix>person</mat-icon>
+                     <!-- <mat-hint>Hint</mat-hint> -->
+                   </mat-form-field>
+                 </div>
+               }
+
+              <div class="col-6">
+                <button
+                  mat-stroked-button
+                  color="primary"
+                  mat-dialog-close
+                  class="mr-1"
+                >
+                  Cerrar
+                </button>
+                <button mat-flat-button type="submit" color="primary">
+                  Registrar
+                </button>
+              </div>
+            </div>
+          </form>
+
         </div>
+        <div class="container">
+          <h2>Antecedentes</h2>
+          Nueva Ficha Clínica >
+          <a mat-button color="primary" matTooltip="Ver Perfil"
+            >{{ data.patient.name }} {{ data.patient.surname }}
+            {{ data.patient.secondSurname }}</a>
 
-        @if(!hideServiceSelect){
-          <div class="col-3">
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Prestación</mat-label>
-              <mat-select formControlName="service">
-                @for (service of services; track $index) {
-                  <mat-option value="{{service._id}}">{{service.description}}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-            <span *ngIf="isValidField('service')" class="text-red-500">
-              Campo requerido
-            </span>
-          </div>
-        }
+            <div>
+              <mat-chip-set>
+                <mat-chip
+                  >Código usuario: {{patient.codigoSistrat ||'-'}}</mat-chip
+                >
+              </mat-chip-set>
+            </div>
+          <p>Fecha Ingreso: {{ patient.admissionDate }}</p>
+          <p>Programa: {{ patient.program.name }}</p>
+          <p>Teéfono: {{ patient.phone }}</p>
+          <mat-divider class="mb-1"></mat-divider>
 
-        <div class="col-8">
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Objetivo de intervención</mat-label>
-            <input formControlName="interventionObjective" matInput placeholder="Actividad">
-          </mat-form-field>
-          <span *ngIf="isValidField('interventionObjective')" class="text-red-500">
-            Campo requerido
-          </span>
-        </div>
-        
-      </div>
-
-      <mat-divider class="mb-4"></mat-divider>
-      <div class="grid w-8">
-        <div class="col-12">
-          <mat-form-field class="w-full" appearance="outline">
-            <mat-label>Elementos relevantes de la intervención</mat-label>
-            <textarea
-              formControlName="relevantElements"
-              rows="5"
-              matInput
-            ></textarea>
-
-            <span
-              *ngIf="isValidField('relevantElements')"
-              class="form-text text-danger"
+          <mat-chip-set>
+            <mat-chip
+              >Diagnóstico SISTRAT: Retraso Mental</mat-chip
             >
-              Este campo es requerido
-            </span>
-            <mat-icon matSuffix>person</mat-icon>
-            <!-- <mat-hint>Hint</mat-hint> -->
-          </mat-form-field>
-        </div>
+          </mat-chip-set>
 
-         @if(user.profile.name == 'Psiquiatra'){
-           <div class="col-12">
-             <mat-form-field class="w-full" appearance="outline">
-               <mat-label>Diagnóstico</mat-label>
-               <textarea
-                 matInput
-                 formControlName="diagnostic"
-                 placeholder="Sólo lo escribe un psiquiatra"
-               ></textarea>
-               <span
-                 *ngIf="isValidField('diagnostic')"
-                 class="form-text text-danger"
-               >
-                 Campo requerido
-               </span>
-               <mat-icon matSuffix>description</mat-icon>
-               <!-- <mat-hint>Hint</mat-hint> -->
-             </mat-form-field>
-           </div>
-   
-           <div class="col-12">
-             <mat-form-field class="w-full" appearance="outline">
-               <mat-label>Esquema Farmacológico</mat-label>
-               <textarea
-                 formControlName="pharmacologicalScheme"
-                 rows="5"
-                 matInput
-               ></textarea>
-   
-               <span
-                 *ngIf="isValidField('pharmacologicalScheme')"
-                 class="form-text text-danger"
-               >
-                 El nombre es requerido
-               </span>
-               <mat-icon matSuffix>person</mat-icon>
-               <!-- <mat-hint>Hint</mat-hint> -->
-             </mat-form-field>
-           </div>
-         }
+          <mat-chip-set>
+            <mat-chip
+              >Otro Diagnóstico: Último diagnóstico
+              @if(latestMedicalRecordWithScheme){
+                {{ latestMedicalRecordWithScheme.date | date : "dd-MM-yyyy" }}
+              }@else { Sin registro anterior }</mat-chip
+            >
+          </mat-chip-set>
+          <div>{{latestMedicalRecordWithScheme?.diagnostic}}</div>
 
-        <div class="col-6">
-          <button
-            mat-stroked-button
-            color="primary"
-            mat-dialog-close
-            class="mr-1"
-          >
-            Cerrar
-          </button>
-          <button mat-flat-button type="submit" color="primary">
-            Registrar
-          </button>
+
+          <!--<mat-divider class="mb-1"></mat-divider>-->
+      <!--
+          <mat-chip-set>
+            <mat-chip
+              >Último Esquema Farmacológico @if(latestMedicalRecordWithScheme){
+              {{ latestMedicalRecordWithScheme.date | date : "dd-MM-yyyy" }}
+              }@else { Sin registro anterior }</mat-chip
+            >
+          </mat-chip-set>
+          <div>{{latestMedicalRecordWithScheme.pharmacologicalScheme}}</div>
+          <mat-divider class="mb-1"></mat-divider> -->
+
         </div>
       </div>
-    </form>
+    </div>
+</ng-container>
 
-    <!-- @if (loadingTransactions) {
-    <mat-spinner color="#0ca86b" diameter="40"></mat-spinner>
-  } -->
-  </div>
-</div>
+
+<ng-template #loading>Cargando</ng-template>

@@ -19,9 +19,9 @@ export class MedicalRecordService {
   }
 
   /**
-   * @param month 
-   * @param year 
-   * @returns 
+   * @param month
+   * @param year
+   * @returns
    */
   getMedialRecordsByMonthAndYear(month: number, year: number): Observable<ResponseMedicalRecordsByMonth> {
     return this.http.get<any>(`${this.backend}/medicalRecord/${year}/${month}`);
@@ -30,6 +30,12 @@ export class MedicalRecordService {
   addMedicalRecord(medicalRecord: MedicalRecord): Observable<any> {
     console.log({ medicalRecord });
     return this.http.post<any>(`${this.backend}/medicalRecord`, medicalRecord).pipe(catchError((err) => throwError(() => err.error.message)));
+  }
+
+  getLastPharmacologicalScheme(medicalRecords: MedicalRecord[]): MedicalRecord | null{
+    const medicalRecordSorted = medicalRecords.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const latestMedicalRecordWithScheme = medicalRecordSorted.find((record) => record.pharmacologicalScheme);
+    return latestMedicalRecordWithScheme || null;
   }
 }
 

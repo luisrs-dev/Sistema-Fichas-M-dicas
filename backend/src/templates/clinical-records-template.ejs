@@ -34,7 +34,7 @@
 
       header {
         text-align: center;
-        margin-bottom: 10px;
+        /* margin-bottom: 10px; */
       }
 
       .header {
@@ -47,29 +47,6 @@
         /* border: 1px solid #ccc; */
         border-radius: 5px;
         /* background-color: #f9f9f9; */
-        padding: 10px;
-      }
-
-      /* --- */
-
-      .record-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 14px;
-      }
-
-      .record-table th,
-      .record-table td {
-        border: 1px solid #ccc;
-        padding: 6px 8px;
-        vertical-align: top;
-        text-align: left;
-      }
-
-      .record-table th {
-        /* background-color: #f2f2f2; */
-        width: 40%;
-        font-weight: bold;
       }
 
       .signature {
@@ -77,11 +54,39 @@
       }
 
       .signature img {
-        width: 120px;
+        width: 180px;
       }
 
-      p {
+      /* p {
         margin: 3px 0;
+      } */
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+      }
+
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+        font-size: 12px;
+      }
+
+      th {
+        background-color: #f0f0f0;
+      } 
+
+      .observacion {
+        max-width: 300px;
+      }
+
+      .complete-row {
+        font-weight: bold;
+        text-align: center;
+        background-color: #f0f0f0;
       }
     </style>
   </head>
@@ -91,97 +96,162 @@
       <!-- Mitad superior -->
       <div class="half">
         <header class="header">
-          <div>
-            <h3>Ficha Clínica Paciente</h3>
+          <div style="text-align: left;">
+            <p> <span style="font-weight: bold; color: #2196f3">EVOLUCIÓN</span> <strong> <%= patient.name %> <%= patient.surname %></strong></p></p>
+            <p> <span style="font-weight: bold; color: #2196f3">PROGRAMA</span> <%= patient.program.name %></p>
           </div>
           <div>
             <img src="<%= logoUrl %>" width="200" />
           </div>
         </header>
         <div class="record">
-          <h4><%= record1.patient.name %> <%= record1.patient.surname %></h4>
-          <table class="record-table">
-            <tr>
-              <th>Registrado por</th>
-              <td><%= record1.registeredBy.name %></td>
-            </tr>
-            <tr>
-              <th>Tipo de atención</th>
-              <td><%= record1.service.description %> (<%= record1.service.code %>)</td>
-            </tr>
-            <tr>
-              <th>Tipo de entrada</th>
-              <td><%= record1.entryType %></td>
-            </tr>
-            <tr>
-              <th>Elementos relevantes</th>
-              <td><%= record1.relevantElements %></td>
-            </tr>
-            <tr>
-              <th>Diagnóstico</th>
-              <td><%= record1.diagnostic || 'N/A' %></td>
-            </tr>
-            <tr>
-              <th>Esquema farmacológico</th>
-              <td><%= record1.pharmacologicalScheme || 'N/A' %></td>
-            </tr>
+          <table>
+            <thead>
+              <tr>
+                <th class="fecha">Fecha</th>
+                <th class="hora">Grupo</th>
+                <th class="tipo">Actividad</th>
+                <th class="paciente">Intervanción</th>
+                <th class="observacion">Sigla SISTRAT</th>
+                <th class="observacion">Instrumentos</th>
+                <th class="observacion">Profesional</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Fila con datos del paciente -->
+              <tr>
+                <td><%= record1.date %></td>
+                <td>Si</td>
+                <td><%= record1.service.name %></td>
+                <td><%= record1.service.description %> (<%= record1.service.code %>)</td>
+                <td>SISTRAT-12345</td>
+                <td><%= record1.entryType %></td>
+                <td><%= record1.registeredBy.name %></td>
+              </tr>
+
+              <!-- Elementos relevantes -->
+              <tr>
+                <td colspan="8" class="complete-row">Elementos relevantes</td>
+              </tr>
+              <tr>
+                <td colspan="8"><%= record1.relevantElements %></td>
+              </tr>
+
+              <tr>
+                <td colspan="8" class="complete-row">Diagnóstico</td>
+              </tr>
+              <tr>
+                <td colspan="8"><%= record1.diagnostic || 'N/A' %></td>
+              </tr>
+              <!-- Diagnóstico -->
+              <tr>
+                <td colspan="4" class="complete-row">Esquema farmacológico</td>
+                <td colspan="4" class="complete-row">Firma Profesional</td>
+              </tr>
+
+              <!-- Fila con elementos relevantes (puedes usar colspan también si es una sola celda) -->
+              <tr>
+                <td colspan="4"><%= record1.pharmacologicalScheme || 'N/A' %></td>
+                <td colspan="4"><% if (record1.registeredBy.signature) { %>
+                  <div class="signature">
+                    <img width="400" src="<%= record1.registeredBy.signature %>" />
+                  </div>
+                  <% } %></td>
+              </tr>
+
+              <!-- Firma -->
+
+
+              <!-- Repetir bloque según otros registros -->
+            </tbody>
           </table>
-          <% if (record1.registeredBy.signature) { %>
-          <div class="signature">
-            <img src="<%= process.env.BASE_URL + record1.registeredBy.signature %>" />
-            <p>Firma del profesional</p>
-          </div>
-          <% } %>
+
+         
         </div>
       </div>
 
       <!-- Mitad inferior -->
       <% if (record2) { %>
-      <div class="half">
-        <header>
-          <div>
-            <h3>Historial Clínico</h3>
+        <div class="half">
+          <header class="header">
+            <div style="text-align: left;">
+              <p> <span style="font-weight: bold; color: #2196f3">EVOLUCIÓN</span> <strong> <%= patient.name %> <%= patient.surname %></strong></p></p>
+              <p> <span style="font-weight: bold; color: #2196f3">PROGRAMA</span> <%= patient.program.name %></p>
+            </div>
+            <div>
+              <img src="<%= logoUrl %>" width="200" />
+            </div>
+          </header>
+          <div class="record">
+            <table>
+              <thead>
+                <tr>
+                  <th class="fecha">Fecha</th>
+                  <th class="hora">Grupo</th>
+                  <th class="tipo">Actividad</th>
+                  <th class="paciente">Intervanción</th>
+                  <th class="observacion">Sigla SISTRAT</th>
+                  <th class="observacion">Instrumentos</th>
+                  <th class="observacion">Profesional</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Fila con datos del paciente -->
+                <tr>
+                  <td><%= record2.date %></td>
+                  <td>Si</td>
+                  <td><%= record2.service.name %></td>
+                  <td><%= record2.service.description %> (<%= record2.service.code %>)</td>
+                  <td>SISTRAT-12345</td>
+                  <td><%= record2.entryType %></td>
+                  <td><%= record2.registeredBy.name %></td>
+                </tr>
+  
+                <!-- Elementos relevantes -->
+                <tr>
+                  <td colspan="8" class="complete-row">Elementos relevantes</td>
+                </tr>
+                <tr>
+                  <td colspan="8"><%= record2.relevantElements %></td>
+                </tr>
+  
+                <tr>
+                  <td colspan="8" class="complete-row">Diagnóstico</td>
+                </tr>
+                <tr>
+                  <td colspan="8"><%= record2.diagnostic || 'N/A' %></td>
+                </tr>
+                <!-- Diagnóstico -->
+                <tr>
+                  <td colspan="4" class="complete-row">Esquema farmacológico</td>
+                  <td colspan="4" class="complete-row">Firma Profesional</td>
+                </tr>
+  
+                <!-- Fila con elementos relevantes (puedes usar colspan también si es una sola celda) -->
+                <tr>
+                  <td colspan="4"><%= record2.pharmacologicalScheme || 'N/A' %></td>
+                  <td colspan="4"><% if (record2.registeredBy.signature) { %>
+                    <div class="signature">
+                      <img width="400" src="<%= record2.registeredBy.signature %>" />
+                    </div>
+                    <% } %></td>
+                </tr>
+  
+                <!-- Firma -->
+  
+  
+                <!-- Repetir bloque según otros registros -->
+              </tbody>
+            </table>
+  
+            <!-- <% if (record2.registeredBy.signature) { %>
+            <div class="signature">
+              <img width="400" src="<%= record2.registeredBy.signature %>" />
+              <p>Firma del profesional</p>
+            </div>
+            <% } %> -->
           </div>
-          <div>
-            <img src="<%= logoUrl %>" width="100" />
-          </div>
-        </header>
-        <div class="record">
-          <h4><%= record1.patient.name %> <%= record1.patient.surname %></h4>
-          <table class="record-table">
-            <tr>
-              <th>Registrado por</th>
-              <td><%= record1.registeredBy.name %></td>
-            </tr>
-            <tr>
-              <th>Tipo de atención</th>
-              <td><%= record1.service.description %> (<%= record1.service.code %>)</td>
-            </tr>
-            <tr>
-              <th>Tipo de entrada</th>
-              <td><%= record1.entryType %></td>
-            </tr>
-            <tr>
-              <th>Elementos relevantes</th>
-              <td><%= record1.relevantElements %></td>
-            </tr>
-            <tr>
-              <th>Diagnóstico</th>
-              <td><%= record1.diagnostic || 'N/A' %></td>
-            </tr>
-            <tr>
-              <th>Esquema farmacológico</th>
-              <td><%= record1.pharmacologicalScheme || 'N/A' %></td>
-            </tr>
-          </table>
-          <% if (record1.registeredBy.signature) { %>
-          <div class="signature">
-            <img src="<%= process.env.BASE_URL + record1.registeredBy.signature %>" />
-            <p>Firma del profesional</p>
-          </div>
-          <% } %>
         </div>
-      </div>
       <% } %>
     </div>
     <% } %>

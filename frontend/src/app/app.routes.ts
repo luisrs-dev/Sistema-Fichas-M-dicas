@@ -13,7 +13,7 @@ export const routes: Routes = [
         redirectTo: 'home',
         pathMatch: 'full',
       },
-      
+
       {
         path: 'home',
         title: 'Bienvenido',
@@ -57,6 +57,13 @@ export const routes: Routes = [
           import('./dashboard/pages/patients/newPatient/newPatient.component'),
       },
       {
+        path: 'patient/:id/ficha-clinica/nueva',
+        title: 'Nueva Ficha',
+        data: { icon: 'group', child: true },
+        loadComponent: () =>
+          import('./dashboard/pages/medicalRecord/new/new.component'),
+      },
+      {
         path: 'patient/:id',
         title: 'Información Paciente',
         data: { icon: 'group', child: false },
@@ -84,13 +91,13 @@ export const routes: Routes = [
       //  loadComponent: () =>
       //    import('./dashboard/pages/medicalRecord/list/list.component'),
       //},
-      {
-        path: 'fichas-medicas/nueva',
-        title: 'Nuevo Fiha Médica',
-        data: { icon: 'user', child: true },
-        loadComponent: () =>
-          import('./dashboard/pages/medicalRecord/new/new.component'),
-      },
+      // {
+      //   path: 'fichas-medicas/nueva',
+      //   title: 'Nuevo Fiha Médica',
+      //   data: { icon: 'user', child: true },
+      //   loadComponent: () =>
+      //     import('./dashboard/pages/medicalRecord/new/new.component'),
+      // },
       {
         path: 'estadisticas',
         title: 'Estadísticas',
@@ -110,7 +117,7 @@ export const routes: Routes = [
         path: 'programas',
         title: 'Programas',
         data: { icon: 'manage_accounts', parameter: true},
-    
+
         loadComponent: () =>
           import('./dashboard/pages/parameters/programs/list/programs.component'),
       },

@@ -6,6 +6,7 @@ import ejs from "ejs";
 import puppeteer from "puppeteer";
 import path from "path";
 import fs from "fs";
+import { findPatient } from "../services/patient.service";
 
 const getAllMedicalRecordsByUser = async ({ params }: Request, res: Response) => {
   try {
@@ -58,20 +59,24 @@ const getPdfMedicalRecordsByPatient = async ({ params }: Request, res: Response)
   try {
     const { patientId } = params;
 
+    const { patient } = await findPatient(patientId);
+    console.log('patient', patient);
+    
     const clinicalRecords = await allMedicalRecordsUser(patientId);
 
     if (!clinicalRecords || clinicalRecords.length === 0) {
       return res.status(404).send("No hay fichas para este paciente.");
     }
 
-    console.log("medical records encontradas", clinicalRecords);
 
-    const logoPath = path.join(__dirname, "../templates/imgs/logo-ficlin-2.jpg");
+
+
+    const logoPath = path.join(__dirname, "../templates/imgs/ficlin-logo.jpg");
     const logoBase64 = fs.readFileSync(logoPath, { encoding: "base64" });
     const logoUrl = `data:image/jpeg;base64,${logoBase64}`;
 
     // 2. Renderizar HTML con EJS
-    const html = await ejs.renderFile(path.join(__dirname, "../templates/clinical-records-template.ejs"), { clinicalRecords, logoUrl });
+    const html = await ejs.renderFile(path.join(__dirname, "../templates/clinical-records-template.ejs"), { patient, clinicalRecords, logoUrl });
 
     // 3. Generar PDF con Puppeteer
     const browser = await puppeteer.launch();

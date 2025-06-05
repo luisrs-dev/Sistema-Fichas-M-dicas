@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+
 import { Types } from "mongoose";
 import { MedicalRecord } from "../interfaces/medicalRecord.interface";
 import MedicalRecordModel from "../models/medicalRecord.model";
@@ -21,9 +24,39 @@ const allMedicalRecords = async () => {
   return responseUsers;
 };
 
-const allMedicalRecordsUser = async (userId: string) => {
+const allMedicalRecordsUser = async (userId: string): Promise<any> => {
   try {
-    const medicalRecords = await MedicalRecordModel.find({ patient: new Types.ObjectId(userId) });
+    const medicalRecords = await MedicalRecordModel.find({ patient: new Types.ObjectId(userId) })
+    .populate('service')
+    .populate('patient')
+    .populate('registeredBy')
+    .lean();
+
+    // Modificar firmas si existen
+    for (const record of medicalRecords) {
+      const registeredBy = record.registeredBy as { signature?: string };
+
+      if (registeredBy && registeredBy.signature) {
+        let signatureRelativePath = registeredBy.signature;
+      
+        // Si la ruta comienza con "/uploads", quita esa parte
+        if (signatureRelativePath.startsWith("/uploads")) {
+          signatureRelativePath = signatureRelativePath.replace("/uploads/", "");
+        }
+      
+        const signaturePath = path.join(__dirname, "../uploads", signatureRelativePath);
+      
+        if (fs.existsSync(signaturePath)) {
+          const signatureBase64 = fs.readFileSync(signaturePath, { encoding: "base64" });
+          registeredBy.signature = `data:image/png;base64,${signatureBase64}`;
+        } else {
+          console.warn("Firma no encontrada en:", signaturePath);
+        }
+      }
+      
+    }
+
+
     return medicalRecords;
   } catch (error) {
     console.error("Error al recuperar las fichas médicas del usuario:", error);
