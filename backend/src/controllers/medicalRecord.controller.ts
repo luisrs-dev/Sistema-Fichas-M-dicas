@@ -73,7 +73,7 @@ const getPdfMedicalRecordsByPatient = async ({ params }: Request, res: Response)
     const logoUrl = `data:image/jpeg;base64,${logoBase64}`;
 
     // 2. Renderizar HTML con EJS
-    const html = await ejs.renderFile(path.join(__dirname, "../templates/clinical-records-template.ejs"), { patient, clinicalRecords, logoUrl });
+    const html = await ejs.renderFile(path.join(__dirname, "../../templates-pdf/clinical-records-template.ejs"), { patient, clinicalRecords, logoUrl });
 
     // 3. Generar PDF con Puppeteer
     const browser = await puppeteer.launch();
