@@ -43,8 +43,9 @@ const allMedicalRecordsUser = async (userId: string): Promise<any> => {
         if (signatureRelativePath.startsWith("/uploads")) {
           signatureRelativePath = signatureRelativePath.replace("/uploads/", "");
         }
-      
-        const signaturePath = path.join(__dirname, "../uploads", signatureRelativePath);
+        const signaturePath = path.join(__dirname, "../../uploads", signatureRelativePath);
+        console.log('data signaturePath', signaturePath);
+        
       
         if (fs.existsSync(signaturePath)) {
           const signatureBase64 = fs.readFileSync(signaturePath, { encoding: "base64" });
