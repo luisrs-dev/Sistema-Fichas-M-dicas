@@ -9,6 +9,7 @@ const registerNewUser = async (user: any, imageFile: Express.Multer.File | undef
   const userFetched = await UserModel.findOne({ email: user.email });
   if (userFetched) return "ALREADY_EXIST";
 
+  console.log('data imageFile en registerNewUser', imageFile);
   const passHash = await encrypt(user.password);
   const newUser = await UserModel.create({
     name: user.name,
