@@ -77,7 +77,21 @@ const getPdfMedicalRecordsByPatient = async ({ params }: Request, res: Response)
     console.log('data html ', path.join(__dirname, "../../templates-pdf/clinical-records-template.ejs"));
     
     // 3. Generar PDF con Puppeteer
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch(
+      {
+        headless: true,
+        //slowMo: 300, sirve para darle tiempe a cada operacion
+        // userDataDir: userDataDir, // Establecer la carpeta de caché
+        args: [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--use-gl=egl",
+          "--blink-settings=imagesEnabled=false,cssEnabled=false",
+        ],
+        timeout: 0,
+        protocolTimeout: 300000,
+      }
+    );
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "networkidle0" });
 

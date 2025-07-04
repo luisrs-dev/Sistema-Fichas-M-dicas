@@ -37,7 +37,8 @@ class Scrapper {
     const sessionHash = Date.now().toString();
     const userDataDir = await this.createCacheDirectory(sessionHash);
 
-    this.browser = await puppeteer.launch({
+    this.browser = await puppeteer.launch(
+      {
       headless: headless,
       //slowMo: 300, sirve para darle tiempe a cada operacion
       userDataDir: userDataDir, // Establecer la carpeta de caché
@@ -49,7 +50,8 @@ class Scrapper {
       ],
       timeout: 0,
       protocolTimeout: 300000,
-    });
+    }
+  );
 
     const browserVersion = await this.browser.version();
     console.log("Browser version:", browserVersion);
