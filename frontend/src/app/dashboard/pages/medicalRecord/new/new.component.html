@@ -148,54 +148,63 @@
           </form>
 
         </div>
+
         <div class="container">
-          <h2>Antecedentes</h2>
-          Nueva Ficha Clínica >
-          <a mat-button color="primary" matTooltip="Ver Perfil"
-            >{{ data.patient.name }} {{ data.patient.surname }}
-            {{ data.patient.secondSurname }}</a>
+          <mat-card style="box-shadow:none;">
+            <mat-card-title>Antecedentes del Paciente</mat-card-title>
+            <mat-card-content>
+              <div class="patient-grid">
+                <div class="field">
+                  <span class="label">Nombre</span>
+                  <span class="value">{{ patient.name  }} {{ patient.surname }} {{ patient.secondSurname }}</span>
+                </div>
+                <div class="field">
+                  <span class="label">Código SISTRAT</span>
+                  <span class="value">{{ patient.codigoSistrat || '-' }}</span>
+                </div>
+                <div class="field">
+                  <span class="label">Fecha Ingreso</span>
+                  <span class="value">{{ patient.admissionDate }}</span>
+                </div>
 
-            <div>
-              <mat-chip-set>
-                <mat-chip
-                  >Código usuario: {{patient.codigoSistrat ||'-'}}</mat-chip
-                >
-              </mat-chip-set>
-            </div>
-          <p>Fecha Ingreso: {{ patient.admissionDate }}</p>
-          <p>Programa: {{ patient.program.name }}</p>
-          <p>Teéfono: {{ patient.phone }}</p>
-          <mat-divider class="mb-1"></mat-divider>
+                <div class="field">
+                  <span class="label">Programa</span>
+                  <span class="value">{{ patient.program!.name || '-' }}</span>
+                </div>
+                <div class="field">
+                  <span class="label">Teléfono</span>
+                  <span class="value">{{ patient.phone || '-' }}</span>
+                </div>
+                @if(latestMedicalRecordWithScheme){
+                  <div class="field">
+                    <span class="label">Último Diagnóstico
+                        ({{ latestMedicalRecordWithScheme.date | date: 'dd-MM-yyyy' }})
+                    </span>
+                    <span class="value">
+                      <ng-container *ngIf="latestMedicalRecordWithScheme.diagnostic; else noScheme">
+                        {{ latestMedicalRecordWithScheme.diagnostic }}<br>
+                      </ng-container>
+                      <ng-template #noScheme>Sin registro anterior</ng-template>
+                    </span>
+                  </div>
+                  <div class="field">
+                    <span class="label">Último Esquema Farmacológico
+                      @if(latestMedicalRecordWithScheme){
+                        ({{ latestMedicalRecordWithScheme.date | date: 'dd-MM-yyyy' }})
+                      }
+                    </span>
+                    <span class="value">
+                      <ng-container *ngIf="latestMedicalRecordWithScheme; else noScheme">
+                        {{ latestMedicalRecordWithScheme.pharmacologicalScheme }}<br>
+                      </ng-container>
+                      <ng-template #noScheme>Sin registro anterior</ng-template>
+                    </span>
+                  </div>
 
-          <mat-chip-set>
-            <mat-chip
-              >Diagnóstico SISTRAT: Retraso Mental</mat-chip
-            >
-          </mat-chip-set>
-
-          <mat-chip-set>
-            <mat-chip
-              >Otro Diagnóstico: Último diagnóstico
-              @if(latestMedicalRecordWithScheme){
-                {{ latestMedicalRecordWithScheme.date | date : "dd-MM-yyyy" }}
-              }@else { Sin registro anterior }</mat-chip
-            >
-          </mat-chip-set>
-          <div>{{latestMedicalRecordWithScheme?.diagnostic}}</div>
-
-
-          <!--<mat-divider class="mb-1"></mat-divider>-->
-      <!--
-          <mat-chip-set>
-            <mat-chip
-              >Último Esquema Farmacológico @if(latestMedicalRecordWithScheme){
-              {{ latestMedicalRecordWithScheme.date | date : "dd-MM-yyyy" }}
-              }@else { Sin registro anterior }</mat-chip
-            >
-          </mat-chip-set>
-          <div>{{latestMedicalRecordWithScheme.pharmacologicalScheme}}</div>
-          <mat-divider class="mb-1"></mat-divider> -->
-
+                }
+              </div>
+            </mat-card-content>
+          </mat-card>
         </div>
       </div>
     </div>
