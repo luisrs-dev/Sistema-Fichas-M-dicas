@@ -36,24 +36,28 @@
       <span *ngIf="isValidField('txtfecha_ingreso_conace')" class="text-red-500"> Debe seleccionar una opción </span>
 
     </div>
-    
+
 
     <div class="col-6">
       <mat-form-field class="w-full" appearance="outline">
         <mat-label>Tipo programa</mat-label>
         <mat-select formControlName="seltipo_programa">
           <mat-option value="null">Seleccione una opción</mat-option>
+          <option value="1">Programa Población General</option>
           <mat-option value="2">Programa Específico Mujeres</mat-option>
         </mat-select>
         <span *ngIf="isValidField('seltipo_programa')" class="text-red-500"> Debe seleccionar una opción </span>
       </mat-form-field>
-    </div>
+    </div> Robe1234
 
     <div class="col-6">
       <mat-form-field class="w-full" appearance="outline">
         <mat-label>Tipo plan</mat-label>
         <mat-select formControlName="seltipo_plan">
           <mat-option value="null">Seleccione una opción</mat-option>
+          <mat-option value="15">PG-PR</mat-option>
+          <mat-option value="14">PG-PAI</mat-option>
+          <mat-option value="24">Otro</mat-option>
           <mat-option value="18">M-PR</mat-option>
         </mat-select>
         <span *ngIf="isValidField('seltipo_plan')" class="text-red-500"> Debe seleccionar una opción </span>

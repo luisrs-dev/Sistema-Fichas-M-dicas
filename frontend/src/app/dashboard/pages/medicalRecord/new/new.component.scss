@@ -3,12 +3,13 @@
 
   .clinical-record{
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     column-gap: 16px;
   }
 
   .container{
     height: 120% !important;
+    padding: 16px;
   }
 
 }
@@ -33,4 +34,30 @@
 .value {
   // font-weight: bold;
   font-size: 14px;
+}
+
+.ficha-clinica {
+  padding: 16px;
+  font-family: Arial, sans-serif;
+}
+
+.section {
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+h3 {
+  margin-top: 0;
+  color: #2c3e50;
+}
+
+.data-patient{
+  display: flex;
+  flex-direction: row;
+}
+
+.data-patient > div{
+  flex: 1;
 }

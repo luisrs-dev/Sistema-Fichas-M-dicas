@@ -22,6 +22,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'highcharts';
 import { Observable, switchMap } from 'rxjs';
 import { PatientService } from '../../patients/patient.service';
+import { MatExpansionModule } from '@angular/material/expansion';
 
 @Component({
   selector: 'app-new',
@@ -37,6 +38,7 @@ import { PatientService } from '../../patients/patient.service';
     MatInputModule,
     MatDividerModule,
     MatChipsModule,
+    MatExpansionModule
   ],
 
   providers: [provideNativeDateAdapter(), DatePipe],
@@ -61,6 +63,7 @@ export default class NewMedicalRecord {
   // public data: { patient: Patient; latestMedicalRecordWithScheme: MedicalRecord | null };
 
   response$: Observable<{patient: Patient, medicalRecords: MedicalRecord[]}>;
+  readonly panelOpenState = signal(false);
 
   patientId = signal<string | null>(null);
 
@@ -143,4 +146,52 @@ export default class NewMedicalRecord {
   isValidField(field: string): boolean {
     return Boolean(this.medicalRecordForm.controls[field].errors) && this.medicalRecordForm.controls[field].touched;
   }
+
+  get fullName(): string{
+    return  `${this.patient.name} ${this.patient.secondSurname}`;
+  }
+
+  get treatmentTime(): string {
+    if (!this.patient?.admissionDate) {
+      return '';
+    }
+
+    const [day, month, year] = this.patient.admissionDate.split('/').map(Number);
+    const admission = new Date(year, month - 1, day);
+    const today = new Date();
+
+    if (admission > today) {
+      return 'Fecha futura';
+    }
+
+    let years = today.getFullYear() - admission.getFullYear();
+    let months = today.getMonth() - admission.getMonth();
+    let days = today.getDate() - admission.getDate();
+
+    if (days < 0) {
+      months--;
+      // Obtener los días del mes anterior
+      const prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+      days += prevMonth.getDate();
+    }
+
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+
+    const parts: string[] = [];
+    if (years > 0) {
+      parts.push(`${years} año${years > 1 ? 's' : ''}`);
+    }
+    if (months > 0) {
+      parts.push(`${months} mes${months > 1 ? 'es' : ''}`);
+    }
+    if (days > 0) {
+      parts.push(`${days} día${days > 1 ? 's' : ''}`);
+    }
+
+    return parts.length > 0 ? parts.join(' ') : '0 días';
+  }
+
 }

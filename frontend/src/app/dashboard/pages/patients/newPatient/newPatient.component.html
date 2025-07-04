@@ -36,6 +36,20 @@
               </span>
             </mat-form-field>
           </div>
+          <div class="col-4">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Centro SISTRAT</mat-label>
+              <mat-select formControlName="program">
+                <mat-option value='mujeres'>SISTRAT Mujeres</mat-option>
+                <mat-option value='hombres'>SISTRAT Hombres</mat-option>
+                <mat-option value='alameda'>SISTRAT Alameda</mat-option>
+
+              </mat-select>
+              <span *ngIf="isValidField('program')" class="text-red-500">
+                Debe seleccionar un programa
+              </span>
+            </mat-form-field>
+          </div>
         </div>
 
         <div class="grid">
