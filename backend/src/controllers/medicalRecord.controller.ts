@@ -68,10 +68,7 @@ const getPdfMedicalRecordsByPatient = async ({ params }: Request, res: Response)
       return res.status(404).send("No hay fichas para este paciente.");
     }
 
-
-
-
-    const logoPath = path.join(__dirname, "../templates/imgs/ficlin-logo.jpg");
+    const logoPath = path.join(__dirname, "../../uploads/imgs/ficlin-logo.jpg");
     const logoBase64 = fs.readFileSync(logoPath, { encoding: "base64" });
     const logoUrl = `data:image/jpeg;base64,${logoBase64}`;
 
