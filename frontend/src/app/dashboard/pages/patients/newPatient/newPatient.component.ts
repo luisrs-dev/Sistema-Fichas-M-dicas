@@ -50,6 +50,19 @@ export default class NewPatientComponent {
     phone: ['', [Validators.required, Validators.minLength(6)]],
     phoneFamily: ['', [Validators.required, Validators.minLength(3)]],
     centerOrigin: ['', [Validators.required, Validators.minLength(3)]],
+    mainSubstance: ['', [Validators.required]],
+    previousTreatments: ['', [Validators.required]],
+    atentionRequestDate: [new Date()],
+    typeContact: ['', [Validators.required]],
+    whoRequest: ['', [Validators.required]],
+    whoDerives: ['', [Validators.required]],
+    careOfferedDate: [new Date()],
+    estimatedMonth: [new Date(), []],
+    demandIsNotAccepted: ['', []],
+    firstAtentionDate: [new Date()],
+    atentionResolutiveDate: [new Date()],
+    interventionAB: ['', []],
+    observations: ['', []],
   });
 
   ngOnInit() {
@@ -58,8 +71,23 @@ export default class NewPatientComponent {
   }
 
   async onSave() {
-    Notiflix.Loading.circle('Registrando nuevo paciente...');
+    console.log('data onSave');
+    
+    Notiflix.Loading.circle('Registrando nueva demanda en Ficlin...');
     if (this.userForm.invalid) {
+
+        console.log('Formulario inválido. Detalles:');
+
+  const controls = this.userForm.controls;
+
+  for (const name in controls) {
+    if (controls[name].invalid) {
+      console.log(`- ${name} está inválido. Errores:`, controls[name].errors);
+    }
+  }
+
+      console.log('invaid');
+      
       this.userForm.markAllAsTouched();
       Notiflix.Loading.remove();
       return;
@@ -73,7 +101,7 @@ export default class NewPatientComponent {
       this.changeDetectorRef.detectChanges();
       Notiflix.Loading.remove();
       Report.success('Registro exitoso', 'Ahora es posible registrar su ficha demanda', 'Entendido');
-      this.router.navigate(['dashboard/patient/demand', this.patient._id]);
+      //this.router.navigate(['dashboard/patient/demand', this.patient._id]);
     });
   }
 
