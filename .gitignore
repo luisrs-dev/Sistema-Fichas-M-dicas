@@ -22,6 +22,10 @@
 # Package files
 *.jar
 
+#Images
+.jpg
+.jpeg
+
 # Maven
 target/
 dist/
@@ -58,3 +62,4 @@ Thumbs.db
 cache
 ecosystem.config.js
 .env
+backend/uploads/*
