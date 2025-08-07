@@ -114,14 +114,15 @@
             Tratamiento en otro centro
           </mat-chip>
           }-->
+            <button mat-icon-button matTooltip="Editar" [routerLink]="['/dashboard/patients/nuevo', element._id]" color="primary" style="font-size: 12px !important">
+              <mat-icon>edit</mat-icon>
+            </button>
+  
             <button mat-icon-button matTooltip="Fichas Clínicas" [routerLink]="['/dashboard/patient', element._id]" color="primary" style="font-size: 12px !important">
               <mat-icon>medical_information</mat-icon>
             </button>
     
             
-            <button mat-icon-button matTooltip="Ficha Demanda" [routerLink]="['/dashboard/patient/demand', element._id]" color="primary">
-              <mat-icon>assignment_ind</mat-icon>
-            </button>
             @if(element.registeredDemand){
               <button mat-icon-button matTooltip="Ficha de ingreso" [routerLink]="['/dashboard/patient/admision-form', element._id]" color="primary">
                 <mat-icon>apartment</mat-icon>

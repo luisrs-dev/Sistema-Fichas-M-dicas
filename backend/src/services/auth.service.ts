@@ -5,6 +5,20 @@ import { encrypt, verified } from "../utils/bcrypt.handle";
 
 const JWT_SECRET = process.env.JWT_SECRET || "token.010101";
 
+const updateUserPassword = async (id: string, password: string) => {
+  const user = await UserModel.findOne({ _id:id });
+
+  if (!user) {
+    return 'USER_NOT_FOUND';
+  }
+
+  const passHash = await encrypt(password);
+  user.password = passHash;
+  await user.save();
+
+  return 'PASSWORD_UPDATED';
+};
+
 const registerNewUser = async (user: any, imageFile: Express.Multer.File | undefined) => {
   const userFetched = await UserModel.findOne({ email: user.email });
   if (userFetched) return "ALREADY_EXIST";
@@ -68,4 +82,4 @@ const loginUser = async ({ email, password }: Auth) => {
   }
 };
 
-export { registerNewUser, updateUser, loginUser };
+export { registerNewUser, updateUser, loginUser, updateUserPassword };

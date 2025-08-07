@@ -6,6 +6,7 @@ import {
   postDemand,
   postDemandToSistrat,
   postPatient,
+  updatePatient,
   postPatientSistrat,
   //recordPatientSistrat,
   getAdmissionForm,
@@ -23,6 +24,7 @@ router.get("/", getPatients);
 router.get("/profile/:profile", getPatientsByProfile);
 router.get("/:id", getPatientsById);
 router.post("/", postPatient);
+router.put("/:id", updatePatient);
 
 router.get("/demanda/:patientId", getDemand);
 router.post("/demanda", postDemand);

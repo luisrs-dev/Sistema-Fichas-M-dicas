@@ -9,6 +9,8 @@ import { Observable } from 'rxjs';
 import { Parameter, ParameterValue } from '../../parameters/interfaces/parameter.interface';
 import { ProfesionalRoleService } from '../../parameters/profesionalRole/profesionalRole.service';
 import { AuthService } from '../../../../auth/auth.service';
+import Notiflix from 'notiflix';
+import { error } from 'highcharts';
 
 @Component({
   selector: 'app-new',
@@ -94,7 +96,6 @@ export default class NewComponent {
 
     const formData = new FormData();
 
-
     Object.entries(this.userForm.value).forEach(([key, value]) => {
       if (value instanceof File) {
         formData.append(key, value); // Si es un archivo, lo añade como Blob
@@ -115,15 +116,13 @@ export default class NewComponent {
       console.log(`${key}: ${value}`);
     });
 
-    if (this.edit) {      
+    if (this.edit) {
       formData.append('patientId', this.patientId); // 'programs' será el nombre de campo para estos datos
 
       this.userService.updateUser(formData).subscribe((response: any) => {
         this.router.navigateByUrl('/dashboard/users');
       });
     } else {
-
-
       this.userService.createUser(formData).subscribe((response: any) => {
         console.log(response);
         this.router.navigateByUrl('/dashboard/users');
@@ -177,5 +176,21 @@ export default class NewComponent {
       return this.edit ? itemsUser.includes(id) : false;
     }
     return false;
+  }
+
+  updatePassword(password: string) {
+    const body = {
+      id: this.patientId, // reemplaza por el email real
+      password,
+    };
+    this.userService.updatePassword(body).subscribe({
+      next: (response) =>{
+        console.log(response);
+        Notiflix.Notify.success('Contraseña actualizada con éxito');
+      },
+      error: (error) => {
+        console.error('Error actualizando contraseña:', error);
+      }
+    });
   }
 }

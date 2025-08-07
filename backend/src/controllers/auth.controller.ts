@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { loginUser, registerNewUser, updateUser } from "../services/auth.service";
+import { loginUser, registerNewUser, updateUser, updateUserPassword } from "../services/auth.service";
 
 const registerController = async (req: Request, res: Response) => {
 
@@ -18,6 +18,28 @@ const updateController = async (req: Request, res: Response) => {
   res.send({status:'ok', responseUser});
 };
 
+const updatePasswordController = async (req: Request, res: Response) => {
+  try {
+    const { id, password } = req.body;
+
+    if (!id || !password) {
+      return res.status(400).json({ status: 'error', message: 'Id y nueva contraseña son requeridos' });
+    }
+
+    const result = await updateUserPassword(id, password);
+
+    if (result === 'USER_NOT_FOUND') {
+      return res.status(404).json({ status: 'error', message: 'Usuario no encontrado' });
+    }
+
+    res.json({ status: 'ok', message: 'Contraseña actualizada correctamente' });
+  } catch (error) {
+    console.error("Error actualizando contraseña:", error);
+    res.status(500).json({ status: 'error', message: 'Error interno del servidor' });
+  }
+};
+
+
 const loginController = async ({ body }: Request, res: Response) => {
   const { email, password } = body;
   const responseUser = await loginUser({ email, password });
@@ -30,4 +52,4 @@ const loginController = async ({ body }: Request, res: Response) => {
   }
 };
 
-export { registerController, updateController, loginController };
+export { registerController, updateController, loginController, updatePasswordController };
