@@ -28,6 +28,7 @@ router.post("/update-password", updatePasswordController);
 router.post("/login", loginController);
 router.post("/register", upload.single('image'), registerController);
 router.put("/update-password", updatePasswordController);
+router.put("/update", upload.single('image'), updateController);
 
 
 export { router };
