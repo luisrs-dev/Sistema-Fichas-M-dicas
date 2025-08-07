@@ -7,10 +7,12 @@ import DemandModel from "../models/demand.model";
 import Sistrat from "./sistrat/sistrat.class";
 import AdmissionFormModel from "../models/admissionForm.model";
 import mongoose from 'mongoose';
+import UserModel from "../models/user.model";
+import { encrypt } from "../utils/bcrypt.handle";
 
 
 const inerPatient = async (Patient: Patient) => {
-  const responseInsert = await PatientModel.create(Patient);
+  const responseInsert = await PatientModel.create({...Patient, registeredOnFiclin: true});
   console.log("Paciente registrado");
   console.log({ responseInsert });
   return responseInsert;
@@ -39,6 +41,41 @@ const saveAdmissionForm = async (patientId: string, admissionFormData: any) => {
   }
 };
 
+
+
+const update = async (id: string, patient: Patient) => {
+  const updatedPatient = await PatientModel.findByIdAndUpdate(
+    id,
+    {
+      ...patient,
+      registeredOnFiclin: true,
+    },
+    { new: true } // Devuelve el documento actualizado
+  );
+
+  if (!updatedPatient) {
+    throw new Error("Paciente no encontrado");
+  }
+
+  console.log("Paciente actualizado");
+  console.log({ updatedPatient });
+
+  return updatedPatient;
+};
+
+const updateUserPassword = async (email: string, newPassword: string) => {
+  const user = await UserModel.findOne({ email });
+
+  if (!user) {
+    return 'USER_NOT_FOUND';
+  }
+
+  const passHash = await encrypt(newPassword);
+  user.password = passHash;
+  await user.save();
+
+  return 'PASSWORD_UPDATED';
+};
 
 
 
@@ -167,12 +204,8 @@ const recordDemandToSistrat = async (patientId: string): Promise<{success:boolea
       throw new Error(`Paciente con ID ${patientId} no encontrado.`);
     }
 
-    if (!demand) {
-      throw new Error(`Demanda para el paciente con ID ${patientId} no encontrada.`);
-    }
-
     const sistratPlatform = new Sistrat();
-    const createdDemand = await sistratPlatform.crearDemanda(patient, demand);
+    const createdDemand = await sistratPlatform.crearDemanda(patient);
     if(createdDemand){
       return {success: true} 
     }else{
@@ -258,7 +291,9 @@ const updateFormCie10 = async (patientId: string, optionSelected: string) => {
 export {
   inerPatient,
   inerDemand,
+  update,
   updatePatientSistrat,
+  updateUserPassword,
   recordDemandToSistrat,
   allPatients,
   PatientsByProfile,

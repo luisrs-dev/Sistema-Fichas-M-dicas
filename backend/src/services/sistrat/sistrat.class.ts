@@ -51,7 +51,7 @@ class Sistrat {
     }
   }
 
-  async crearDemanda(patient: any, demand: any) {
+  async crearDemanda(patient: Patient) {
     this.gender = patient.sex;
     let page: Page = await this.login();
 
@@ -72,25 +72,25 @@ class Sistrat {
       await this.scrapper.waitAndType(page, "#int_telefono", patient.phone);
       await this.scrapper.waitAndType(page, "#int_telefono_familiar", patient.phoneFamily);
 
-      await this.scrapper.setSelectValue(page, "#selsustancia_princial", demand.mainSubstance);
+      await this.scrapper.setSelectValue(page, "#selsustancia_princial", patient.mainSubstance);
 
-      await this.scrapper.setDateValue(page, "#txt_fecha_de_atencion_en_el_establecimiento", demand.atentionRequestDate);
+      await this.scrapper.setDateValue(page, "#txt_fecha_de_atencion_en_el_establecimiento", patient.atentionRequestDate);
 
-      await this.scrapper.setSelectValue(page, "#int_numero_tratamiento", demand.previousTreatments);
-      await this.scrapper.setSelectValue(page, "#tipo_contacto", demand.typeContact);
-      await this.scrapper.setSelectValue(page, "#quien_solicita", demand.whoRequest);
-      await this.scrapper.setSelectValue(page, "#quien_deriva", demand.whoDerives);
+      await this.scrapper.setSelectValue(page, "#int_numero_tratamiento", patient.previousTreatments);
+      await this.scrapper.setSelectValue(page, "#tipo_contacto", patient.typeContact);
+      await this.scrapper.setSelectValue(page, "#quien_solicita", patient.whoRequest);
+      await this.scrapper.setSelectValue(page, "#quien_deriva", patient.whoDerives);
 
-      await this.scrapper.setDateValue(page, "#txt_mes_estimado", demand.estimatedMonth);
+      await this.scrapper.setDateValue(page, "#txt_mes_estimado", patient.estimatedMonth);
 
-      await this.scrapper.setSelectValue(page, "#no_permite_corresponde", demand.demandIsNotAccepted);
+      await this.scrapper.setSelectValue(page, "#no_permite_corresponde", patient.demandIsNotAccepted);
 
-      await this.scrapper.setDateValue(page, "#txt_1era_fecha_atencion_realizada", demand.firstAtentionDate);
-      await this.scrapper.setDateValue(page, "#txt_fecha_ofrecida_de_atencion_resolutiva", demand.atentionResolutiveDate);
-      await this.scrapper.setDateValue(page, "#txt_fecha_atencion_ofrecida_citacion_en_el_establecimiento", demand.careOfferedDate);
+      await this.scrapper.setDateValue(page, "#txt_1era_fecha_atencion_realizada", patient.firstAtentionDate);
+      await this.scrapper.setDateValue(page, "#txt_fecha_ofrecida_de_atencion_resolutiva", patient.atentionResolutiveDate);
+      await this.scrapper.setDateValue(page, "#txt_fecha_atencion_ofrecida_citacion_en_el_establecimiento", patient.careOfferedDate);
 
-      await this.scrapper.setSelectValue(page, "#sel_intervencion_a_b", demand.interventionAB);
-      await this.scrapper.waitAndType(page, "#obs", demand.observations);
+      await this.scrapper.setSelectValue(page, "#sel_intervencion_a_b", patient.interventionAB);
+      await this.scrapper.waitAndType(page, "#obs", patient.observations);
       await this.scrapper.setSelectValue(page, "#selcomuna", "150");
 
 

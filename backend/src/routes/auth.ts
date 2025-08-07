@@ -1,6 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
-import {loginController, registerController, updateController} from "../controllers/auth.controller";
+import {loginController, registerController, updateController, updatePasswordController} from "../controllers/auth.controller";
 import path from 'path';
 import fs from 'fs';
 
@@ -24,8 +24,10 @@ const storage = multer.diskStorage({
   
 const upload = multer({ storage: storage });
 
+router.post("/update-password", updatePasswordController);
 router.post("/login", loginController);
 router.post("/register", upload.single('image'), registerController);
-router.put("/update", upload.single('image'), updateController);
+router.put("/update-password", updatePasswordController);
+
 
 export { router };

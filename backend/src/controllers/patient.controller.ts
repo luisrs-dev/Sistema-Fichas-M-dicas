@@ -14,7 +14,8 @@ import {
   saveAdmissionFormToSistrat,
   updateAlertsFromSistrat,
   updateFormCie10,
-  demandByPatient
+  demandByPatient,
+  update
 } from "../services/patient.service";
 
 const getPatientsById = async ({ params }: Request, res: Response) => {
@@ -60,6 +61,18 @@ const postPatient = async ({ body }: Request, res: Response) => {
     res.send(responsePatient);
   } catch (error) {
     handleHttp(res, "ERROR_POST_ITEM", error);
+  }
+};
+
+const updatePatient = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const patientData = req.body;
+
+  try {
+    const updatedPatient = await update(id, patientData);
+    res.send(updatedPatient);
+  } catch (error) {
+    handleHttp(res, "ERROR_UPDATE_PATIENT", error);
   }
 };
 
@@ -211,6 +224,7 @@ const formCie10 = async (req: Request, res: Response) => {
 
 export {
   postPatient,
+  updatePatient,
   postDemand,
   postDemandToSistrat,
   postPatientSistrat,

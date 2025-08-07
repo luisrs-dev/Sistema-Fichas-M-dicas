@@ -55,6 +55,16 @@ export class PatientService {
     return this.http.post<any>(`${this.backend}/patient`, patient).pipe(catchError((err) => throwError(() => console.log(err))));
   }
 
+  updatePatient(id: string, patient: Patient): Observable<Patient> {
+  return this.http.put<Patient>(`${this.backend}/patient/${id}`, patient)
+    .pipe(
+      catchError((err) => {
+        console.error(err);
+        return throwError(() => err);
+      })
+    );
+}
+
   /*
    TODO: definir interfaz para datos sistrat
   */

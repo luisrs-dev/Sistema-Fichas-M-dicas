@@ -57,6 +57,13 @@ export const routes: Routes = [
           import('./dashboard/pages/patients/newPatient/newPatient.component'),
       },
       {
+        path: 'patients/nuevo/:id',
+        title: 'Editar demanda',
+        data: { icon: 'group', child: true },
+        loadComponent: () =>
+          import('./dashboard/pages/patients/newPatient/newPatient.component'),
+      },
+      {
         path: 'patient/:id/ficha-clinica/nueva',
         title: 'Nueva Ficha',
         data: { icon: 'group', child: true },
