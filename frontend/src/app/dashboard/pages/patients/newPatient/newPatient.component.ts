@@ -25,6 +25,7 @@ import { Patient } from '../../../interfaces/patient.interface';
 export default class NewPatientComponent {
   private patientService = inject(PatientService);
   private authService = inject(AuthService);
+  private userService = inject(UserService);
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private changeDetectorRef = inject(ChangeDetectorRef);
@@ -71,8 +72,18 @@ export default class NewPatientComponent {
 
   ngOnInit() {
     const user = this.authService.getUser();
-    this.programs = user.programs;
+    if (!user) {
+      Notiflix.Notify.failure('Usuario no autenticado. Por favor, inicie sesión.');
+      this.router.navigate(['/login']);
+      return;
+    }
 
+    this.userService.getUserById(user._id).subscribe((response) => {
+      this.programs = response.user.programs;
+      this.changeDetectorRef.detectChanges();
+    });
+
+  
     // Leer id desde la URL (si existe)
     const id = this.route.snapshot.paramMap.get('id');
 
