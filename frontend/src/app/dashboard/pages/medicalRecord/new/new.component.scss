@@ -61,3 +61,10 @@ h3 {
 .data-patient > div{
   flex: 1;
 }
+
+.section{
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  height: 100vh;
+}
