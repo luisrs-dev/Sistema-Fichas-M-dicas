@@ -3,10 +3,10 @@ import { Patient } from "../interfaces/patient.interface";
 
 const PatientSchema = new Schema<Patient>(
   {
-    admissionDate: {
-      type: String,
-      required: true,
-    },
+    //admissionDate: {
+    //  type: String,
+    //  required: true,
+    //},
     program: {
       type: Schema.Types.ObjectId,
       ref: 'program'
@@ -42,6 +42,10 @@ const PatientSchema = new Schema<Patient>(
       required: true,
     },
     region: {
+      type: String,
+      required: true,
+    },
+    comuna: {
       type: String,
       required: true,
     },
@@ -94,8 +98,7 @@ const PatientSchema = new Schema<Patient>(
       required: true,
     },
     atentionRequestDate: {
-      type: String,
-      required: true,
+      type: String
     },
     typeContact: {
       type: String,
@@ -110,8 +113,7 @@ const PatientSchema = new Schema<Patient>(
       required: true,
     },
     careOfferedDate: {
-      type: String,
-      required: true,
+      type: String
     },
     estimatedMonth: {
       type: String
@@ -120,8 +122,7 @@ const PatientSchema = new Schema<Patient>(
       type: String
     },
     firstAtentionDate: {
-      type: String,
-      required: true,
+      type: String
     },
     atentionResolutiveDate: {
       type: String

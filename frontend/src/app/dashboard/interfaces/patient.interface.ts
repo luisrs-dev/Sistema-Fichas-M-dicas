@@ -13,6 +13,7 @@ export interface Patient {
   birthDate: string;
   sex: string;
   region: string;
+  comuna: string;
   phone: string;
   phoneFamily: string;
   centerOrigin: string;

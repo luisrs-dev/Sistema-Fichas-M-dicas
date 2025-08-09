@@ -3,7 +3,7 @@ import { Auth } from "./auth.interface";
 
 export interface Patient extends Auth {
   _id?: string;
-  admissionDate: string;
+  //admissionDate: string;
   program: Types.ObjectId;
   codigoSistrat: string;
   sistratCenter: string;
@@ -14,6 +14,7 @@ export interface Patient extends Auth {
   birthDate: string;
   sex: string;
   region: string;
+  comuna: string;
   phone: string;
   phoneFamily: string;
   centerOrigin: string;

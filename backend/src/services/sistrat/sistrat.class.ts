@@ -58,8 +58,8 @@ class Sistrat {
     try {
       await this.listActiveDemands(page);
       await this.scrapper.clickButton(page, "#crea_demanda", 15000);
-
-      await this.scrapper.waitAndType(page, "#txtrut", "171847931");
+        console.log("Creando demanda en SISTRAT...", patient);
+      await this.scrapper.waitAndType(page, "#txtrut", patient.rut);
       await this.scrapper.waitAndType(page, "#txtnombre_usuario", patient.name);
       await this.scrapper.waitAndType(page, "#txtapellido_usuario", patient.surname);
       await this.scrapper.waitAndType(page, "#txtapellido2_usuario", patient.secondSurname);
@@ -68,6 +68,8 @@ class Sistrat {
 
       await this.scrapper.setSelectValue(page, "#sexo", patient.sex);
       await this.scrapper.setSelectValue(page, "#selregion", "7");
+      await this.scrapper.waitForSeconds(3);
+      await this.scrapper.setSelectValue(page, "#selcomuna", patient.comuna);
 
       await this.scrapper.waitAndType(page, "#int_telefono", patient.phone);
       await this.scrapper.waitAndType(page, "#int_telefono_familiar", patient.phoneFamily);
@@ -91,8 +93,13 @@ class Sistrat {
 
       await this.scrapper.setSelectValue(page, "#sel_intervencion_a_b", patient.interventionAB);
       await this.scrapper.waitAndType(page, "#obs", patient.observations);
-      await this.scrapper.setSelectValue(page, "#selcomuna", "150");
+      //await this.scrapper.setSelectValue(page, "#selcomuna", "150");
+      //await this.scrapper.clickButton(page, "#mysubmit");
 
+      
+
+
+      
 
       await this.scrapper.waitForSeconds(90);
       // await this.listActiveDemands(page);

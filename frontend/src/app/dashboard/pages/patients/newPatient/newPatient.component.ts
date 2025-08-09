@@ -42,30 +42,31 @@ export default class NewPatientComponent {
   public registeredOnFiclin = signal<boolean>(false);
 
   public userForm: FormGroup = this.fb.group({
-    admissionDate: [new Date(), [Validators.required]],
+    //admissionDate: ['', [Validators.required]],
     program: ['', [Validators.required]],
     sistratCenter: ['', [Validators.required]],
     rut: ['', [Validators.required, Validators.minLength(3)]],
     name: ['', [Validators.required, Validators.minLength(3)]],
     surname: ['', [Validators.required, Validators.minLength(3)]],
     secondSurname: ['', [Validators.required, Validators.minLength(3)]],
-    birthDate: [new Date(), [Validators.required]],
+    birthDate: ['', [Validators.required]],
     sex: ['', [Validators.required]],
     region: ['7', [Validators.required]],
+    comuna: ['', [Validators.required]],
     phone: ['', [Validators.required, Validators.minLength(6)]],
     phoneFamily: ['', [Validators.required, Validators.minLength(3)]],
     centerOrigin: ['', [Validators.required, Validators.minLength(3)]],
     mainSubstance: ['', [Validators.required]],
     previousTreatments: ['', [Validators.required]],
-    atentionRequestDate: [new Date()],
+    atentionRequestDate: [''],
     typeContact: ['', [Validators.required]],
     whoRequest: ['', [Validators.required]],
     whoDerives: ['', [Validators.required]],
-    careOfferedDate: [new Date()],
-    estimatedMonth: [new Date(), []],
+    careOfferedDate: [''],
+    estimatedMonth: ['', []],
     demandIsNotAccepted: ['', []],
-    firstAtentionDate: [new Date()],
-    atentionResolutiveDate: [new Date()],
+    firstAtentionDate: ['', [Validators.required]],
+    atentionResolutiveDate: [''],
     interventionAB: ['', []],
     observations: ['', []],
   });
@@ -93,37 +94,50 @@ export default class NewPatientComponent {
     }
   }
 
+  formatDateStringToDate(dateString: string): Date | string {
+    if(!dateString) return '';
+    console.log('formatDateStringToDate dateString', dateString);
+    
+    const [day, month, year] = dateString.split("/").map(Number);
+    // Ojo: en JS los meses empiezan en 0
+    const fechaDate = new Date(year, month - 1, day);
+    return fechaDate;
+  }
+
   private loadPatient(id: string): void {
     this.patientService.getPatientById(id).subscribe({
       next: (response) => {
+        console.log('Cargando paciente:', response);
+        
         this.patient = response.patient;
         this.registeredOnFiclin.set(this.patient.registeredOnFiclin!);
         // Patch para evitar borrar las fechas y mantener formato
         this.userForm.patchValue({
-          admissionDate: new Date(this.patient.admissionDate),
+          //admissionDate: new Date(this.patient.admissionDate),
           program: this.patient.program,
           sistratCenter: this.patient.sistratCenter,
           rut: this.patient.rut,
           name: this.patient.name,
           surname: this.patient.surname,
           secondSurname: this.patient.secondSurname,
-          birthDate: new Date(this.patient.birthDate),
+          birthDate: this.formatDateStringToDate(this.patient.birthDate),
           sex: this.patient.sex,
           region: this.patient.region,
+          comuna: this.patient.comuna,
           phone: this.patient.phone,
           phoneFamily: this.patient.phoneFamily,
           centerOrigin: this.patient.centerOrigin,
           mainSubstance: this.patient.mainSubstance,
           previousTreatments: this.patient.previousTreatments,
-          atentionRequestDate: new Date(this.patient.atentionRequestDate),
+          atentionRequestDate: this.formatDateStringToDate(this.patient.atentionRequestDate),
           typeContact: this.patient.typeContact,
           whoRequest: this.patient.whoRequest,
           whoDerives: this.patient.whoDerives,
-          careOfferedDate: new Date(this.patient.careOfferedDate),
-          estimatedMonth: new Date(this.patient.estimatedMonth),
+          careOfferedDate: this.formatDateStringToDate(this.patient.careOfferedDate),
+          estimatedMonth: this.formatDateStringToDate(this.patient.estimatedMonth),
           demandIsNotAccepted: this.patient.demandIsNotAccepted,
-          firstAtentionDate: new Date(this.patient.firstAtentionDate),
-          atentionResolutiveDate: new Date(this.patient.atentionResolutiveDate),
+          firstAtentionDate: this.formatDateStringToDate(this.patient.firstAtentionDate),
+          atentionResolutiveDate: this.formatDateStringToDate(this.patient.atentionResolutiveDate),
           interventionAB: this.patient.interventionAB,
           observations: this.patient.observations,
         });
@@ -146,13 +160,15 @@ export default class NewPatientComponent {
   }
 
   async onSave() {
-    Notiflix.Loading.circle('Registrando nueva demanda en Ficlin...');
     if (this.userForm.invalid) {
       const controls = this.userForm.controls;
       this.userForm.markAllAsTouched();
       Notiflix.Loading.remove();
       return;
     }
+
+    Notiflix.Loading.circle('Registrando nueva demanda en Ficlin...');
+
 
     const dataUser = this.formatFormDates(this.userForm.value);
     this.patientService.addPatient(dataUser).subscribe((patient) => {
