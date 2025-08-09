@@ -1,11 +1,10 @@
 <div>
   <div class="section">
-    <div class="container">
       <ng-container *ngIf="response$ | async as data; else loading">
         <!-- <div *ngIf="patient$ | async as patient; else loading"> -->
         <div class="mt-2 mb-8">
           <div class="clinical-record mb-3">
-            <div>
+            <div class="container">
               <h2>Nueva Ficha Clínica</h2>
               <form [formGroup]="medicalRecordForm" autocomplete="off" (ngSubmit)="onSave()">
                 <div class="grid">
@@ -131,11 +130,8 @@
                 </div>
               </form>
             </div>
-          </div>
-        </div>
-      </ng-container>
-    </div>
-    <div class="container">
+
+            <div class="container">
       @if(patient){
           <mat-card style="box-shadow: none">
             <!-- <mat-card-title>Antecedentes del Paciente</mat-card-title> -->
@@ -188,6 +184,10 @@
           </mat-card>
           }
     </div>
+          </div>
+        </div>
+      </ng-container>
+    
   </div>
 </div>
 
