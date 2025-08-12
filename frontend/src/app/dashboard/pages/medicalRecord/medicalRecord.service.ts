@@ -37,6 +37,10 @@ export class MedicalRecordService {
     const latestMedicalRecordWithScheme = medicalRecordSorted.find((record) => record.pharmacologicalScheme);
     return latestMedicalRecordWithScheme || null;
   }
+
+  deleteMedicalRecord(id: string): Observable<any> {
+    return this.http.delete<any>(`${this.backend}/medicalRecord/${id}`).pipe(catchError((err) => throwError(() => err.error.message)));
+  }
 }
 
 

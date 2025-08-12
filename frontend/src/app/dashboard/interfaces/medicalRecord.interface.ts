@@ -1,6 +1,7 @@
 import { Patient } from "./patient.interface";
 
 export interface MedicalRecord {
+  _id: string;
   date: string;
   entryType: string;
   service: Service;

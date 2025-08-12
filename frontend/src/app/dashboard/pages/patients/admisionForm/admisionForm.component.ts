@@ -133,7 +133,7 @@ export default class AdmisionFormComponent {
     console.log(Object.keys(dataAdmidssonForm).length);
 
     if (this.editMode) {
-      console.log('actualizar');
+      
       this.patientService.updateFichaIngreso(this.patient!._id!, dataAdmidssonForm).subscribe((response) => {
         Notiflix.Notify.success('Ficha de ingreso actualizda');
       });

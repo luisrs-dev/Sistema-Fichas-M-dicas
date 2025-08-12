@@ -68,6 +68,10 @@ const updatePatient = async (req: Request, res: Response) => {
   const { id } = req.params;
   const patientData = req.body;
 
+  console.log(`updatePatient id: ${id}`);
+  console.log(`updatePatient patientData: ${JSON.stringify(patientData)}`);
+  
+  
   try {
     const updatedPatient = await update(id, patientData);
     res.send(updatedPatient);
@@ -113,6 +117,9 @@ const postDemandToSistrat = async ({ body }: Request, response: Response) => {
 
 const updateAdmissionForm = async ({ body }: Request, res: Response) => {
   const { patientId, dataAdmissionForm } = body;
+  console.log(`updateAdmissionForm patientId: ${patientId}`);
+  console.log(`updateAdmissionForm dataAdmissionForm: ${JSON.stringify(dataAdmissionForm)}`);
+  
   if (!patientId) {
     res.status(500).json({ success: true, message: "Usuario no existe para actualizar ficha de ingreso" });
   }

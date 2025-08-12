@@ -3,12 +3,14 @@ import {
   getMedicalRecords,
   getAllMedicalRecordsByUser,
   postMedicalRecord,
-  medicalRecordsByMonth
+  medicalRecordsByMonth,
+  deleteMedicalRecords
 } from "../controllers/medicalRecord.controller";
 // import { logMiddleware } from "../middleware/log";
 const router = Router();
 
 router.get("/", getMedicalRecords);
+router.delete("/:id", deleteMedicalRecords);
 // router.get("/", logMiddleware, getItems);
 router.get("/:userId", getAllMedicalRecordsByUser );
 router.post("/", postMedicalRecord);

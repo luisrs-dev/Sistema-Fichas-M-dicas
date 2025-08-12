@@ -37,6 +37,7 @@ export interface Patient {
   atentionResolutiveDate: string;
   interventionAB: string;
   observations: string;
+  opcion_discapacidad?: string;
 }
 
 interface Program{

@@ -49,10 +49,15 @@ export class UserIdentificationComponent extends FormBaseComponent {
         phone: this.patient.phone,
         phoneFamily: this.patient.phoneFamily,
         centerOrigin: this.patient.centerOrigin,
+        opcion_discapacidad: this.patient.opcion_discapacidad ,
       });
     }
 
     // Método de componente base
     this.fillFormWithAdmissionData();
+  }
+
+  get mostrarCampoExtra() {
+    return this.form.get('discapacidad')?.value === '1';
   }
 }

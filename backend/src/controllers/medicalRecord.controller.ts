@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { handleHttp } from "../utils/error.handle";
-import { allMedicalRecords, insertMedicalRecord, allMedicalRecordsUser, getRecordsByMonthAndYear } from "../services/medicalRecord.service";
+import { allMedicalRecords, insertMedicalRecord, allMedicalRecordsUser, getRecordsByMonthAndYear, deleteRecord } from "../services/medicalRecord.service";
 import { allServices } from "../services/service.service";
 import ejs from "ejs";
 import puppeteer from "puppeteer";
@@ -60,8 +60,8 @@ const getPdfMedicalRecordsByPatient = async ({ params }: Request, res: Response)
     const { patientId } = params;
 
     const { patient } = await findPatient(patientId);
-    console.log('patient', patient);
-    
+    console.log("patient", patient);
+
     const clinicalRecords = await allMedicalRecordsUser(patientId);
 
     if (!clinicalRecords || clinicalRecords.length === 0) {
@@ -74,24 +74,17 @@ const getPdfMedicalRecordsByPatient = async ({ params }: Request, res: Response)
 
     // 2. Renderizar HTML con EJS
     const html = await ejs.renderFile(path.join(__dirname, "../../templates-pdf/clinical-records-template.ejs"), { patient, clinicalRecords, logoUrl });
-    console.log('data html ', path.join(__dirname, "../../templates-pdf/clinical-records-template.ejs"));
-    
+    console.log("data html ", path.join(__dirname, "../../templates-pdf/clinical-records-template.ejs"));
+
     // 3. Generar PDF con Puppeteer
-    const browser = await puppeteer.launch(
-      {
-        headless: true,
-        //slowMo: 300, sirve para darle tiempe a cada operacion
-        // userDataDir: userDataDir, // Establecer la carpeta de caché
-        args: [
-          "--no-sandbox",
-          "--disable-setuid-sandbox",
-          "--use-gl=egl",
-          "--blink-settings=imagesEnabled=false,cssEnabled=false",
-        ],
-        timeout: 0,
-        protocolTimeout: 300000,
-      }
-    );
+    const browser = await puppeteer.launch({
+      headless: true,
+      //slowMo: 300, sirve para darle tiempe a cada operacion
+      // userDataDir: userDataDir, // Establecer la carpeta de caché
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--use-gl=egl", "--blink-settings=imagesEnabled=false,cssEnabled=false"],
+      timeout: 0,
+      protocolTimeout: 300000,
+    });
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "networkidle0" });
 
@@ -112,4 +105,17 @@ const getPdfMedicalRecordsByPatient = async ({ params }: Request, res: Response)
   }
 };
 
-export { postMedicalRecord, getMedicalRecords, getAllMedicalRecordsByUser, medicalRecordsByMonth, getPdfMedicalRecordsByPatient };
+const deleteMedicalRecords = async ({ params }: Request, res: Response) => {
+  const { id } = params;
+  try {
+    const status = await deleteRecord(id);
+    res.status(200).json({
+      status: true,
+      message: "Ficha clínica eliminada",
+    }); // Respuesta exitosa
+  } catch (error) {
+    handleHttp(res, "No fue posible eliminar ficha clínica", error);
+  }
+};
+
+export { postMedicalRecord, getMedicalRecords, getAllMedicalRecordsByUser, medicalRecordsByMonth, getPdfMedicalRecordsByPatient, deleteMedicalRecords };

@@ -11,6 +11,20 @@ const insertMedicalRecord = async (medicalRecord: MedicalRecord) => {
   return responseInsert;
 };
 
+const deleteRecord = async (id: string) => {
+  try {
+    const responseDelete = await MedicalRecordModel.findByIdAndDelete(id);  
+    if (!responseDelete) {
+      throw new Error("No se encontró la ficha médica para eliminar");
+    } 
+    console.log("Ficha médica eliminada correctamente");
+    return responseDelete;
+  } catch (error) {
+    console.error("Error al eliminar la ficha médica:", error);
+    throw new Error(`Error al eliminar la ficha médica: ${error}`);
+  } 
+};
+
 const allMedicalRecords = async () => {
   const responseUsers = await MedicalRecordModel.find({}).populate([
     { path: 'service' },
@@ -87,5 +101,5 @@ const getRecordsByMonthAndYear = async (month: number, year: number) => {
 
 };
 
-export { allMedicalRecords, insertMedicalRecord, allMedicalRecordsUser, getRecordsByMonthAndYear };
+export { allMedicalRecords, insertMedicalRecord, allMedicalRecordsUser, getRecordsByMonthAndYear, deleteRecord };
 

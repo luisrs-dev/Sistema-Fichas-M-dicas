@@ -108,6 +108,7 @@ const demandByPatient = async (patientId: string) => {
 
 const updateAF = async (patientId: string, admissionFormData: any) => {
    
+  console.log('admissionFormData', admissionFormData);
   
   try {
     const patient = await PatientModel.findOne({ _id: patientId });

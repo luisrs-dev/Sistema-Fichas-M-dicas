@@ -13,6 +13,9 @@ const AdmissionFormSchema = new Schema<AdmissionForm>(
     discapacidad: {
       type: String
     }, 
+    opcion_discapacidad: {
+      type: String
+    }, 
     documentacion_regularizada: {
       type: String
     }, 

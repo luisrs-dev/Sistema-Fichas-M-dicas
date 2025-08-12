@@ -20,11 +20,7 @@ import {
 // import { logMiddleware } from "../middleware/log";
 const router = Router();
 
-router.get("/", getPatients);
 router.get("/profile/:profile", getPatientsByProfile);
-router.get("/:id", getPatientsById);
-router.post("/", postPatient);
-router.put("/:id", updatePatient);
 
 router.get("/demanda/:patientId", getDemand);
 router.post("/demanda", postDemand);
@@ -37,6 +33,11 @@ router.post("/ficha-ingreso/sistrat", postAdmissionFormSistrat);
 router.post("/sistrat", postPatientSistrat);
 router.post("/sistrat/alerts", updateAlerts);
 router.post("/sistrat/formCie10", formCie10);
+router.get("/", getPatients);
+router.get("/:id", getPatientsById);
+router.post("/", postPatient);
+router.put("/:id", updatePatient);
+
 
 
 //router.post("/sistrat/record", recordPatientSistrat);

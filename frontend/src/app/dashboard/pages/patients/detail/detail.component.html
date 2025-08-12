@@ -18,10 +18,10 @@
     <mat-icon style="color: white">print</mat-icon>
   </button>
 
-  @if(medicalRecords().length > 0){
+  @if(state().medicalRecords.length > 0){
     <div class="mat-elevation-z1 mt-4">
       <mat-accordion class="example-headers-align">
-        <mat-expansion-panel *ngFor="let medicalRecord of medicalRecords(); index as i" hideToggle>
+        <mat-expansion-panel *ngFor="let medicalRecord of state().medicalRecords; index as i" hideToggle>
           <mat-expansion-panel-header>
             <mat-panel-title class="mr-1">
               <mat-chip>{{ medicalRecord.date | date: 'dd-MM-yyyy' }}</mat-chip>
@@ -41,6 +41,10 @@
             <div class="record-item" *ngIf="medicalRecord.diagnostic"><strong>Diagnóstico:</strong> {{ medicalRecord.diagnostic }}</div>
             <div class="record-item" *ngIf="medicalRecord.pharmacologicalScheme"><strong>Esquema farmacológico:</strong> {{ medicalRecord.pharmacologicalScheme }}</div>
           </div>
+          <!--<button mat-stroked-button color="warn" class="my-2 mat-elevation-z1" >-->
+          <button mat-stroked-button color="warn" class="my-2 mat-elevation-z1" (click)="onDeleteMedicalRecord(medicalRecord._id)">
+        Eliminar</button>
+        <!--<pre>{{ medicalRecord | json }}</pre>-->
         </mat-expansion-panel>
       </mat-accordion>
     </div>
