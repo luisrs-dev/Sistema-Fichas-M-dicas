@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import {
   allProfesionalRoles,
-  insertProfesionalRole
+  insertProfesionalRole,
+  getProfesionalRole
 } from "../services/profesionalRole.service";
 import { handleHttp } from "../utils/error.handle";
 
@@ -9,6 +10,18 @@ const getProfesionalRoles = async (req: Request, res: Response) => {
   try {
     const responseProfesionalRoles = await allProfesionalRoles();
     res.send(responseProfesionalRoles);
+  } catch (error) {
+    handleHttp(res, "ERROR_GET_ITEMS", error);
+  }
+};
+
+const getProfesionalRoleById = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  console.log('getServiceById', id);
+  
+  try {
+    const responseServices = await getProfesionalRole(id);
+    res.send(responseServices);
   } catch (error) {
     handleHttp(res, "ERROR_GET_ITEMS", error);
   }
@@ -25,5 +38,6 @@ const postProfesionalRole = async ({ body }: Request, res: Response) => {
 
 export {
   getProfesionalRoles,
-  postProfesionalRole
+  postProfesionalRole,
+  getProfesionalRoleById
 };

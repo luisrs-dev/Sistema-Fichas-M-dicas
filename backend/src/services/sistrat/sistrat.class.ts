@@ -25,17 +25,33 @@ class Sistrat {
   }
 
   // Método para hacer login en Sistrat
-  async login() {
+  async login(center: string) {
     try {
       let page: Page = await this.scrapper.getPage();
       const loginUrl = "https://sistrat.senda.gob.cl/sistrat/"; // URL del formulario de login
       await this.scrapper.navigateToPage(page, loginUrl);
 
       await page.goto(loginUrl);
+      //Centro hombres; rmorales  Robe0011
+      //Centro mujeres; rmorales  Robe1010
+      //Centro alameda; rmoralesn  Robe1234
 
-      let usuario: string = "rmorales";
-      // Para cada genero se asigna unaa clave diferente
-      let password: string | null = this.gender == Gender.Man ? "Robe0011" : "Robe1010";
+      let usuario: string = "";
+      let password: string = "";
+      if(center == 'mujeres'){
+        usuario = "rmorales";
+        password = "Robe1010";
+      }
+
+      if(center == 'hombres'){
+        usuario = "rmorales";
+        password = "Robe0011";
+      }
+
+      if(center == 'alameda'){
+        usuario = "rmoralesn";
+        password = "Robe1234";
+      }
 
       await this.scrapper.waitAndType(page, "#txr_usuario", usuario);
       await this.scrapper.waitForSeconds(4);
@@ -52,8 +68,17 @@ class Sistrat {
   }
 
   async crearDemanda(patient: Patient) {
+    const center = patient.sistratCenter;
     this.gender = patient.sex;
-    let page: Page = await this.login();
+    console.log('center', center);
+    
+    let page: Page = await this.login(center);
+
+      // Manejo de alertas / confirm / prompt
+    page.on('dialog', async dialog => {
+      console.log('Se detectó un diálogo:', dialog.message());
+      await dialog.accept(); // O dialog.dismiss() si quieres cancelarlo
+    });
 
     try {
       await this.listActiveDemands(page);
@@ -94,16 +119,11 @@ class Sistrat {
       await this.scrapper.setSelectValue(page, "#sel_intervencion_a_b", patient.interventionAB);
       await this.scrapper.waitAndType(page, "#obs", patient.observations);
       //await this.scrapper.setSelectValue(page, "#selcomuna", "150");
-      //await this.scrapper.clickButton(page, "#mysubmit");
+      await this.scrapper.clickButton(page, "#mysubmit");
 
-      
-
-
-      
-
-      await this.scrapper.waitForSeconds(90);
-      // await this.listActiveDemands(page);
-      // await this.setDataSistrat(page, patient);
+      //await this.scrapper.waitForSeconds(90);
+       await this.listActiveDemands(page);
+       await this.setDataSistrat(page, patient);
 
       return true;
     } catch (error) {
@@ -194,7 +214,7 @@ class Sistrat {
     const data: RowData[] = []; // Cambiar aquí el tipo a RowData[]
 
     this.gender = patient.sex;    
-    let page: Page = await this.login();
+    let page: Page = await this.login(patient.sistratCenter);
 
     try {
       await this.scrapper.clickButton(page, "#flyout2"); // Botón demandas activas
@@ -384,7 +404,7 @@ class Sistrat {
 
   async updateAlerts(patient: Patient) {
     this.gender = patient.sex;
-    let page: Page = await this.login();
+    let page: Page = await this.login(patient.sistratCenter);
     await this.scrapper.clickButton(page, "#flyout");
     await this.scrapper.clickButton(page, 'a[href="php/consultar_paciente.php"].ui-corner-all');
     await this.scrapper.clickButton(page, "#filtrar");
@@ -468,7 +488,7 @@ class Sistrat {
 
   async updateFormCie10(patient: Patient, optionSelected: string) {
     this.gender = patient.sex;
-    let page: Page = await this.login();
+    let page: Page = await this.login(patient.sistratCenter);
     await this.scrapper.clickButton(page, "#flyout");
     await this.scrapper.clickButton(page, 'a[href="php/consultar_paciente.php"].ui-corner-all');
     await this.scrapper.clickButton(page, "#filtrar");

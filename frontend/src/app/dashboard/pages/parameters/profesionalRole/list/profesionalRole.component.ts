@@ -21,7 +21,7 @@ export default class profesionalRoleComponent {
 
   public profesionalRoles: any[] = [];
 
-  displayedColumns: string[] = ['name', 'services'];
+  displayedColumns: string[] = ['name', 'services', 'actions'];
   dataSource = [];
   ngOnInit() {
     this.loadProfesionalRoles();
@@ -29,6 +29,27 @@ export default class profesionalRoleComponent {
 
   loadProfesionalRoles() {
     this.searchResults$ =  this.profesionalRoleService.getProfesionalRoles();
+    
+  }
+
+  onEditProfesionalRole(id: string){
+    console.log('editing', id);
+    const dialogRef = this.dialog.open(NewProfesionalRole, {
+      width: '40%',
+      data: {id}
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      this.loadProfesionalRoles();
+
+      this.searchResults$.subscribe( response => {
+        console.log(response);
+      })
+      
+      if (result) {
+        this.loadProfesionalRoles();
+      }
+    });
     
   }
   
@@ -42,16 +63,10 @@ export default class profesionalRoleComponent {
 
       this.searchResults$.subscribe( response => {
         console.log(response);
-        
       })
       
       if (result) {
         this.loadProfesionalRoles();
-        // this.searchResults$ = this.parameterService.getPermissions();
-
-        // this.parameterService.getPermissions().subscribe((permissions) => {
-        //   this.tableData = permissions;
-        // });
       }
     });
     

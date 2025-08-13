@@ -136,6 +136,13 @@ export const routes: Routes = [
           import('./dashboard/pages/parameters/profesionalRole/list/profesionalRole.component'),
       },
       {
+        path: 'profesional-roles/:id',
+        title: 'Cargos',
+        data: { icon: 'manage_accounts', parameter: true},
+        loadComponent: () =>
+          import('./dashboard/pages/parameters/profesionalRole/list/profesionalRole.component'),
+      },
+      {
         path: 'prestaciones',
         title: 'Prestaciones',
         data: { icon: 'manage_accounts', parameter: true},
