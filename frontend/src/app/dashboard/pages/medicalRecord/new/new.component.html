@@ -39,9 +39,11 @@
                     <mat-form-field appearance="outline" class="w-full">
                       <mat-label>Prestación</mat-label>
                       <mat-select formControlName="service">
+                        <mat-option value="informacion">Información</mat-option>
+                        <mat-option value="nosepresenta">No se presenta</mat-option>
                         @for (service of services; track $index) {
                         <mat-option value="{{ service._id }}">{{ service.description }}</mat-option>
-                        }
+                      }
                       </mat-select>
                     </mat-form-field>
                     <span *ngIf="isValidField('service')" class="text-red-500"> Campo requerido </span>
