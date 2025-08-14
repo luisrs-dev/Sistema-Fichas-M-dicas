@@ -20,14 +20,17 @@ const updateUserPassword = async (id: string, password: string) => {
 };
 
 const registerNewUser = async (user: any, imageFile: Express.Multer.File | undefined) => {
-  const userFetched = await UserModel.findOne({ email: user.email });
+  
+// Normalizar el email a minúsculas
+  const email = user.email.toLowerCase().trim();
+const userFetched = await UserModel.findOne({ email});
   if (userFetched) return "ALREADY_EXIST";
 
   console.log('data imageFile en registerNewUser', imageFile);
   const passHash = await encrypt(user.password);
   const newUser = await UserModel.create({
     name: user.name,
-    email: user.email,
+    email,
     password: passHash,
     profile: user.profile,
     permissions: user.permissions,
@@ -65,13 +68,14 @@ const updateUser = async (user: any, imageFile: Express.Multer.File | undefined)
 
 const loginUser = async ({ email, password }: Auth) => {
   try {
-    const userFetched = await UserModel.findOne({ email }).populate(["permissions", "programs", "profile"]);
+	const emailLowercase = email.toLowerCase().trim();
+    const userFetched = await UserModel.findOne({ email: emailLowercase }).populate(["permissions", "programs", "profile"]);
     if (!userFetched) return { status: false, msg: "No existe usuario" };
 
     const passwordHash = userFetched.password;
     const isCorrect = await verified(password, passwordHash);
     if (!isCorrect) return { status: false, msg: "Credenciales incorrectas" };
-    const token = jsonwebtoken.sign({ email }, JWT_SECRET, { expiresIn: "1h" });
+    const token = jsonwebtoken.sign({ emailLowercase }, JWT_SECRET, { expiresIn: "1h" });
 
     const { password: onlyPassword, ...userWithoutPass } = userFetched.toObject(); // Convertir a objeto plano
 
