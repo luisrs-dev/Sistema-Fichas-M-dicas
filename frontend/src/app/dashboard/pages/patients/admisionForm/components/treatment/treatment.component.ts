@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, Input } from '@angular/core';
 import { MaterialModule } from '../../../../../../angular-material/material.module';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -17,6 +17,8 @@ import { FormBaseComponent } from '../form-base.component';
 export class TreatmentComponent extends FormBaseComponent {
   private fb = inject(FormBuilder);
 
+  @Input() rut: string;
+  
   ngOnInit() {
     this.form = this.fb.group({
       txtfecha_ingreso_tratamiento: ['', []],
@@ -31,6 +33,8 @@ export class TreatmentComponent extends FormBaseComponent {
 
     // Método de componente base
     this.fillFormWithAdmissionData();
-    this.form.get('txtrut')?.setValue(this.admissionForm?.txtrut || '');
+    this.form.get('txtrut')?.setValue(this.rut || this.admissionForm?.txtrut);
+    this.form.get('txtrut')?.disable();
+
   }
 }

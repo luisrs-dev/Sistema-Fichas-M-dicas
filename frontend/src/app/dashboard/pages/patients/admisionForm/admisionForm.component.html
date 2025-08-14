@@ -39,7 +39,7 @@
         <clinical-diagnosis-form [admissionForm]="admissionForm" />
       </mat-tab>
 
-      <mat-tab label="Tratamiento/Convenio "><treatment-form [admissionForm]="admissionForm" /></mat-tab>
+      <mat-tab label="Tratamiento/Convenio "><treatment-form [rut]="patient.rut" [admissionForm]="admissionForm" /></mat-tab>
 
       <mat-tab label="Diagnósitco de Int. Social"><social-diagnosis-form [admissionForm]="admissionForm" /> </mat-tab>
       }
