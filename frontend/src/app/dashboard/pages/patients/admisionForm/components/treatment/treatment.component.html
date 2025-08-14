@@ -43,7 +43,7 @@
         <mat-label>Tipo programa</mat-label>
         <mat-select formControlName="seltipo_programa">
           <mat-option value="null">Seleccione una opción</mat-option>
-          <option value="1">Programa Población General</option>
+          <mat-option value="1">Programa Población General</mat-option>
           <mat-option value="2">Programa Específico Mujeres</mat-option>
         </mat-select>
         <span *ngIf="isValidField('seltipo_programa')" class="text-red-500"> Debe seleccionar una opción </span>
@@ -53,6 +53,7 @@
     <div class="col-6">
       <mat-form-field class="w-full" appearance="outline">
         <mat-label>Tipo plan</mat-label>
+        <!--// Modificar si es mujeres u hombres-->
         <mat-select formControlName="seltipo_plan">
           <mat-option value="null">Seleccione una opción</mat-option>
           <mat-option value="15">PG-PR</mat-option>
@@ -69,7 +70,7 @@
         <mat-label>Usuario de tribunales tratamiento de drogas</mat-label>
         <mat-select formControlName="selprograma_tribunales">
           <mat-option value="null">Seleccione una opción</mat-option>
-          <mat-option value="18">M-PR</mat-option>
+          <mat-option value="No">No</mat-option>
         </mat-select>
         <span *ngIf="isValidField('selprograma_tribunales')" class="text-red-500"> Debe seleccionar una opción </span>
       </mat-form-field>

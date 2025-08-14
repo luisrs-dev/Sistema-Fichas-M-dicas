@@ -31,5 +31,6 @@ export class TreatmentComponent extends FormBaseComponent {
 
     // Método de componente base
     this.fillFormWithAdmissionData();
+    this.form.get('txtrut')?.setValue(this.admissionForm?.txtrut || '');
   }
 }

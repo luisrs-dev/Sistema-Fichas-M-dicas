@@ -24,11 +24,11 @@ import { FormCie10Component } from './components/formCie10/formCie10.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class ListPatientsComponent {
-  displayedColumns: string[] = ['codigoSistrat', 'name', 'program', 'phone',  'fonasa', 'alertas', 'actions'];
+  displayedColumns: string[] = ['codigoSistrat', 'name', 'program', 'phone', 'alertas', 'actions'];
   //displayedColumns: string[] = ['codigoSistrat', 'name', 'program', 'phone', 'admissionDate', 'fonasa', 'alertas', 'actions'];
   dataSource = new MatTableDataSource<Patient>([]);
   private patientService = inject(PatientService);
-  private authService = inject(AuthService);
+  public authService = inject(AuthService);
   public dialog = inject(MatDialog);
 
 
@@ -42,7 +42,10 @@ export default class ListPatientsComponent {
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
 
-  ngOnInit(): void {
+  ngOnInit(): void {    
+    if(this.authService.isAdmin()){
+      this.displayedColumns = ['codigoSistrat', 'name', 'program', 'phone', 'fonasa', 'alertas', 'actions'];
+    }
     this.dataSource.filterPredicate = (data: any, filter: string) => {
       // Convertir el filtro a minúsculas para una comparación sin distinción de mayúsculas y minúsculas
       const lowerCaseFilter = filter.trim().toLowerCase();
