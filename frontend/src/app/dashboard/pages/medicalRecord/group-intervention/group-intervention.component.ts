@@ -1,20 +1,7 @@
-//import { ChangeDetectionStrategy, Component } from '@angular/core';
-
-//@Component({
-//  selector: 'app-group-intervention',
-//  standalone: true,
-//  imports: [],
-//  templateUrl: './group-intervention.component.html',
-//  styleUrl: './group-intervention.component.css',
-//  changeDetection: ChangeDetectionStrategy.OnPush,
-//})
-//export class GroupInterventionComponent { }
-
-
 
 import { CommonModule, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatChipsModule } from '@angular/material/chips';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -71,9 +58,11 @@ export default class GroupInterventionComponent {
   public services: any[];
   public hideServiceSelect: boolean = false;
   // public data: { patient: Patient; latestMedicalRecordWithScheme: MedicalRecord | null };
-  public patients: Patient[] = [];
+  public patients = signal<Patient[]>([]);
+  public patientsList  = new FormControl('');
+  public patientsListNames: string[]  = [];
 
-  response$: Observable<{patient: Patient, medicalRecords: MedicalRecord[]}>;
+
   readonly panelOpenState = signal(false);
 
   patientId = signal<string | null>(null);
@@ -89,7 +78,8 @@ export default class GroupInterventionComponent {
     console.log('programsIDs', this.programsIds);
        this.patientService.getPatients(this.programsIds).subscribe((patients) => {
         console.log('patients', patients);
-        this.patients = patients;
+        this.patients.set(patients);
+        this.patientsListNames = this.patients().map( patient => patient.name);
       });
     
 
@@ -189,6 +179,11 @@ export default class GroupInterventionComponent {
     }
 
     return parts.length > 0 ? parts.join(' ') : '0 días';
+  }
+
+  removePatient(patient: any){
+    console.log('remove patient: ',patient);
+    
   }
 
 }

@@ -1,142 +1,160 @@
 <div>
   <div class="section">
-    <pre>{{ patients }}</pre>
-      <ng-container *ngIf="patients && patients.length > 0; else loading">
-        <!-- <div *ngIf="patient$ | async as patient; else loading"> -->
-        <div class="mt-2 mb-8">
-          <div class="clinical-record mb-3">
-            <div class="container">
-              <h2>Intervención Grupal</h2>
-              <form [formGroup]="groupInterventionForm" autocomplete="off" (ngSubmit)="onSave()">
-                <div class="grid">
-                  <div class="col-4">
-                    <mat-form-field class="w-full" appearance="outline">
-                      <mat-label>Fecha</mat-label>
-                      <input matInput formControlName="date" [matDatepicker]="picker" />
-                      <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
-                      <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-                      <mat-datepicker #picker></mat-datepicker>
-                    </mat-form-field>
-                  </div>
-                  <!-- <div class="col-3">
-                <mat-form-field appearance="outline" class="w-full">
-                  <mat-label>Tipo de entrada</mat-label>
-                  <mat-select formControlName="entryType">
-                    @if(data.patient.program.name.includes('PAI')){
-                      <mat-option value="A Distancia">A Distancia</mat-option>
+    @if(patients()){
+      <div class="mt-2 mb-8">
+        <div class="clinical-record mb-3">
+          <div class="container">
+            <h2>Intervención Grupal</h2>
+            <form [formGroup]="groupInterventionForm" autocomplete="off" (ngSubmit)="onSave()">
+              <div class="grid">
+                <div class="patients">
+                  <mat-chip-set aria-label="Fish selection">
+                    @for (patient of patientsList.value; track $index) {
+                      <mat-chip (click)="removePatient(patient)">{{ patient }}</mat-chip>
                     }
-                      <mat-option value="Presencial">Presencial</mat-option>
-                      <mat-option value="No se presenta">No se presenta</mat-option>
-                      <mat-option value="Informacion">Información</mat-option>
-                  </mat-select>
-                </mat-form-field>
-                <span *ngIf="isValidField('entryType')" class="text-red-500">
-                  Campo requerido
-                </span>
-              </div> -->
-
-                  @if(!hideServiceSelect){
-                  <div class="col-4">
-                    <mat-form-field appearance="outline" class="w-full">
-                      <mat-label>Prestación</mat-label>
-                      <mat-select formControlName="service">
-                        @for (service of services; track $index) {
-                        <mat-option value="{{ service._id }}">{{ service.description }}</mat-option>
+                  </mat-chip-set>
+                  <mat-form-field class="patients__select">
+                    <mat-label>Seleccionar Pacientes</mat-label>
+                    <mat-select  [formControl]="patientsList" multiple>
+                      @for (patientName of patientsListNames; track patientName) {
+                        <mat-option [value]="patientName">{{ patientName }}</mat-option>
                       }
-                      </mat-select>
-                    </mat-form-field>
-                    <span *ngIf="isValidField('service')" class="text-red-500"> Campo requerido </span>
-                  </div>
-                  }
+                    </mat-select>
+                  </mat-form-field>
 
-                  <div class="col-12">
-                    <mat-form-field appearance="outline" class="w-full">
-                      <mat-label>Objetivo de intervención</mat-label>
-                      <input formControlName="interventionObjective" matInput placeholder="Actividad" />
-                    </mat-form-field>
-                    <span *ngIf="isValidField('interventionObjective')" class="text-red-500"> Campo requerido </span>
-                  </div>
                 </div>
+                <!--<pre>{{ patientsList.value| json}}</pre>-->
 
-                <div class="grid">
-                  <div class="col-12">
-                    <mat-form-field class="w-full" appearance="outline">
-                      <mat-label>Elementos relevantes de la intervención</mat-label>
-                      <textarea formControlName="relevantElements" rows="5" matInput></textarea>
-
-                      <span *ngIf="isValidField('relevantElements')" class="form-text text-danger"> Este campo es requerido </span>
-                      <mat-icon matSuffix>person</mat-icon>
-                      <!-- <mat-hint>Hint</mat-hint> -->
-                    </mat-form-field>
-                  </div>
-
-                  <!-- TODO cambiar lógica por booleanos en moodelo user y setear valor en creación o ediciónde usuario -->
-                  @if(user.profile.name == 'Psiquiatra' || user.profile.name == 'Médico'){
-                  <div class="col-12">
-                    <!-- <mat-form-field class="w-full" appearance="outline">
-                      <mat-label>Diagnóstico</mat-label>
-                      <textarea
-                        matInput
-                        formControlName="diagnostic"
-                        placeholder="Sólo lo escribe un psiquiatra"
-                      ></textarea>
-                      <span
-                        *ngIf="isValidField('diagnostic')"
-                        class="form-text text-danger"
-                      >
-                        Campo requerido
-                      </span>
-                      <mat-icon matSuffix>description</mat-icon>
-                    </mat-form-field> -->
-
-                    <mat-form-field class="w-full" appearance="outline">
-                      <mat-label>Diagnóstico</mat-label>
-                      <mat-select formControlName="diagnostic">
-                        <!-- <mat-select formControlName="seldiagn_psiquiatrico_cie3"> -->
-                        <mat-option value="">Seleccione una opción</mat-option>
-                        <mat-option value="1">Trastornos mentales orgánicos, incluidos los sintomáticos</mat-option>
-                        <mat-option value="2">Esquizofrenia, trastorno esquizotípico y trastornos de ideas delirantes</mat-option>
-                        <mat-option value="3">Trastornos del humor (afectivos).</mat-option>
-                        <mat-option value="4">Trastornos neuróticos, secundarios a situaciones estresantes y somatomorfos</mat-option>
-                        <mat-option value="5">Trastornos de la personalidad y del comportamiento del adulto</mat-option>
-                        <mat-option value="6">Trastornos del comportamiento asociados a disfunciones fisiológicas y a factores somáticos</mat-option>
-                        <mat-option value="7">Retraso Mental</mat-option>
-                        <mat-option value="8">Trastornos del Desarrollo Psicológico</mat-option>
-                        <mat-option value="9">Trs. del comportamiento y de las emociones de comienzo habitual en la infancia y adolescencia</mat-option>
-                        <mat-option value="10">En estudio</mat-option>
-                        <mat-option value="11">Sin trastorno</mat-option>
-                        <mat-option value="12">Trastornos de la conducta alimentaria </mat-option>
-                        <mat-option value="13">Trastornos de los hábitos y del control de los impulsos </mat-option>
-                      </mat-select>
-                      <!-- <span *ngIf="isValidField('seldiagn_psiquiatrico_cie3')" class="text-red-500"> Debe seleccionar una opción </span> -->
-                    </mat-form-field>
-                  </div>
-
-                  <div class="col-12">
-                    <mat-form-field class="w-full" appearance="outline">
-                      <mat-label>Esquema Farmacológico</mat-label>
-                      <textarea formControlName="pharmacologicalScheme" rows="5" matInput></textarea>
-
-                      <span *ngIf="isValidField('pharmacologicalScheme')" class="form-text text-danger"> El nombre es requerido </span>
-                      <mat-icon matSuffix>person</mat-icon>
-                      <!-- <mat-hint>Hint</mat-hint> -->
-                    </mat-form-field>
-                  </div>
-                  }
-
-                  <div class="col-6">
-                    <button mat-stroked-button color="primary" mat-dialog-close class="mr-1">Cerrar</button>
-                    <button mat-flat-button type="submit" color="primary">Registrar</button>
-                  </div>
+              </div>
+              <div class="grid">
+                <div class="col-4">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>Fecha</mat-label>
+                    <input matInput formControlName="date" [matDatepicker]="picker" />
+                    <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
+                    <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                    <mat-datepicker #picker></mat-datepicker>
+                  </mat-form-field>
                 </div>
-              </form>
-            </div>
-
+                <!-- <div class="col-3">
+              <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Tipo de entrada</mat-label>
+                <mat-select formControlName="entryType">
+                  @if(data.patient.program.name.includes('PAI')){
+                    <mat-option value="A Distancia">A Distancia</mat-option>
+                  }
+                    <mat-option value="Presencial">Presencial</mat-option>
+                    <mat-option value="No se presenta">No se presenta</mat-option>
+                    <mat-option value="Informacion">Información</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <span *ngIf="isValidField('entryType')" class="text-red-500">
+                Campo requerido
+              </span>
+            </div> -->
+  
+                @if(!hideServiceSelect){
+                <div class="col-4">
+                  <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Prestación</mat-label>
+                    <mat-select formControlName="service">
+                      @for (service of services; track $index) {
+                      <mat-option value="{{ service._id }}">{{ service.description }}</mat-option>
+                    }
+                    </mat-select>
+                  </mat-form-field>
+                  <span *ngIf="isValidField('service')" class="text-red-500"> Campo requerido </span>
+                </div>
+                }
+  
+                <div class="col-12">
+                  <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Objetivo de intervención</mat-label>
+                    <input formControlName="interventionObjective" matInput placeholder="Actividad" />
+                  </mat-form-field>
+                  <span *ngIf="isValidField('interventionObjective')" class="text-red-500"> Campo requerido </span>
+                </div>
+              </div>
+  
+              <div class="grid">
+                <div class="col-12">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>Elementos relevantes de la intervención</mat-label>
+                    <textarea formControlName="relevantElements" rows="5" matInput></textarea>
+  
+                    <span *ngIf="isValidField('relevantElements')" class="form-text text-danger"> Este campo es requerido </span>
+                    <mat-icon matSuffix>person</mat-icon>
+                    <!-- <mat-hint>Hint</mat-hint> -->
+                  </mat-form-field>
+                </div>
+  
+                <!-- TODO cambiar lógica por booleanos en moodelo user y setear valor en creación o ediciónde usuario -->
+                @if(user.profile.name == 'Psiquiatra' || user.profile.name == 'Médico'){
+                <div class="col-12">
+                  <!-- <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>Diagnóstico</mat-label>
+                    <textarea
+                      matInput
+                      formControlName="diagnostic"
+                      placeholder="Sólo lo escribe un psiquiatra"
+                    ></textarea>
+                    <span
+                      *ngIf="isValidField('diagnostic')"
+                      class="form-text text-danger"
+                    >
+                      Campo requerido
+                    </span>
+                    <mat-icon matSuffix>description</mat-icon>
+                  </mat-form-field> -->
+  
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>Diagnóstico</mat-label>
+                    <mat-select formControlName="diagnostic">
+                      <!-- <mat-select formControlName="seldiagn_psiquiatrico_cie3"> -->
+                      <mat-option value="">Seleccione una opción</mat-option>
+                      <mat-option value="1">Trastornos mentales orgánicos, incluidos los sintomáticos</mat-option>
+                      <mat-option value="2">Esquizofrenia, trastorno esquizotípico y trastornos de ideas delirantes</mat-option>
+                      <mat-option value="3">Trastornos del humor (afectivos).</mat-option>
+                      <mat-option value="4">Trastornos neuróticos, secundarios a situaciones estresantes y somatomorfos</mat-option>
+                      <mat-option value="5">Trastornos de la personalidad y del comportamiento del adulto</mat-option>
+                      <mat-option value="6">Trastornos del comportamiento asociados a disfunciones fisiológicas y a factores somáticos</mat-option>
+                      <mat-option value="7">Retraso Mental</mat-option>
+                      <mat-option value="8">Trastornos del Desarrollo Psicológico</mat-option>
+                      <mat-option value="9">Trs. del comportamiento y de las emociones de comienzo habitual en la infancia y adolescencia</mat-option>
+                      <mat-option value="10">En estudio</mat-option>
+                      <mat-option value="11">Sin trastorno</mat-option>
+                      <mat-option value="12">Trastornos de la conducta alimentaria </mat-option>
+                      <mat-option value="13">Trastornos de los hábitos y del control de los impulsos </mat-option>
+                    </mat-select>
+                    <!-- <span *ngIf="isValidField('seldiagn_psiquiatrico_cie3')" class="text-red-500"> Debe seleccionar una opción </span> -->
+                  </mat-form-field>
+                </div>
+  
+                <div class="col-12">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>Esquema Farmacológico</mat-label>
+                    <textarea formControlName="pharmacologicalScheme" rows="5" matInput></textarea>
+  
+                    <span *ngIf="isValidField('pharmacologicalScheme')" class="form-text text-danger"> El nombre es requerido </span>
+                    <mat-icon matSuffix>person</mat-icon>
+                    <!-- <mat-hint>Hint</mat-hint> -->
+                  </mat-form-field>
+                </div>
+                }
+  
+                <div class="col-6">
+                  <button mat-stroked-button color="primary" mat-dialog-close class="mr-1">Cerrar</button>
+                  <button mat-flat-button type="submit" color="primary" disabled>Registrar (Beta)</button>
+                </div>
+              </div>
+            </form>
           </div>
+  
         </div>
-      </ng-container>
-    
+      </div>
+    }@else {
+      <ng-template #loading>Cargando</ng-template>
+    }
   </div>
 </div>
 
-<ng-template #loading>Cargando</ng-template>
