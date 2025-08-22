@@ -41,7 +41,9 @@ const userFetched = await UserModel.findOne({ email});
 };
 
 const updateUser = async (user: any, imageFile: Express.Multer.File | undefined) => {
-  const userFetched = await UserModel.findOne({ email: user.email });
+
+  const queryEmail = user.email.trim();
+  const userFetched = await UserModel.findOne({ email: queryEmail });
   if (!userFetched) return "USER_NOT_FOUND"; // Si el usuario no existe, retornar un mensaje
 
   // Si se ha proporcionado una contraseña nueva, encriptarla, de lo contrario, mantener la actual
@@ -50,7 +52,7 @@ const updateUser = async (user: any, imageFile: Express.Multer.File | undefined)
   try {
     // Actualizar los datos del usuario
     const updatedUser = await UserModel.updateOne(
-      { email: user.email }, // Filtro para buscar al usuario
+      { email: queryEmail }, // Filtro para buscar al usuario
       {
         name: user.name || userFetched.name,
         //password: passHash,

@@ -57,6 +57,13 @@ export const routes: Routes = [
           import('./dashboard/pages/patients/newPatient/newPatient.component'),
       },
       {
+        path: 'patients/intervencion-grupal',
+        title: 'Intervención Grupal',
+        data: { icon: 'group', child: true },
+        loadComponent: () =>
+          import('./dashboard/pages/medicalRecord/group-intervention/group-intervention.component'),
+      },
+      {
         path: 'patients/nuevo/:id',
         title: 'Editar demanda',
         data: { icon: 'group', child: true },

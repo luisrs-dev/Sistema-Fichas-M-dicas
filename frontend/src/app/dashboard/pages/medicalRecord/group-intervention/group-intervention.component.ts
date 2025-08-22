@@ -1,3 +1,17 @@
+//import { ChangeDetectionStrategy, Component } from '@angular/core';
+
+//@Component({
+//  selector: 'app-group-intervention',
+//  standalone: true,
+//  imports: [],
+//  templateUrl: './group-intervention.component.html',
+//  styleUrl: './group-intervention.component.css',
+//  changeDetection: ChangeDetectionStrategy.OnPush,
+//})
+//export class GroupInterventionComponent { }
+
+
+
 import { CommonModule, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, Inject, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -42,11 +56,11 @@ import { MatExpansionModule } from '@angular/material/expansion';
   ],
 
   providers: [provideNativeDateAdapter(), DatePipe],
-  templateUrl: './new.component.html',
-  styleUrl: './new.component.scss',
+  templateUrl: './group-intervention.component.html',
+  styleUrl: './group-intervention.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export default class NewMedicalRecord {
+export default class GroupInterventionComponent {
   private fb = inject(FormBuilder);
   private medicalRecordService = inject(MedicalRecordService);
   private authService = inject(AuthService);
@@ -68,48 +82,22 @@ export default class NewMedicalRecord {
   patientId = signal<string | null>(null);
 
   ngOnInit(): void {
-
-    const id = this.route.snapshot.paramMap.get('id');
-    const groupIntervention = this.route.snapshot.paramMap.get('groupIntervention');
-    console.log('groupIntervention', groupIntervention);
     
-    if (id) {
-      this.response$ = this.patientService.getPatientById(id);
-    }
-    this.route.paramMap.subscribe((params) => {
-      const id = params.get('id');
-      console.log('id', id);
+      // this.patientService.getPatients().subscribe((response) => {
+      //  console.log('response', response);
+      //});
 
-      if (id) this.patientId.set(id);
+    //this.user = this.authService.getUser();
+    //console.log('this.user', this.user);
 
-      this.patientService.getPatientById(id!).subscribe((response) => {
-        console.log('response', response);
-        this.patient = response.patient;
-
-
-        this.latestMedicalRecordWithScheme = this.medicalRecordService.getLastPharmacologicalScheme(response.medicalRecords);
-        console.log('latestMedicalRecordWithScheme', this.latestMedicalRecordWithScheme);
-
-        this.medicalRecordForm.get('entryType')?.valueChanges.subscribe((value) => {
-          this.hideServiceSelect = value === 'Informacion';
-          if (this.hideServiceSelect) {
-            this.medicalRecordForm.get('service')?.reset(); // Resetea el campo service si se oculta
-          }
-        });
-      });
-    });
-
-    this.user = this.authService.getUser();
-    console.log('this.user', this.user);
-
-    this.userService.getServicesByProfile(this.user.profile._id).subscribe((services) => {
-      this.services = services;
-      console.log('services', services);
-    });
+    //this.userService.getServicesByProfile(this.user.profile._id).subscribe((services) => {
+    //  this.services = services;
+    //  console.log('services', services);
+    //});
   }
 
 
-  public medicalRecordForm: FormGroup = this.fb.group({
+  public groupInterventionForm: FormGroup = this.fb.group({
     date: [new Date(), [Validators.minLength(3), Validators.required]],
     // entryType: [this.setValueEntryType(), [Validators.required]],
     service: ['', [Validators.minLength(3), Validators.required]],
@@ -125,13 +113,13 @@ export default class NewMedicalRecord {
   // }
 
   onSave() {
-    if (this.medicalRecordForm.invalid) {
-      this.medicalRecordForm.markAllAsTouched();
+    if (this.groupInterventionForm.invalid) {
+      this.groupInterventionForm.markAllAsTouched();
       return;
     }
     this.medicalRecordService
       .addMedicalRecord({
-        ...this.medicalRecordForm.value,
+        ...this.groupInterventionForm.value,
         patient: this.patientId(),
         registeredBy: this.user._id
       })
@@ -147,7 +135,7 @@ export default class NewMedicalRecord {
   }
 
   isValidField(field: string): boolean {
-    return Boolean(this.medicalRecordForm.controls[field].errors) && this.medicalRecordForm.controls[field].touched;
+    return Boolean(this.groupInterventionForm.controls[field].errors) && this.groupInterventionForm.controls[field].touched;
   }
 
   get fullName(): string{
