@@ -13,30 +13,26 @@
 
 
 import { CommonModule, DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, Inject, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatChipsModule } from '@angular/material/chips';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Report } from 'notiflix';
+import { Observable } from 'rxjs';
 import { MaterialModule } from '../../../../angular-material/material.module';
 import { AuthService } from '../../../../auth/auth.service';
 import { User } from '../../../../auth/interfaces/login-response.interface';
 import { MedicalRecord } from '../../../interfaces/medicalRecord.interface';
 import { Patient } from '../../../interfaces/patient.interface';
+import { PatientService } from '../../patients/patient.service';
 import { UserService } from '../../users/user.service';
 import { MedicalRecordService } from '../medicalRecord.service';
-import { ValueEntryType } from '../../../interfaces/entryType.interface';
-import { Report } from 'notiflix';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'highcharts';
-import { Observable, switchMap } from 'rxjs';
-import { PatientService } from '../../patients/patient.service';
-import { MatExpansionModule } from '@angular/material/expansion';
 
 @Component({
   selector: 'app-new',
@@ -75,17 +71,27 @@ export default class GroupInterventionComponent {
   public services: any[];
   public hideServiceSelect: boolean = false;
   // public data: { patient: Patient; latestMedicalRecordWithScheme: MedicalRecord | null };
+  public patients: Patient[] = [];
 
   response$: Observable<{patient: Patient, medicalRecords: MedicalRecord[]}>;
   readonly panelOpenState = signal(false);
 
   patientId = signal<string | null>(null);
 
+  programsIds: string[] = [];
+
   ngOnInit(): void {
     
-      // this.patientService.getPatients().subscribe((response) => {
-      //  console.log('response', response);
-      //});
+
+
+    this.user = this.authService.getUser();
+    this.programsIds = this.user.programs.map((program) => program._id);
+    console.log('programsIDs', this.programsIds);
+       this.patientService.getPatients(this.programsIds).subscribe((patients) => {
+        console.log('patients', patients);
+        this.patients = patients;
+      });
+    
 
     //this.user = this.authService.getUser();
     //console.log('this.user', this.user);

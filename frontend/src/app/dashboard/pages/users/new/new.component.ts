@@ -43,7 +43,7 @@ export default class NewComponent {
   public imageFile: File | null = null; // Almacena el archivo seleccionado
   public imagePath: string | null = null;
 
-  public patientId: string;
+  public userId: string;
   public edit: boolean = false;
 
   public userForm: FormGroup = this.fb.group({
@@ -55,13 +55,13 @@ export default class NewComponent {
   });
 
   ngOnInit() {
-    this.patientId = this.route.snapshot.paramMap.get('id')!;
-    if (this.patientId) {
+    this.userId = this.route.snapshot.paramMap.get('id')!;
+    if (this.userId) {
       // Se actualiza form para que password no sea requerido
       // Cambio de clave debe hacerse en otro lugar
       this.userForm.get('password')?.setValidators([]);
       this.edit = true;
-      this.userService.getUserById(this.patientId).subscribe((response) => {
+      this.userService.getUserById(this.userId).subscribe((response) => {
         this.userForm.patchValue({
           name: response.user.name || '', // Si el campo está vacío, se usa un string vacío como fallback
           email: response.user.email || '',
@@ -117,7 +117,7 @@ export default class NewComponent {
     });
 
     if (this.edit) {
-      formData.append('patientId', this.patientId); // 'programs' será el nombre de campo para estos datos
+      formData.append('userId', this.userId); // 'programs' será el nombre de campo para estos datos
 
       this.userService.updateUser(formData).subscribe((response: any) => {
         this.router.navigateByUrl('/dashboard/users');
@@ -180,7 +180,7 @@ export default class NewComponent {
 
   updatePassword(password: string) {
     const body = {
-      id: this.patientId, // reemplaza por el email real
+      id: this.userId, // reemplaza por el email real
       password,
     };
     this.userService.updatePassword(body).subscribe({

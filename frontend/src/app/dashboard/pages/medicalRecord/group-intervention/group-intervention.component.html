@@ -1,6 +1,7 @@
 <div>
   <div class="section">
-      <ng-container *ngIf="response$ | async as data; else loading">
+    <pre>{{ patients }}</pre>
+      <ng-container *ngIf="patients && patients.length > 0; else loading">
         <!-- <div *ngIf="patient$ | async as patient; else loading"> -->
         <div class="mt-2 mb-8">
           <div class="clinical-record mb-3">
