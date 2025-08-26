@@ -1,18 +1,18 @@
 <div class="container p-4 pb-6">
   <form [formGroup]="userForm" autocomplete="off" (ngSubmit)="onSave()">
     <div>
-      <h1>@if (edit) {Editando}@else{Nuevo} Profasadesional</h1>
+      <h1>@if (edit) {Editando}@else{Nuevo} Profesional</h1>
 
       <div class="grid mt-4">
-        <div class="col flex flex-column">
-          <mat-form-field class="w-4" appearance="outline">
+        <div class="col-12 md:col-6 flex flex-column">
+          <mat-form-field class="w-full" appearance="outline">
             <mat-label>Nombre completo</mat-label>
             <input matInput formControlName="name" placeholder="Nombre profesional" />
             <span *ngIf="isValidField('name')" class="form-text text-danger"> El nombre es requerido </span>
             <mat-icon matSuffix>person</mat-icon>
             <!-- <mat-hint>Hint</mat-hint> -->
           </mat-form-field>
-          <mat-form-field class="w-4" appearance="outline">
+          <mat-form-field class="w-full" appearance="outline">
             <mat-label>Email</mat-label>
             <input matInput formControlName="email" placeholder="Correo electrónico" />
             <span *ngIf="isValidField('email')" class="text-red-500"> El email es requerido </span>
@@ -20,7 +20,7 @@
             <!-- <mat-hint>Hint</mat-hint> -->
           </mat-form-field>
           @if(!edit){
-          <mat-form-field class="w-4 mb-2" appearance="outline">
+          <mat-form-field class="w-full mb-2" appearance="outline">
             <mat-label>Password</mat-label>
             <input matInput formControlName="password" type="password" placeholder="Ingrese una clave" />
             <span *ngIf="isValidField('password')" class="text-red-500"> El password es requerido </span>
@@ -28,7 +28,7 @@
             <mat-hint>Clave que usará el profesional para ingresar a su cuenta</mat-hint>
           </mat-form-field>
           }
-          <mat-form-field appearance="outline" class="w-4">
+          <mat-form-field appearance="outline" class="w-full">
             <mat-label>Perfil</mat-label>
             <mat-select formControlName="profile">
               @for (profesionalRol of profesionalRoles; track $index) {
@@ -56,7 +56,7 @@
       </div>
     </div>
     <div class="grid">
-      <div class="col">
+      <div class="col-12 md:col-6">
         <h1>Permisos</h1>
         <div>
           @if(permissions$ | async; as permissions){ @for (permission of permissions; track $index) {
@@ -68,7 +68,7 @@
           } } @else{ Cargando... }
         </div>
       </div>
-      <div class="col">
+      <div class="col-12 md:col-6">
         <h1>Programas habilitados</h1>
         <div>
           @if(programs$ | async; as programs){ @for (program of programs; track $index) {
@@ -104,7 +104,7 @@
     <mat-divider class="mt-4 ">
     </mat-divider>
   <form (ngSubmit)="updatePassword(password.value)" class="example-form">
-    <div class="flex flex-column mt-4 w-4">
+    <div class="flex flex-column mt-4 w-full">
       <mat-form-field appearance="outline" class="example-full-width">
         <mat-label>Nueva contraseña</mat-label>
         <input #password matInput />
