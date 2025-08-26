@@ -1,4 +1,3 @@
-
 import { CommonModule, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -35,7 +34,7 @@ import { MedicalRecordService } from '../medicalRecord.service';
     MatInputModule,
     MatDividerModule,
     MatChipsModule,
-    MatExpansionModule
+    MatExpansionModule,
   ],
 
   providers: [provideNativeDateAdapter(), DatePipe],
@@ -59,9 +58,7 @@ export default class GroupInterventionComponent {
   public hideServiceSelect: boolean = false;
   // public data: { patient: Patient; latestMedicalRecordWithScheme: MedicalRecord | null };
   public patients = signal<Patient[]>([]);
-  public patientsList  = new FormControl('');
-  public patientsListNames: string[]  = [];
-
+  public patientsList = new FormControl<Patient[]>([]);
 
   readonly panelOpenState = signal(false);
 
@@ -70,28 +67,20 @@ export default class GroupInterventionComponent {
   programsIds: string[] = [];
 
   ngOnInit(): void {
-    
-
-
     this.user = this.authService.getUser();
     this.programsIds = this.user.programs.map((program) => program._id);
-    console.log('programsIDs', this.programsIds);
-       this.patientService.getPatients(this.programsIds).subscribe((patients) => {
-        console.log('patients', patients);
-        this.patients.set(patients);
-        this.patientsListNames = this.patients().map( patient => patient.name);
-      });
-    
+    this.patientService.getPatients(this.programsIds).subscribe((patients) => {
+      this.patients.set(patients);
+    });
 
-    //this.user = this.authService.getUser();
-    //console.log('this.user', this.user);
+    this.user = this.authService.getUser();
+    console.log('this.user', this.user);
 
-    //this.userService.getServicesByProfile(this.user.profile._id).subscribe((services) => {
-    //  this.services = services;
-    //  console.log('services', services);
-    //});
+    this.userService.getServicesByProfile(this.user.profile._id).subscribe((services) => {
+      this.services = services;
+      console.log('services', services);
+    });
   }
-
 
   public groupInterventionForm: FormGroup = this.fb.group({
     date: [new Date(), [Validators.minLength(3), Validators.required]],
@@ -103,39 +92,37 @@ export default class GroupInterventionComponent {
     pharmacologicalScheme: [''],
   });
 
-  // setValueEntryType(){
-  //   const valueEntryType = this.data.patient.program.name.includes('PAI') ? ValueEntryType.Distancia : null;
-  //   return valueEntryType;
-  // }
+  onPatientSelected() {
+    console.log('onPatientSelected');
+    console.log(this.patientsList.value);
+  }
 
   onSave() {
     if (this.groupInterventionForm.invalid) {
       this.groupInterventionForm.markAllAsTouched();
       return;
     }
+    
+    const patients = this.patientsList.value?.map( patient => patient._id);
+    
     this.medicalRecordService
       .addMedicalRecord({
         ...this.groupInterventionForm.value,
-        patient: this.patientId(),
-        registeredBy: this.user._id
+        patient: patients,
+        registeredBy: this.user._id,
       })
       .subscribe((user) => {
         console.log({ user });
-        // this.dialogRef.close(true);
-
-            // console.log('redirigiendo a  nueva ficha');
-            this.router.navigate(['dashboard/patient', this.patientId()]);
         Report.success('Registro exitoso', 'Ficha clínica registrada con éxito', 'Entendido');
       });
-
   }
 
   isValidField(field: string): boolean {
     return Boolean(this.groupInterventionForm.controls[field].errors) && this.groupInterventionForm.controls[field].touched;
   }
 
-  get fullName(): string{
-    return  `${this.patient.name} ${this.patient.secondSurname}`;
+  get fullName(): string {
+    return `${this.patient.name} ${this.patient.secondSurname}`;
   }
 
   get treatmentTime(): string {
@@ -181,9 +168,8 @@ export default class GroupInterventionComponent {
     return parts.length > 0 ? parts.join(' ') : '0 días';
   }
 
-  removePatient(patient: any){
-    console.log('remove patient: ',patient);
-    
+  removePatient(patient: Patient) {
+    const current = this.patientsList.value ?? [];
+    this.patientsList.setValue(current.filter((p) => p._id !== patient._id));
   }
-
 }

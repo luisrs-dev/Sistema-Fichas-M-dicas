@@ -7,21 +7,25 @@
             <h2>Intervención Grupal</h2>
             <form [formGroup]="groupInterventionForm" autocomplete="off" (ngSubmit)="onSave()">
               <div class="grid">
-                <div class="patients">
-                  <mat-chip-set aria-label="Fish selection">
-                    @for (patient of patientsList.value; track $index) {
-                      <mat-chip (click)="removePatient(patient)">{{ patient }}</mat-chip>
-                    }
-                  </mat-chip-set>
-                  <mat-form-field class="patients__select">
-                    <mat-label>Seleccionar Pacientes</mat-label>
-                    <mat-select  [formControl]="patientsList" multiple>
-                      @for (patientName of patientsListNames; track patientName) {
-                        <mat-option [value]="patientName">{{ patientName }}</mat-option>
+                <div class="col-6">
+                  <div class="patients">
+                    <mat-chip-set aria-label="Fish selection">
+                      @for (patient of patientsList.value; track $index) {
+                        <mat-chip (click)="removePatient(patient)">{{ patient.name }}
+                          <mat-icon matListItemIcon>close_small</mat-icon>
+                        </mat-chip>
                       }
-                    </mat-select>
-                  </mat-form-field>
-
+                    </mat-chip-set>
+                    <mat-form-field appearance="outline" class="patients__select">
+                      <mat-label>Seleccionar Pacientes</mat-label>
+                      <mat-select [formControl]="patientsList" multiple>
+                        @for (patient of patients(); track patient._id) {
+                          <mat-option (click)="onPatientSelected()" [value]="patient">{{ patient.name }}</mat-option>
+                        }
+                      </mat-select>
+                    </mat-form-field>
+  
+                  </div>
                 </div>
                 <!--<pre>{{ patientsList.value| json}}</pre>-->
 
@@ -144,7 +148,7 @@
   
                 <div class="col-6">
                   <button mat-stroked-button color="primary" mat-dialog-close class="mr-1">Cerrar</button>
-                  <button mat-flat-button type="submit" color="primary" disabled>Registrar (Beta)</button>
+                  <button mat-flat-button type="submit" color="primary">Registrar</button>
                 </div>
               </div>
             </form>

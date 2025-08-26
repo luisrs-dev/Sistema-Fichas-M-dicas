@@ -6,9 +6,23 @@ import { MedicalRecord } from "../interfaces/medicalRecord.interface";
 import MedicalRecordModel from "../models/medicalRecord.model";
 
 const insertMedicalRecord = async (medicalRecord: MedicalRecord) => {
+  
+    if (Array.isArray(medicalRecord.patient)) {
+      // Caso: varios pacientes → crear un registro por cada uno
+      const recordsToInsert = medicalRecord.patient.map((p) => ({
+        ...medicalRecord,
+        patient: new Types.ObjectId(p), // asegurar que sea ObjectId si viene como string
+      }));
 
-  const responseInsert = await MedicalRecordModel.create(medicalRecord);
-  return responseInsert;
+       const responseInsert = await MedicalRecordModel.insertMany(recordsToInsert);
+      return responseInsert;
+      
+    } else {
+      const responseInsert = await MedicalRecordModel.create(medicalRecord);
+      // Aquí TS ya sabe que patient es un ObjectId
+      return responseInsert;
+    }
+    
 };
 
 const deleteRecord = async (id: string) => {

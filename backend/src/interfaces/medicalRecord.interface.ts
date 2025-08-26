@@ -8,6 +8,6 @@ export interface MedicalRecord {
   interventionObjective: string;
   diagnostic: string;
   pharmacologicalScheme: string;
-  patient: Types.ObjectId;
+  patient: Types.ObjectId | string[];
   registeredBy: Types.ObjectId;
 }
