@@ -2,7 +2,8 @@ import { Request, Response } from "express";
 import {
   allProfesionalRoles,
   insertProfesionalRole,
-  getProfesionalRole
+  getProfesionalRole,
+  updateProfesionalRole
 } from "../services/profesionalRole.service";
 import { handleHttp } from "../utils/error.handle";
 
@@ -36,8 +37,20 @@ const postProfesionalRole = async ({ body }: Request, res: Response) => {
   }
 };
 
+const putProfesionalRole = async ({ body }: Request, res: Response) => {
+  const { id, services } = body; 
+  try {
+    const responseProfesionalRole = await updateProfesionalRole(id, services);
+    res.send(responseProfesionalRole);
+  } catch (error) {
+    handleHttp(res, "ERROR_PUT_PROFESIONAL_ROLE", error);
+  }
+};
+
+
 export {
   getProfesionalRoles,
+  putProfesionalRole,
   postProfesionalRole,
   getProfesionalRoleById
 };

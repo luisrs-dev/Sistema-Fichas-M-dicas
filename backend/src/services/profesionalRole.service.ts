@@ -6,6 +6,17 @@ const insertProfesionalRole = async (profesionalRole: ProfesionalRole) => {
   return responseInsert;
 };
 
+const updateProfesionalRole = async (id: string, services: string[]) => {
+  
+  const responseUpdate = await ProfesionalRoleModel.findByIdAndUpdate(
+    id,
+    { services }, // aquí actualizamos el campo que contiene el array
+    { new: true } // retorna el documento actualizado
+  );
+
+  return responseUpdate;
+};
+
 const getProfesionalRole = async (id: string) => {
 
   try {
@@ -26,6 +37,7 @@ const allProfesionalRoles = async () => {
 export {
   allProfesionalRoles,
   insertProfesionalRole,
-  getProfesionalRole
+  getProfesionalRole,
+  updateProfesionalRole
 };
 

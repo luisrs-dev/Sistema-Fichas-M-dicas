@@ -24,6 +24,9 @@ const MedicalRecordSchema = new Schema<MedicalRecord>(
     diagnostic: {
       type: String,
     },
+    diagnosticMedic: {
+      type: String,
+    },
     pharmacologicalScheme: {
       type: String
     },

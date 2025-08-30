@@ -8,6 +8,7 @@ export interface MedicalRecord {
   relevantElements: string;
   interventionObjective: string;
   diagnostic: string;
+  diagnosticMedic?: string;
   pharmacologicalScheme: string;
   patient: Patient;
   registeredBy: RegisteredBy;

@@ -28,17 +28,18 @@
               <span class="ml-2">{{ medicalRecord.service.description }}</span>
             </mat-panel-title>
             <mat-panel-description>
-              {{ medicalRecord.registeredBy.name }} - {{ medicalRecord.registeredBy.profile.name }}
+              Registrado por {{ medicalRecord.registeredBy.name }} ({{ medicalRecord.registeredBy.profile.name }})
               <mat-icon>add_circle</mat-icon>
             </mat-panel-description>
           </mat-expansion-panel-header>
           <div class="medical-record-details">
             <div class="record-item"><strong>Fecha:</strong> {{ medicalRecord.date | date: 'dd-MM-yyyy' }}</div>
-            <div class="record-item"><strong>Tipo entrada:</strong> {{ medicalRecord.entryType }}</div>
+            <!--<div class="record-item"><strong>Tipo entrada:</strong> {{ medicalRecord.entryType }}</div>-->
             <div class="record-item"><strong>Prestación:</strong> {{ medicalRecord.service.description }}</div>
             <div class="record-item"><strong>Elementos relevantes:</strong> {{ medicalRecord.relevantElements }}</div>
             <div class="record-item"><strong>Objetivo intervención:</strong> {{ medicalRecord.interventionObjective }}</div>
-            <div class="record-item" *ngIf="medicalRecord.diagnostic"><strong>Diagnóstico:</strong> {{ medicalRecord.diagnostic }}</div>
+            <div class="record-item" *ngIf="medicalRecord.diagnosticMedic"><strong>Diagnóstico del profesional:</strong> {{ medicalRecord.diagnosticMedic }}</div>
+            <div class="record-item" *ngIf="medicalRecord.diagnostic"><strong>Diagnóstico:</strong> {{ getDiagnosticText(medicalRecord.diagnostic) }}</div>
             <div class="record-item" *ngIf="medicalRecord.pharmacologicalScheme"><strong>Esquema farmacológico:</strong> {{ medicalRecord.pharmacologicalScheme }}</div>
           </div>
           <!--<button mat-stroked-button color="warn" class="my-2 mat-elevation-z1" >-->

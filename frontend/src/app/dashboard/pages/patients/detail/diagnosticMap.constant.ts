@@ -1,0 +1,15 @@
+  export const diagnosticMap: { [key: string]: string } = {
+    "1": "Trastornos mentales orgánicos, incluidos los sintomáticos",
+    "2": "Esquizofrenia, trastorno esquizotípico y trastornos de ideas delirantes",
+    "3": "Trastornos del humor (afectivos).",
+    "4": "Trastornos neuróticos, secundarios a situaciones estresantes y somatomorfos",
+    "5": "Trastornos de la personalidad y del comportamiento del adulto",
+    "6": "Trastornos del comportamiento asociados a disfunciones fisiológicas y a factores somáticos",
+    "7": "Retraso Mental",
+    "8": "Trastornos del Desarrollo Psicológico",
+    "9": "Trs. del comportamiento y de las emociones de comienzo habitual en la infancia y adolescencia",
+    "10": "En estudio",
+    "11": "Sin trastorno",
+    "12": "Trastornos de la conducta alimentaria",
+    "13": "Trastornos de los hábitos y del control de los impulsos",
+  };

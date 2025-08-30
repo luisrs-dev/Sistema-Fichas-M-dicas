@@ -17,6 +17,7 @@ import { Patient } from '../../../interfaces/patient.interface';
 import { PatientService } from '../patient.service';
 import { MedicalRecordService } from '../../medicalRecord/medicalRecord.service';
 import Notiflix from 'notiflix';
+import { diagnosticMap } from './diagnosticMap.constant';
 
 interface State {
   patient: Patient | null;
@@ -115,4 +116,12 @@ export default class DetailComponent {
   onNewMedicalRecord() {
     this.router.navigate(['dashboard/patient', this.patientId(), 'ficha-clinica', 'nueva']);
   }
+
+  getDiagnosticText(code: string | null | undefined): string {
+    if (!code) return "-";
+    return diagnosticMap[code] || "Valor desconocido";
+  }
+
+  
 }
+

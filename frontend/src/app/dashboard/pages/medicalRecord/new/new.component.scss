@@ -3,7 +3,7 @@
 
   .clinical-record{
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     gap: 16px;
     height: 100vh;
   }
@@ -15,11 +15,23 @@
 
 }
 
-.patient-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 16px;
+.patient{
+  border-radius: 0.5rem;
+    border: 1px solid #c4c6d0;
+    border-radius: 4px;
 }
+
+.info-patient{
+    display: grid;
+    grid-template-columns: 1fr 3fr;
+    gap: 16px;
+  }
+
+//.patient-grid {
+//  display: grid;
+//  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+//  gap: 16px;
+//}
 
 .field {
   border-bottom: 1px solid #e0e0e0;
@@ -28,8 +40,8 @@
 
 .label {
   font-size: 16px;
-  color: #757575;
-  display: block;
+  //color: #757575;
+  //display: block;
 }
 
 .value {
@@ -68,4 +80,26 @@ h3 {
   flex-direction: row;
   gap: 16px;
   height: 100vh;
+}
+
+
+.patient-info-container {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  font-weight: 700;
+  font-size: 14px;
+  color: #000000;
+  margin-bottom: 2px;
+}
+
+.value {
+  font-size: 1rem;
 }

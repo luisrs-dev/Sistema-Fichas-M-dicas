@@ -38,7 +38,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
     MatInputModule,
     MatDividerModule,
     MatChipsModule,
-    MatExpansionModule
+    MatExpansionModule,
   ],
 
   providers: [provideNativeDateAdapter(), DatePipe],
@@ -62,17 +62,16 @@ export default class NewMedicalRecord {
   public hideServiceSelect: boolean = false;
   // public data: { patient: Patient; latestMedicalRecordWithScheme: MedicalRecord | null };
 
-  response$: Observable<{patient: Patient, medicalRecords: MedicalRecord[]}>;
+  response$: Observable<{ patient: Patient; medicalRecords: MedicalRecord[] }>;
   readonly panelOpenState = signal(false);
 
   patientId = signal<string | null>(null);
 
   ngOnInit(): void {
-
     const id = this.route.snapshot.paramMap.get('id');
     const groupIntervention = this.route.snapshot.paramMap.get('groupIntervention');
     console.log('groupIntervention', groupIntervention);
-    
+
     if (id) {
       this.response$ = this.patientService.getPatientById(id);
     }
@@ -85,7 +84,6 @@ export default class NewMedicalRecord {
       this.patientService.getPatientById(id!).subscribe((response) => {
         console.log('response', response);
         this.patient = response.patient;
-
 
         this.latestMedicalRecordWithScheme = this.medicalRecordService.getLastPharmacologicalScheme(response.medicalRecords);
         console.log('latestMedicalRecordWithScheme', this.latestMedicalRecordWithScheme);
@@ -100,14 +98,16 @@ export default class NewMedicalRecord {
     });
 
     this.user = this.authService.getUser();
-    console.log('this.user', this.user);
 
-    this.userService.getServicesByProfile(this.user.profile._id).subscribe((services) => {
+    this.userService.getUserById(this.user._id).pipe(
+      switchMap( (response) =>
+        this.userService.getServicesByProfile(response.user.profile._id)
+      )
+    ).subscribe( services => {
       this.services = services;
-      console.log('services', services);
-    });
-  }
+    })
 
+  }
 
   public medicalRecordForm: FormGroup = this.fb.group({
     date: [new Date(), [Validators.minLength(3), Validators.required]],
@@ -115,6 +115,7 @@ export default class NewMedicalRecord {
     service: ['', [Validators.minLength(3), Validators.required]],
     interventionObjective: ['', [Validators.minLength(3), Validators.required]],
     relevantElements: ['', [Validators.required]],
+    diagnosticMedic: ['', [Validators.required]],
     diagnostic: [''],
     pharmacologicalScheme: [''],
   });
@@ -133,25 +134,24 @@ export default class NewMedicalRecord {
       .addMedicalRecord({
         ...this.medicalRecordForm.value,
         patient: this.patientId(),
-        registeredBy: this.user._id
+        registeredBy: this.user._id,
       })
       .subscribe((user) => {
         console.log({ user });
         // this.dialogRef.close(true);
 
-            // console.log('redirigiendo a  nueva ficha');
-            this.router.navigate(['dashboard/patient', this.patientId()]);
+        // console.log('redirigiendo a  nueva ficha');
+        this.router.navigate(['dashboard/patient', this.patientId()]);
         Report.success('Registro exitoso', 'Ficha clínica registrada con éxito', 'Entendido');
       });
-
   }
 
   isValidField(field: string): boolean {
     return Boolean(this.medicalRecordForm.controls[field].errors) && this.medicalRecordForm.controls[field].touched;
   }
 
-  get fullName(): string{
-    return  `${this.patient.name} ${this.patient.secondSurname}`;
+  get fullName(): string {
+    return `${this.patient.name} ${this.patient.secondSurname}`;
   }
 
   get treatmentTime(): string {
@@ -196,5 +196,4 @@ export default class NewMedicalRecord {
 
     return parts.length > 0 ? parts.join(' ') : '0 días';
   }
-
 }

@@ -25,4 +25,8 @@ export class ProfesionalRoleService {
     return this.http.post<any>(`${this.backend}/profesional-role`, {name, services});
   }
 
+  update(id: string, services: string[]): Observable<any>{
+    return this.http.put<any>(`${this.backend}/profesional-role`, {id, services});
+  }
+
 }
