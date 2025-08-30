@@ -23,6 +23,7 @@ import { map } from 'highcharts';
 import { Observable, switchMap } from 'rxjs';
 import { PatientService } from '../../patients/patient.service';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { diagnosticMap } from '../../patients/detail/diagnosticMap.constant';
 
 @Component({
   selector: 'app-new',
@@ -196,4 +197,9 @@ export default class NewMedicalRecord {
 
     return parts.length > 0 ? parts.join(' ') : '0 días';
   }
+
+    getDiagnosticText(code: string | null | undefined): string {
+      if (!code) return "-";
+      return diagnosticMap[code] || "Valor desconocido";
+    }
 }

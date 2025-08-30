@@ -59,7 +59,12 @@
   padding: 12px;
   //border: 1px solid #ccc;
   border-radius: 8px;
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  height: 100vh;
 }
+
 
 h3 {
   margin-top: 0;
@@ -75,12 +80,7 @@ h3 {
   flex: 1;
 }
 
-.section{
-  display: flex;
-  flex-direction: row;
-  gap: 16px;
-  height: 100vh;
-}
+
 
 
 .patient-info-container {

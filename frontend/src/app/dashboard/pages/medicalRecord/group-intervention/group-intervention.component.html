@@ -11,7 +11,7 @@
                   <div class="patients">
                     <mat-chip-set aria-label="Fish selection">
                       @for (patient of patientsList.value; track $index) {
-                        <mat-chip (click)="removePatient(patient)">{{ patient.name }}
+                        <mat-chip (click)="removePatient(patient)">{{ patient.name }} {{ patient.surname }} {{ patient.secondSurname}}
                           <mat-icon matListItemIcon>close_small</mat-icon>
                         </mat-chip>
                       }
@@ -20,7 +20,7 @@
                       <mat-label>Seleccionar Pacientes</mat-label>
                       <mat-select [formControl]="patientsList" multiple>
                         @for (patient of patients(); track patient._id) {
-                          <mat-option (click)="onPatientSelected()" [value]="patient">{{ patient.name }}</mat-option>
+                          <mat-option (click)="onPatientSelected()" [value]="patient">{{ patient.name }} {{ patient.surname }} {{ patient.secondSurname}}</mat-option>
                         }
                       </mat-select>
                     </mat-form-field>

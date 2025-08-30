@@ -10,7 +10,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Report } from 'notiflix';
-import { Observable } from 'rxjs';
+import { Observable, switchMap } from 'rxjs';
 import { MaterialModule } from '../../../../angular-material/material.module';
 import { AuthService } from '../../../../auth/auth.service';
 import { User } from '../../../../auth/interfaces/login-response.interface';
@@ -68,14 +68,15 @@ export default class GroupInterventionComponent {
 
   ngOnInit(): void {
     this.user = this.authService.getUser();
-    this.programsIds = this.user.programs.map((program) => program._id);
-    this.patientService.getPatients(this.programsIds).subscribe((patients) => {
-      this.patients.set(patients);
-    });
-
-    this.user = this.authService.getUser();
-    console.log('this.user', this.user);
-
+    const user = this.userService.getUserById(this.user._id).pipe(
+      switchMap( (user: any) =>{
+        const userFetched = user.user;        
+        const programsIds = userFetched.programs.map( (program: any) => program._id);
+        
+        return this.patientService.getPatients(programsIds)
+      })
+    ).subscribe(patients => this.patients.set(patients))
+  
     this.userService.getServicesByProfile(this.user.profile._id).subscribe((services) => {
       this.services = services;
       console.log('services', services);
