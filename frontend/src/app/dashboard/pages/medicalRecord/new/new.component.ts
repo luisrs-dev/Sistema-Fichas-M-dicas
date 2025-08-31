@@ -114,9 +114,10 @@ export default class NewMedicalRecord {
     date: [new Date(), [Validators.minLength(3), Validators.required]],
     // entryType: [this.setValueEntryType(), [Validators.required]],
     service: ['', [Validators.minLength(3), Validators.required]],
+    //typeContact: ['presencial', [Validators.minLength(3), Validators.required]],
     interventionObjective: ['', [Validators.minLength(3), Validators.required]],
     relevantElements: ['', [Validators.required]],
-    diagnosticMedic: ['', [Validators.required]],
+    diagnosticMedic: [''],
     diagnostic: [''],
     pharmacologicalScheme: [''],
   });
