@@ -112,14 +112,14 @@ export const routes: Routes = [
       //   loadComponent: () =>
       //     import('./dashboard/pages/medicalRecord/new/new.component'),
       // },
-      {
-        path: 'estadisticas',
-        title: 'Estadísticas',
-        data: { icon: 'analytics', child: false },
+      //{
+      //  path: 'estadisticas',
+      //  title: 'Estadísticas',
+      //  data: { icon: 'analytics', child: false },
 
-        loadComponent: () =>
-          import('./dashboard/pages/statistics/statistics.component'),
-      },
+      //  loadComponent: () =>
+      //    import('./dashboard/pages/statistics/statistics.component'),
+      //},
       {
         path: 'permisos',
         title: 'Permisos',
