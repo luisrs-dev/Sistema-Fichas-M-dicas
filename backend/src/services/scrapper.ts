@@ -41,7 +41,8 @@ class Scrapper {
       {
       headless: headless,
       //slowMo: 300, sirve para darle tiempe a cada operacion
-      userDataDir: userDataDir, // Establecer la carpeta de caché
+      userDataDir: userDataDir, // Establecer la carpeta de caché,
+      executablePath: '/snap/bin/chromium',
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
