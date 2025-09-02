@@ -216,6 +216,10 @@ class Sistrat {
     this.gender = patient.sex;
     let page: Page = await this.login(patient.sistratCenter);
 
+    page.on('dialog', async dialog => { await dialog.accept(); });
+
+
+    
     try {
       console.log("registrarMedicalRecordsByMonth lueg de login");
 
@@ -359,8 +363,15 @@ class Sistrat {
       await page.screenshot({ path: filePath, fullPage: true });
 
       // 3. Esperar al botón y hacer click
-      await page.waitForSelector('#mysubmit', { visible: true, timeout: 30000 });
-      await page.click('#mysubmit');
+
+      await page.waitForSelector('#mysubmit', { visible: true, timeout: 50000 });
+      await page.evaluate(() => {
+        (document.querySelector('#mysubmit') as HTMLElement)?.scrollIntoView();
+      });
+      await Promise.all([
+        page.waitForNavigation({ timeout: 30000 }),
+        page.click('#mysubmit'),
+      ]);
 
       return 'REGISTRO EXITOSO ATENCIONES MENSUALES';
 
