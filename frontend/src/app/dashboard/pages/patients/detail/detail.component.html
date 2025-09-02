@@ -2,103 +2,101 @@
   <div *ngIf="patient() as p">
     <h4>
       Información Paciente >
-      <span >
+      <span>
         {{ p.name }} {{ p.surname }} {{ p.secondSurname }}
-        <mat-chip matTooltip="Copiar">Código usuario {{ p.codigoSistrat || '' }}</mat-chip>
+        <mat-chip matTooltip="Copiar">Código usuario {{ p.codigoSistrat || "" }}</mat-chip>
       </span>
     </h4>
-
   </div>
 
-  <h1>Historial Clínico</h1>
+  <div class="header">
+    <h1>Historial Clínico</h1>
+    <mat-form-field appearance="outline">
+      <mat-label>Mes</mat-label>
+      <mat-select matNativeControl required (selectionChange)="onMonthChange($event.value)">
+        <mat-option value="8">Agosto</mat-option>
+        <mat-option selected value="9">Septiembre</mat-option>
+        <mat-option value="10">Octubre</mat-option>
+        <mat-option value="11">Noviembre</mat-option>
+        <mat-option value="11">Diciembre</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
 
+  <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1" (click)="onNewMedicalRecord()">Nuevo Registro</button>
 
-  <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1" (click)="onNewMedicalRecord()">
-        Nuevo Registro</button>
-        
-          <button mat-mini-fab aria-label="Example icon button with a delete icon" (click)="generatePdf()" class="ml-2">
-  </button>
+  <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2" (click)="generatePdf()">PDF</button>
 
-         <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2" (click)="onMonthRegisters()">
-        Resumen Mensual</button>
+  <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2" (click)="onMonthRegisters()">Resumen Mensual</button>
 
-        @if(medicalRecordsGrouped().length > 0){
-          <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2" (click)="onSistratRecord()">
-        Registrar en SISTRAT</button>
-        }
+  @if(medicalRecordsGrouped().length > 0){
+  <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2" (click)="onSistratRecord()">Registrar en SISTRAT</button>
+  } @if(showTable()){
+  <div class="table-container">
+    <table mat-table [dataSource]="medicalRecordsGrouped()" class="mat-elevation-z2 my-4">
+      <!-- Columna de servicio -->
+      <ng-container matColumnDef="service">
+        <th mat-header-cell *matHeaderCellDef>Servicio</th>
+        <td mat-cell *matCellDef="let element">{{ element.service }}</td>
+      </ng-container>
 
-  @if(showTable()){
-    <div class="table-container">
-      <table mat-table [dataSource]="medicalRecordsGrouped()" class="mat-elevation-z2 my-4">
+      <!-- Columnas de días -->
+      <ng-container *ngFor="let day of daysInMonth; let i = index" [matColumnDef]="i.toString()">
+        <th mat-header-cell *matHeaderCellDef>{{ i + 1 }}</th>
+        <td mat-cell *matCellDef="let element">
+          @if(element.days[i] != 0){
+          <strong>{{ element.days[i] }}</strong>
+          }@else{
+          <span style="color: #cccccc">0</span>
+          }
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+  </div>
+
+  } 
   
-    <!-- Columna de servicio -->
-    <ng-container matColumnDef="service">
-      <th mat-header-cell *matHeaderCellDef> Servicio </th>
-      <td mat-cell *matCellDef="let element"> {{ element.service }} </td>
-    </ng-container>
-  
-    <!-- Columnas de días -->
-    <ng-container *ngFor="let day of daysInMonth; let i = index" [matColumnDef]="i.toString()">
-      <th mat-header-cell *matHeaderCellDef> {{ i + 1 }} </th>
-      <td mat-cell *matCellDef="let element">@if(element.days[i] != 0){
-      <strong>{{ element.days[i] }}</strong>  
-      }@else{
-       <span style="color:#cccccc">0</span>
-      } 
-    </td>
-    </ng-container>
-  
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-  </table>
-    </div>
-
-  }
-
   @if(registeredRecordsPerMonth()){
-    <img [src]="screenshotPath()" alt="">
-  }
-
-  @if(state().medicalRecords.length > 0){
-    <div class="mat-elevation-z1 mt-4">
-      <mat-accordion class="example-headers-align">
-        <mat-expansion-panel *ngFor="let medicalRecord of state().medicalRecords; index as i" hideToggle>
-          <mat-expansion-panel-header>
-            <mat-panel-title class="mr-1">
-              <mat-chip>{{ medicalRecord.date | date: 'dd-MM-yyyy' }}</mat-chip>
-              <span class="ml-2">{{ medicalRecord.service.description }}</span>
-            </mat-panel-title>
-            <mat-panel-description>
-              Registrado por {{ medicalRecord.registeredBy.name }} ({{ medicalRecord.registeredBy.profile.name }})
-              <mat-icon>add_circle</mat-icon>
-            </mat-panel-description>
-          </mat-expansion-panel-header>
-          <div class="medical-record-details">
-            <div class="record-item"><strong>Fecha:</strong> {{ medicalRecord.date | date: 'dd-MM-yyyy' }}</div>
-            <!--<div class="record-item"><strong>Tipo entrada:</strong> {{ medicalRecord.entryType }}</div>-->
-            <div class="record-item"><strong>Prestación:</strong> {{ medicalRecord.service.description }}</div>
-            <div class="record-item"><strong>Elementos relevantes:</strong> {{ medicalRecord.relevantElements }}</div>
-            <div class="record-item"><strong>Objetivo intervención:</strong> {{ medicalRecord.interventionObjective }}</div>
-            <div class="record-item" *ngIf="medicalRecord.diagnosticMedic"><strong>Diagnóstico del profesional:</strong> {{ medicalRecord.diagnosticMedic }}</div>
-            <div class="record-item" *ngIf="medicalRecord.diagnostic"><strong>Diagnóstico:</strong> {{ getDiagnosticText(medicalRecord.diagnostic) }}</div>
-            <div class="record-item" *ngIf="medicalRecord.pharmacologicalScheme"><strong>Esquema farmacológico:</strong> {{ medicalRecord.pharmacologicalScheme }}</div>
-          </div>
-          <!--<button mat-stroked-button color="warn" class="my-2 mat-elevation-z1" >-->
-          <button mat-stroked-button color="warn" class="my-2 mat-elevation-z1" (click)="onDeleteMedicalRecord(medicalRecord._id)">
-        Eliminar</button>
+  <img [src]="screenshotPath()" alt="" />
+  } 
+  
+  
+  @if(state().filteredMedicalRecords.length > 0){
+  <div class="mat-elevation-z1 mt-4">
+    <mat-accordion class="example-headers-align">
+      <mat-expansion-panel *ngFor="let medicalRecord of state().filteredMedicalRecords; index as i" hideToggle>
+        <mat-expansion-panel-header>
+          <mat-panel-title class="mr-1">
+            <mat-chip>{{ medicalRecord.date | date : "dd-MM-yyyy" }}</mat-chip>
+            <span class="ml-2">{{ medicalRecord.service.description }}</span>
+          </mat-panel-title>
+          <mat-panel-description>
+            Registrado por {{ medicalRecord.registeredBy.name }} ({{ medicalRecord.registeredBy.profile.name }})
+            <mat-icon>add_circle</mat-icon>
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+        <div class="medical-record-details">
+          <div class="record-item"><strong>Fecha:</strong> {{ medicalRecord.date | date : "dd-MM-yyyy" }}</div>
+          <!--<div class="record-item"><strong>Tipo entrada:</strong> {{ medicalRecord.entryType }}</div>-->
+          <div class="record-item"><strong>Prestación:</strong> {{ medicalRecord.service.description }}</div>
+          <div class="record-item"><strong>Elementos relevantes:</strong> {{ medicalRecord.relevantElements }}</div>
+          <div class="record-item"><strong>Objetivo intervención:</strong> {{ medicalRecord.interventionObjective }}</div>
+          <div class="record-item" *ngIf="medicalRecord.diagnosticMedic"><strong>Diagnóstico del profesional:</strong> {{ medicalRecord.diagnosticMedic }}</div>
+          <div class="record-item" *ngIf="medicalRecord.diagnostic"><strong>Diagnóstico:</strong> {{ getDiagnosticText(medicalRecord.diagnostic) }}</div>
+          <div class="record-item" *ngIf="medicalRecord.pharmacologicalScheme"><strong>Esquema farmacológico:</strong> {{ medicalRecord.pharmacologicalScheme }}</div>
+        </div>
+        <!--<button mat-stroked-button color="warn" class="my-2 mat-elevation-z1" >-->
+        <button mat-stroked-button color="warn" class="my-2 mat-elevation-z1" (click)="onDeleteMedicalRecord(medicalRecord._id)">Eliminar</button>
         <!--<pre>{{ medicalRecord | json }}</pre>-->
-        </mat-expansion-panel>
-      </mat-accordion>
-    </div>
+      </mat-expansion-panel>
+    </mat-accordion>
+  </div>
   }@else {
-    <div class="flex justify-content-center flex-wrap mt-8">
-      <h2 class="justify-content-center">Aún no registra historial clínico</h2>
-    </div>
+  <div class="flex justify-content-center flex-wrap mt-8">
+    <h2 class="justify-content-center">Aún no registra historial clínico</h2>
+  </div>
   }
-
-
-
-
-
-
 </div>

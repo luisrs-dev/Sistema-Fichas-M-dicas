@@ -46,3 +46,10 @@ table.mat-table td.mat-cell:first-child {
 table.mat-table {
   border-collapse: collapse;
 }
+
+.header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}

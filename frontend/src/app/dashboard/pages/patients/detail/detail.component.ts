@@ -14,10 +14,12 @@ import { Patient } from '../../../interfaces/patient.interface';
 import { MedicalRecordService } from '../../medicalRecord/medicalRecord.service';
 import { PatientService } from '../patient.service';
 import { diagnosticMap } from './diagnosticMap.constant';
+import { MatSelectModule } from '@angular/material/select';
 
 interface State {
   patient: Patient | null;
   medicalRecords: MedicalRecord[];
+  filteredMedicalRecords: MedicalRecord[];
   loading: boolean;
 }
 
@@ -29,7 +31,7 @@ export interface MedicalRecordGrouped {
 @Component({
   selector: 'app-detail',
   standalone: true,
-  imports: [MaterialModule, MatExpansionModule, CommonModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, DatePipe],
+  imports: [MaterialModule, MatExpansionModule, CommonModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, DatePipe, MatSelectModule],
   templateUrl: './detail.component.html',
   styleUrl: './detail.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,6 +42,8 @@ export default class DetailComponent {
   private medicalRecordService = inject(MedicalRecordService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+
+  selectedMonth = signal<number>(9);
 
   registeredRecordsPerMonth = signal<boolean>(false);
   screenshotPath = signal<string | null>(null);
@@ -53,6 +57,7 @@ export default class DetailComponent {
   #state = signal<State>({
     loading: true,
     patient: null,
+    filteredMedicalRecords: [],
     medicalRecords: [],
   });
 
@@ -80,17 +85,18 @@ export default class DetailComponent {
         return ta - tb; // ascendente
       });
 
-      const medicalRecordAgosto = medicalRecordsOrdered.filter((record) => {
-        const recordDate = new Date(record.date);
-        return recordDate.getMonth() + 1 === 8 && recordDate.getFullYear() === 2025;
-      });
+      //const medicalRecordAgosto = medicalRecordsOrdered.filter((record) => {
+      //  const recordDate = new Date(record.date);
+      //  return recordDate.getMonth() + 1 === this.selectedMonth() && recordDate.getFullYear() === 2025;
+      //});
 
-      console.log('medicalRecordAgosto', medicalRecordAgosto);
+      //console.log('medicalRecordAgosto', medicalRecordAgosto);
       
       this.#state.set({
         loading: false,
         patient: response.patient,
-        medicalRecords: medicalRecordAgosto,
+        medicalRecords: medicalRecordsOrdered,
+        filteredMedicalRecords: medicalRecordsOrdered,
       });
 
       console.log('setstate', this.#state());
@@ -155,7 +161,7 @@ export default class DetailComponent {
     }
   }
 
-  buildDataMonth(month: number = 8, year: number = 2025) {
+  buildDataMonth(month: number = this.selectedMonth(), year: number = 2025) {
     // Inicializamos un objeto para agrupar
     let grouped: Record<string, number[]> = {};
     const records = this.state().medicalRecords;
@@ -203,7 +209,7 @@ export default class DetailComponent {
         
         // Success
         if(patientId === undefined) return;
-        this.medicalRecordService.monthRecords(patientId, 8, 2025, this.medicalRecordsGrouped()).subscribe({
+        this.medicalRecordService.monthRecords(patientId, this.selectedMonth(), 2025, this.medicalRecordsGrouped()).subscribe({
           next: () => {
             //this.#state.update((state) => ({
             //  ...state,
@@ -226,5 +232,39 @@ export default class DetailComponent {
       }
     );
   }
+
+onMonthChange(event: number) {
+  this.selectedMonth.set(event);
+  console.log(this.selectedMonth());
+  
+  const state = this.#state();
+  // Usamos todos los registros del paciente
+  const allRecords = state.medicalRecords ?? [];
+  console.log('allRecords', allRecords);
+  
+
+
+  // Filtramos los del mes seleccionado
+    const filteredRecords = allRecords.filter((record) => {
+    const recordDate = new Date(record.date);
+    return (
+      (recordDate.getMonth() + 1) === Number(event) &&
+      recordDate.getFullYear() === 2025
+    );
+  });
+
+
+  // Actualizamos el state con los registros filtrados
+  this.#state.set({
+    ...state,
+    filteredMedicalRecords: filteredRecords
+  });
+
+  console.log('state', this.#state());
+  
+
+  // Recalculamos la tabla agrupada
+  //this.buildDataMonth(event); 
+}
 
 }
