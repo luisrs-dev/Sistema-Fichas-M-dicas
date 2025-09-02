@@ -372,8 +372,8 @@ class Sistrat {
 
       // 3. Esperar al botón y hacer click
 
-      this.scrapper.waitForSeconds(3);
-      this.scrapper.clickButton(page, '#mysubmit', 30000);
+      await this.scrapper.waitForSeconds(3);
+      await this.scrapper.clickButton(page, '#mysubmit', 30000);
 
       return 'REGISTRO EXITOSO ATENCIONES MENSUALES';
 
