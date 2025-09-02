@@ -47,6 +47,7 @@ class Scrapper {
         "--disable-setuid-sandbox",
         "--use-gl=egl",
         "--blink-settings=imagesEnabled=false,cssEnabled=false",
+        "--disable-dev-shm-usage"
       ],
       timeout: 0,
       protocolTimeout: 300000,

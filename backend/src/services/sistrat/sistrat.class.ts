@@ -63,6 +63,8 @@ class Sistrat {
 
       return page;
     } catch (error) {
+      console.log("Error en login SISTRAT", error);
+      
       throw new Error("Error en autenticación con SISTRAT");
     }
   }
