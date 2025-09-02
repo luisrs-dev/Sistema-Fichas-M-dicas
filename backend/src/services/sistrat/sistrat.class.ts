@@ -356,9 +356,12 @@ class Sistrat {
       
       const safePatientName = patientName.replace(/\s+/g, '_').toLowerCase();
       const filePath = `uploads/screenshots/agosto2025/${safePatientName}_mes_agosto.png`;
-
       await page.screenshot({ path: filePath, fullPage: true });
-      await this.scrapper.clickButton(page, "#mysubmit"); // Botón demandas activas
+
+      // 3. Esperar al botón y hacer click
+      await page.waitForSelector('#mysubmit', { visible: true, timeout: 30000 });
+      await page.click('#mysubmit');
+
       return 'REGISTRO EXITOSO ATENCIONES MENSUALES';
 
     } catch (error) {
