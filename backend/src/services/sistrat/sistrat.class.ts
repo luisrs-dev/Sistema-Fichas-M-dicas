@@ -358,6 +358,8 @@ class Sistrat {
       const filePath = `uploads/screenshots/agosto2025/${safePatientName}_mes_agosto.png`;
 
       await page.screenshot({ path: filePath, fullPage: true });
+      await this.scrapper.clickButton(page, "#mysubmit"); // Botón demandas activas
+      return 'REGISTRO EXITOSO ATENCIONES MENSUALES';
 
     } catch (error) {
       console.log("errror", error);
