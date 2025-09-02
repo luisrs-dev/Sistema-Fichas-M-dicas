@@ -357,21 +357,23 @@ class Sistrat {
         });
       }, medicalRecordsGrouped);
 
+      console.log('medicalRecordsGrouped', medicalRecordsGrouped);
+      
+      console.log('Datos ingresados en la tabla, tomando screenshot...');
+      
+
       
       const safePatientName = patientName.replace(/\s+/g, '_').toLowerCase();
       const filePath = `uploads/screenshots/agosto2025/${safePatientName}_mes_agosto.png`;
       await page.screenshot({ path: filePath, fullPage: true });
+      console.log('screenshot tomado y guardado en:', filePath);
+      console.log('esperando mysubmit');
+      
 
       // 3. Esperar al botón y hacer click
 
-      await page.waitForSelector('#mysubmit', { visible: true, timeout: 50000 });
-      await page.evaluate(() => {
-        (document.querySelector('#mysubmit') as HTMLElement)?.scrollIntoView();
-      });
-      await Promise.all([
-        page.waitForNavigation({ timeout: 30000 }),
-        page.click('#mysubmit'),
-      ]);
+      this.scrapper.waitForSeconds(3);
+      this.scrapper.clickButton(page, '#mysubmit', 30000);
 
       return 'REGISTRO EXITOSO ATENCIONES MENSUALES';
 
