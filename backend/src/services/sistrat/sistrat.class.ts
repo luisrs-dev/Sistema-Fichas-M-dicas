@@ -222,7 +222,6 @@ class Sistrat {
     
     try {
       console.log("registrarMedicalRecordsByMonth lueg de login");
-
       // Cick botón Usuarios
       await this.scrapper.clickButton(page, "#flyout");
       // Click botón "Ver usuarios activos"
@@ -328,7 +327,7 @@ class Sistrat {
               'psicoterapia individual': 'psicoterapia individual',
               'psicoterapia grupal': 'psicoterapia grupal',
               'psiocodiagn?stico': 'psicodiagnóstico',
-              'consultor?a de salud mental': 'consultoría de salud mental'
+              'consultor?a de salud mental': 'consulta de salud mental'
             }
 
             const normalizedServiceOnSistrat = mappedServicesSISTRAT[serviceNameOnTableSistrat];
@@ -358,11 +357,7 @@ class Sistrat {
       }, medicalRecordsGrouped);
 
       console.log('medicalRecordsGrouped', medicalRecordsGrouped);
-      
       console.log('Datos ingresados en la tabla, tomando screenshot...');
-      
-
-      
       const safePatientName = patientName.replace(/\s+/g, '_').toLowerCase();
       const filePath = `uploads/screenshots/agosto2025/${safePatientName}_mes_agosto.png`;
       await page.screenshot({ path: filePath, fullPage: true });
