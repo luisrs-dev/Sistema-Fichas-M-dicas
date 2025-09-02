@@ -38,17 +38,17 @@ class Sistrat {
 
       let usuario: string = "";
       let password: string = "";
-      if(center == 'mujeres'){
+      if (center == "mujeres") {
         usuario = "rmorales";
         password = "Robe1010";
       }
 
-      if(center == 'hombres'){
+      if (center == "hombres") {
         usuario = "rmorales";
         password = "Robe0011";
       }
 
-      if(center == 'alameda'){
+      if (center == "alameda") {
         usuario = "rmoralesn";
         password = "Robe1234";
       }
@@ -70,20 +70,20 @@ class Sistrat {
   async crearDemanda(patient: Patient) {
     const center = patient.sistratCenter;
     this.gender = patient.sex;
-    console.log('center', center);
-    
+    console.log("center", center);
+
     let page: Page = await this.login(center);
 
-      // Manejo de alertas / confirm / prompt
-    page.on('dialog', async dialog => {
-      console.log('Se detectó un diálogo:', dialog.message());
+    // Manejo de alertas / confirm / prompt
+    page.on("dialog", async (dialog) => {
+      console.log("Se detectó un diálogo:", dialog.message());
       await dialog.accept(); // O dialog.dismiss() si quieres cancelarlo
     });
 
     try {
       await this.listActiveDemands(page);
       await this.scrapper.clickButton(page, "#crea_demanda", 15000);
-        console.log("Creando demanda en SISTRAT...", patient);
+      console.log("Creando demanda en SISTRAT...", patient);
       await this.scrapper.waitAndType(page, "#txtrut", patient.rut);
       await this.scrapper.waitAndType(page, "#txtnombre_usuario", patient.name);
       await this.scrapper.waitAndType(page, "#txtapellido_usuario", patient.surname);
@@ -122,8 +122,8 @@ class Sistrat {
       await this.scrapper.clickButton(page, "#mysubmit");
 
       //await this.scrapper.waitForSeconds(90);
-       await this.listActiveDemands(page);
-       await this.setDataSistrat(page, patient);
+      await this.listActiveDemands(page);
+      await this.setDataSistrat(page, patient);
 
       return true;
     } catch (error) {
@@ -183,11 +183,11 @@ class Sistrat {
 
       console.log({ patientOnSistrat });
 
-      if(!patientOnSistrat){
+      if (!patientOnSistrat) {
         console.log(`Paciente ${patientName} no registrado en SISTRAT. `);
         this.scrapper.closeBrowser();
         return null;
-      }else{
+      } else {
         if (patientOnSistrat?.codigoSistrat) {
           const patientEntity = await PatientModel.findOne({ _id: patient._id });
           if (patientEntity) {
@@ -195,7 +195,7 @@ class Sistrat {
             await patientEntity.save();
           }
         }
-  
+
         if (patientOnSistrat?.alertTreatment) {
           const patientEntity = await PatientModel.findOne({ _id: patient._id });
           if (patientEntity) {
@@ -204,35 +204,53 @@ class Sistrat {
           }
         }
       }
-
     } catch (error) {
       throw new Error(`Error al setear datos desde SISTRAT. Error: ${error}`);
     }
   }
 
-  async registrarFichaIngreso(patient: Patient, admissionForm: AdmissionForm) {
+  async registrarMedicalRecordsByMonth(patient: Patient, month: number, year: number, medicalRecordsGrouped: any) {
     const data: RowData[] = []; // Cambiar aquí el tipo a RowData[]
-
-    this.gender = patient.sex;    
+    this.gender = patient.sex;
     let page: Page = await this.login(patient.sistratCenter);
 
     try {
-      await this.scrapper.clickButton(page, "#flyout2"); // Botón demandas activas
-      await this.scrapper.clickButton(page, 'a[href="php/conv1/listado_demanda.php"].ui-corner-all');
-  
-      // await page.waitForSelector("#table_pacientes", { visible: true, timeout: 5000 });
-      const patientName = `${patient.name.trim()} ${patient.surname.trim()}`.toLowerCase();
-      console.log(`registrarFichaIngreso patientName: ${patientName}`);
-      
-  
-      const rowPatientSistrat: any = await page.evaluate((patientName) => {
+      console.log("registrarMedicalRecordsByMonth lueg de login");
+
+      // Cick botón Usuarios
+      await this.scrapper.clickButton(page, "#flyout");
+      // Click botón "Ver usuarios activos"
+      await this.scrapper.clickButton(page, 'a[href="php/consultar_paciente.php"].ui-corner-all');
+      // CLick botón filtrar
+      await this.scrapper.clickButton(page, "#filtrar");
+      await this.scrapper.waitForSeconds(3);
+      const patientName = `${patient.name.trim()} ${patient.surname.trim()} ${patient.secondSurname.trim()}`.toLowerCase();
+      console.log("patientName", patientName);
+      const normalizedTarget = this.normalizeName(patientName);
+
+      const rowPatientSistrat: any = await page.evaluate((normalizedTarget) => {
+        console.log("rowPatientSistrat");
+        // función de normalización DENTRO del contexto de la página
+        const normalize = (name?: string) => {
+          if (!name) return "";
+          return name
+            .normalize("NFD") // separar diacríticos
+            .replace(/[\u0300-\u036f]/g, "") // quitar tildes
+            .replace(/\s+/g, "") // quitar espacios
+            .toLowerCase();
+        };
+
         const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
-  
+        console.log("table getElementById", table);
+
         if (table) {
+          console.log("table");
+
           // Iteramos sobre las filas de la tabla, comenzando desde la segunda fila (i = 1)
           for (let i = 1; i < table.rows.length; i++) {
             const objCells = table.rows.item(i)?.cells;
-  
+            console.log("tabla paciente encontrada", objCells);
+
             if (objCells) {
               // Obtenemos el texto de cada celda relevante
               const patient = {
@@ -240,12 +258,145 @@ class Sistrat {
                 name: objCells.item(1)?.innerText?.toLowerCase() || "", // Captura el texto de la segunda celda (nombre)
                 codigoSistrat: objCells.item(2)?.innerText || false, // Captura el texto de la tercera celda (código Sistrat)
               };
-  
+
+              console.log("patient evaluado", patient);
+
+              console.log("patient.name", normalize(patient.name));
+              console.log("normalizedTarget", normalizedTarget);
+
+              // Comparamos con el nombre que estamos buscando
+              if (normalize(patient.name) == normalizedTarget) {
+                console.log("patient encontrado", patient);
+
+                // Si el nombre coincide se da click en boton Crear Ficha Ingreso
+                const button = objCells.item(5)?.querySelector("span[name='fmensual']") as HTMLElement;
+
+                if (button) {
+                  // Realizamos el clic en el botón
+                  button.click();
+                  console.log(`Se hizo clic en el botón de crear ficha mensual para ${patient.name}`);
+                  return patient;
+                }
+                break; // Salimos del bucle cuando encontramos y hacemos clic en el botón
+              }
+            }
+          }
+        } else {
+          return null; // Tabla no encontrada
+        }
+        //return data; // Devuelve los datos capturados
+      }, normalizedTarget);
+
+      console.log(`rowPatientSistrat resultado: ${rowPatientSistrat}`);
+      await page.waitForSelector(".tabla_mensual", { timeout: 5000 });
+
+
+      console.log('IMPORTANTE medicalRecordsGrouped', medicalRecordsGrouped);
+      
+
+      await page.evaluate((medicalRecordsGrouped) => {
+        // Buscar la tabla donde están los registros mensuales
+        //const table = document.querySelector(".tabla_mensual") as HTMLTableElement | null;
+        // En la página hay varias tablas con esa clase, tomamos la segunda (índice 2) que corresponde a "Ejecuciones en Centro"
+        const table = document.getElementsByClassName("tabla_mensual")[2] as HTMLTableElement | null;
+
+        if (!table) {
+          console.error("No se encontró la tabla mensual");
+          return;
+        }
+
+        // Iterar sobre los registros que mandas desde Node
+        medicalRecordsGrouped.forEach((recordFiclin: any) => {
+          // Buscar la fila cuyo servicio coincida con el nombre (columna 0)
+          for (let i = 1; i < table.rows.length; i++) {
+            const row = table.rows[i];
+            const serviceNameOnTableSistrat = row.cells[0]?.innerText.trim().toLowerCase();            
+
+            const mappedServicesSISTRAT = {
+              'consulta salud mental': 'consulta de salud mental',
+              'intervenci?n psicosocial de grupo': 'intervención psicosocial de grupo',
+              'visita domiciliaria': 'visita domiciliaria',
+              'consulta m?dica': 'consulta médica',
+              'consulta psicol?gica': 'consulta psicológica',
+              'consulta psiqui?trica': 'consulta psiquiátrica',
+              'psicoterapia individual': 'psicoterapia individual',
+              'psicoterapia grupal': 'psicoterapia grupal',
+              'psiocodiagn?stico': 'psicodiagnóstico',
+              'consultor?a de salud mental': 'consultoría de salud mental'
+            }
+
+            const normalizedServiceOnSistrat = mappedServicesSISTRAT[serviceNameOnTableSistrat];
+            console.log('normalizedServiceOnSistrat', normalizedServiceOnSistrat);
+
+            const normalizedServiceFiclin = recordFiclin.service.trim().toLowerCase();
+
+
+            if (normalizedServiceOnSistrat === normalizedServiceFiclin) {
+              console.log('IGUALES');
+              
+              
+              // Rellenar los días (cada celda debería tener un input)
+              recordFiclin.days.forEach((value: number, dayIndex: number) => {
+                if (value > 0) {
+                  const input = row.cells[dayIndex + 1]?.querySelector("input") as HTMLInputElement;
+                  if (input) {
+                    input.value = value.toString();
+                    input.dispatchEvent(new Event("input", { bubbles: true })); // disparar evento por si hay listeners
+                  }
+                }
+              });
+              break;
+            }
+          }
+        });
+      }, medicalRecordsGrouped);
+
+      
+      const safePatientName = patientName.replace(/\s+/g, '_').toLowerCase();
+      const filePath = `uploads/screenshots/agosto2025/${safePatientName}_mes_agosto.png`;
+
+      await page.screenshot({ path: filePath, fullPage: true });
+
+    } catch (error) {
+      console.log("errror", error);
+    }
+  }
+
+  async registrarFichaIngreso(patient: Patient, admissionForm: AdmissionForm) {
+    const data: RowData[] = []; // Cambiar aquí el tipo a RowData[]
+
+    this.gender = patient.sex;
+    let page: Page = await this.login(patient.sistratCenter);
+
+    try {
+      await this.scrapper.clickButton(page, "#flyout2"); // Botón demandas activas
+      await this.scrapper.clickButton(page, 'a[href="php/conv1/listado_demanda.php"].ui-corner-all');
+
+      // await page.waitForSelector("#table_pacientes", { visible: true, timeout: 5000 });
+      const patientName = `${patient.name.trim()} ${patient.surname.trim()}`.toLowerCase();
+      console.log(`registrarFichaIngreso patientName: ${patientName}`);
+
+      const rowPatientSistrat: any = await page.evaluate((patientName) => {
+        const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
+
+        if (table) {
+          // Iteramos sobre las filas de la tabla, comenzando desde la segunda fila (i = 1)
+          for (let i = 1; i < table.rows.length; i++) {
+            const objCells = table.rows.item(i)?.cells;
+
+            if (objCells) {
+              // Obtenemos el texto de cada celda relevante
+              const patient = {
+                id: objCells.item(0)?.innerText || "", // Captura el texto de la primera celda (ID)
+                name: objCells.item(1)?.innerText?.toLowerCase() || "", // Captura el texto de la segunda celda (nombre)
+                codigoSistrat: objCells.item(2)?.innerText || false, // Captura el texto de la tercera celda (código Sistrat)
+              };
+
               // Comparamos con el nombre que estamos buscando
               if (patient.name == patientName) {
                 // Si el nombre coincide se da click en boton Crear Ficha Ingreso
                 const button = objCells.item(4)?.querySelector("span[name='crear_ficha_ingreso']") as HTMLElement;
-  
+
                 if (button) {
                   // Realizamos el clic en el botón
                   button.click();
@@ -263,11 +414,11 @@ class Sistrat {
       }, patientName);
 
       console.log(`rowPatientSistrat resultado: ${rowPatientSistrat}`);
-      if(!rowPatientSistrat){
+      if (!rowPatientSistrat) {
         this.scrapper.closeBrowser();
         return null;
       }
-  
+
       // Si se capturo el codigo sistrat se registrar en paciente
       if (rowPatientSistrat && rowPatientSistrat.codigoSistrat) {
         const patientEntity = await PatientModel.findOne({ _id: patient._id });
@@ -276,17 +427,13 @@ class Sistrat {
           await patientEntity.save();
         }
       }
-  
+
       if (rowPatientSistrat) {
         await this.completeAdmissionForm(page, patient, admissionForm);
       }
-      
     } catch (error: any) {
       throw new Error(`Error al registrar ficha de ingreso en función registrarFichaIngreso: ${error}`);
-      
     }
-
-
   }
 
   async completeAdmissionForm(page: Page, patient: Patient, admissionForm: AdmissionForm) {
@@ -553,6 +700,21 @@ class Sistrat {
       return null;
     }
   }
+
+  normalizeName(name: string): string {
+    return name
+      .normalize("NFD") // separa acentos de letras
+      .replace(/[\u0300-\u036f]/g, "") // quita tildes y diacríticos
+      .replace(/\s+/g, "") // elimina TODOS los espacios en blanco
+      .toLowerCase(); // pasa todo a minúsculas
+  }
 }
 
 export default Sistrat;
+
+
+
+
+
+
+  

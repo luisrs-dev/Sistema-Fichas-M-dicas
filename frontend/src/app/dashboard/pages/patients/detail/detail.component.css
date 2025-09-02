@@ -21,3 +21,28 @@
 .record-item strong {
   color: black; /* Color del texto en negrita */
 }
+
+/* Quitar padding y márgenes de celdas */
+table.mat-table {
+  font-size: 12px; /* Fuente más pequeña */
+}
+
+table.mat-table th.mat-header-cell,
+table.mat-table td.mat-cell {
+  padding: 4px 6px; /* Reducir padding vertical y horizontal */
+  text-align: center; /* Centrar contenido */
+  min-width: 24px; /* Ancho mínimo de columna */
+}
+
+/* Si quieres la primera columna (servicio) un poco más ancha */
+table.mat-table th.mat-header-cell:first-child,
+table.mat-table td.mat-cell:first-child {
+  min-width: 120px;
+  text-align: left;
+  padding-left: 8px;
+}
+
+/* Quitar espacios entre columnas (border-spacing) */
+table.mat-table {
+  border-collapse: collapse;
+}

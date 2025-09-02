@@ -3,6 +3,7 @@ import {
   getMedicalRecords,
   getAllMedicalRecordsByUser,
   postMedicalRecord,
+  postMedicalRecordPerMonth,
   medicalRecordsByMonth,
   deleteMedicalRecords
 } from "../controllers/medicalRecord.controller";
@@ -14,6 +15,7 @@ router.delete("/:id", deleteMedicalRecords);
 // router.get("/", logMiddleware, getItems);
 router.get("/:userId", getAllMedicalRecordsByUser );
 router.post("/", postMedicalRecord);
+router.post("/monthRecords/:patientId", postMedicalRecordPerMonth);
 router.get("/:year/:month", medicalRecordsByMonth);
 // router.delete("/:id", deleteItem);
 // router.put("/:id", updateItem);

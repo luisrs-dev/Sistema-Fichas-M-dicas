@@ -4,6 +4,7 @@ import { environment } from '../../../../environments/environment';
 import { Observable, catchError, throwError } from 'rxjs';
 import { Service } from '../parameters/services/profesionalService.service';
 import { MedicalRecord } from '../../interfaces/medicalRecord.interface';
+import { MedicalRecordGrouped } from '../patients/detail/detail.component';
 
 @Injectable({
   providedIn: 'root',
@@ -40,6 +41,10 @@ export class MedicalRecordService {
 
   deleteMedicalRecord(id: string): Observable<any> {
     return this.http.delete<any>(`${this.backend}/medicalRecord/${id}`).pipe(catchError((err) => throwError(() => err.error.message)));
+  }
+
+  monthRecords(id: string, month: number, year: number = 2025, medicalRecordsGrouped: MedicalRecordGrouped[]): Observable<any> {
+    return this.http.post<any>(`${this.backend}/medicalRecord/monthRecords/${id}`, { medicalRecordsGrouped, month, year }).pipe(catchError((err) => throwError(() => err.error.message)));
   }
 }
 

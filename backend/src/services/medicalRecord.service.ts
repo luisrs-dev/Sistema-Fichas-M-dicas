@@ -4,6 +4,8 @@ import path from 'path';
 import { Types } from "mongoose";
 import { MedicalRecord } from "../interfaces/medicalRecord.interface";
 import MedicalRecordModel from "../models/medicalRecord.model";
+import Sistrat from './sistrat/sistrat.class';
+import PatientModel from '../models/patient.model';
 
 const insertMedicalRecord = async (medicalRecord: MedicalRecord) => {
   
@@ -24,6 +26,28 @@ const insertMedicalRecord = async (medicalRecord: MedicalRecord) => {
     }
     
 };
+
+const postMedicalRecordsPerMonthOnSistrat = async (patientId: string, month: number, year: number,medicalRecord: any) => {
+  
+  console.log('postMedicalRecordsPerMonthOnSistrat');
+    const sistratPlatform = new Sistrat();
+    const patient = await PatientModel.findOne({ _id: patientId });
+    console.log('patient postMedicalRecordsPerMonthOnSistrat', patient);
+    
+    console.log('month year', month, year);
+    
+    if (!patient) {
+      throw new Error("Paciente no encontrado");
+    }
+
+      const statusAdmissionFormCreated = await sistratPlatform.registrarMedicalRecordsByMonth(patient,  month, year, medicalRecord);
+
+    console.log({ patientId, medicalRecord });
+    return;
+    
+};
+
+
 
 const deleteRecord = async (id: string) => {
   try {
@@ -115,5 +139,5 @@ const getRecordsByMonthAndYear = async (month: number, year: number) => {
 
 };
 
-export { allMedicalRecords, insertMedicalRecord, allMedicalRecordsUser, getRecordsByMonthAndYear, deleteRecord };
+export { allMedicalRecords, postMedicalRecordsPerMonthOnSistrat, insertMedicalRecord, allMedicalRecordsUser, getRecordsByMonthAndYear, deleteRecord };
 

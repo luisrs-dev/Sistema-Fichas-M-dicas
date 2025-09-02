@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { handleHttp } from "../utils/error.handle";
-import { allMedicalRecords, insertMedicalRecord, allMedicalRecordsUser, getRecordsByMonthAndYear, deleteRecord } from "../services/medicalRecord.service";
+import { allMedicalRecords, 
+  insertMedicalRecord, allMedicalRecordsUser, getRecordsByMonthAndYear, deleteRecord,
+postMedicalRecordsPerMonthOnSistrat } from "../services/medicalRecord.service";
 import { allServices } from "../services/service.service";
 import ejs from "ejs";
 import puppeteer from "puppeteer";
@@ -38,6 +40,25 @@ const postMedicalRecord = async ({ body }: Request, res: Response) => {
     handleHttp(res, "ERROR_POST_ITEM", error);
   }
 };
+
+const postMedicalRecordPerMonth = async ({ params, body }: Request, res: Response) => {
+  
+  const { patientId } = params;
+  const { medicalRecordsGrouped, month, year } = body;
+  console.log("patientId", patientId);
+  console.log("body", body);
+  
+  try {
+    const responseUser = await postMedicalRecordsPerMonthOnSistrat(patientId, month, year, medicalRecordsGrouped);
+
+    res.send(responseUser);
+  } catch (error) {
+    handleHttp(res, "ERROR_POST_ITEM", error);
+  }
+};
+
+
+
 
 const medicalRecordsByMonth = async ({ params }: Request, res: Response) => {
   const { month, year } = params;
@@ -118,4 +139,4 @@ const deleteMedicalRecords = async ({ params }: Request, res: Response) => {
   }
 };
 
-export { postMedicalRecord, getMedicalRecords, getAllMedicalRecordsByUser, medicalRecordsByMonth, getPdfMedicalRecordsByPatient, deleteMedicalRecords };
+export { postMedicalRecord, postMedicalRecordPerMonth, getMedicalRecords, getAllMedicalRecordsByUser, medicalRecordsByMonth, getPdfMedicalRecordsByPatient, deleteMedicalRecords };
