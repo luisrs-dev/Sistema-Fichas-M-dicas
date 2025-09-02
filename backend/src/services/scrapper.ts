@@ -12,7 +12,7 @@ class Scrapper {
   protected browser: Browser | null = null;
 
   async getPage(): Promise<Page> {
-    const browser: Browser = await this.launchBrowser(false);
+    const browser: Browser = await this.launchBrowser();
     const page: Page = await browser.newPage();
     await page.setDefaultNavigationTimeout(300000); // 5 minutos
 
