@@ -198,7 +198,7 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
         const html = await ejs.renderFile(path.join(__dirname, "../../templates-pdf/clinical-records-template.ejs"), { patient, clinicalRecords, logoUrl });
 
         const page = await browser.newPage();
-        await page.setContent(html, { waitUntil: "networkidle0" });
+        await page.setContent(html, { waitUntil: "load", timeout: 0 });
 
         const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
         await page.close();
