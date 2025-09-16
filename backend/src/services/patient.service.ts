@@ -219,6 +219,14 @@ const recordDemandToSistrat = async (patientId: string): Promise<{success:boolea
   }
 };
 
+
+const getAllPatients = async () => {
+  const responsePatients = await PatientModel.find().populate("program");
+  return responsePatients;
+};
+
+
+
 const allPatients = async (programs: string[]) => {
   const programArray = programs[0].split(",");
   const responsePatients = await PatientModel.find({
@@ -305,5 +313,6 @@ export {
   saveAdmissionFormToSistrat,
   updateAlertsFromSistrat,
   updateFormCie10,
-  updateAF
+  updateAF,
+  getAllPatients
 };

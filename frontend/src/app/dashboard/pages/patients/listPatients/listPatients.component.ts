@@ -14,6 +14,9 @@ import { User } from '../../../../auth/interfaces/login-response.interface';
 import { Parameter } from '../../parameters/interfaces/parameter.interface';
 import { MatDialog } from '@angular/material/dialog';
 import { FormCie10Component } from './components/formCie10/formCie10.component';
+import { MatBottomSheet } from '@angular/material/bottom-sheet';
+import { DataExportComponent } from './components/data-export/data-export.component';
+import Notiflix from 'notiflix';
 
 @Component({
   selector: 'app-list-patients',
@@ -30,6 +33,8 @@ export default class ListPatientsComponent {
   private patientService = inject(PatientService);
   public authService = inject(AuthService);
   public dialog = inject(MatDialog);
+  public bottomSheet = inject(MatBottomSheet);
+
 
 
   public patients: Patient[];
@@ -38,6 +43,7 @@ export default class ListPatientsComponent {
   public user: User;
   public programsIds: string[];
   public programs: Parameter[] = [];
+  public selectedOptionToExport: string | null = null;
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
@@ -101,4 +107,34 @@ export default class ListPatientsComponent {
     });
 
   }
+
+exportData(): void {
+  const ref = this.bottomSheet.open(DataExportComponent);
+  ref.afterDismissed().subscribe((result) => {
+    if (result) {
+      Notiflix.Loading.circle('Generando Documentos PDFs');
+      const { mes, anio } = result;
+
+      this.patientService.getPdfByProgram(mes, anio).subscribe((blob) => {
+        // Crear URL temporal para el ZIP
+        const url = window.URL.createObjectURL(blob);
+
+        // Crear enlace de descarga oculto
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `historiales_${mes}_${anio}.zip`; // nombre sugerido
+        document.body.appendChild(a);
+        a.click();
+
+        // Liberar recursos
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        Notiflix.Loading.remove();
+      });
+    }
+  });
+}
+
+
+  
 }

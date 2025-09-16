@@ -1,14 +1,21 @@
 import { Request, Response } from "express";
 import { handleHttp } from "../utils/error.handle";
-import { allMedicalRecords, 
-  insertMedicalRecord, allMedicalRecordsUser, getRecordsByMonthAndYear, deleteRecord,
-postMedicalRecordsPerMonthOnSistrat } from "../services/medicalRecord.service";
+import {
+  allMedicalRecords,
+  insertMedicalRecord,
+  allMedicalRecordsUser,
+  getRecordsByMonthAndYear,
+  deleteRecord,
+  postMedicalRecordsPerMonthOnSistrat,
+} from "../services/medicalRecord.service";
 import { allServices } from "../services/service.service";
 import ejs from "ejs";
 import puppeteer from "puppeteer";
 import path from "path";
 import fs from "fs";
-import { findPatient } from "../services/patient.service";
+import archiver from "archiver"; // para comprimir en zip
+
+import { findPatient, getAllPatients } from "../services/patient.service";
 
 const getAllMedicalRecordsByUser = async ({ params }: Request, res: Response) => {
   try {
@@ -42,12 +49,11 @@ const postMedicalRecord = async ({ body }: Request, res: Response) => {
 };
 
 const postMedicalRecordPerMonth = async ({ params, body }: Request, res: Response) => {
-  
   const { patientId } = params;
   const { medicalRecordsGrouped, month, year } = body;
   console.log("patientId", patientId);
   console.log("body", body);
-  
+
   try {
     const responseUser = await postMedicalRecordsPerMonthOnSistrat(patientId, month, year, medicalRecordsGrouped);
 
@@ -56,9 +62,6 @@ const postMedicalRecordPerMonth = async ({ params, body }: Request, res: Respons
     handleHttp(res, "ERROR_POST_ITEM", error);
   }
 };
-
-
-
 
 const medicalRecordsByMonth = async ({ params }: Request, res: Response) => {
   const { month, year } = params;
@@ -102,7 +105,7 @@ const getPdfMedicalRecordsByPatient = async ({ params }: Request, res: Response)
       headless: true,
       //slowMo: 300, sirve para darle tiempe a cada operacion
       // userDataDir: userDataDir, // Establecer la carpeta de caché
-      executablePath: '/snap/bin/chromium',
+      executablePath: "/snap/bin/chromium",
       args: ["--no-sandbox", "--disable-setuid-sandbox", "--use-gl=egl", "--blink-settings=imagesEnabled=false,cssEnabled=false"],
       timeout: 0,
       protocolTimeout: 300000,
@@ -127,6 +130,87 @@ const getPdfMedicalRecordsByPatient = async ({ params }: Request, res: Response)
   }
 };
 
+// Función de utilidad para formatear fecha
+const matchMonthYear = (date: Date, month: number, year: number) => {
+  const d = new Date(date);
+  return d.getMonth() + 1 === Number(month) && d.getFullYear() === Number(year);
+};
+
+const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
+  console.log("getPdfMedicalRecords");
+
+  try {
+    const { month, year } = body;
+    console.log('{ month, year }',{ month, year });
+    
+
+    // 1. Buscar pacientes (ejemplo: deberías traerlos de tu servicio o DB)
+    const patients = await getAllPatients();
+    //console.log("patients", patients);
+
+    if (!patients || patients.length === 0) {
+      return res.status(404).send("No hay pacientes para generar PDFs.");
+    }
+
+    // 2. Logo en base64
+    const logoPath = path.join(__dirname, "../../uploads/imgs/ficlin-logo.jpg");
+    const logoBase64 = fs.readFileSync(logoPath, { encoding: "base64" });
+    const logoUrl = `data:image/jpeg;base64,${logoBase64}`;
+
+    // 3. Preparar ZIP
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Disposition", `attachment; filename="historiales_${month}_${year}.zip"`);
+
+    const archive = archiver("zip", { zlib: { level: 9 } });
+    archive.pipe(res);
+
+    // 4. Agrupar por programa
+    const patientsByProgram = patients.reduce((acc: any, patient: any) => {
+      const program = patient.program.name || "Sin Programa";
+      if (!acc[program]) acc[program] = [];
+      acc[program].push(patient);
+      return acc;
+    }, {});
+
+    // 5. Generar PDFs agrupados
+    const browser = await puppeteer.launch({
+      headless: true,
+      //executablePath: "/snap/bin/chromium",
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+
+    for (const program of Object.keys(patientsByProgram)) {
+      for (const patient of patientsByProgram[program]) {
+        // Filtrar fichas del paciente por mes y año
+        const clinicalRecordsPatient = await allMedicalRecordsUser(patient._id);
+
+        const clinicalRecords = (clinicalRecordsPatient || []).filter((r: any) => matchMonthYear(r.date, month, year));
+
+        if (!clinicalRecords.length) continue;
+
+        // Renderizar EJS
+        const html = await ejs.renderFile(path.join(__dirname, "../../templates-pdf/clinical-records-template.ejs"), { patient, clinicalRecords, logoUrl });
+
+        const page = await browser.newPage();
+        await page.setContent(html, { waitUntil: "networkidle0" });
+
+        const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
+        await page.close();
+
+        // Nombre del archivo PDF: programa/paciente.pdf
+        const filename = `${program}/${patient.name || patient._id}.pdf`;
+        archive.append(pdfBuffer, { name: filename });
+      }
+    }
+
+    await browser.close();
+    await archive.finalize();
+  } catch (error) {
+    console.error("Error al generar PDF:", error);
+    res.status(500).send("Error generando el PDF.");
+  }
+};
+
 const deleteMedicalRecords = async ({ params }: Request, res: Response) => {
   const { id } = params;
   try {
@@ -140,4 +224,13 @@ const deleteMedicalRecords = async ({ params }: Request, res: Response) => {
   }
 };
 
-export { postMedicalRecord, postMedicalRecordPerMonth, getMedicalRecords, getAllMedicalRecordsByUser, medicalRecordsByMonth, getPdfMedicalRecordsByPatient, deleteMedicalRecords };
+export {
+  postMedicalRecord,
+  postMedicalRecordPerMonth,
+  getMedicalRecords,
+  getAllMedicalRecordsByUser,
+  medicalRecordsByMonth,
+  getPdfMedicalRecordsByPatient,
+  getPdfMedicalRecords,
+  deleteMedicalRecords,
+};

@@ -36,6 +36,14 @@ export class PatientService {
     );
   }
 
+  getPdfByProgram(month: string, year: string): Observable<any> {
+    return this.http.post<any>(`${this.backend}/generate-pdf/medical-records/`, {month, year},
+      {
+        responseType: 'blob' as 'json' // clave para evitar el error
+      }
+    );
+  }
+
   getPdfByPatientId(id: string): Observable<any> {
   // getPdfByPatientId(id: string): Observable<{ patient: Patient; medicalRecords: MedicalRecord[] }> {
     return this.http.get<any>(`${this.backend}/generate-pdf/medical-records/${id}`,

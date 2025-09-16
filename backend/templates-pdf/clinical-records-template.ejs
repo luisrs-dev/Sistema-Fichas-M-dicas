@@ -120,7 +120,11 @@
             <tbody>
               <!-- Fila con datos del paciente -->
               <tr>
-                <td><%= record1.date %></td>
+                <td><%= new Date(record1.date).toLocaleDateString('es-CL', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric' 
+      }) %></td>
                 <td>Si</td>
                 <td><%= record1.service.name %></td>
                 <td><%= record1.service.description %> (<%= record1.service.code %>)</td>
@@ -198,7 +202,12 @@
               <tbody>
                 <!-- Fila con datos del paciente -->
                 <tr>
-                  <td><%= record2.date %></td>
+                  <td>
+                  <%= new Date(record2.date).toLocaleDateString('es-CL', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric' 
+      }) %></td>
                   <td>Si</td>
                   <td><%= record2.service.name %></td>
                   <td><%= record2.service.description %> (<%= record2.service.code %>)</td>
