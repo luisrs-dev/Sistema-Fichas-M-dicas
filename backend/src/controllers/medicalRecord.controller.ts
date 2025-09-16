@@ -175,8 +175,14 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
     // 5. Generar PDFs agrupados
     const browser = await puppeteer.launch({
       headless: true,
-      //executablePath: "/snap/bin/chromium",
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      executablePath: '/snap/bin/chromium',
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--use-gl=egl",
+        "--blink-settings=imagesEnabled=false,cssEnabled=false",
+        "--disable-dev-shm-usage"
+      ],
     });
 
     for (const program of Object.keys(patientsByProgram)) {
