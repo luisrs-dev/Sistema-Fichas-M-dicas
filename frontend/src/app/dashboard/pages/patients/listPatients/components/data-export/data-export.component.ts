@@ -31,9 +31,13 @@ export class DataExportComponent {
   public años = [2024, 2025, 2026];
   constructor(private bottomSheetRef: MatBottomSheetRef<DataExportComponent>) {
 
+  const today = new Date();
+  const currentMonth = ((today.getMonth() + 1) - 1).toString(); // meses en JS van de 0-11
+  const currentYear = today.getFullYear().toString();
+
     this.exportForm = this.fb.group({
-      mes: ['Septiembre', Validators.required],
-      anio: ['2025', Validators.required],
+      mes: [currentMonth, Validators.required],
+      anio: [currentYear, Validators.required],
     });
   }
 

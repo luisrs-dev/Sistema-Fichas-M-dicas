@@ -141,8 +141,6 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
 
   try {
     const { month, year } = body;
-    console.log('{ month, year }',{ month, year });
-    
 
     // 1. Buscar pacientes (ejemplo: deberías traerlos de tu servicio o DB)
     const patients = await getAllPatients();
@@ -176,21 +174,16 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
     const browser = await puppeteer.launch({
       headless: true,
       executablePath: '/snap/bin/chromium',
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--use-gl=egl",
-        "--blink-settings=imagesEnabled=false,cssEnabled=false",
-        "--disable-dev-shm-usage"
-      ],
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--use-gl=egl", "--blink-settings=imagesEnabled=false,cssEnabled=false", "--disable-dev-shm-usage"],
     });
 
     for (const program of Object.keys(patientsByProgram)) {
       for (const patient of patientsByProgram[program]) {
         // Filtrar fichas del paciente por mes y año
         const clinicalRecordsPatient = await allMedicalRecordsUser(patient._id);
+        const clinicalRecordsFiltered = (clinicalRecordsPatient || []).filter((r: any) => matchMonthYear(r.date, month, year));
 
-        const clinicalRecords = (clinicalRecordsPatient || []).filter((r: any) => matchMonthYear(r.date, month, year));
+        const clinicalRecords = (clinicalRecordsFiltered || []).sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
         if (!clinicalRecords.length) continue;
 
