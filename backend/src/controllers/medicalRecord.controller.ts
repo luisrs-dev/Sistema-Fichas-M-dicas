@@ -140,7 +140,7 @@ const matchMonthYear = (date: Date, month: number, year: number) => {
 
 const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
   try {
-    const { month, year } = body;
+    const { startDate, endDate } = body;
 
     const patients = await getAllPatients();
     if (!patients || patients.length === 0) {
@@ -152,7 +152,7 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
 
     // Preparar ZIP
     res.setHeader("Content-Type", "application/zip");
-    res.setHeader("Content-Disposition", `attachment; filename="historiales_${month}_${year}.zip"`);
+    res.setHeader("Content-Disposition", `attachment; filename="historiales_${startDate}_${endDate}.zip"`);
 
     const archive = archiver("zip", { zlib: { level: 9 } });
     archive.pipe(res);
@@ -174,13 +174,11 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
     for (const program of Object.keys(patientsByProgram)) {
       for (const patient of patientsByProgram[program]) {
         // Obtener fichas del paciente
-        const clinicalRecordsPatient = await allMedicalRecordsUser(patient._id);
+        const clinicalRecordsPatient = await allMedicalRecordsUser(patient._id, startDate, endDate);
 
-        const clinicalRecordsFiltered = (clinicalRecordsPatient || []).filter((r: any) =>
-          matchMonthYear(r.date, month, year)
-        );
 
-        const clinicalRecords = (clinicalRecordsFiltered || []).sort(
+
+        const clinicalRecords = (clinicalRecordsPatient || []).sort(
           (a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()
         );
 

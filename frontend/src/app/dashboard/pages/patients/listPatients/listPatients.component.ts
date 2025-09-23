@@ -113,16 +113,16 @@ exportData(): void {
   ref.afterDismissed().subscribe((result) => {
     if (result) {
       Notiflix.Loading.circle('Generando Documentos PDFs');
-      const { mes, anio } = result;
+      const { startDate, endDate } = result;
 
-      this.patientService.getPdfByProgram(mes, anio).subscribe((blob) => {
+      this.patientService.getPdfByProgram(startDate, endDate).subscribe((blob) => {
         // Crear URL temporal para el ZIP
         const url = window.URL.createObjectURL(blob);
 
         // Crear enlace de descarga oculto
         const a = document.createElement('a');
         a.href = url;
-        a.download = `historiales_${mes}_${anio}.zip`; // nombre sugerido
+        a.download = `historiales_${startDate}_${endDate}.zip`; // nombre sugerido
         document.body.appendChild(a);
         a.click();
 

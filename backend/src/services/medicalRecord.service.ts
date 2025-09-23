@@ -75,12 +75,29 @@ const allMedicalRecords = async () => {
   return responseUsers;
 };
 
-const allMedicalRecordsUser = async (userId: string) => {
-  const medicalRecords = await MedicalRecordModel.find({ patient: userId })
+const allMedicalRecordsUser = async (userId: string, startDate?: string, endDate?: string) => {
+
+let medicalRecords = [];
+
+  if(startDate && endDate){
+   medicalRecords = await MedicalRecordModel.find({ 
+    patient: userId,
+    date: { $gte: startDate, $lte: endDate },
+  })
     .populate('service')
     .populate('patient')
     .populate('registeredBy')
     .lean();
+  }else{
+       medicalRecords = await MedicalRecordModel.find({ 
+    patient: userId,
+  })
+    .populate('service')
+    .populate('patient')
+    .populate('registeredBy')
+    .lean();
+  }
+    
 
   for (const record of medicalRecords) {
     const registeredBy = record.registeredBy as any;
