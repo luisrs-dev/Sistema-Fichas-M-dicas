@@ -168,7 +168,8 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
     const browser = await puppeteer.launch({
       headless: true,
       executablePath: "/snap/bin/chromium",
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--use-gl=egl", "--blink-settings=imagesEnabled=false,cssEnabled=false", "--disable-dev-shm-usage"],
+      args: ["--no-sandbox", "--disable-setuid-sandbox"]
+      // args: ["--no-sandbox", "--disable-setuid-sandbox", "--use-gl=egl", "--blink-settings=imagesEnabled=false,cssEnabled=false", "--disable-dev-shm-usage"],
     });
 
     for (const program of Object.keys(patientsByProgram)) {
