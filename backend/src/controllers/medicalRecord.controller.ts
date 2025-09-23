@@ -204,7 +204,9 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
         );
 
         const page = await browser.newPage();
-        await page.setContent(html, { waitUntil: "networkidle0", timeout: 60000 }); // 60 segundos
+        await page.setContent(html, { waitUntil: "networkidle0", timeout: 0 });
+
+        // await page.setContent(html, { waitUntil: "networkidle0", timeout: 60000 }); // 60 segundos
 
         // await page.setContent(html, { waitUntil: "networkidle0" });
 
