@@ -16,6 +16,8 @@ import fs from "fs";
 import archiver from "archiver"; // para comprimir en zip
 
 import { findPatient, getAllPatients } from "../services/patient.service";
+import { getBase64Image } from "../utils/base64Image";
+import { diagnosticMap } from "../constants/diagnosticMap";
 
 const getAllMedicalRecordsByUser = async ({ params }: Request, res: Response) => {
   try {
@@ -137,66 +139,75 @@ const matchMonthYear = (date: Date, month: number, year: number) => {
 };
 
 const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
-  console.log("getPdfMedicalRecords");
-
   try {
     const { month, year } = body;
 
-    // 1. Buscar pacientes (ejemplo: deberías traerlos de tu servicio o DB)
     const patients = await getAllPatients();
-    //console.log("patients", patients);
-
     if (!patients || patients.length === 0) {
       return res.status(404).send("No hay pacientes para generar PDFs.");
     }
 
-    // 2. Logo en base64
-    const logoPath = path.join(__dirname, "../../uploads/imgs/ficlin-logo.jpg");
-    const logoBase64 = fs.readFileSync(logoPath, { encoding: "base64" });
-    const logoUrl = `data:image/jpeg;base64,${logoBase64}`;
+    // Logo en Base64
+    const logoUrl = getBase64Image("imgs/ficlin-logo.jpg", "jpeg");
 
-    // 3. Preparar ZIP
+    // Preparar ZIP
     res.setHeader("Content-Type", "application/zip");
     res.setHeader("Content-Disposition", `attachment; filename="historiales_${month}_${year}.zip"`);
 
     const archive = archiver("zip", { zlib: { level: 9 } });
     archive.pipe(res);
 
-    // 4. Agrupar por programa
+    // Agrupar pacientes por programa
     const patientsByProgram = patients.reduce((acc: any, patient: any) => {
-      const program = patient.program.name || "Sin Programa";
+      const program = patient.program?.name || "Sin Programa";
       if (!acc[program]) acc[program] = [];
       acc[program].push(patient);
       return acc;
     }, {});
 
-    // 5. Generar PDFs agrupados
     const browser = await puppeteer.launch({
       headless: true,
-      executablePath: '/snap/bin/chromium',
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--use-gl=egl", "--blink-settings=imagesEnabled=false,cssEnabled=false", "--disable-dev-shm-usage"],
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
 
     for (const program of Object.keys(patientsByProgram)) {
       for (const patient of patientsByProgram[program]) {
-        // Filtrar fichas del paciente por mes y año
+        // Obtener fichas del paciente
         const clinicalRecordsPatient = await allMedicalRecordsUser(patient._id);
-        const clinicalRecordsFiltered = (clinicalRecordsPatient || []).filter((r: any) => matchMonthYear(r.date, month, year));
 
-        const clinicalRecords = (clinicalRecordsFiltered || []).sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        const clinicalRecordsFiltered = (clinicalRecordsPatient || []).filter((r: any) =>
+          matchMonthYear(r.date, month, year)
+        );
+
+        const clinicalRecords = (clinicalRecordsFiltered || []).sort(
+          (a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
 
         if (!clinicalRecords.length) continue;
 
+        // Convertir firmas a Base64
+        for (const record of clinicalRecords) {
+          const registeredBy = record.registeredBy as any;
+          if (registeredBy?.signature) {
+            // Quitar "/uploads/" si está en la ruta
+            const relativePath = registeredBy.signature.replace(/^\/uploads\//, "");
+            const signatureBase64 = getBase64Image(relativePath, "png");
+            if (signatureBase64) registeredBy.signature = signatureBase64;
+          }
+        }
+
         // Renderizar EJS
-        const html = await ejs.renderFile(path.join(__dirname, "../../templates-pdf/clinical-records-template.ejs"), { patient, clinicalRecords, logoUrl });
+        const html = await ejs.renderFile(
+          path.join(__dirname, "../../templates-pdf/clinical-records-template.ejs"),
+          { patient, clinicalRecords, logoUrl, diagnosticMap}
+        );
 
         const page = await browser.newPage();
-        await page.setContent(html, { waitUntil: "load", timeout: 0 });
+        await page.setContent(html, { waitUntil: "networkidle0" });
 
         const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
         await page.close();
 
-        // Nombre del archivo PDF: programa/paciente.pdf
         const filename = `${program}/${patient.name || patient._id}.pdf`;
         archive.append(pdfBuffer, { name: filename });
       }

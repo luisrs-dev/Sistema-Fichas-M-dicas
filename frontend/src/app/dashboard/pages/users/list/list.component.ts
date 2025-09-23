@@ -24,7 +24,7 @@ import { AuthService } from '../../../../auth/auth.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class ListComponent implements OnInit {
-  displayedColumns: string[] = [ 'name', 'email', 'profile','permissions','programs', 'actions'];
+  displayedColumns: string[] = [ 'name', 'email', 'profile','signature','permissions','programs', 'actions'];
   dataSource = new MatTableDataSource<User>([]);
 
   public users: User[];

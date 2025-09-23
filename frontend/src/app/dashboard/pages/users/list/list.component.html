@@ -53,8 +53,12 @@
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Perfil</th>
         <td mat-cell *matCellDef="let element">
           {{element.profile?.name || 'No registra'}}
-          <!-- @for (p of element.profile; track $index; let last = $last) {
-            {{p.name}}@if(last){}@else{,}}</td> -->
+      </ng-container>
+
+       <ng-container matColumnDef="signature">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Firma</th>
+        <td mat-cell *matCellDef="let element">
+          {{element.signature ? 'Registrada' : 'Sin Firma'}}
       </ng-container>
     
         <!-- Symbol Column -->

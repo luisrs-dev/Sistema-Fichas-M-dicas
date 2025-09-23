@@ -1,11 +1,10 @@
-import fs from 'fs';
-import path from 'path';
 
 import { Types } from "mongoose";
 import { MedicalRecord } from "../interfaces/medicalRecord.interface";
 import MedicalRecordModel from "../models/medicalRecord.model";
 import Sistrat from './sistrat/sistrat.class';
 import PatientModel from '../models/patient.model';
+import { getBase64Image } from "../utils/base64Image";
 
 const insertMedicalRecord = async (medicalRecord: MedicalRecord) => {
   
@@ -76,46 +75,28 @@ const allMedicalRecords = async () => {
   return responseUsers;
 };
 
-const allMedicalRecordsUser = async (userId: string): Promise<any> => {
-  try {
-    const medicalRecords = await MedicalRecordModel.find({ patient: new Types.ObjectId(userId) })
+const allMedicalRecordsUser = async (userId: string) => {
+  const medicalRecords = await MedicalRecordModel.find({ patient: userId })
     .populate('service')
     .populate('patient')
     .populate('registeredBy')
     .lean();
 
-    // Modificar firmas si existen
-    for (const record of medicalRecords) {
-      const registeredBy = record.registeredBy as { signature?: string };
+  for (const record of medicalRecords) {
+    const registeredBy = record.registeredBy as any;
 
-      if (registeredBy && registeredBy.signature) {
-        let signatureRelativePath = registeredBy.signature;
-      
-        // Si la ruta comienza con "/uploads", quita esa parte
-        if (signatureRelativePath.startsWith("/uploads")) {
-          signatureRelativePath = signatureRelativePath.replace("/uploads/", "");
-        }
-        const signaturePath = path.join(__dirname, "../../uploads", signatureRelativePath);
-        console.log('data signaturePath', signaturePath);
-        
-      
-        if (fs.existsSync(signaturePath)) {
-          const signatureBase64 = fs.readFileSync(signaturePath, { encoding: "base64" });
-          registeredBy.signature = `data:image/png;base64,${signatureBase64}`;
-        } else {
-          console.warn("Firma no encontrada en:", signaturePath);
-        }
-      }
-      
+    if (registeredBy?.signature) {
+      // Quitar "/uploads/" si está en la ruta
+      let relativePath = registeredBy.signature.replace(/^\/uploads\//, "");
+      const signatureBase64 = getBase64Image(relativePath, "png");
+      if (signatureBase64) registeredBy.signature = signatureBase64;
     }
-
-
-    return medicalRecords;
-  } catch (error) {
-    console.error("Error al recuperar las fichas médicas del usuario:", error);
-    throw error;
   }
+
+  return medicalRecords;
 };
+
+
 
 const getRecordsByMonthAndYear = async (month: number, year: number) => {
 
