@@ -167,7 +167,7 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
 
     const browser = await puppeteer.launch({
       headless: true,
-      executablePath: "/snap/bin/chromium",
+      // executablePath: "/snap/bin/chromium",
       args: ["--no-sandbox", "--disable-setuid-sandbox"]
       // args: ["--no-sandbox", "--disable-setuid-sandbox", "--use-gl=egl", "--blink-settings=imagesEnabled=false,cssEnabled=false", "--disable-dev-shm-usage"],
     });
@@ -212,7 +212,9 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
         const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
         await page.close();
 
-        const filename = `${program}/${patient.name || patient._id}.pdf`;
+        const fullname = `${patient.name} ${patient.surname} ${patient.secondSurname}`.toUpperCase();
+
+        const filename = `[${program}]/[${program}] ${fullname}.pdf`;
         archive.append(pdfBuffer, { name: filename });
       }
     }
