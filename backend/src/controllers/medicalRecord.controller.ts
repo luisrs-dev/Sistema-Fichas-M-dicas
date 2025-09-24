@@ -132,13 +132,7 @@ const getPdfMedicalRecordsByPatient = async ({ params }: Request, res: Response)
   }
 };
 
-// Función de utilidad para formatear fecha
-const matchMonthYear = (date: Date, month: number, year: number) => {
-  const d = new Date(date);
-  return d.getMonth() + 1 === Number(month) && d.getFullYear() === Number(year);
-};
-
-const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
+const getPdfMedicalRecords1 = async ({ body }: Request, res: Response) => {
   try {
     const { startDate, endDate } = body;
 
@@ -169,12 +163,10 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
       headless: true,
       executablePath: "/snap/bin/chromium",
       args: ["--no-sandbox", "--disable-setuid-sandbox"]
-      // args: ["--no-sandbox", "--disable-setuid-sandbox", "--use-gl=egl", "--blink-settings=imagesEnabled=false,cssEnabled=false", "--disable-dev-shm-usage"],
     });
 
     for (const program of Object.keys(patientsByProgram)) {
       for (const patient of patientsByProgram[program]) {
-        // Obtener fichas del paciente
         const clinicalRecordsPatient = await allMedicalRecordsUser(patient._id, startDate, endDate);
 
 
@@ -185,7 +177,6 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
 
         if (!clinicalRecords.length) continue;
 
-        // Convertir firmas a Base64
         for (const record of clinicalRecords) {
           const registeredBy = record.registeredBy as any;
           if (registeredBy?.signature) {
@@ -196,7 +187,6 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
           }
         }
 
-        // Renderizar EJS
         const html = await ejs.renderFile(
           path.join(__dirname, "../../templates-pdf/clinical-records-template.ejs"),
           { patient, clinicalRecords, logoUrl, diagnosticMap}
@@ -205,9 +195,6 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
         const page = await browser.newPage();
         await page.setContent(html, { waitUntil: "networkidle0", timeout: 0 });
 
-        // await page.setContent(html, { waitUntil: "networkidle0", timeout: 60000 }); // 60 segundos
-
-        // await page.setContent(html, { waitUntil: "networkidle0" });
 
         const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
         await page.close();
@@ -226,6 +213,98 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
     res.status(500).send("Error generando el PDF.");
   }
 };
+
+const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
+  try {
+    const { startDate, endDate } = body;
+
+    const patients = await getAllPatients();
+    if (!patients || patients.length === 0) {
+      return res.status(404).send("No hay pacientes para generar PDFs.");
+    }
+
+    // Logo en Base64
+    const logoUrl = getBase64Image("imgs/ficlin-logo.jpg", "jpeg");
+
+    // Preparar ZIP
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Disposition", `attachment; filename="historiales_${startDate}_${endDate}.zip"`);
+
+    const archive = archiver("zip", { zlib: { level: 9 } });
+    archive.pipe(res);
+
+    // Agrupar pacientes por programa
+    const patientsByProgram = patients.reduce((acc: any, patient: any) => {
+      const program = patient.program?.name || "Sin Programa";
+      if (!acc[program]) acc[program] = [];
+      acc[program].push(patient);
+      return acc;
+    }, {});
+
+    // Lanzar navegador
+    const browser = await puppeteer.launch({
+      headless: true,
+      executablePath: "/snap/bin/chromium",
+      args: ["--no-sandbox", "--disable-setuid-sandbox"]
+    });
+
+    // 🔹 Crear UNA sola página
+    const page = await browser.newPage();
+
+    // 🔹 Definir el path del template UNA vez
+    const templatePath = path.join(__dirname, "../../templates-pdf/clinical-records-template.ejs");
+
+    for (const program of Object.keys(patientsByProgram)) {
+      for (const patient of patientsByProgram[program]) {
+        // Obtener fichas del paciente
+        const clinicalRecordsPatient = await allMedicalRecordsUser(patient._id, startDate, endDate);
+
+        const clinicalRecords = (clinicalRecordsPatient || []).sort(
+          (a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+
+        if (!clinicalRecords.length) continue;
+
+        // Convertir firmas a Base64
+        for (const record of clinicalRecords) {
+          const registeredBy = record.registeredBy as any;
+          if (registeredBy?.signature) {
+            const relativePath = registeredBy.signature.replace(/^\/uploads\//, "");
+            const signatureBase64 = getBase64Image(relativePath, "png");
+            if (signatureBase64) registeredBy.signature = signatureBase64;
+          }
+        }
+
+        // Renderizar EJS con el templatePath
+        const html = await ejs.renderFile(templatePath, {
+          patient,
+          clinicalRecords,
+          logoUrl,
+          diagnosticMap
+        });
+
+        // Reusar la misma página
+        await page.setContent(html, { waitUntil: "domcontentloaded" });
+
+        const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
+
+        const fullname = `${patient.name} ${patient.surname} ${patient.secondSurname}`.toUpperCase();
+        const filename = `[${program}]/[${program}] ${fullname}.pdf`;
+
+        archive.append(pdfBuffer, { name: filename });
+      }
+    }
+
+    // Cerrar recursos
+    await page.close();
+    await browser.close();
+    await archive.finalize();
+  } catch (error) {
+    console.error("Error al generar PDF:", error);
+    res.status(500).send("Error generando el PDF.");
+  }
+};
+
 
 const deleteMedicalRecords = async ({ params }: Request, res: Response) => {
   const { id } = params;
