@@ -33,7 +33,7 @@ class Sistrat {
       console.log('despues de getPage()');
 
       const loginUrl = "https://sistrat.senda.gob.cl/sistrat/"; // URL del formulario de login
-      await this.scrapper.navigateToPage(page, loginUrl);
+      // await this.scrapper.navigateToPage(page, loginUrl);
 
       await page.goto(loginUrl);
       //Centro hombres; rmorales  Robe0011
