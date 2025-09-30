@@ -57,9 +57,10 @@ const postMedicalRecordPerMonth = async ({ params, body }: Request, res: Respons
   console.log("body", body);
 
   try {
-    const responseUser = await postMedicalRecordsPerMonthOnSistrat(patientId, month, year, medicalRecordsGrouped);
+    const responsepostMedicalRecordsPerMonthOnSistrat = await postMedicalRecordsPerMonthOnSistrat(patientId, month, year, medicalRecordsGrouped);
 
-    res.send(responseUser);
+    
+    res.send(responsepostMedicalRecordsPerMonthOnSistrat);
   } catch (error) {
     handleHttp(res, "ERROR_POST_ITEM", error);
   }

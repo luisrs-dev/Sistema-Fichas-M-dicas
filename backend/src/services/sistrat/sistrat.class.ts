@@ -27,15 +27,20 @@ class Sistrat {
   // Método para hacer login en Sistrat
   async login(center: string) {
     try {
-      console.log('antes de getPage()');
+      console.log('CENTRO: antes de getPage()', center);
       
       let page: Page = await this.scrapper.getPage();
       console.log('despues de getPage()');
 
       const loginUrl = "https://sistrat.senda.gob.cl/sistrat/"; // URL del formulario de login
-      // await this.scrapper.navigateToPage(page, loginUrl);
+      console.log('loginurl', loginUrl);
+      
+      await this.scrapper.navigateToPage(page, loginUrl);
 
-      await page.goto(loginUrl);
+      console.log('luego de navigateToPage login');
+      
+
+      // await page.goto(loginUrl);
       //Centro hombres; rmorales  Robe0011
       //Centro mujeres; rmorales  Robe1010
       //Centro alameda; rmoralesn  Robe1234
@@ -53,7 +58,7 @@ class Sistrat {
       }
 
       if (center == "alameda") {
-        usuario = "rmoralesn";
+        usuario = "rmoralesn";  
         password = "Robe1234";
       }
 
@@ -222,7 +227,7 @@ class Sistrat {
     const data: RowData[] = []; // Cambiar aquí el tipo a RowData[]
     console.log('patient for loooogiiiiiin',patient);
     
-    this.gender = patient.sex;
+    // this.gender = patient.sex;
     let page: Page = await this.login(patient.sistratCenter);
 
     page.on('dialog', async dialog => { await dialog.accept(); });
