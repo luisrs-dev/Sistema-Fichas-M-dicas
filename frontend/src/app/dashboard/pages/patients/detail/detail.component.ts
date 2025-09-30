@@ -169,8 +169,15 @@ export default class DetailComponent {
     let grouped: Record<string, number[]> = {};
     const records = this.state().medicalRecords;
 
+    console.log('records', records);
+    
     records.forEach((record) => {
       const date = new Date(record.date);
+
+      console.log('date.getMonth() + 1', date.getMonth() + 1);
+      console.log('month', month);
+      
+      
 
       // Solo del mes y año que nos interesa
       if (date.getMonth() + 1 !== month || date.getFullYear() !== year) return;
