@@ -42,14 +42,14 @@ class Scrapper {
       headless: headless,
       //slowMo: 300, sirve para darle tiempe a cada operacion
       userDataDir: userDataDir, // Establecer la carpeta de caché,
-      executablePath: '/snap/bin/chromium',
+      executablePath: await puppeteer.executablePath(), // usa el binario que trae Puppeteer
       args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--use-gl=egl",
-        "--blink-settings=imagesEnabled=false,cssEnabled=false",
-        "--disable-dev-shm-usage"
-      ],
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-features=site-per-process",
+      "--ignore-certificate-errors",
+    ],
       timeout: 0,
       protocolTimeout: 300000,
     }
