@@ -44,12 +44,12 @@ class Scrapper {
       userDataDir: userDataDir, // Establecer la carpeta de caché,
       executablePath: '/snap/bin/chromium',
       args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-features=site-per-process",
-      "--ignore-certificate-errors",
-    ],
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--use-gl=egl",
+        "--blink-settings=imagesEnabled=false,cssEnabled=false",
+        "--disable-dev-shm-usage"
+      ],
       timeout: 0,
       protocolTimeout: 300000,
     }
