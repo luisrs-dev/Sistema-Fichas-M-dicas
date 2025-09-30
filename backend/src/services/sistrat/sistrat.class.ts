@@ -27,7 +27,11 @@ class Sistrat {
   // Método para hacer login en Sistrat
   async login(center: string) {
     try {
+      console.log('antes de getPage()');
+      
       let page: Page = await this.scrapper.getPage();
+      console.log('despues de getPage()');
+
       const loginUrl = "https://sistrat.senda.gob.cl/sistrat/"; // URL del formulario de login
       await this.scrapper.navigateToPage(page, loginUrl);
 
