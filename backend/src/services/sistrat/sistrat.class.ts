@@ -226,6 +226,8 @@ class Sistrat {
       await this.scrapper.clickButton(page, "#flyout");
       // Click botón "Ver usuarios activos"
       await this.scrapper.clickButton(page, 'a[href="php/consultar_paciente.php"].ui-corner-all');
+      await this.scrapper.waitForSeconds(3);
+      
       // CLick botón filtrar
       await this.scrapper.clickButton(page, "#filtrar");
       await this.scrapper.waitForSeconds(3);
@@ -318,16 +320,16 @@ class Sistrat {
             const serviceNameOnTableSistrat = row.cells[0]?.innerText.trim().toLowerCase();            
 
             const mappedServicesSISTRAT = {
-              'consulta salud mental': 'consulta de salud mental',
+              'consulta de salud mental': 'consulta de salud mental',
               'intervenci?n psicosocial de grupo': 'intervención psicosocial de grupo',
-              'visita domiciliaria': 'visita domiciliaria',
+              'visita domiciliaria': 'visita domiciliaria', 
               'consulta m?dica': 'consulta médica',
               'consulta psicol?gica': 'consulta psicológica',
               'consulta psiqui?trica': 'consulta psiquiátrica',
               'psicoterapia individual': 'psicoterapia individual',
-              'psicoterapia grupal': 'psicoterapia grupal',
+              'psicoterapia grupal': 'psicoterapia individual grupal',
               'psiocodiagn?stico': 'psicodiagnóstico',
-              'consultor?a de salud mental': 'consulta de salud mental'
+              'consultor?a de salud mental': 'consulta de salud mental',
             }
 
             const normalizedServiceOnSistrat = mappedServicesSISTRAT[serviceNameOnTableSistrat];
@@ -359,7 +361,7 @@ class Sistrat {
       console.log('medicalRecordsGrouped', medicalRecordsGrouped);
       console.log('Datos ingresados en la tabla, tomando screenshot...');
       const safePatientName = patientName.replace(/\s+/g, '_').toLowerCase();
-      const filePath = `uploads/screenshots/agosto2025/${safePatientName}_mes_agosto.png`;
+      const filePath = `uploads/screenshots/septiembre2025/${safePatientName}_mes_septiembre.png`;
       await page.screenshot({ path: filePath, fullPage: true });
       console.log('screenshot tomado y guardado en:', filePath);
       console.log('esperando mysubmit');

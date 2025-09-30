@@ -48,6 +48,9 @@ export default class DetailComponent {
   registeredRecordsPerMonth = signal<boolean>(false);
   screenshotPath = signal<string | null>(null);
 
+  screenshotImage = computed( () => this.screenshotPath() )
+
+
   patientId = signal<string | null>(null);
 
   showTable = signal(false);
@@ -217,7 +220,7 @@ export default class DetailComponent {
             //}));
             Notiflix.Notify.success('Registrado en SISTRAT');
             this.registeredRecordsPerMonth.set(true);
-            this.screenshotPath.set(`http://localhost:3002/uploads/screenshots/agosto2025/${this.patient()?.name.replace(/\s+/g, '_').toLowerCase()}_mes_agosto.png`);
+            this.screenshotPath.set(`http://ficlin.cl/uploads/screenshots/septiembre2025/${this.patient()?.name.replace(/\s+/g, '_').toLowerCase()}_mes_septiembre.png`);
             //this.imagePath = `http://localhost:3002${response.user.signature}`;
 
           },

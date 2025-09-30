@@ -59,9 +59,7 @@
 
   } 
   
-  @if(registeredRecordsPerMonth()){
-  <img [src]="screenshotPath()" alt="" />
-  } 
+  <img [src]="screenshotImage()" alt="" />
   
   
   @if(state().filteredMedicalRecords.length > 0){
