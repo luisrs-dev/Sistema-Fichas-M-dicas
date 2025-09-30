@@ -216,6 +216,8 @@ class Sistrat {
 
   async registrarMedicalRecordsByMonth(patient: Patient, month: number, year: number, medicalRecordsGrouped: any) {
     const data: RowData[] = []; // Cambiar aquí el tipo a RowData[]
+    console.log('patient for loooogiiiiiin',patient);
+    
     this.gender = patient.sex;
     let page: Page = await this.login(patient.sistratCenter);
 
