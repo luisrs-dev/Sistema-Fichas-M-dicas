@@ -53,6 +53,9 @@ class Sistrat {
         password = "Robe1234";
       }
 
+      console.log('usuario password', usuario, password);
+      
+
       await this.scrapper.waitAndType(page, "#txr_usuario", usuario);
       await this.scrapper.waitForSeconds(4);
 
