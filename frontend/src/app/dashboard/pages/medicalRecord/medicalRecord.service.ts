@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../../environments/environment';
-import { Observable, catchError, throwError } from 'rxjs';
+import { Observable, catchError, retry, throwError } from 'rxjs';
 import { Service } from '../parameters/services/profesionalService.service';
 import { MedicalRecord } from '../../interfaces/medicalRecord.interface';
 import { MedicalRecordGrouped } from '../patients/detail/detail.component';
@@ -44,7 +44,10 @@ export class MedicalRecordService {
   }
 
   monthRecords(id: string, month: number, year: number = 2025, medicalRecordsGrouped: MedicalRecordGrouped[]): Observable<any> {
-    return this.http.post<any>(`${this.backend}/medicalRecord/monthRecords/${id}`, { medicalRecordsGrouped, month, year }).pipe(catchError((err) => throwError(() => err.error.message)));
+    return this.http.post<any>(`${this.backend}/medicalRecord/monthRecords/${id}`, { medicalRecordsGrouped, month, year })
+    .pipe(
+      retry(3),
+      catchError((err) => throwError(() => err.error.message)));
   }
 }
 

@@ -232,16 +232,19 @@ class Sistrat {
 
     page.on('dialog', async dialog => { await dialog.accept(); });
 
-
     
     try {
       console.log("registrarMedicalRecordsByMonth lueg de login");
       // Cick botón Usuarios
+      await page.waitForSelector('#flyout', { visible: true, timeout: 15000 });
+
       await this.scrapper.clickButton(page, "#flyout");
       // Click botón "Ver usuarios activos"
       await this.scrapper.clickButton(page, 'a[href="php/consultar_paciente.php"].ui-corner-all');
-      await this.scrapper.waitForSeconds(3);
-      
+      console.log('esperando 15 segundos para click en #filtrar');
+      await page.waitForSelector('#filtrar', { visible: true, timeout: 15000 });
+
+        
       // CLick botón filtrar
       await this.scrapper.clickButton(page, "#filtrar");
       await this.scrapper.waitForSeconds(3);
@@ -363,6 +366,8 @@ class Sistrat {
                   if (input) {
                     input.value = value.toString();
                     input.dispatchEvent(new Event("input", { bubbles: true })); // disparar evento por si hay listeners
+                    input.dispatchEvent(new Event("change", { bubbles: true })); // simula blur/tab
+
                   }
                 }
               });
@@ -374,10 +379,11 @@ class Sistrat {
 
       console.log('medicalRecordsGrouped', medicalRecordsGrouped);
       console.log('Datos ingresados en la tabla, tomando screenshot...');
-      const safePatientName = patientName.replace(/\s+/g, '_').toLowerCase();
-      const filePath = `uploads/screenshots/septiembre2025/${safePatientName}_mes_septiembre.png`;
-      await page.screenshot({ path: filePath, fullPage: true });
-      console.log('screenshot tomado y guardado en:', filePath);
+      // await this.scrapper.waitForSeconds(15);
+      // const safePatientName = patientName.replace(/\s+/g, '_').toLowerCase();
+      // const filePath = `uploads/screenshots/septiembre2025/${safePatientName}_mes_septiembre.png`;
+      // await page.screenshot({ path: filePath, fullPage: true });
+      // console.log('screenshot tomado y guardado en:', filePath);
       console.log('esperando mysubmit');
       
 
@@ -385,11 +391,14 @@ class Sistrat {
 
       await this.scrapper.waitForSeconds(3);
       await this.scrapper.clickButton(page, '#mysubmit', 30000);
+console.log('REGISTRO EXITOSO ATENCIONES MENSUALES');
+
 
       return 'REGISTRO EXITOSO ATENCIONES MENSUALES';
 
     } catch (error) {
       console.log("errror", error);
+      throw new Error(`Error en registrar atenciones mensuales: ${error}`);
     }
   }
 
