@@ -72,6 +72,7 @@ class Sistrat {
 
       await this.scrapper.clickButton(page, 'input[value="Ingresar SISTRAT"] ');
       await page.waitForNavigation();
+      await this.scrapper.waitForSeconds(5);
 
       return page;
     } catch (error) {
@@ -236,11 +237,18 @@ class Sistrat {
     try {
       console.log("registrarMedicalRecordsByMonth lueg de login");
       // Cick botón Usuarios
+      console.log('Esperando #flyout...');
+      
       await page.waitForSelector('#flyout', { visible: true, timeout: 15000 });
 
-      await this.scrapper.clickButton(page, "#flyout");
+
+      await this.scrapper.clickButton(page, "#flyout", 15000);
+      await page.waitForSelector('a[href*="consultar_paciente.php"]', { visible: true, timeout: 15000 });
+      await this.scrapper.clickButton(page, 'a[href*="consultar_paciente.php"]', 15000);
+
+      // await this.scrapper.clickButton(page, "#flyout");
       // Click botón "Ver usuarios activos"
-      await this.scrapper.clickButton(page, 'a[href="php/consultar_paciente.php"].ui-corner-all');
+      // await this.scrapper.clickButton(page, 'a[href="php/consultar_paciente.php"].ui-corner-all');
       console.log('esperando 15 segundos para click en #filtrar');
       await page.waitForSelector('#filtrar', { visible: true, timeout: 15000 });
 
@@ -344,9 +352,10 @@ class Sistrat {
               'consulta psicol?gica': 'consulta psicológica',
               'consulta psiqui?trica': 'consulta psiquiátrica',
               'psicoterapia individual': 'psicoterapia individual',
-              'psicoterapia grupal': 'psicoterapia individual grupal',
+              'psicoterapia grupal': 'psicoterapia grupal',
               'psiocodiagn?stico': 'psicodiagnóstico',
               'consultor?a de salud mental': 'consulta de salud mental',
+              'intervenci?n familiar': 'intervención familiar'
             }
 
             const normalizedServiceOnSistrat = mappedServicesSISTRAT[serviceNameOnTableSistrat];
@@ -389,8 +398,8 @@ class Sistrat {
 
       // 3. Esperar al botón y hacer click
 
-      await this.scrapper.waitForSeconds(3);
-      await this.scrapper.clickButton(page, '#mysubmit', 30000);
+      await this.scrapper.waitForSeconds(50);
+      // await this.scrapper.clickButton(page, '#mysubmit', 30000);
 console.log('REGISTRO EXITOSO ATENCIONES MENSUALES');
 
 

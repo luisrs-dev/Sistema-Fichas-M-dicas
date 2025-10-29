@@ -164,7 +164,7 @@ export default class DetailComponent {
     }
   }
 
-  buildDataMonth(month: number = this.selectedMonth(), year: number = 2025) {
+  buildDataMonth(monthSelected: number = this.selectedMonth(), year: number = 2025) {
     // Inicializamos un objeto para agrupar
     let grouped: Record<string, number[]> = {};
     const records = this.state().medicalRecords;
@@ -172,17 +172,16 @@ export default class DetailComponent {
     console.log('records', records);
     
     records.forEach((record) => {
-      const date = new Date(record.date);
+      const dateMedicalRecord = new Date(record.date);
+      const yearMedicalRecord = Number(new Date(record.date).getFullYear());
+      const monthMedicalRecord = Number(dateMedicalRecord.getMonth() + 1);
 
-      console.log('date.getMonth() + 1', date.getMonth() + 1);
-      console.log('month', month);
       
-      
-
       // Solo del mes y año que nos interesa
-      if (date.getMonth() + 1 !== month || date.getFullYear() !== year) return;
+      if (monthMedicalRecord !== Number(monthSelected) || yearMedicalRecord !== year) return;
 
-      const day = date.getDate(); // día 1-31
+      
+      const day = dateMedicalRecord.getDate(); // día 1-31      
       const service = record.service.description;
 
       // Si no existe la fila para este servicio, creamos array con 31 posiciones
