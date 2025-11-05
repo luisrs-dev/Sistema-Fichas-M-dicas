@@ -108,7 +108,7 @@ const getPdfMedicalRecordsByPatient = async ({ params }: Request, res: Response)
       headless: true,
       //slowMo: 300, sirve para darle tiempe a cada operacion
       // userDataDir: userDataDir, // Establecer la carpeta de caché
-      // executablePath: "/snap/bin/chromium",
+      executablePath: "/snap/bin/chromium",
       args: ["--no-sandbox", "--disable-setuid-sandbox", "--use-gl=egl", "--blink-settings=imagesEnabled=false,cssEnabled=false"],
       timeout: 0,
       protocolTimeout: 300000,
@@ -164,7 +164,7 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
     // Lanzar navegador
     const browser = await puppeteer.launch({
       headless: true,
-      // executablePath: "/snap/bin/chromium",
+      executablePath: "/snap/bin/chromium",
       args: ["--no-sandbox", "--disable-setuid-sandbox"]
     });
 
