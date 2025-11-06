@@ -14,13 +14,13 @@ class Scrapper {
   async getPage(): Promise<Page> {
     const browser: Browser = await this.launchBrowser();
     const page: Page = await browser.newPage();
-    await page.setDefaultNavigationTimeout(300000); // 5 minutos
+    // await page.setDefaultNavigationTimeout(300000); // 5 minutos
 
     // Ajustar el viewport para simular una pantalla de notebook
-    await page.setViewport({
-      width: 1366, // Ancho de un notebook común
-      height: 768, // Alto de un notebook común
-    });
+    // await page.setViewport({
+    //   width: 1366, // Ancho de un notebook común
+    //   height: 768, // Alto de un notebook común
+    // });
 
     return page;
   }
@@ -31,8 +31,8 @@ class Scrapper {
    * @returns
    */
   async launchBrowser(headless: boolean = true): Promise<Browser> {
-    //puppeteer.use(StealthPlugin());
-    //puppeteer.use(AnonymizeUAPlugin());
+    // puppeteer.use(StealthPlugin());
+    // puppeteer.use(AnonymizeUAPlugin());
 
     const sessionHash = Date.now().toString();
     const userDataDir = await this.createCacheDirectory(sessionHash);
@@ -40,16 +40,18 @@ class Scrapper {
     this.browser = await puppeteer.launch(
       {
       headless: headless,
+      executablePath: '/snap/bin/chromium',
       //slowMo: 300, sirve para darle tiempe a cada operacion
       userDataDir: userDataDir, // Establecer la carpeta de caché,
-      executablePath: '/snap/bin/chromium',
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--use-gl=egl",
-        "--blink-settings=imagesEnabled=false,cssEnabled=false",
-        "--disable-dev-shm-usage"
-      ],
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--use-gl=egl", "--blink-settings=imagesEnabled=false,cssEnabled=false"],
+
+      // args: [
+      //   "--no-sandbox",
+      //   "--disable-setuid-sandbox",
+      //   "--use-gl=egl",
+      //   "--blink-settings=imagesEnabled=false,cssEnabled=false",
+      //   "--disable-dev-shm-usage"
+      // ],
       timeout: 0,
       protocolTimeout: 300000,
     }

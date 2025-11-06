@@ -26,58 +26,69 @@ class Sistrat {
 
   // Método para hacer login en Sistrat
   async login(center: string) {
+    console.group(`[Login] Inicio proceso de login para centro: ${center}`);
     try {
-      console.log('CENTRO: antes de getPage()', center);
-      
+      console.group("Preparando variables");
+
+      let usuario = "";
+      let password = "";
+
+      switch (center) {
+        case "mujeres":
+          usuario = "rmorales";
+          password = "Robe1010";
+          break;
+
+        case "hombres":
+          usuario = "rmorales";
+          password = "Robe0011";
+          break;
+
+        case "alameda":
+          usuario = "rmoralesn";
+          password = "Robe1234";
+          break;
+      }
+
+      console.log("Usuario seleccionado:", usuario);
+      console.log("Password seleccionado:", password ? password : null);
+      console.groupEnd(); // end Preparando variables
+
+      console.group("Navegación inicial");
+      const loginUrl = "https://sistrat.senda.gob.cl/sistrat/";
+      console.log("URL Login:", loginUrl);
+
       let page: Page = await this.scrapper.getPage();
-      console.log('despues de getPage()');
+      console.log("Página obtenida desde el scrapper");
 
-      const loginUrl = "https://sistrat.senda.gob.cl/sistrat/"; // URL del formulario de login
-      console.log('loginurl', loginUrl);
-      
       await this.scrapper.navigateToPage(page, loginUrl);
+      console.log("Navegado correctamente al login");
 
-      console.log('luego de navigateToPage login');
-      
-
-      // await page.goto(loginUrl);
-      //Centro hombres; rmorales  Robe0011
-      //Centro mujeres; rmorales  Robe1010
-      //Centro alameda; rmoralesn  Robe1234
-
-      let usuario: string = "";
-      let password: string = "";
-      if (center == "mujeres") {
-        usuario = "rmorales";
-        password = "Robe1010";
-      }
-
-      if (center == "hombres") {
-        usuario = "rmorales";
-        password = "Robe0011";
-      }
-
-      if (center == "alameda") {
-        usuario = "rmoralesn";  
-        password = "Robe1234";
-      }
-
-      console.log('usuario password', usuario, password);
-      
-
+      console.group("Escribiendo credenciales");
       await this.scrapper.waitAndType(page, "#txr_usuario", usuario);
-      await this.scrapper.waitForSeconds(4);
+      console.log("Usuario ingresado");
+      await this.scrapper.waitForSeconds(2);
 
       await this.scrapper.waitAndType(page, "#txr_clave", password);
+      console.log("Password ingresado");
+      await this.scrapper.waitForSeconds(1);
+      console.groupEnd(); // end Escribiendo credenciales
 
-      await this.scrapper.clickButton(page, 'input[value="Ingresar SISTRAT"] ');
+      console.group("Enviando formulario");
+      await this.scrapper.clickButton(page, 'input[value="Ingresar SISTRAT"]');
+      console.log("Botón de login clickeado");
+
       await page.waitForNavigation();
-      await this.scrapper.waitForSeconds(5);
+      console.log("Página navegó después de login");
 
+      await this.scrapper.waitForSeconds(3);
+      console.groupEnd(); // end Enviando formulario
+
+      console.groupEnd(); // end [Login]
       return page;
     } catch (error) {
       console.log("Error en login SISTRAT", error);
-      
+
       throw new Error("Error en autenticación con SISTRAT");
     }
   }
@@ -226,21 +237,21 @@ class Sistrat {
 
   async registrarMedicalRecordsByMonth(patient: Patient, month: number, year: number, medicalRecordsGrouped: any) {
     const data: RowData[] = []; // Cambiar aquí el tipo a RowData[]
-    console.log('patient for loooogiiiiiin',patient);
-    
+    console.log("patient for loooogiiiiiin", patient);
+
     // this.gender = patient.sex;
     let page: Page = await this.login(patient.sistratCenter);
 
-    page.on('dialog', async dialog => { await dialog.accept(); });
+    page.on("dialog", async (dialog) => {
+      await dialog.accept();
+    });
 
-    
     try {
       console.log("registrarMedicalRecordsByMonth lueg de login");
       // Cick botón Usuarios
-      console.log('Esperando #flyout...');
-      
-      await page.waitForSelector('#flyout', { visible: true, timeout: 15000 });
+      console.log("Esperando #flyout...");
 
+      await page.waitForSelector("#flyout", { visible: true, timeout: 15000 });
 
       await this.scrapper.clickButton(page, "#flyout", 15000);
       await page.waitForSelector('a[href*="consultar_paciente.php"]', { visible: true, timeout: 15000 });
@@ -249,10 +260,9 @@ class Sistrat {
       // await this.scrapper.clickButton(page, "#flyout");
       // Click botón "Ver usuarios activos"
       // await this.scrapper.clickButton(page, 'a[href="php/consultar_paciente.php"].ui-corner-all');
-      console.log('esperando 15 segundos para click en #filtrar');
-      await page.waitForSelector('#filtrar', { visible: true, timeout: 15000 });
+      console.log("esperando 15 segundos para click en #filtrar");
+      await page.waitForSelector("#filtrar", { visible: true, timeout: 15000 });
 
-        
       // CLick botón filtrar
       await this.scrapper.clickButton(page, "#filtrar");
       await this.scrapper.waitForSeconds(3);
@@ -322,9 +332,7 @@ class Sistrat {
       console.log(`rowPatientSistrat resultado: ${rowPatientSistrat}`);
       await page.waitForSelector(".tabla_mensual", { timeout: 5000 });
 
-
-      console.log('IMPORTANTE medicalRecordsGrouped', medicalRecordsGrouped);
-      
+      console.log("IMPORTANTE medicalRecordsGrouped", medicalRecordsGrouped);
 
       await page.evaluate((medicalRecordsGrouped) => {
         // Buscar la tabla donde están los registros mensuales
@@ -342,32 +350,30 @@ class Sistrat {
           // Buscar la fila cuyo servicio coincida con el nombre (columna 0)
           for (let i = 1; i < table.rows.length; i++) {
             const row = table.rows[i];
-            const serviceNameOnTableSistrat = row.cells[0]?.innerText.trim().toLowerCase();            
+            const serviceNameOnTableSistrat = row.cells[0]?.innerText.trim().toLowerCase();
 
             const mappedServicesSISTRAT = {
-              'consulta de salud mental': 'consulta de salud mental',
-              'intervenci?n psicosocial de grupo': 'intervención psicosocial de grupo',
-              'visita domiciliaria': 'visita domiciliaria', 
-              'consulta m?dica': 'consulta médica',
-              'consulta psicol?gica': 'consulta psicológica',
-              'consulta psiqui?trica': 'consulta psiquiátrica',
-              'psicoterapia individual': 'psicoterapia individual',
-              'psicoterapia grupal': 'psicoterapia grupal',
-              'psiocodiagn?stico': 'psicodiagnóstico',
-              'consultor?a de salud mental': 'consulta de salud mental',
-              'intervenci?n familiar': 'intervención familiar'
-            }
+              "consulta de salud mental": "consulta de salud mental",
+              "intervenci?n psicosocial de grupo": "intervención psicosocial de grupo",
+              "visita domiciliaria": "visita domiciliaria",
+              "consulta m?dica": "consulta médica",
+              "consulta psicol?gica": "consulta psicológica",
+              "consulta psiqui?trica": "consulta psiquiátrica",
+              "psicoterapia individual": "psicoterapia individual",
+              "psicoterapia grupal": "psicoterapia grupal",
+              "psiocodiagn?stico": "psicodiagnóstico",
+              "consultor?a de salud mental": "consulta de salud mental",
+              "intervenci?n familiar": "intervención familiar",
+            };
 
             const normalizedServiceOnSistrat = mappedServicesSISTRAT[serviceNameOnTableSistrat];
-            console.log('normalizedServiceOnSistrat', normalizedServiceOnSistrat);
+            console.log("normalizedServiceOnSistrat", normalizedServiceOnSistrat);
 
             const normalizedServiceFiclin = recordFiclin.service.trim().toLowerCase();
 
-
             if (normalizedServiceOnSistrat === normalizedServiceFiclin) {
-              console.log('IGUALES');
-              
-              
+              console.log("IGUALES");
+
               // Rellenar los días (cada celda debería tener un input)
               recordFiclin.days.forEach((value: number, dayIndex: number) => {
                 if (value > 0) {
@@ -376,7 +382,6 @@ class Sistrat {
                     input.value = value.toString();
                     input.dispatchEvent(new Event("input", { bubbles: true })); // disparar evento por si hay listeners
                     input.dispatchEvent(new Event("change", { bubbles: true })); // simula blur/tab
-
                   }
                 }
               });
@@ -386,25 +391,22 @@ class Sistrat {
         });
       }, medicalRecordsGrouped);
 
-      console.log('medicalRecordsGrouped', medicalRecordsGrouped);
-      console.log('Datos ingresados en la tabla, tomando screenshot...');
+      console.log("medicalRecordsGrouped", medicalRecordsGrouped);
+      console.log("Datos ingresados en la tabla, tomando screenshot...");
       // await this.scrapper.waitForSeconds(15);
       // const safePatientName = patientName.replace(/\s+/g, '_').toLowerCase();
       // const filePath = `uploads/screenshots/septiembre2025/${safePatientName}_mes_septiembre.png`;
       // await page.screenshot({ path: filePath, fullPage: true });
       // console.log('screenshot tomado y guardado en:', filePath);
-      console.log('esperando mysubmit');
-      
+      console.log("esperando mysubmit");
 
       // 3. Esperar al botón y hacer click
 
       await this.scrapper.waitForSeconds(50);
       // await this.scrapper.clickButton(page, '#mysubmit', 30000);
-console.log('REGISTRO EXITOSO ATENCIONES MENSUALES');
+      console.log("REGISTRO EXITOSO ATENCIONES MENSUALES");
 
-
-      return 'REGISTRO EXITOSO ATENCIONES MENSUALES';
-
+      return "REGISTRO EXITOSO ATENCIONES MENSUALES";
     } catch (error) {
       console.log("errror", error);
       throw new Error(`Error en registrar atenciones mensuales: ${error}`);
@@ -760,10 +762,3 @@ console.log('REGISTRO EXITOSO ATENCIONES MENSUALES');
 }
 
 export default Sistrat;
-
-
-
-
-
-
-  
