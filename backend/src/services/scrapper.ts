@@ -59,11 +59,12 @@ class Scrapper {
     console.log('[LaunchBrowser] Obteniendo browser...');
     
     this.browser =  await puppeteer.launch({
-    args: [
-      `--proxy-server=http://${"geo.iproyal.com:12321"}`,
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-    ],
+      executablePath: '/usr/bin/google-chrome',
+      args: [
+        `--proxy-server=http://${"geo.iproyal.com:12321"}`,
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+      ],
   });
 
     console.log('[LaunchBrowser] Browser obtenido');
