@@ -13,8 +13,12 @@ class Scrapper {
 
   async getPage(): Promise<Page> {
     const browser: Browser = await this.launchBrowser();
+    console.log('[Scrapper] Browser obtenido');
+
     const page: Page = await browser.newPage();
 
+    console.log('[Scrapper] Página obtenida');
+    
     await page.authenticate({
     username: "4y0YVHAHmRvZMtOx",
     password: "ZuVPtBuURBDDI6C9_country-cl_city-talca",
@@ -50,16 +54,20 @@ class Scrapper {
   async launchBrowser(headless: boolean = true): Promise<Browser> {
 
     const sessionHash = Date.now().toString();
-    const userDataDir = await this.createCacheDirectory(sessionHash);
+    // const userDataDir = await this.createCacheDirectory(sessionHash);
 
+    console.log('[LaunchBrowser] Obteniendo browser...');
+    
     this.browser =  await puppeteer.launch({
-    headless: false, // o true si quieres
     args: [
       `--proxy-server=http://${"geo.iproyal.com:12321"}`,
       "--no-sandbox",
       "--disable-setuid-sandbox",
     ],
   });
+
+    console.log('[LaunchBrowser] Browser obtenido');
+
 
     const browserVersion = await this.browser.version();
     console.log("Browser version:", browserVersion);
