@@ -2,13 +2,11 @@ import { Browser, Page } from "puppeteer";
 //import puppeteer from "puppeteer-extra";
 import moment from "moment";
 import puppeteer from "puppeteer-extra";
-import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import AnonymizeUAPlugin from "puppeteer-extra-plugin-anonymize-ua";
 
 //import StealthPlugin from "puppeteer-extra-plugin-stealth";
 //import AnonymizeUAPlugin from "puppeteer-extra-plugin-anonymize-ua";
-import path from "path";
 import { promises as fs } from "fs";
+import path from "path";
 
 class Scrapper {
   protected browser: Browser | null = null;
@@ -50,9 +48,6 @@ class Scrapper {
    * @returns
    */
   async launchBrowser(headless: boolean = true): Promise<Browser> {
-
-    puppeteer.use(StealthPlugin());
-    puppeteer.use(AnonymizeUAPlugin());
 
     const sessionHash = Date.now().toString();
     const userDataDir = await this.createCacheDirectory(sessionHash);
