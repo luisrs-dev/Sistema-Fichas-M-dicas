@@ -1,7 +1,9 @@
 import { Browser, Page } from "puppeteer";
 //import puppeteer from "puppeteer-extra";
-import puppeteer from "puppeteer";
 import moment from "moment";
+import puppeteer from "puppeteer-extra";
+import StealthPlugin from "puppeteer-extra-plugin-stealth";
+import AnonymizeUAPlugin from "puppeteer-extra-plugin-anonymize-ua";
 
 //import StealthPlugin from "puppeteer-extra-plugin-stealth";
 //import AnonymizeUAPlugin from "puppeteer-extra-plugin-anonymize-ua";
@@ -14,6 +16,11 @@ class Scrapper {
   async getPage(): Promise<Page> {
     const browser: Browser = await this.launchBrowser();
     const page: Page = await browser.newPage();
+
+    await page.authenticate({
+    username: "4y0YVHAHmRvZMtOx",
+    password: "ZuVPtBuURBDDI6C9_country-cl_city-talca",
+  });
     // await page.setDefaultNavigationTimeout(300000); // 5 minutos
 
     // Ajustar el viewport para simular una pantalla de notebook
@@ -21,6 +28,18 @@ class Scrapper {
     //   width: 1366, // Ancho de un notebook común
     //   height: 768, // Alto de un notebook común
     // });
+
+    // User agent realista
+    await page.setUserAgent(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+      "(KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
+    );
+    
+    
+    // Bypass básico antibot
+    await page.evaluateOnNewDocument(() => {
+      Object.defineProperty(navigator, "webdriver", { get: () => false });
+    });
 
     return page;
   }
@@ -31,31 +50,21 @@ class Scrapper {
    * @returns
    */
   async launchBrowser(headless: boolean = true): Promise<Browser> {
-    // puppeteer.use(StealthPlugin());
-    // puppeteer.use(AnonymizeUAPlugin());
+
+    puppeteer.use(StealthPlugin());
+    puppeteer.use(AnonymizeUAPlugin());
 
     const sessionHash = Date.now().toString();
     const userDataDir = await this.createCacheDirectory(sessionHash);
 
-    this.browser = await puppeteer.launch(
-      {
-      headless: headless,
-      executablePath: '/snap/bin/chromium',
-      //slowMo: 300, sirve para darle tiempe a cada operacion
-      userDataDir: userDataDir, // Establecer la carpeta de caché,
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--use-gl=egl", "--blink-settings=imagesEnabled=false,cssEnabled=false"],
-
-      // args: [
-      //   "--no-sandbox",
-      //   "--disable-setuid-sandbox",
-      //   "--use-gl=egl",
-      //   "--blink-settings=imagesEnabled=false,cssEnabled=false",
-      //   "--disable-dev-shm-usage"
-      // ],
-      timeout: 0,
-      protocolTimeout: 300000,
-    }
-  );
+    this.browser =  await puppeteer.launch({
+    headless: false, // o true si quieres
+    args: [
+      `--proxy-server=http://${"geo.iproyal.com:12321"}`,
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+    ],
+  });
 
     const browserVersion = await this.browser.version();
     console.log("Browser version:", browserVersion);
@@ -71,8 +80,7 @@ class Scrapper {
 
   // Método para manejar la navegación y selección de elementos comunes
   async navigateToPage(page: Page, url: string): Promise<void> {
-    await page.goto(url, { waitUntil: "networkidle0" });
-    //await page.goto(url, { waitUntil: 'networkidle2' });
+    await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
   }
 
   async waitAndType(page: Page, selector: string, text: string): Promise<void> {
