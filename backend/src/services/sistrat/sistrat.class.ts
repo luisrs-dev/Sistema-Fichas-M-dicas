@@ -473,11 +473,11 @@ async login(center: string) {
       console.log('rowPatientSistrat', rowPatientSistrat);
       
 
-      if (!rowPatientSistrat) {
-        console.log(`[Ficha de Ingreso] Paciente No encontrado: ${rowPatientSistrat}`);
-        this.scrapper.closeBrowser();
-        return null;
-      }
+      // if (!rowPatientSistrat) {
+      //   console.log(`[Ficha de Ingreso] Paciente No encontrado: ${rowPatientSistrat}`);
+      //   this.scrapper.closeBrowser();
+      //   return null;
+      // }
       
       // Si se capturo el codigo sistrat se registrar en paciente
       // if (rowPatientSistrat && rowPatientSistrat.codigoSistrat) {
