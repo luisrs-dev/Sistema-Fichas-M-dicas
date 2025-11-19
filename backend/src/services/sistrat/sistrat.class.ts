@@ -25,73 +25,77 @@ class Sistrat {
   }
 
   // Método para hacer login en Sistrat
-  async login(center: string) {
-    console.group(`[Login] Inicio proceso de login para centro: ${center}`);
-    try {
-      console.group("Preparando variables");
+async login(center: string) {
+  console.group(`[Login] Inicio proceso de login para centro: ${center}`);
 
-      let usuario = "";
-      let password = "";
+  try {
+    // --- Selección de credenciales ---
+    console.group("Preparando variables");
 
-      switch (center) {
-        case "mujeres":
-          usuario = "rmorales";
-          password = "Robe1010";
-          break;
+    const credentials: Record<string, { usuario: string; password: string }> = {
+      mujeres:  { usuario: "rmorales",  password: "Robe1010" },
+      hombres:  { usuario: "rmorales",  password: "Robe0011" },
+      alameda:  { usuario: "rmoralesn", password: "Robe1234" },
+    };
 
-        case "hombres":
-          usuario = "rmorales";
-          password = "Robe0011";
-          break;
+    const creds = credentials[center];
 
-        case "alameda":
-          usuario = "rmoralesn";
-          password = "Robe1234";
-          break;
-      }
-
-      console.log("Usuario seleccionado:", usuario);
-      console.log("Password seleccionado:", password ? password : null);
-      console.groupEnd(); // end Preparando variables
-
-      console.group("Navegación inicial");
-      const loginUrl = "https://sistrat.senda.gob.cl/sistrat/";
-      console.log("URL Login:", loginUrl);
-
-      let page: Page = await this.scrapper.getPage();
-      console.log("Página obtenida desde el scrapper");
-
-      await this.scrapper.navigateToPage(page, loginUrl);
-      console.log("Navegado correctamente al login");
-
-      console.group("Escribiendo credenciales");
-      await this.scrapper.waitAndType(page, "#txr_usuario", usuario);
-      console.log("Usuario ingresado");
-      await this.scrapper.waitForSeconds(2);
-
-      await this.scrapper.waitAndType(page, "#txr_clave", password);
-      console.log("Password ingresado");
-      await this.scrapper.waitForSeconds(1);
-      console.groupEnd(); // end Escribiendo credenciales
-
-      console.group("Enviando formulario");
-      await this.scrapper.clickButton(page, 'input[value="Ingresar SISTRAT"]');
-      console.log("Botón de login clickeado");
-
-      await page.waitForNavigation();
-      console.log("Página navegó después de login");
-
-      await this.scrapper.waitForSeconds(3);
-      console.groupEnd(); // end Enviando formulario
-
-      console.groupEnd(); // end [Login]
-      return page;
-    } catch (error) {
-      console.log("Error en login SISTRAT", error);
-
-      throw new Error("Error en autenticación con SISTRAT");
+    if (!creds) {
+      throw new Error(`Centro no válido: ${center}`);
     }
+
+    const { usuario, password } = creds;
+
+    console.log("Usuario:", usuario);
+    console.log("Password:", password ? "[PROTECTED]" : null);
+    console.groupEnd();
+
+
+    // --- Navegar al login ---
+    console.group("Navegación inicial");
+    const loginUrl = "https://sistrat.senda.gob.cl/sistrat/";
+    console.log("URL Login:", loginUrl);
+
+    const page: Page = await this.scrapper.getPage();
+    console.log("Página obtenida");
+
+    await this.scrapper.navigateToPage(page, loginUrl);
+    console.log("Página cargada");
+    console.groupEnd();
+
+
+    // --- Escribir credenciales ---
+    console.group("Escribiendo credenciales");
+
+    await this.scrapper.waitAndType(page, "#txr_usuario", usuario);
+    console.log("Usuario ingresado");
+
+    await this.scrapper.waitAndType(page, "#txr_clave", password);
+    console.log("Password ingresado");
+
+    console.groupEnd();
+
+
+    // --- Enviar formulario ---
+    console.group("Enviando formulario");
+
+    await this.scrapper.clickButton(page, 'input[value="Ingresar SISTRAT"]');
+    console.log("Botón clickeado");
+
+    await page.waitForNavigation({ waitUntil: "networkidle2" });
+    console.log("Navegación completada");
+
+    console.groupEnd();
+    console.groupEnd();
+
+    return page;
+
+  } catch (error) {
+    console.error("Error en login SISTRAT", error);
+    throw new Error("Error en autenticación con SISTRAT");
   }
+}
+
 
   async crearDemanda(patient: Patient) {
     const center = patient.sistratCenter;
@@ -425,9 +429,11 @@ class Sistrat {
 
       // await page.waitForSelector("#table_pacientes", { visible: true, timeout: 5000 });
       const patientName = `${patient.name.trim()} ${patient.surname.trim()}`.toLowerCase();
-      console.log(`registrarFichaIngreso patientName: ${patientName}`);
+      const codigoSistrat = patient.codigoSistrat;
+      console.log(`[Ficha de Ingreso] Paciente : ${patient}`);
+      console.log(`[Ficha de Ingreso] Buscando paciente en Sistrat...`);
 
-      const rowPatientSistrat: any = await page.evaluate((patientName) => {
+      const rowPatientSistrat: any = await page.evaluate((codigoSistrat) => {
         const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
 
         if (table) {
@@ -437,21 +443,21 @@ class Sistrat {
 
             if (objCells) {
               // Obtenemos el texto de cada celda relevante
-              const patient = {
+              const patientSistrat = {
                 id: objCells.item(0)?.innerText || "", // Captura el texto de la primera celda (ID)
                 name: objCells.item(1)?.innerText?.toLowerCase() || "", // Captura el texto de la segunda celda (nombre)
                 codigoSistrat: objCells.item(2)?.innerText || false, // Captura el texto de la tercera celda (código Sistrat)
               };
 
               // Comparamos con el nombre que estamos buscando
-              if (patient.name == patientName) {
+              if (patientSistrat.codigoSistrat == codigoSistrat) {
                 // Si el nombre coincide se da click en boton Crear Ficha Ingreso
                 const button = objCells.item(4)?.querySelector("span[name='crear_ficha_ingreso']") as HTMLElement;
 
                 if (button) {
                   // Realizamos el clic en el botón
                   button.click();
-                  console.log(`Se hizo clic en el botón de crear ficha ingreso para ${patient.name}`);
+                  console.log(`[Ficha de ingreso] Click en crear ficha ingreso para ${patientSistrat.name}`);
                   return patient;
                 }
                 break; // Salimos del bucle cuando encontramos y hacemos clic en el botón
@@ -464,21 +470,22 @@ class Sistrat {
         return data; // Devuelve los datos capturados
       }, patientName);
 
-      console.log(`rowPatientSistrat resultado: ${rowPatientSistrat}`);
       if (!rowPatientSistrat) {
+        console.log(`[Ficha de Ingreso] Paciente No encontrado: ${rowPatientSistrat}`);
         this.scrapper.closeBrowser();
         return null;
       }
-
+      
       // Si se capturo el codigo sistrat se registrar en paciente
-      if (rowPatientSistrat && rowPatientSistrat.codigoSistrat) {
-        const patientEntity = await PatientModel.findOne({ _id: patient._id });
-        if (patientEntity) {
-          patientEntity.codigoSistrat = rowPatientSistrat.codigoSistrat;
-          await patientEntity.save();
-        }
-      }
-
+      // if (rowPatientSistrat && rowPatientSistrat.codigoSistrat) {
+        //   const patientEntity = await PatientModel.findOne({ _id: patient._id });
+        //   if (patientEntity) {
+          //     patientEntity.codigoSistrat = rowPatientSistrat.codigoSistrat;
+          //     await patientEntity.save();
+          //   }
+          // }
+          
+      console.log(`[Ficha de Ingreso] Paciente encontrado: ${rowPatientSistrat}`);
       if (rowPatientSistrat) {
         await this.completeAdmissionForm(page, patient, admissionForm);
       }
