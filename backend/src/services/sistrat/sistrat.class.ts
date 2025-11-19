@@ -431,7 +431,7 @@ async login(center: string) {
       const patientName = `${patient.name.trim()} ${patient.surname.trim()}`.toLowerCase();
       const codigoSistrat = patient.codigoSistrat;
       console.log(`[Ficha de Ingreso] Paciente : ${patient}`);
-      console.log(`[Ficha de Ingreso] Buscando paciente en Sistrat...`);
+      console.log(`[Ficha de Ingreso] Buscando paciente por código sistrar: ${codigoSistrat}`);
 
       const rowPatientSistrat: any = await page.evaluate((codigoSistrat) => {
         const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
@@ -469,6 +469,9 @@ async login(center: string) {
         }
         return data; // Devuelve los datos capturados
       }, patientName);
+
+      console.log('rowPatientSistrat', rowPatientSistrat);
+      
 
       if (!rowPatientSistrat) {
         console.log(`[Ficha de Ingreso] Paciente No encontrado: ${rowPatientSistrat}`);
