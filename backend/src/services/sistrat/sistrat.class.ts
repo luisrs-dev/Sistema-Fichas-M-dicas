@@ -458,7 +458,7 @@ async login(center: string) {
                   // Realizamos el clic en el botón
                   button.click();
                   console.log(`[Ficha de ingreso] Click en crear ficha ingreso para ${patientSistrat.name}`);
-                  return patient;
+                  return patientSistrat;
                 }
                 break; // Salimos del bucle cuando encontramos y hacemos clic en el botón
               }
@@ -468,16 +468,16 @@ async login(center: string) {
           return null; // Tabla no encontrada
         }
         return data; // Devuelve los datos capturados
-      }, patientName);
+      }, codigoSistrat);
 
       console.log('rowPatientSistrat', rowPatientSistrat);
       
 
-      // if (!rowPatientSistrat) {
-      //   console.log(`[Ficha de Ingreso] Paciente No encontrado: ${rowPatientSistrat}`);
-      //   this.scrapper.closeBrowser();
-      //   return null;
-      // }
+      if (!rowPatientSistrat) {
+        console.log(`[Ficha de Ingreso] Paciente No encontrado: ${rowPatientSistrat}`);
+        this.scrapper.closeBrowser();
+        return null;
+      }
       
       // Si se capturo el codigo sistrat se registrar en paciente
       // if (rowPatientSistrat && rowPatientSistrat.codigoSistrat) {
@@ -489,9 +489,8 @@ async login(center: string) {
           // }
           
       console.log(`[Ficha de Ingreso] Paciente encontrado: ${rowPatientSistrat}`);
-      if (rowPatientSistrat) {
-        await this.completeAdmissionForm(page, patient, admissionForm);
-      }
+      await this.completeAdmissionForm(page, patient, admissionForm);
+
     } catch (error: any) {
       throw new Error(`Error al registrar ficha de ingreso en función registrarFichaIngreso: ${error}`);
     }
