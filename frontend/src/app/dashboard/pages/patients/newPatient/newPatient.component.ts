@@ -114,7 +114,7 @@ export default class NewPatientComponent {
         // Patch para evitar borrar las fechas y mantener formato
         this.userForm.patchValue({
           //admissionDate: new Date(this.patient.admissionDate),
-          program: this.patient.program,
+          program: this.patient.program._id,
           sistratCenter: this.patient.sistratCenter,
           rut: this.patient.rut,
           name: this.patient.name,

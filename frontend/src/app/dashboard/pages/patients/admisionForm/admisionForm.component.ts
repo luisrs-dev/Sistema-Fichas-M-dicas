@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, inject, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, signal, ViewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { ActivatedRoute } from '@angular/router';
@@ -42,6 +42,7 @@ export default class AdmisionFormComponent {
   private patientService = inject(PatientService);
   private dialog = inject(MatDialog);
   private changeDetectorRef = inject(ChangeDetectorRef);
+  public loading = signal<boolean>(true);
 
   private patientId: string;
   public patient: Patient | null = null;
@@ -57,18 +58,22 @@ export default class AdmisionFormComponent {
   @ViewChild(SocialDiagnosisComponent) socialDiagnosisComponent!: SocialDiagnosisComponent;
 
   ngOnInit(): void {
+    
     this.patientId = this.activatedRoute.snapshot.paramMap.get('id') || '';
     console.log({patientId:this.patientId});
 
     // En el caso que paciente tenga ficha de ingreso registrada en ficlin,
     // se obtiene el registro para rellenar los formularios para luego registrar en SISTRAT
     this.patientService.getFichaIngreso(this.patientId).subscribe((response) => {
-      console.log('getFichaIngreso', response);
+      console.log('getFichaIngreso response', response);
 
       this.patient = response.data.patient;
+      console.log('patient', this.patient);
+      
       this.admissionForm = response.data.admissionForm;
-      console.log(this.patient);
-      console.log(this.admissionForm);
+      console.log('admissionForm', this.admissionForm);
+      if(this.patient && this.admissionForm) this.loading.set(false);
+      
       if (this.patient && this.patient.registeredAdmissionForm) {
         this.editMode = true;
       }

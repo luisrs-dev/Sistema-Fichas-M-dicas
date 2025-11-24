@@ -36,6 +36,9 @@ export interface AdmissionForm {
   selescolaridad: string; 
   selestado_civil: string; 
   selestado_ocupacional: string; 
+  laboral_ingresos: string;
+  laboral_detalle: string;
+  selrubro_trabajo: string;
   selfecha_ult_trata: string; 
   selfrecuencia_consumo: string; 
   selintox_aguda: string; 
@@ -67,6 +70,7 @@ export interface AdmissionForm {
   txtfecha_ingreso_tratamiento: string; 
   selconvenio_conace: string
   txtnacionalidad: string; 
+  seletnia: string;
   txtrut: string;
 }
 

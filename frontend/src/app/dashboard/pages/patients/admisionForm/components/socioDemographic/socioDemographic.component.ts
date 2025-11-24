@@ -21,6 +21,8 @@ export class SocioDemographicComponent extends FormBaseComponent {
   ngOnInit() {
     this.form = this.fb.group({
       txtnacionalidad: ['', []],
+      etnia: ['', []],
+      documentacion_regularizada: ['', []],
       selestado_civil: ['', []],
       int_numero_hijos: ['', []],
       selnumero_hijos_ingreso: ['', []],
@@ -29,6 +31,9 @@ export class SocioDemographicComponent extends FormBaseComponent {
       selmujer_embarazada: ['No', []],
       tiene_menores_a_cargo: ['no', []],
       selestado_ocupacional: ['', []],
+      laboral_ingresos: ['', []],
+      laboral_detalle: ['', []],
+      selrubro_trabajo: ['', []],
       selcon_quien_vive: ['', []],
       selparentesco: ['', []],
       seldonde_vive: ['', []],

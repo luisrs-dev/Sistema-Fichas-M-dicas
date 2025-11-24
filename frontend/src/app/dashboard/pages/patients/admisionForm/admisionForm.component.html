@@ -1,11 +1,11 @@
 <div class="container">
-  <div class="flex justify-content-between flex-wrap">
+@if(!loading()){
+    <div class="flex justify-content-between flex-wrap">
     <div class="flex align-items-center justify-content-center border-round">
       <h4>
         Ficha de ingreso >
         <a mat-button color="primary" matTooltip="Ver Perfil">
-          @if(patient){
-          {{ patient.name }} {{ patient.surname }} {{ patient.secondSurname }} }</a
+          {{ patient!.name }} {{ patient!.surname }} {{ patient!.secondSurname }}</a
         >
       </h4>
     </div>
@@ -16,9 +16,11 @@
           <mat-icon>save</mat-icon>
         </button>
 
-        @if(patient){ @if(admissionFormRegistered || patient.registeredAdmissionForm){
-        <button class="ml-1 my-2" mat-raised-button color="primary" (click)="onSaveSistrat()">SISTRAT<mat-icon>save</mat-icon></button>
-        } }
+        @if(patient){ 
+          @if(admissionFormRegistered || patient.registeredAdmissionForm){
+            <button class="ml-1 my-2" mat-raised-button color="primary" (click)="onSaveSistrat()">SISTRAT<mat-icon>save</mat-icon></button>
+          } 
+        }
       </div>
     </div>
 
@@ -45,4 +47,7 @@
       }
     </mat-tab-group>
   </div>
+}@else {
+  Cargando...
+}
 </div>

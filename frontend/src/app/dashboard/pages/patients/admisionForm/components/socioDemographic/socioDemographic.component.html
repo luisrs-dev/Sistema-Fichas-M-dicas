@@ -6,12 +6,46 @@
       <mat-form-field class="w-full" appearance="outline">
         <mat-label>Nacionalidad</mat-label>
         <mat-select formControlName="txtnacionalidad">
+          <mat-option value="null">Seleccione una opción</mat-option>
           @for ( option of optionsNacionality; track $index) {
           <mat-option value="{{ option.value }}">{{ option.name }}</mat-option>
           }
         </mat-select>
         <span *ngIf="isValidField('txtnacionalidad')" class="text-red-500"> Debe seleccionar una opción </span>
       </mat-form-field>
+    </div>
+
+    <pre>{{ form.get("txtnacionalidad")?.value | json }}</pre>
+
+    <div class="col-6">
+      @if(form.get('txtnacionalidad')?.value === '46'){
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Etnia</mat-label>
+        <mat-select formControlName="etnia">
+          <mat-option value="">Seleccione</mat-option>
+          <mat-option value="9">No pertenece</mat-option>
+          <mat-option value="1">Mapuche</mat-option>
+          <mat-option value="2">Aimara</mat-option>
+          <mat-option value="3">Lican Antai</mat-option>
+          <mat-option value="4">Quechua</mat-option>
+          <mat-option value="5">Rapa Nui</mat-option>
+          <mat-option value="6">Colla</mat-option>
+          <mat-option value="7">Yaman o Yagana</mat-option>
+          <mat-option value="10">Diaguitas</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('etnia')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+      }@else {
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>DOCUMENTACIÓN REGULARIZADA</mat-label>
+        <mat-select formControlName="documentacion_regularizada">
+          <mat-option value="">Seleccione</mat-option>
+          <mat-option value="1">SI</mat-option>
+          <mat-option value="2">NO</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('documentacion_regularizada')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+      }
     </div>
 
     <div class="col-6">
@@ -31,7 +65,6 @@
         </mat-select>
         <span *ngIf="isValidField('selestado_civil')" class="text-red-500"> Debe seleccionar una opción </span>
       </mat-form-field>
-
     </div>
     <div class="col-6">
       <mat-form-field class="w-full" appearance="outline">
@@ -91,6 +124,60 @@
       </mat-form-field>
     </div>
 
+    @if(['18','19','20','21','22'].includes(form.get('selescolaridad')?.value)) {
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Años (Mayor nivel)</mat-label>
+        <mat-select formControlName="escolaridad_opc">
+          <mat-option value="1">1</mat-option>
+          <mat-option value="2">2</mat-option>
+          <mat-option value="3">3</mat-option>
+          <mat-option value="4">4</mat-option>
+          <mat-option value="5">5</mat-option>
+          <mat-option value="6">6</mat-option>
+          <mat-option value="7">7</mat-option>
+          <mat-option value="8">8</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('escolaridad_opc')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+    } @if(['24'].includes(form.get('selescolaridad')?.value)) {
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Años (Mayor nivel)</mat-label>
+        <mat-select formControlName="escolaridad_opc">
+          <mat-option value="1">1</mat-option>
+          <mat-option value="2">2</mat-option>
+          <mat-option value="3">3</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('escolaridad_opc')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+    } @if(['25'].includes(form.get('selescolaridad')?.value)) {
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Años (Mayor nivel)</mat-label>
+        <mat-select formControlName="escolaridad_opc">
+          <mat-option value="1">1</mat-option>
+          <mat-option value="2">2</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('escolaridad_opc')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+    } @if(['26'].includes(form.get('selescolaridad')?.value)) {
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Años (Mayor nivel)</mat-label>
+        <mat-select formControlName="escolaridad_opc">
+          <mat-option value="4">4</mat-option>
+          <mat-option value="5">5</mat-option>
+          <mat-option value="6">6</mat-option>
+          <mat-option value="7">7</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('escolaridad_opc')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+    } @if(['27'].includes(form.get('selescolaridad')?.value)) {
     <div class="col-6">
       <mat-form-field class="w-full" appearance="outline">
         <mat-label>Años (Mayor nivel)</mat-label>
@@ -106,7 +193,20 @@
         <span *ngIf="isValidField('escolaridad_opc')" class="text-red-500"> Debe seleccionar una opción </span>
       </mat-form-field>
     </div>
+    } @if(['28'].includes(form.get('selescolaridad')?.value)) {
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Años (Mayor nivel)</mat-label>
+        <mat-select formControlName="escolaridad_opc">
+          <mat-option value="">SELECCIONE</mat-option>
+          <mat-option value="Completa">Completa</mat-option>
+          <mat-option value="Incompleta">Incompleta</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('escolaridad_opc')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
 
+    }
     <div class="col-6">
       <mat-form-field class="w-full" appearance="outline">
         <mat-label>¿Mujer embarazada?</mat-label>
@@ -154,6 +254,81 @@
           <mat-option value="14" data-index-number="">Otra razón</mat-option>
         </mat-select>
         <span *ngIf="isValidField('selestado_ocupacional')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    @if(['17', '18'].includes(form.get('selestado_ocupacional')?.value)) {
+
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>OCUPACIÓN INGRESOS</mat-label>
+        <mat-select formControlName="laboral_ingresos">
+          <mat-option value="">SELECCIONE</mat-option>
+          <mat-option value="1">Menos de 100.000</mat-option>
+          <mat-option value="2">100.000 a 200.000</mat-option>
+          <mat-option value="3">200.001 a 300.000</mat-option>
+          <mat-option value="4">300.001 a 400.000</mat-option>
+          <mat-option value="5">400.001 a 500.000</mat-option>
+          <mat-option value="6">500.001 a 600.000</mat-option>
+          <mat-option value="7">600.001 a 700.000</mat-option>
+          <mat-option value="8">700.001 a 800.000</mat-option>
+          <mat-option value="9">800.001 a 900.000</mat-option>
+          <mat-option value="10">900.001 a 1.000.000</mat-option>
+          <mat-option value="11">Más de 1.000.000</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('laboral_ingresos')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+    } @if(['19'].includes(form.get('selestado_ocupacional')?.value)) {
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>OCUPACIÓN DETALLE</mat-label>
+        <mat-select formControlName="laboral_detalle">
+          <mat-option value="" data-index-number="">SELECCIONE</mat-option>
+          <mat-option value="1" data-index-number="1000"> Contrato indefinido</mat-option>
+          <mat-option value="2" data-index-number="1000"> A plazo fijo</mat-option>
+          <mat-option value="3" data-index-number="1000"> Por obra o faena</mat-option>
+          <mat-option value="4" data-index-number=""> NO tiene contrato</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('laboral_detalle')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+    } 
+    
+    @if(['22'].includes(form.get('selestado_ocupacional')?.value)) {
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>OCUPACIÓN DETALLE</mat-label>
+        <mat-select formControlName="laboral_detalle">
+          <mat-option value="" data-index-number="">SELECCIONE</mat-option>
+          <mat-option value="5" data-index-number=""> No cotiza en sistema previsional</mat-option>
+          <mat-option value="6" data-index-number="1000"> Cotiza en sistema previsional</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('laboral_detalle')" class="text-red-500"> Debe seleccionar una opción </span>
+      </mat-form-field>
+    </div>
+
+    }
+
+    // En que rubro trabajar
+    <div class="col-6">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>EN QUE RUBRO TRABAJA </mat-label>
+        <mat-select formControlName="selrubro_trabajo">                                                
+        <mat-option value="">SELECCIONE</mat-option>
+        <mat-option value="1">Directores y Gerentes</mat-option>
+        <mat-option value="2">Profesionales, científicos e intelectuales</mat-option>
+        <mat-option value="3">Técnicos y profesionales de nivel medio</mat-option>
+        <mat-option value="4">Personal de apoyo administrativo</mat-option>
+        <mat-option value="5">Trabajadores de los servicios y vendedores de comercio y mercado</mat-option>
+        <mat-option value="6">Agricultores y trabajadores calificados agropecuarios, forestales y pesqueros</mat-option>
+        <mat-option value="7">Oficiales, operarios y artesanos de artes mecánica y otros oficios</mat-option>
+        <mat-option value="8">Operadores y montadores de instalaciones y maquinaria y ensambladores</mat-option>
+        <mat-option value="9">Trabajadores no calificados (Ocupaciones elementales)</mat-option>
+        <mat-option value="10">Ocupaciones Militares</mat-option>
+        <mat-option value="11">Ocupación no bien especificada</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('selrubro_trabajo')" class="text-red-500"> Debe seleccionar una opción </span>
       </mat-form-field>
     </div>
 
@@ -228,43 +403,43 @@
       </mat-form-field>
     </div>
 
-    <div class="col-6">
-      <mat-form-field class="w-full" appearance="outline">
-        <mat-label>N° personas en el hogar por dormitorio de uso exclusivo es:</mat-label>
-        <mat-select formControlName="perso_dormitorio_vivienda">
-          <mat-option value="">Seleccione una opción</mat-option>
-          <mat-option value="1">Mayor a 2,5 personas</mat-option>
-          <mat-option value="2">Menor a 2,5 personas</mat-option>
-        </mat-select>
-        <span *ngIf="isValidField('perso_dormitorio_vivienda')" class="text-red-500"> Debe seleccionar una opción </span>
-      </mat-form-field>
-    </div>
-
-    <div class="col-6">
-      <mat-form-field class="w-full" appearance="outline">
-        <mat-label>Precariedad habitacional</mat-label>
-        <mat-select formControlName="precariedad_vivienda">
-          <mat-option value="">Seleccione una opción</mat-option>
-          <mat-option value="1">Reside en una vivienda precaria o en una vivienda con muros y/opiso en mal estado</mat-option>
-          <mat-option value="2">Reside en una vivienda en buen estado</mat-option>
-        </mat-select>
-        <span *ngIf="isValidField('precariedad_vivienda')" class="text-red-500"> Debe seleccionar una opción </span>
-      </mat-form-field>
-    </div>
-
-    <div class="col-6">
-      <mat-form-field class="w-full" appearance="outline">
-        <mat-label>Servicios básicos</mat-label>
-        <mat-select formControlName="ss_basicos_vivienda">
-          <mat-option value="">Seleccione una opción</mat-option>
-          <mat-option value="1"
-            >Reside en una vivienda sin servicios sanitarios básicos (sin WC, y/o llave dentro de la vivienda y/o agua según estándar urbano o rural
-          </mat-option>
-          <mat-option value="2">Reside en una vivienda con servicios sanitarios básicos</mat-option>
-        </mat-select>
-        <span *ngIf="isValidField('ss_basicos_vivienda')" class="text-red-500"> Debe seleccionar una opción </span>
-      </mat-form-field>
-    </div>
+    @if(['1','2','3','4','5','6'].includes(form.get('seldonde_vive')?.value)) {
+      <div class="col-6">
+        <mat-form-field class="w-full" appearance="outline">
+          <mat-label>N° personas en el hogar por dormitorio de uso exclusivo es:</mat-label>
+          <mat-select formControlName="perso_dormitorio_vivienda">
+            <mat-option value="">Seleccione una opción</mat-option>
+            <mat-option value="1">Mayor a 2,5 personas</mat-option>
+            <mat-option value="2">Menor a 2,5 personas</mat-option>
+          </mat-select>
+          <span *ngIf="isValidField('perso_dormitorio_vivienda')" class="text-red-500"> Debe seleccionar una opción </span>
+        </mat-form-field>
+      </div>
+      <div class="col-6">
+        <mat-form-field class="w-full" appearance="outline">
+          <mat-label>Precariedad habitacional</mat-label>
+          <mat-select formControlName="precariedad_vivienda">
+            <mat-option value="">Seleccione una opción</mat-option>
+            <mat-option value="1">Reside en una vivienda precaria o en una vivienda con muros y/opiso en mal estado</mat-option>
+            <mat-option value="2">Reside en una vivienda en buen estado</mat-option>
+          </mat-select>
+          <span *ngIf="isValidField('precariedad_vivienda')" class="text-red-500"> Debe seleccionar una opción </span>
+        </mat-form-field>
+      </div>
+      <div class="col-6">
+        <mat-form-field class="w-full" appearance="outline">
+          <mat-label>Servicios básicos</mat-label>
+          <mat-select formControlName="ss_basicos_vivienda">
+            <mat-option value="">Seleccione una opción</mat-option>
+            <mat-option value="1"
+              >Reside en una vivienda sin servicios sanitarios básicos (sin WC, y/o llave dentro de la vivienda y/o agua según estándar urbano o rural
+            </mat-option>
+            <mat-option value="2">Reside en una vivienda con servicios sanitarios básicos</mat-option>
+          </mat-select>
+          <span *ngIf="isValidField('ss_basicos_vivienda')" class="text-red-500"> Debe seleccionar una opción </span>
+        </mat-form-field>
+      </div>
+    }
 
     <div class="col-6">
       <mat-form-field class="w-full" appearance="outline">
@@ -308,7 +483,7 @@
 
     <div class="col-6">
       <mat-form-field class="w-full" appearance="outline">
-        <mat-label>fecha último tratamiento</mat-label>
+        <mat-label>Fecha último tratamiento</mat-label>
         <mat-select formControlName="selfecha_ult_trata">
           <mat-option value="">Seleccione una opción</mat-option>
           <mat-option value="1">Último 6 meses</mat-option>

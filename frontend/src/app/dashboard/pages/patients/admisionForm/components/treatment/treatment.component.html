@@ -5,10 +5,10 @@
     <div class="col-6">
       <mat-form-field appearance="outline" class="w-full">
         <mat-label>Fecha ingreso tratamiento</mat-label>
-        <input formControlName="txtfecha_ingreso_tratamiento" matInput [matDatepicker]="picker" />
+        <input formControlName="txtfecha_ingreso_tratamiento" matInput [matDatepicker]="picker_txtfecha_ingreso_tratamiento" />
         <!--<mat-hint>MM/DD/YYYY</mat-hint>-->
-        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-        <mat-datepicker #picker></mat-datepicker>
+        <mat-datepicker-toggle matIconSuffix [for]="picker_txtfecha_ingreso_tratamiento"></mat-datepicker-toggle>
+        <mat-datepicker #picker_txtfecha_ingreso_tratamiento></mat-datepicker>
       </mat-form-field>
       <span *ngIf="isValidField('txtfecha_ingreso_tratamiento')" class="text-red-500"> Debe seleccionar una opción </span>
     </div>
@@ -28,10 +28,10 @@
     <div class="col-6">
       <mat-form-field class="w-full" appearance="outline">
         <mat-label>Fecha ingreso convenio senda</mat-label>
-        <input matInput [matDatepicker]="pickerBirthday" formControlName="txtfecha_ingreso_conace" />
+        <input matInput [matDatepicker]="pickerTxtfecha_ingreso_conace" formControlName="txtfecha_ingreso_conace" />
         <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
-        <mat-datepicker-toggle matIconSuffix [for]="pickerBirthday"></mat-datepicker-toggle>
-        <mat-datepicker #pickerBirthday></mat-datepicker>
+        <mat-datepicker-toggle matIconSuffix [for]="pickerTxtfecha_ingreso_conace"></mat-datepicker-toggle>
+        <mat-datepicker #pickerTxtfecha_ingreso_conace></mat-datepicker>
       </mat-form-field>
       <span *ngIf="isValidField('txtfecha_ingreso_conace')" class="text-red-500"> Debe seleccionar una opción </span>
 

@@ -21,9 +21,9 @@ export class TreatmentComponent extends FormBaseComponent {
   
   ngOnInit() {
     this.form = this.fb.group({
-      txtfecha_ingreso_tratamiento: ['', []],
+      txtfecha_ingreso_tratamiento: [new Date()],
       selconvenio_conace: ['', []],
-      txtfecha_ingreso_conace: ['', []],
+      txtfecha_ingreso_conace: [new Date()],
       seltipo_programa: ['', []],
       seltipo_plan: ['', []],
       selprograma_tribunales: ['', []],

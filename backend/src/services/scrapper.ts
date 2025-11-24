@@ -19,6 +19,17 @@ class Scrapper {
 
     console.log('[Scrapper] Página obtenida');
     
+    // Propagar los console.log del navegador hacia la terminal de Node
+    page.on('console', (msg) => {
+      const type = msg.type();
+      const text = msg.text();
+      console.log(`[Browser::${type}] ${text}`);
+    });
+    page.on('pageerror', (error) => {
+      console.error('[Browser::pageerror]', error);
+    });
+
+
     await page.authenticate({
     username: "4y0YVHAHmRvZMtOx",
     password: "ZuVPtBuURBDDI6C9_country-cl_city-talca",
@@ -51,14 +62,17 @@ class Scrapper {
    * @param headless define si el navegador se levanta visualmente (false para visualizar)
    * @returns
    */
-  async launchBrowser(headless: boolean = true): Promise<Browser> {
+  async launchBrowser(headless: boolean = false): Promise<Browser> {
 
     const sessionHash = Date.now().toString();
     // const userDataDir = await this.createCacheDirectory(sessionHash);
+    const userDataDir = await this.createCacheDirectory(sessionHash);
 
     console.log('[LaunchBrowser] Obteniendo browser...');
     
     this.browser =  await puppeteer.launch({
+      // userDataDir: userDataDir,
+      // executablePath: await puppeteer.executablePath(), // usa el binario que trae Puppeteer
       executablePath: '/usr/bin/google-chrome',
       args: [
         `--proxy-server=http://${"geo.iproyal.com:12321"}`,
@@ -104,11 +118,12 @@ class Scrapper {
 
   async setDateValue(page: Page, selector: string, date: string): Promise<void> {
     this.waitForSeconds(1); // Esperar 1 segundo
+    const formattedDate = this.normalizeDateInput(date);
     await page.evaluate(
-      (selector, date) => {
+      (selector, formattedDate) => {
         const input = document.querySelector(selector);
         if (input) {
-          (input as HTMLInputElement).value = date;
+          (input as HTMLInputElement).value = formattedDate;
           const event = new Event("input", { bubbles: true });
           input.dispatchEvent(event);
         } else {
@@ -116,7 +131,7 @@ class Scrapper {
         }
       },
       selector,
-      date
+      formattedDate
     );
   }
 
@@ -134,8 +149,7 @@ class Scrapper {
             const event = new Event("change", { bubbles: true }); // Despachar evento "change"
             select.dispatchEvent(event);
           } else {
-            console.error(`El elemento select con selector "${selector}" no fue encontrado.`);
-            throw new Error(`Elemento select no encontrado: ${selector}`);
+            console.warn(`El elemento select con selector "${selector}" no fue encontrado.`);
 
           }
         },
@@ -143,7 +157,7 @@ class Scrapper {
         value
       );
     } catch (error) {
-      throw new Error(`Error al setear valor de select: ${error}`);
+      console.warn(`[Scrapper] setSelectValue omitido para ${selector}: ${error}`);
       
     }
   }
@@ -165,6 +179,23 @@ class Scrapper {
       });
     }, timeout);
   };
+
+  private normalizeDateInput(date: string): string {
+    if (!date) return date;
+
+    const iso = moment(date, moment.ISO_8601, true);
+    if (iso.isValid()) {
+      return iso.format("DD/MM/YYYY");
+    }
+
+    const knownFormats = ["DD/MM/YYYY", "DD-MM-YYYY", "YYYY-MM-DD", "YYYY/MM/DD"];
+    const parsed = moment(date, knownFormats, true);
+    if (parsed.isValid()) {
+      return parsed.format("DD/MM/YYYY");
+    }
+
+    return date;
+  }
 
   private async createCacheDirectory(sessionHash: string): Promise<string> {
     const baseDir = "./cache";

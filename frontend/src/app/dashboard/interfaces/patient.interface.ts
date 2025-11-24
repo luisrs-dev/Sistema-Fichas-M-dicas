@@ -2,6 +2,7 @@ export interface Patient {
   _id?: string;
   admissionDate: string;
   program: {
+    _id?: string,
     name: string
   };
   codigoSistrat: string;
