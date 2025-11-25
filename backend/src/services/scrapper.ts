@@ -70,20 +70,38 @@ class Scrapper {
 
     console.log('[LaunchBrowser] Obteniendo browser...');
     
-    this.browser =  await puppeteer.launch({
-      // userDataDir: userDataDir,
-      // executablePath: await puppeteer.executablePath(), // usa el binario que trae Puppeteer
-      executablePath: '/usr/bin/google-chrome',
-      args: [
-        `--proxy-server=http://${"geo.iproyal.com:12321"}`,
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-      ],
-  });
+    this.browser =  await puppeteer.launch(
+      
+      // Prod
+      {
+        userDataDir: userDataDir,
+        executablePath: '/usr/bin/google-chrome',
+        args: [
+          `--proxy-server=http://${"geo.iproyal.com:12321"}`,
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+        ],
+      }
+
+      // Local
+      // {
+      //   headless: headless,
+      //   executablePath: await puppeteer.executablePath(), // usa el binario que trae Puppeteer
+      //   //slowMo: 300, sirve para darle tiempe a cada operacion
+      //   userDataDir: userDataDir, // Establecer la carpeta de caché,
+      //   args: [
+      //     "--no-sandbox",
+      //     "--disable-setuid-sandbox",
+      //     "--use-gl=egl",
+      //     "--blink-settings=imagesEnabled=false,cssEnabled=false",
+      //     "--disable-dev-shm-usage"
+      //   ],
+      //   timeout: 0,
+      //   protocolTimeout: 300000,
+      // }
+      );
 
     console.log('[LaunchBrowser] Browser obtenido');
-
-
     const browserVersion = await this.browser.version();
     console.log("Browser version:", browserVersion);
     return this.browser;

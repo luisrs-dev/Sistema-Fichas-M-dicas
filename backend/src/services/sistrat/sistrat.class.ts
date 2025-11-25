@@ -484,8 +484,6 @@ class Sistrat {
   }
 
   async registrarFichaIngreso(patient: Patient, admissionForm: AdmissionForm) {
-    const data: RowData[] = []; // Cambiar aquí el tipo a RowData[]
-
     this.gender = patient.sex;
     const logger = new ProcessLogger(this.getPatientLabel(patient), "ficha-ingreso");
     let page: Page | null = null;
@@ -497,81 +495,34 @@ class Sistrat {
       page = await this.login(patient.sistratCenter, logger);
       console.log("Login Finalizado correctamente");
       await this.logStep(logger, "[Sistrat][registrarFichaIngreso] Login completado");
-      await this.scrapper.waitForSeconds(3);
-      await this.scrapper.clickButton(page, "#flyout2"); // Botón demandas activas
-      await this.scrapper.waitForSeconds(3);
-      await this.scrapper.clickButton(page, 'a[href="php/conv1/listado_demanda.php"].ui-corner-all');
 
-      // await page.waitForSelector("#table_pacientes", { visible: true, timeout: 5000 });
-      // const patientName = `${patient.name.trim()} ${patient.surname.trim()}`.toLowerCase();
-      const codigoSistrat = patient.codigoSistrat;
+      await this.listActiveDemands(page, logger);
+      await page.waitForSelector("#table_pacientes", { visible: true, timeout: 15000 });
+
+      const codigoSistrat = patient.codigoSistrat?.trim();
       console.log(`[Ficha de Ingreso] Codigo Sistrat: ${codigoSistrat}`);
-      await this.scrapper.waitForSeconds(3);
+      if (!codigoSistrat) {
+        console.warn("[Sistrat][registrarFichaIngreso] Paciente sin código SISTRAT, no es posible continuar");
+        await this.logStep(logger, "[Sistrat][registrarFichaIngreso] Paciente sin código SISTRAT");
+        return false;
+      }
+
       console.log("[Sistrat][registrarFichaIngreso] Buscando fila del paciente en tabla");
-
-      const rowPatientSistrat: any = await page.evaluate((codigoSistrat) => {
-        console.log("Buscando Tabla...");
-        const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
-
-        console.log("Tabla resultado: ", table);
-
-        if (table) {
-          // Iteramos sobre las filas de la tabla, comenzando desde la segunda fila (i = 1)
-          for (let i = 1; i < table.rows.length; i++) {
-            const objCells = table.rows.item(i)?.cells;
-
-            if (objCells) {
-              // Obtenemos el texto de cada celda relevante
-              const patientSistrat = {
-                id: objCells.item(0)?.innerText || "", // Captura el texto de la primera celda (ID)
-                name: objCells.item(1)?.innerText?.toLowerCase() || "", // Captura el texto de la segunda celda (nombre)
-                codigoSistrat: objCells.item(2)?.innerText || false, // Captura el texto de la tercera celda (código Sistrat)
-              };
-
-              // Comparamos con el nombre que estamos buscando
-              if (patientSistrat.codigoSistrat == codigoSistrat) {
-                // Si el nombre coincide se da click en boton Crear Ficha Ingreso
-                const button = objCells.item(4)?.querySelector("span[name='crear_ficha_ingreso']") as HTMLElement;
-
-                if (button) {
-                  // Realizamos el clic en el botón
-                  button.click();
-                  console.log(`[Ficha de ingreso] Click en crear ficha ingreso para ${patientSistrat.name}`);
-                  return patientSistrat;
-                }
-                break; // Salimos del bucle cuando encontramos y hacemos clic en el botón
-              }
-            }
-          }
-        } else {
-          return null; // Tabla no encontrada
-        }
-        return data; // Devuelve los datos capturados
-      }, codigoSistrat);
-
+      const rowPatientSistrat = await this.openAdmissionFormFromList(page, codigoSistrat);
       console.log("rowPatientSistrat", rowPatientSistrat);
       await this.logStep(logger, `[Sistrat][registrarFichaIngreso] Paciente encontrado: ${!!rowPatientSistrat}`);
 
       if (!rowPatientSistrat) {
-        console.log(`[Ficha de Ingreso] Paciente No encontrado: ${rowPatientSistrat}`);
-        this.scrapper.closeBrowser();
+        console.log(`[Ficha de Ingreso] Paciente No encontrado para código: ${codigoSistrat}`);
         await this.logStep(logger, "[Sistrat][registrarFichaIngreso] Paciente no encontrado en listado");
-        return null;
+        return false;
       }
 
-      // Si se capturo el codigo sistrat se registrar en paciente
-      // if (rowPatientSistrat && rowPatientSistrat.codigoSistrat) {
-      //   const patientEntity = await PatientModel.findOne({ _id: patient._id });
-      //   if (patientEntity) {
-      //     patientEntity.codigoSistrat = rowPatientSistrat.codigoSistrat;
-      //     await patientEntity.save();
-      //   }
-      // }
-
-      console.log(`[Ficha de Ingreso] Paciente encontrado: ${rowPatientSistrat}`);
+      console.log(`[Ficha de Ingreso] Paciente encontrado: ${rowPatientSistrat.codigoSistrat}`);
       console.log("[Sistrat][registrarFichaIngreso] Abriendo formulario y completando secciones");
-      await this.completeAdmissionForm(page, patient, admissionForm, logger);
+      const formCompleted = await this.completeAdmissionForm(page, patient, admissionForm, logger);
       await this.logStep(logger, "[Sistrat][registrarFichaIngreso] Proceso completado");
+      return formCompleted;
     } catch (error: any) {
       await this.logStep(logger, `[Sistrat][registrarFichaIngreso] Error: ${error}`);
       throw new Error(`Error al registrar ficha de ingreso en función registrarFichaIngreso: ${error}`);
@@ -583,6 +534,46 @@ class Sistrat {
       await logger.close();
       console.groupEnd();
     }
+  }
+
+  private async openAdmissionFormFromList(page: Page, codigoSistrat: string): Promise<RowData | null> {
+    return page.evaluate((codigo) => {
+      const normalizedCode = (codigo || "").toString().trim();
+      if (!normalizedCode) {
+        return null;
+      }
+
+      const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
+      if (!table) {
+        return null;
+      }
+
+      for (let i = 1; i < table.rows.length; i++) {
+        const objCells = table.rows.item(i)?.cells;
+        if (!objCells) {
+          continue;
+        }
+
+        const patientSistrat: RowData = {
+          i,
+          id: objCells.item(0)?.innerText?.trim() || "",
+          name: objCells.item(1)?.innerText?.toLowerCase().trim() || "",
+          codigoSistrat: objCells.item(2)?.innerText?.trim() || "",
+        };
+
+        if (patientSistrat.codigoSistrat === normalizedCode) {
+          const button = objCells.item(4)?.querySelector("span[name='crear_ficha_ingreso']") as HTMLElement | null;
+          if (button) {
+            button.click();
+            console.log(`[Ficha de ingreso] Click en crear ficha ingreso para ${patientSistrat.name}`);
+            return patientSistrat;
+          }
+          break;
+        }
+      }
+
+      return null;
+    }, codigoSistrat);
   }
 
   async completeAdmissionForm(page: Page, patient: Patient, admissionForm: AdmissionForm, logger?: ProcessLogger) {
@@ -662,6 +653,7 @@ class Sistrat {
       await this.scrapper.setSelectValue(page, "#orientacion_sexual", admissionForm.orientacion_sexual);
       await this.scrapper.setSelectValue(page, "#discapacidad", admissionForm.discapacidad);
       if (admissionForm.discapacidad === "1") {
+        await this.scrapper.waitForSeconds(1);
         await this.scrapper.setSelectValue(page, "#opcion_discapacidad", admissionForm.opcion_discapacidad);
       }
 
@@ -671,7 +663,7 @@ class Sistrat {
       await this.scrapper.clickButton(page, 'a[href="#tabs2"]');
       await this.scrapper.waitForSeconds(2);
       await this.scrapper.setSelectValue(page, "#txtnacionalidad", admissionForm.txtnacionalidad);
-
+      await this.scrapper.waitForSeconds(2);
       // 46 Chile - aparecen nuevos select
       
       if(admissionForm.txtnacionalidad ==="46"){
@@ -703,6 +695,14 @@ class Sistrat {
       await this.scrapper.setSelectValue(page, "#selcon_quien_vive", admissionForm.selcon_quien_vive);
       await this.scrapper.setSelectValue(page, "#selparentesco", admissionForm.selparentesco);
       await this.scrapper.setSelectValue(page, "#seldonde_vive", admissionForm.seldonde_vive);
+      
+      if(['1','2','3','4','5','6'].includes( admissionForm.seldonde_vive)) {        
+        await this.scrapper.waitForSeconds(2);
+        await this.scrapper.setSelectValue(page, "#perso_dormitorio_vivienda", admissionForm.perso_dormitorio_vivienda);
+        await this.scrapper.setSelectValue(page, "#precariedad_vivienda", admissionForm.precariedad_vivienda);
+        await this.scrapper.setSelectValue(page, "#ss_basicos_vivienda", admissionForm.ss_basicos_vivienda);
+      }
+
       await this.scrapper.setSelectValue(page, "#seltenencia_vivienda", admissionForm.seltenencia_vivienda);
       await this.scrapper.setSelectValue(page, "#selnumero_tratamientos_anteriores", admissionForm.selnumero_tratamientos_anteriores);
       await this.scrapper.setSelectValue(page, "#selfecha_ult_trata", admissionForm.selfecha_ult_trata);
@@ -710,12 +710,16 @@ class Sistrat {
       await this.scrapper.clickButton(page, 'a[href="#tabs3"]');
       console.log("[Sistrat][completeAdmissionForm] Completando pestaña Consumo de sustancias");
       await this.logStep(logger, "[Sistrat][completeAdmissionForm] Consumo de sustancias");
-      await this.scrapper.waitForSeconds(3);
+      await this.scrapper.waitForSeconds(2);
 
       await this.scrapper.setSelectValue(page, "#selsustancia_princial", admissionForm.selsustancia_princial);
+      await this.scrapper.waitForSeconds(1);
       await this.scrapper.setSelectValue(page, "#selotra_sustancia_1", admissionForm.selotra_sustancia_1);
+      await this.scrapper.waitForSeconds(1);
       await this.scrapper.setSelectValue(page, "#selotra_sustancia_2", admissionForm.selotra_sustancia_2);
+      await this.scrapper.waitForSeconds(1);
       await this.scrapper.setSelectValue(page, "#selotra_sustancia_3", admissionForm.selotra_sustancia_3);
+      await this.scrapper.waitForSeconds(1);
       await this.scrapper.setSelectValue(page, "#selfrecuencia_consumo", admissionForm.selfrecuencia_consumo);
       await this.scrapper.waitAndType(page, "#txtedad_inicio_consumo", admissionForm.txtedad_inicio_consumo);
       await this.scrapper.setSelectValue(page, "#selvia_administracion", admissionForm.selvia_administracion);
@@ -775,6 +779,7 @@ class Sistrat {
       await this.scrapper.clickButton(page, '#mysubmit');
       await this.logStep(logger, "[Sistrat][Ficha de ingreso registrada");
 
+    //  await this.scrapper.waitForSeconds(300);
       return true;
     } catch (error) {
       await this.logStep(logger, `[Sistrat][completeAdmissionForm] Error: ${error}`);

@@ -14,9 +14,6 @@
         <span *ngIf="isValidField('txtnacionalidad')" class="text-red-500"> Debe seleccionar una opción </span>
       </mat-form-field>
     </div>
-
-    <pre>{{ form.get("txtnacionalidad")?.value | json }}</pre>
-
     <div class="col-6">
       @if(form.get('txtnacionalidad')?.value === '46'){
       <mat-form-field class="w-full" appearance="outline">
@@ -310,7 +307,6 @@
 
     }
 
-    // En que rubro trabajar
     <div class="col-6">
       <mat-form-field class="w-full" appearance="outline">
         <mat-label>EN QUE RUBRO TRABAJA </mat-label>
