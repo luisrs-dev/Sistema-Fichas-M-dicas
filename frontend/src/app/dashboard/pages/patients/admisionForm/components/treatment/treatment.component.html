@@ -17,8 +17,8 @@
       <mat-form-field class="w-full" appearance="outline">
         <mat-label>Ingreso convenio CONACE</mat-label>
         <mat-select formControlName="selconvenio_conace">
-          <mat-option value="null">Seleccione una opción</mat-option>
-          <mat-option value="Si">Si</mat-option>
+          <!-- <mat-option value="null">Seleccione una opción</mat-option> -->
+          <mat-option value="Si" seleceted>Si</mat-option>
         </mat-select>
         <span *ngIf="isValidField('selconvenio_conace')" class="text-red-500"> Debe seleccionar una opción </span>
       </mat-form-field>

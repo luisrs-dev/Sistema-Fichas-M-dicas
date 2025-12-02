@@ -92,6 +92,13 @@ export default class NewPatientComponent {
       this.loadPatient(id); // Función para cargar datos en modo edición
       this.isEditable = true; // Puedes usar esta flag para controlar lógica de edición si es necesario
     }
+
+      this.userForm.get('name')?.disable(); // deja el campo solo lectura
+      this.userForm.get('surname')?.disable(); // deja el campo solo lectura
+      this.userForm.get('secondSurname')?.disable(); // deja el campo solo lectura
+      this.userForm.get('birthDate')?.disable(); // deja el campo solo lectura
+      this.userForm.get('sex')?.disable(); // deja el campo solo lectura
+
   }
 
   formatDateStringToDate(dateString: string): Date | string {
@@ -245,5 +252,44 @@ export default class NewPatientComponent {
 
   get textButtonRegister(): string {
     return this.registeredOnFiclin() ? 'Actualizar' : 'Registrar';
+  }
+
+  onFetchDataWithRut(): void {
+    Notiflix.Loading.circle('Recuperando datos desde SISTRAT');
+
+    const rut = this.userForm.get('rut')?.value?.trim();
+    if (!rut) {
+      Notiflix.Notify.warning('Debes ingresar un RUT antes de buscar.');
+      return;
+    }
+
+    this.patientService.getDataWithRut(rut).subscribe({
+      next: (response) => {
+        const data = response?.data;
+        if (!data) {
+          Notiflix.Notify.failure('Respuesta inválida del servicio.');
+          return;
+        }
+
+        // Rellenamos los campos disponibles sin tocar el resto del formulario.
+        this.userForm.patchValue({
+          name: data.name ?? this.userForm.get('name')?.value,
+          surname: data.surname ?? this.userForm.get('surname')?.value,
+          secondSurname: data.secondSurname ?? this.userForm.get('secondSurname')?.value,
+          birthDate: this.formatDateStringToDate(data.birthDate) || this.userForm.get('birthDate')?.value,
+          sex: data.sex ?? this.userForm.get('sex')?.value,
+        });
+
+        this.changeDetectorRef.detectChanges();
+        Notiflix.Notify.success('Datos recuperados con éxito.');
+        Notiflix.Loading.remove();
+
+      },
+      error: () =>{
+        Notiflix.Notify.failure('No se pudo obtener la información.'),
+        Notiflix.Loading.remove();
+      } 
+
+    });
   }
 }

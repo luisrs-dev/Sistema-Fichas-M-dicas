@@ -15,7 +15,8 @@ import {
   updateAlertsFromSistrat,
   updateFormCie10,
   demandByPatient,
-  update
+  update,
+  dataPatientByRut
 } from "../services/patient.service";
 
 const getPatientsById = async ({ params }: Request, res: Response) => {
@@ -169,6 +170,26 @@ const getDemand = async (req: Request, res: Response) => {
   }
 };
 
+const getDataByRut = async (req: Request, res: Response) => {
+  try {
+    const { rut } = req.params;
+    if (!rut) {
+      return res.status(400).json({ success: false, message: "El parámetro rut es requerido" });
+    }
+
+    const data = await dataPatientByRut(rut);
+    if (!data) {
+      return res
+        .status(404)
+        .json({ success: false, message: "No se encontró demanda asociada al RUT proporcionado" });
+    }
+
+    res.status(200).json({ success: true, message: "Demanda recuperada con éxito", data });
+  } catch (error) {
+    handleHttp(res, "ERROR_GET_ITEMS", error);
+  }
+};
+
 
 
 
@@ -244,5 +265,6 @@ export {
   postAdmissionFormSistrat,
   updateAlerts,
   formCie10,
-  getDemand
+  getDemand,
+  getDataByRut
 };

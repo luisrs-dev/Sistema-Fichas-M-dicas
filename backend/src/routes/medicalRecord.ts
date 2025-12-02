@@ -5,16 +5,19 @@ import {
   postMedicalRecord,
   postMedicalRecordPerMonth,
   medicalRecordsByMonth,
-  deleteMedicalRecords
+  deleteMedicalRecords,
+  groupedMedicalRecordsByPatient,
+  postMedicalRecordPerMonthBulk
 } from "../controllers/medicalRecord.controller";
 // import { logMiddleware } from "../middleware/log";
 const router = Router();
 
 router.get("/", getMedicalRecords);
 router.delete("/:id", deleteMedicalRecords);
-// router.get("/", logMiddleware, getItems);
-router.get("/:userId", getAllMedicalRecordsByUser );
+router.get("/grouped/:patientId/:year/:month", groupedMedicalRecordsByPatient);
+router.get("/:userId", getAllMedicalRecordsByUser);
 router.post("/", postMedicalRecord);
+router.post("/monthRecords/bulk", postMedicalRecordPerMonthBulk);
 router.post("/monthRecords/:patientId", postMedicalRecordPerMonth);
 router.get("/:year/:month", medicalRecordsByMonth);
 // router.delete("/:id", deleteItem);

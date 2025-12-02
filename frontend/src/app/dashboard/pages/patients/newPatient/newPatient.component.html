@@ -10,6 +10,20 @@
         ⚠️ Paciente no tiene demanda registrada. Por favor, registre la ficha de demanda antes de continuar.
       </mat-card>
       <form [formGroup]="userForm" autocomplete="off" (ngSubmit)="onSubmit()">
+        <div class="grid">
+          <div class="col-4">
+              <mat-form-field class="w-full" appearance="outline">
+                <mat-label>RUT</mat-label>
+                <input matInput formControlName="rut" placeholder="11.222.333-4" />
+                <span *ngIf="isValidField('rut')" class="form-text text-danger"> El nombre es requerido </span>
+                <mat-icon matSuffix>person</mat-icon>
+                <!-- <mat-hint>Hint</mat-hint> -->
+              </mat-form-field>
+          </div>
+          <div class="col-4">
+            <button mat-flat-button type="button" (click)="onFetchDataWithRut()" color="primary">Traer datos con RUT</button>
+          </div>
+        </div>
         <div class="grid pt-4">
 
           <!-- Esta fecha corresponde al registro de la Ficha de Ingeso -->
@@ -22,7 +36,62 @@
               <mat-datepicker #pickerDateAdmission></mat-datepicker>
             </mat-form-field>
           </div>-->
+
+        </div>
+
+        <div class="grid">
+          
+          <div class="col-4">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Nombre</mat-label>
+              <input matInput formControlName="name" placeholder="Nombre"  />
+              <span *ngIf="isValidField('name')" class="form-text text-danger"> El nombre es requerido </span>
+              <mat-icon matSuffix>person</mat-icon>
+              <!-- <mat-hint>Hint</mat-hint> -->
+            </mat-form-field>
+          </div>
+          <div class="col-4">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Apellido Paterno</mat-label>
+              <input matInput formControlName="surname" />
+              <span *ngIf="isValidField('surname')" class="form-text text-danger"> Requerido </span>
+              <mat-icon matSuffix>person</mat-icon>
+              <!-- <mat-hint>Hint</mat-hint> -->
+            </mat-form-field>
+          </div>
+          <div class="col-4">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Apellido Materno</mat-label>
+              <input matInput formControlName="secondSurname" />
+              <span *ngIf="isValidField('secondSurname')" class="form-text text-danger"> Requerido </span>
+              <mat-icon matSuffix>person</mat-icon>
+              <!-- <mat-hint>Hint</mat-hint> -->
+            </mat-form-field>
+          </div>
           <div class="col-3">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Fecha Nacimiento</mat-label>
+              <input matInput [matDatepicker]="pickerBirthday" formControlName="birthDate" />
+              <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
+              <mat-datepicker-toggle matIconSuffix [for]="pickerBirthday"></mat-datepicker-toggle>
+              <mat-datepicker #pickerBirthday></mat-datepicker>
+            </mat-form-field>
+          </div>
+
+          <div class="col-3">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Sexo</mat-label>
+              <mat-select formControlName="sex">
+                <mat-option value="1">Hombre</mat-option>
+                <mat-option value="2">Mujer</mat-option>
+              </mat-select>
+              <span *ngIf="isValidField('sex')" class="text-red-500"> Debe seleccionar un programa </span>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div class="grid">
+                    <div class="col-3">
             <mat-form-field class="w-full" appearance="outline">
               <mat-label>Programa</mat-label>
               <mat-select formControlName="program">
@@ -47,65 +116,7 @@
         </div>
 
         <div class="grid">
-          <div class="col-2">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>RUT</mat-label>
-              <input matInput formControlName="rut" placeholder="11.222.333-4" />
-              <span *ngIf="isValidField('rut')" class="form-text text-danger"> El nombre es requerido </span>
-              <mat-icon matSuffix>person</mat-icon>
-              <!-- <mat-hint>Hint</mat-hint> -->
-            </mat-form-field>
-          </div>
-          <div class="col-3">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Nombre</mat-label>
-              <input matInput formControlName="name" placeholder="Nombre" />
-              <span *ngIf="isValidField('name')" class="form-text text-danger"> El nombre es requerido </span>
-              <mat-icon matSuffix>person</mat-icon>
-              <!-- <mat-hint>Hint</mat-hint> -->
-            </mat-form-field>
-          </div>
-          <div class="col-3">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Apellido Paterno</mat-label>
-              <input matInput formControlName="surname" />
-              <span *ngIf="isValidField('surname')" class="form-text text-danger"> Requerido </span>
-              <mat-icon matSuffix>person</mat-icon>
-              <!-- <mat-hint>Hint</mat-hint> -->
-            </mat-form-field>
-          </div>
-          <div class="col-3">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Apellido Materno</mat-label>
-              <input matInput formControlName="secondSurname" />
-              <span *ngIf="isValidField('secondSurname')" class="form-text text-danger"> Requerido </span>
-              <mat-icon matSuffix>person</mat-icon>
-              <!-- <mat-hint>Hint</mat-hint> -->
-            </mat-form-field>
-          </div>
-        </div>
-
-        <div class="grid">
-          <div class="col-2">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Fecha Nacimiento</mat-label>
-              <input matInput [matDatepicker]="pickerBirthday" formControlName="birthDate" />
-              <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
-              <mat-datepicker-toggle matIconSuffix [for]="pickerBirthday"></mat-datepicker-toggle>
-              <mat-datepicker #pickerBirthday></mat-datepicker>
-            </mat-form-field>
-          </div>
-
-          <div class="col-2">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Sexo</mat-label>
-              <mat-select formControlName="sex">
-                <mat-option value="1">Hombre</mat-option>
-                <mat-option value="2">Mujer</mat-option>
-              </mat-select>
-              <span *ngIf="isValidField('sex')" class="text-red-500"> Debe seleccionar un programa </span>
-            </mat-form-field>
-          </div>
+          
           <div class="col-2">
             <mat-form-field class="w-full" appearance="outline">
               <mat-label>Region</mat-label>

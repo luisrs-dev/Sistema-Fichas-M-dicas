@@ -8,6 +8,8 @@ import puppeteer from "puppeteer-extra";
 import { promises as fs } from "fs";
 import path from "path";
 
+const SYSTEM_CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+
 class Scrapper {
   protected browser: Browser | null = null;
 
@@ -36,11 +38,21 @@ class Scrapper {
   });
     // await page.setDefaultNavigationTimeout(300000); // 5 minutos
 
-    // Ajustar el viewport para simular una pantalla de notebook
-    // await page.setViewport({
-    //   width: 1366, // Ancho de un notebook común
-    //   height: 768, // Alto de un notebook común
-    // });
+    // Ajustar el viewport para usar la pantalla completa del entorno disponible
+    try {
+      const viewport = await page.evaluate(() => ({
+        width: window.screen?.availWidth || window.innerWidth || 1366,
+        height: window.screen?.availHeight || window.innerHeight || 768,
+      }));
+
+      await page.setViewport({
+        width: viewport.width,
+        height: viewport.height,
+      });
+    } catch (error) {
+      console.warn("[Scrapper] No fue posible detectar dimensiones de pantalla, usando fallback 1920x1080", error);
+      await page.setViewport({ width: 1920, height: 1080 });
+    }
 
     // User agent realista
     await page.setUserAgent(
@@ -67,38 +79,38 @@ class Scrapper {
     const sessionHash = Date.now().toString();
     // const userDataDir = await this.createCacheDirectory(sessionHash);
     const userDataDir = await this.createCacheDirectory(sessionHash);
+    const executablePath = await this.getSystemChromePath();
 
     console.log('[LaunchBrowser] Obteniendo browser...');
     
     this.browser =  await puppeteer.launch(
       
       // Prod
-      {
-        userDataDir: userDataDir,
-        executablePath: '/usr/bin/google-chrome',
-        args: [
-          `--proxy-server=http://${"geo.iproyal.com:12321"}`,
-          "--no-sandbox",
-          "--disable-setuid-sandbox",
-        ],
-      }
-
-      // Local
       // {
-      //   headless: headless,
-      //   executablePath: await puppeteer.executablePath(), // usa el binario que trae Puppeteer
-      //   //slowMo: 300, sirve para darle tiempe a cada operacion
-      //   userDataDir: userDataDir, // Establecer la carpeta de caché,
+      //   userDataDir: userDataDir,
+      //   executablePath: '/usr/bin/google-chrome',
       //   args: [
+      //     `--proxy-server=http://${"geo.iproyal.com:12321"}`,
       //     "--no-sandbox",
       //     "--disable-setuid-sandbox",
-      //     "--use-gl=egl",
-      //     "--blink-settings=imagesEnabled=false,cssEnabled=false",
-      //     "--disable-dev-shm-usage"
       //   ],
-      //   timeout: 0,
-      //   protocolTimeout: 300000,
       // }
+      // Local
+      {
+        headless: headless,
+        executablePath,
+        //slowMo: 300, sirve para darle tiempe a cada operacion
+        userDataDir: userDataDir, // Establecer la carpeta de caché,
+        args: [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--use-gl=egl",
+          "--blink-settings=imagesEnabled=false,cssEnabled=false",
+          "--disable-dev-shm-usage"
+        ],
+        timeout: 0,
+        protocolTimeout: 300000,
+      }
       );
 
     console.log('[LaunchBrowser] Browser obtenido');
@@ -228,6 +240,16 @@ class Scrapper {
     console.log({ userDataDir });
 
     return userDataDir;
+  }
+
+  private async getSystemChromePath(): Promise<string> {
+    try {
+      await fs.access(SYSTEM_CHROME_PATH);
+      console.log(`[LaunchBrowser] Usando Chrome del sistema: ${SYSTEM_CHROME_PATH}`);
+      return SYSTEM_CHROME_PATH;
+    } catch {
+      throw new Error(`[LaunchBrowser] Chrome no encontrado en ${SYSTEM_CHROME_PATH}`);
+    }
   }
 }
 

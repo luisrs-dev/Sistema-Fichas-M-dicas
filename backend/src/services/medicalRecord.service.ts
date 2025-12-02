@@ -2,9 +2,11 @@
 import { Types } from "mongoose";
 import { MedicalRecord } from "../interfaces/medicalRecord.interface";
 import MedicalRecordModel from "../models/medicalRecord.model";
-import Sistrat from './sistrat/sistrat.class';
-import PatientModel from '../models/patient.model';
+import Sistrat from "./sistrat/sistrat.class";
+import PatientModel from "../models/patient.model";
 import { getBase64Image } from "../utils/base64Image";
+import { getGroupedRecordsByPatientAndMonth } from "./medicalRecordGrouping.service";
+import ProcessLogger from "../utils/processLogger";
 
 const insertMedicalRecord = async (medicalRecord: MedicalRecord) => {
   
@@ -26,24 +28,99 @@ const insertMedicalRecord = async (medicalRecord: MedicalRecord) => {
     
 };
 
-const postMedicalRecordsPerMonthOnSistrat = async (patientId: string, month: number, year: number,medicalRecord: any) => {
-  
-  console.log('postMedicalRecordsPerMonthOnSistrat');
-    const sistratPlatform = new Sistrat();
-    const patient = await PatientModel.findOne({ _id: patientId });
-    console.log('patient postMedicalRecordsPerMonthOnSistrat', patient);
-    
-    console.log('month year', month, year);
-    
+const postMedicalRecordsPerMonthOnSistrat = async (patientId: string, month: number, year: number) => {
+  console.log("postMedicalRecordsPerMonthOnSistrat");
+  const sistratPlatform = new Sistrat();
+  const patient = await PatientModel.findOne({ _id: patientId });
+  console.log("patient postMedicalRecordsPerMonthOnSistrat", patient);
+
+  console.log("month year", month, year);
+
+  if (!patient) {
+    throw new Error("Paciente no encontrado");
+  }
+
+  await sistratPlatform.recordMonthlySheet(patient, month, year);
+};
+
+interface BulkMonthlyRecordResult {
+  patientId: string;
+  status: "registered" | "skipped" | "error";
+  reason?: string;
+}
+
+const postMedicalRecordsPerMonthForAllPatients = async (month: number, year: number) => {
+  if (!Number.isInteger(month) || month < 1 || month > 12) {
+    throw new Error("Mes inválido, debe estar entre 1 y 12");
+  }
+
+  if (!Number.isInteger(year) || year < 2000) {
+    throw new Error("Año inválido");
+  }
+
+  const startOfMonth = new Date(year, month - 1, 1, 0, 0, 0, 0).toISOString();
+  const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999).toISOString();
+
+  const patientIds = await MedicalRecordModel.distinct("patient", {
+    date: {
+      $gte: startOfMonth,
+      $lte: endOfMonth,
+    },
+  });
+
+  const results: BulkMonthlyRecordResult[] = [];
+  const bulkLogger = new ProcessLogger("bulk-registro", `fichas-mensuales-${year}-${month}`);
+  await bulkLogger.log(`Inicio de registro masivo para ${month}/${year}`);
+
+  for (const patientId of patientIds) {
+    const patient = await PatientModel.findById(patientId);
+
     if (!patient) {
-      throw new Error("Paciente no encontrado");
+      results.push({ patientId: String(patientId), status: "error", reason: "Paciente no encontrado" });
+      await bulkLogger.log(`ERROR | pacienteId=${patientId} | Paciente no encontrado`);
+      continue;
     }
 
-      const statusAdmissionFormCreated = await sistratPlatform.registrarMedicalRecordsByMonth(patient,  month, year, medicalRecord);
+    const sistratPlatform = new Sistrat();
 
-    console.log({ patientId, medicalRecord });
-    return;
-    
+    try {
+      const groupedRecords = await getGroupedRecordsByPatientAndMonth(String(patient._id), month, year);
+
+      if (!groupedRecords.length) {
+        results.push({ patientId: String(patient._id), status: "skipped", reason: "Sin fichas en el mes solicitado" });
+        await sistratPlatform.scrapper.closeBrowser();
+        await bulkLogger.log(`SKIPPED | pacienteId=${patient._id} | ${patient.name} ${patient.surname} | Sin fichas en el mes`);
+        continue;
+      }
+
+      await sistratPlatform.recordMonthlySheet(patient, month, year);
+      results.push({ patientId: String(patient._id), status: "registered" });
+      await bulkLogger.log(`REGISTERED | pacienteId=${patient._id} | ${patient.name} ${patient.surname}`);
+    } catch (error: any) {
+      results.push({
+        patientId: String(patient._id),
+        status: "error",
+        reason: error?.message || "Error desconocido al registrar la ficha mensual",
+      });
+      await bulkLogger.log(`ERROR | pacienteId=${patient._id} | ${patient.name} ${patient.surname} | ${error?.message || error}`);
+    } finally {
+      await sistratPlatform.scrapper.closeBrowser();
+    }
+  }
+
+  await bulkLogger.log(`Fin de registro masivo. Total pacientes con fichas: ${patientIds.length}`);
+  await bulkLogger.close();
+
+  return {
+    month,
+    year,
+    totalPatientsWithRecords: patientIds.length,
+    registered: results.filter((result) => result.status === "registered").length,
+    skipped: results.filter((result) => result.status === "skipped").length,
+    errors: results.filter((result) => result.status === "error").length,
+    results,
+    logPath: bulkLogger.path,
+  };
 };
 
 
@@ -137,5 +214,14 @@ const getRecordsByMonthAndYear = async (month: number, year: number) => {
 
 };
 
-export { allMedicalRecords, postMedicalRecordsPerMonthOnSistrat, insertMedicalRecord, allMedicalRecordsUser, getRecordsByMonthAndYear, deleteRecord };
+export {
+  allMedicalRecords,
+  postMedicalRecordsPerMonthOnSistrat,
+  insertMedicalRecord,
+  allMedicalRecordsUser,
+  getRecordsByMonthAndYear,
+  deleteRecord,
+  getGroupedRecordsByPatientAndMonth,
+  postMedicalRecordsPerMonthForAllPatients,
+};
 

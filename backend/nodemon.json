@@ -1,0 +1,13 @@
+{
+  "watch": ["src"],
+  "ext": "ts",
+  "ignore": [
+    "cache",
+    "uploads",
+    "logs",
+    "node_modules",
+    "templates-pdf",
+    "dist"
+  ],
+  "exec": "ts-node ./src/index.ts"
+}

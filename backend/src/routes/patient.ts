@@ -15,7 +15,8 @@ import {
   postAdmissionFormSistrat,
   updateAlerts,
   formCie10,
-  getDemand
+  getDemand,
+  getDataByRut
 } from "../controllers/patient.controller";
 // import { logMiddleware } from "../middleware/log";
 const router = Router();
@@ -23,6 +24,7 @@ const router = Router();
 router.get("/profile/:profile", getPatientsByProfile);
 
 router.get("/demanda/:patientId", getDemand);
+router.get("/rut/:rut", getDataByRut);
 router.post("/demanda", postDemand);
 router.post("/demanda/sistrat", postDemandToSistrat);
 

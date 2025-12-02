@@ -7,6 +7,8 @@ import {
   getRecordsByMonthAndYear,
   deleteRecord,
   postMedicalRecordsPerMonthOnSistrat,
+  getGroupedRecordsByPatientAndMonth,
+  postMedicalRecordsPerMonthForAllPatients,
 } from "../services/medicalRecord.service";
 import { allServices } from "../services/service.service";
 import ejs from "ejs";
@@ -52,17 +54,37 @@ const postMedicalRecord = async ({ body }: Request, res: Response) => {
 
 const postMedicalRecordPerMonth = async ({ params, body }: Request, res: Response) => {
   const { patientId } = params;
-  const { medicalRecordsGrouped, month, year } = body;
+  const { month, year } = body;
   console.log("patientId", patientId);
   console.log("body", body);
 
   try {
-    const responsepostMedicalRecordsPerMonthOnSistrat = await postMedicalRecordsPerMonthOnSistrat(patientId, month, year, medicalRecordsGrouped);
+    const responsepostMedicalRecordsPerMonthOnSistrat = await postMedicalRecordsPerMonthOnSistrat(patientId, +month, +year);
 
     
     res.send(responsepostMedicalRecordsPerMonthOnSistrat);
   } catch (error) {
     handleHttp(res, "ERROR_MEDICAL_RECORDS_PER_MONTH", error);
+  }
+};
+
+const postMedicalRecordPerMonthBulk = async ({ body }: Request, res: Response) => {
+  const month = Number(body?.month);
+  const year = Number(body?.year);
+
+  if (!month || !year) {
+    return res.status(400).json({ status: false, message: "Debe indicar mes y año" });
+  }
+
+  try {
+    const bulkResult = await postMedicalRecordsPerMonthForAllPatients(month, year);
+    res.status(200).json({
+      status: true,
+      message: "Registro masivo de fichas mensuales completado",
+      data: bulkResult,
+    });
+  } catch (error) {
+    handleHttp(res, "ERROR_BULK_MEDICAL_RECORDS_PER_MONTH", error);
   }
 };
 
@@ -77,6 +99,21 @@ const medicalRecordsByMonth = async ({ params }: Request, res: Response) => {
     }); // Respuesta exitosa
   } catch (error) {
     handleHttp(res, "Error fetching medical records by month", error);
+  }
+};
+
+const groupedMedicalRecordsByPatient = async ({ params }: Request, res: Response) => {
+  const { patientId, month, year } = params;
+
+  try {
+    const groupedMedicalRecords = await getGroupedRecordsByPatientAndMonth(patientId, Number(month), Number(year));
+    res.status(200).json({
+      status: true,
+      message: "Fichas clínicas agrupadas",
+      groupedMedicalRecords,
+    });
+  } catch (error) {
+    handleHttp(res, "ERROR_GROUPED_MEDICAL_RECORDS", error);
   }
 };
 
@@ -248,9 +285,11 @@ const deleteMedicalRecords = async ({ params }: Request, res: Response) => {
 export {
   postMedicalRecord,
   postMedicalRecordPerMonth,
+  postMedicalRecordPerMonthBulk,
   getMedicalRecords,
   getAllMedicalRecordsByUser,
   medicalRecordsByMonth,
+  groupedMedicalRecordsByPatient,
   getPdfMedicalRecordsByPatient,
   getPdfMedicalRecords,
   deleteMedicalRecords,

@@ -26,6 +26,7 @@ interface State {
 export interface MedicalRecordGrouped {
   service: string;
   days: number[];
+  total: number;
 }
 
 @Component({
@@ -56,7 +57,7 @@ export default class DetailComponent {
   showTable = signal(false);
   medicalRecordsGrouped = signal<MedicalRecordGrouped[]>([]);
   daysInMonth = Array.from({ length: 31 }); // días 1-31
-  displayedColumns = ['service', ...this.daysInMonth.map((_, i) => i.toString())];
+  displayedColumns = ['service', ...this.daysInMonth.map((_, i) => i.toString()), 'total'];
   #state = signal<State>({
     loading: true,
     patient: null,
@@ -194,10 +195,11 @@ export default class DetailComponent {
     });
 
     // Convertimos el objeto en un array de objetos
-    const groupedArray = Object.keys(grouped).map((serviceName) => ({
-      service: serviceName,
-      days: grouped[serviceName],
-    }));
+    const groupedArray = Object.keys(grouped).map((serviceName) => {
+      const days = grouped[serviceName];
+      const total = days.reduce((acc, value) => acc + value, 0);
+      return { service: serviceName, days, total };
+    });
 
     console.log('Grouped Array:', groupedArray);
 
