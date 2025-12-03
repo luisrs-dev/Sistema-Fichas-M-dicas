@@ -5,8 +5,6 @@ import Scrapper from "../scrapper";
 import { AdmissionForm } from "./../../interfaces/admissionForm.interface";
 import ProcessLogger from "../../utils/processLogger";
 import { getGroupedRecordsByPatientAndMonth } from "../medicalRecordGrouping.service";
-import { load } from "cheerio"; // si aún no lo usas, `npm install cheerio`
-import iconv from "iconv-lite";
 
 
 interface RowData {
@@ -104,83 +102,153 @@ class Sistrat {
     }
   }
 
- async dataPatientFromDemand(rut: string) {
-    const center = 'mujeres';
-    // this.gender = patient.sex;
-    console.log("center", center);
-    console.group(`[Sistrat][Datos con rut] ${rut}`);
-    console.log(`[Sistrat][Datos con rut] Iniciando flujo para centro ${center}`);
-    const logger = new ProcessLogger(rut, "datos-paciente-desde-crear-demanda");
 
-    let page: Page | null = null;
+async dataPatientFromDemand(rut: string) {
+  const center = "mujeres";
+  console.group(`[Sistrat][Datos con rut] ${rut}`);
+  const logger = new ProcessLogger(rut, "datos-paciente-desde-crear-demanda");
 
-    try {
-      await this.logStep(logger, `[Sistrat][Datos con rut] Inicio flujo centro ${center}`);
-      page = await this.login(center, logger);
-      console.log("[Sistrat][Datos con rut] Login exitoso, avanzando a creación de demanda");
-      await this.logStep(logger, "[Sistrat][Datos con rut] Login completado");
+  let page: Page | null = null;
 
-    // Manejo de alertas / confirm / prompt
+  try {
+    await this.logStep(logger, `[Sistrat][Datos con rut] Inicio flujo centro ${center}`);
+    page = await this.login(center, logger);
+
     page.on("dialog", async (dialog) => {
-      console.log("Se detectó un diálogo:", dialog.message());
-      await this.logStep(logger, `[Sistrat][Datos con rut] Diálogo detectado: ${dialog.message()}`);
-      await dialog.accept(); // O dialog.dismiss() si quieres cancelarlo
+      console.log("[Sistrat] Diálogo detectado:", dialog.message());
+      await dialog.accept();
     });
 
-      await this.listActiveDemands(page, logger);
-      console.log("[Sistrat][crearDemanda] Menú de demandas activas listo, abriendo formulario de creación");
-      await this.scrapper.clickButton(page, "#crea_demanda", 15000);
-      console.log("Creando demanda en SISTRAT...", rut);
-      await this.logStep(logger, "[Sistrat][crearDemanda] Formulario de creación abierto");
-      await this.scrapper.waitAndType(page, "#txtrut", rut);
+    await this.listActiveDemands(page, logger);
+    await this.scrapper.clickButton(page, "#crea_demanda", 15000);
+    await this.scrapper.waitAndType(page, "#txtrut", rut);
 
-      const fonasaResponsePromise = page.waitForResponse((response) => {
-        const url = response.url();
-        return url.includes("php/conv1/ajaxs/checar.php") && response.request().method() === "GET";
-      });
+    // Espera explícitamente la respuesta del endpoint que trae los datos de Fonasa
+    const fonasaResponsePromise = page.waitForResponse((response) => {
+      const url = response.url();
+      return (
+        url.includes("php/conv1/ajaxs/checar.php") &&
+        response.request().method() === "GET"
+      );
+    });
 
-      await this.scrapper.clickButton(page, "#traeDatoFonasa", 50000 );
+    await this.scrapper.clickButton(page, "#traeDatoFonasa");
 
-      // Espera la respuesta del servicio PHP
-      const fonasaResponse = await fonasaResponsePromise;
+    await fonasaResponsePromise;
 
-
-      // ...
-      const responseBuffer = await fonasaResponse.buffer();
-      const response = iconv.decode(responseBuffer, "latin1");
-      const $ = load(response, { decodeEntities: false } as any);
-
-      const patientFromFonasa = {
-        name: $("#txtnombre_usuario").val()?.toString().trim() || "",
-        surname: $("#txtapellido_usuario").val()?.toString().trim() || "",
-        secondSurname: $("#txtapellido2_usuario").val()?.toString().trim() || "",
-        birthDate: $("#txt_fecha_nacimiento").val()?.toString().trim() || "", // "DD/MM/AAAA"
-        sex: $("#sexo").val()?.toString().trim() || "", // "1" ó "2"
+    await page.waitForFunction(() => {
+      const getValue = (selector: string) => {
+        const element = document.querySelector(selector) as HTMLInputElement | HTMLSelectElement | null;
+        return element?.value?.trim();
       };
 
-      console.log("[Sistrat] Datos rescatados:", patientFromFonasa);
+      const nameValue = getValue('#txtnombre_usuario');
+      const surnameValue = getValue('#txtapellido_usuario');
+      const secondSurnameValue = getValue('#txtapellido2_usuario');
+      const birthDateValue = getValue('#txt_fecha_nacimiento');
+      const sexValue = getValue('#sexo');
 
-      console.log('[Data Patient]', patientFromFonasa);
-      return patientFromFonasa;
-    
-      //await this.scrapper.waitForSeconds(90);
-      await this.listActiveDemands(page, logger);
-      console.log("[Sistrat][crearDemanda] Datos sincronizados correctamente");
-      await this.logStep(logger, "[Sistrat][crearDemanda] Datos sincronizados");
+      return Boolean(nameValue || surnameValue || secondSurnameValue || birthDateValue || sexValue);
+    }, { timeout: 15000 });
 
-      return true;
-    } catch (error) {
-      console.error("Error en crearDemanda", error);
-      await this.logStep(logger, `[Sistrat][crearDemanda] Error: ${error}`);
-      throw new Error(`Error en la creación de la demanda. Error: ${error}`);
-    } finally {
-      if (page) {
-        await this.scrapper.closeBrowser();
-      }
-      await logger.close();
-      console.groupEnd();
+    const fonasaData = await page.evaluate(() => {
+      const getInputValue = (selector: string) => {
+        const element = document.querySelector(selector) as HTMLInputElement | null;
+        return element?.value?.trim() ?? '';
+      };
+
+      const getSelectValue = (selector: string) => {
+        const element = document.querySelector(selector) as HTMLSelectElement | null;
+        if (!element) return '';
+        const selectedText = element.options[element.selectedIndex]?.textContent?.trim();
+        return selectedText || element.value?.trim() || '';
+      };
+
+      return {
+        name: getInputValue('#txtnombre_usuario'),
+        surname: getInputValue('#txtapellido_usuario'),
+        secondSurname: getInputValue('#txtapellido2_usuario'),
+        birthDate: getInputValue('#txt_fecha_nacimiento'),
+        sexLabel: getSelectValue('#sexo'),
+        sexValue: getInputValue('#sexo')
+      };
+    });
+
+    const normalizedSex = this.normalizeSexFromFonasa(fonasaData.sexValue || fonasaData.sexLabel);
+    const normalizedBirthDate = this.normalizeBirthDateFormat(fonasaData.birthDate);
+
+    console.log({
+      name: fonasaData.name,
+      surname: fonasaData.surname,
+      secondSurname: fonasaData.secondSurname,
+      birthDate: normalizedBirthDate,
+      sex: normalizedSex,
+    });
+
+    await this.logStep(logger, "[Sistrat][Datos con rut] Datos extraídos correctamente");
+
+    return {
+      name: fonasaData.name,
+      surname: fonasaData.surname,
+      secondSurname: fonasaData.secondSurname,
+      birthDate: normalizedBirthDate,
+      sex: normalizedSex,
+    };
+
+  } catch (error) {
+    console.error("[Sistrat][Datos con rut] ERROR:", error);
+    await this.logStep(logger, "[Sistrat][Datos con rut] Error: " + error);
+    throw error;
+
+  } finally {
+    if (page) {
+      await this.scrapper.closeBrowser();
     }
+    await logger.close();
+    console.groupEnd();
   }
+}
+
+  private normalizeSexFromFonasa(rawValue: string): string {
+    const value = (rawValue || '').toString().trim().toLowerCase();
+    if (!value) {
+      return '';
+    }
+
+    if (value === Gender.Man || value === '1') {
+      return Gender.Man;
+    }
+
+    if (value === Gender.Woman || value === '2') {
+      return Gender.Woman;
+    }
+
+    if (value.startsWith('h') || value.includes('masc')) {
+      return Gender.Man;
+    }
+
+    if (value.startsWith('f') || value.includes('fem')) {
+      return Gender.Woman;
+    }
+
+    return '';
+  }
+
+  private normalizeBirthDateFormat(value: string): string {
+    if (!value) {
+      return '';
+    }
+
+    const trimmedValue = value.trim();
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmedValue)) {
+      const [year, month, day] = trimmedValue.split('-');
+      return `${day}/${month}/${year}`;
+    }
+
+    return trimmedValue;
+  }
+
 
   async crearDemanda(patient: Patient) {
     const center = patient.sistratCenter;
@@ -198,12 +266,12 @@ class Sistrat {
       console.log("[Sistrat][crearDemanda] Login exitoso, avanzando a creación de demanda");
       await this.logStep(logger, "[Sistrat][crearDemanda] Login completado");
 
-    // Manejo de alertas / confirm / prompt
-    page.on("dialog", async (dialog) => {
-      console.log("Se detectó un diálogo:", dialog.message());
-      await this.logStep(logger, `[Sistrat][crearDemanda] Diálogo detectado: ${dialog.message()}`);
-      await dialog.accept(); // O dialog.dismiss() si quieres cancelarlo
-    });
+      // Manejo de alertas / confirm / prompt
+      page.on("dialog", async (dialog) => {
+        console.log("Se detectó un diálogo:", dialog.message());
+        await this.logStep(logger, `[Sistrat][crearDemanda] Diálogo detectado: ${dialog.message()}`);
+        await dialog.accept(); // O dialog.dismiss() si quieres cancelarlo
+      });
 
       await this.listActiveDemands(page, logger);
       console.log("[Sistrat][crearDemanda] Menú de demandas activas listo, abriendo formulario de creación");
@@ -211,13 +279,19 @@ class Sistrat {
       console.log("Creando demanda en SISTRAT...", patient);
       await this.logStep(logger, "[Sistrat][crearDemanda] Formulario de creación abierto");
       await this.scrapper.waitAndType(page, "#txtrut", patient.rut);
-      await this.scrapper.waitAndType(page, "#txtnombre_usuario", patient.name);
-      await this.scrapper.waitAndType(page, "#txtapellido_usuario", patient.surname);
-      await this.scrapper.waitAndType(page, "#txtapellido2_usuario", patient.secondSurname);
 
-      await this.scrapper.setDateValue(page, "#txt_fecha_nacimiento", patient.birthDate);
+      // Se da click en botón "Traer datos con rut"
+      // Se autocompletan campos nombre, apellidos, birthdate y sexo
 
-      await this.scrapper.setSelectValue(page, "#sexo", patient.sex);
+      const fonasaResponsePromise = page.waitForResponse((response) => {
+        const url = response.url();
+        return url.includes("php/conv1/ajaxs/checar.php") && response.request().method() === "GET";
+      });
+
+      await this.scrapper.clickButton(page, "#traeDatoFonasa", 50000);
+      // Espera la respuesta del servicio PHP
+      const fonasaResponse = await fonasaResponsePromise;
+
       await this.scrapper.setSelectValue(page, "#selregion", "7");
       await this.scrapper.waitForSeconds(3);
       await this.scrapper.setSelectValue(page, "#selcomuna", patient.comuna);
@@ -245,7 +319,8 @@ class Sistrat {
       await this.scrapper.setSelectValue(page, "#sel_intervencion_a_b", patient.interventionAB);
       await this.scrapper.waitAndType(page, "#obs", patient.observations);
       //await this.scrapper.setSelectValue(page, "#selcomuna", "150");
-      await this.scrapper.clickButton(page, "#mysubmit");
+      // await this.scrapper.clickButton(page, "#mysubmit");
+      await this.scrapper.waitForSeconds(120);
       console.log("[Sistrat][crearDemanda] Formulario enviado, refrescando listado para validar creación");
       await this.logStep(logger, "[Sistrat][crearDemanda] Formulario enviado");
 
@@ -265,26 +340,6 @@ class Sistrat {
         await this.scrapper.closeBrowser();
       }
       await logger.close();
-      console.groupEnd();
-    }
-  }
-
-  async listActiveDemands(page: Page, logger?: ProcessLogger) {
-    console.group("[Sistrat][listActiveDemands]");
-    await this.logStep(logger, "[Sistrat][listActiveDemands] Apertura de menú de demandas activas");
-    try {
-      console.log("[Sistrat][listActiveDemands] Esperando menú principal");
-      await this.scrapper.waitForSeconds(3);
-      await this.scrapper.clickButton(page, "#flyout2");
-      console.log("[Sistrat][listActiveDemands] Menú flyout2 abierto, navegando a listado");
-      await this.scrapper.waitForSeconds(3);
-      await this.scrapper.clickButton(page, 'a[href="php/conv1/listado_demanda.php"].ui-corner-all');
-      console.log("[Sistrat][listActiveDemands] Listado de demandas solicitado");
-      await this.logStep(logger, "[Sistrat][listActiveDemands] Listado solicitado correctamente");
-    } catch (error) {
-      await this.logStep(logger, `[Sistrat][listActiveDemands] Error: ${error}`);
-      throw new Error("Error al listar demandaas");
-    } finally {
       console.groupEnd();
     }
   }
@@ -394,67 +449,71 @@ class Sistrat {
       const normalizedTarget = this.normalizeName(patientName);
       const patientCode = patient.codigoSistrat?.trim() || null;
 
-      const rowPatientSistrat: any = await page.evaluate((normalizedTarget, patientCodeEval) => {
-        console.log("rowPatientSistrat");
-        // función de normalización DENTRO del contexto de la página
-        const normalize = (name?: string) => {
-          if (!name) return "";
-          return name
-            .normalize("NFD") // separar diacríticos
-            .replace(/[\u0300-\u036f]/g, "") // quitar tildes
-            .replace(/\s+/g, "") // quitar espacios
-            .toLowerCase();
-        };
+      const rowPatientSistrat: any = await page.evaluate(
+        (normalizedTarget, patientCodeEval) => {
+          console.log("rowPatientSistrat");
+          // función de normalización DENTRO del contexto de la página
+          const normalize = (name?: string) => {
+            if (!name) return "";
+            return name
+              .normalize("NFD") // separar diacríticos
+              .replace(/[\u0300-\u036f]/g, "") // quitar tildes
+              .replace(/\s+/g, "") // quitar espacios
+              .toLowerCase();
+          };
 
-        const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
-        console.log("table getElementById", table);
+          const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
+          console.log("table getElementById", table);
 
-        if (table) {
-          // console.log("table");
+          if (table) {
+            // console.log("table");
 
-          // Iteramos sobre las filas de la tabla, comenzando desde la segunda fila (i = 1)
-          for (let i = 1; i < table.rows.length; i++) {
-            const objCells = table.rows.item(i)?.cells;
-            console.log("tabla paciente encontrada", objCells);
+            // Iteramos sobre las filas de la tabla, comenzando desde la segunda fila (i = 1)
+            for (let i = 1; i < table.rows.length; i++) {
+              const objCells = table.rows.item(i)?.cells;
+              console.log("tabla paciente encontrada", objCells);
 
-            if (objCells) {
-              // Obtenemos el texto de cada celda relevante
-              const patient = {
-                id: objCells.item(0)?.innerText || "", // Captura el texto de la primera celda (ID)
-                name: objCells.item(1)?.innerText?.toLowerCase() || "", // Captura el texto de la segunda celda (nombre)
-                codigoSistrat: objCells.item(2)?.innerText?.trim() || "", // Captura el texto de la tercera celda (código Sistrat)
-              };
+              if (objCells) {
+                // Obtenemos el texto de cada celda relevante
+                const patient = {
+                  id: objCells.item(0)?.innerText || "", // Captura el texto de la primera celda (ID)
+                  name: objCells.item(1)?.innerText?.toLowerCase() || "", // Captura el texto de la segunda celda (nombre)
+                  codigoSistrat: objCells.item(2)?.innerText?.trim() || "", // Captura el texto de la tercera celda (código Sistrat)
+                };
 
-              // console.log("patient evaluado", patient);
+                // console.log("patient evaluado", patient);
 
-              // console.log("patient.name", normalize(patient.name));
-              // console.log("normalizedTarget", normalizedTarget);
+                // console.log("patient.name", normalize(patient.name));
+                // console.log("normalizedTarget", normalizedTarget);
 
-              // Comparamos con el nombre que estamos buscando
-              const matchesName = normalize(patient.name) === normalizedTarget;
-              const matchesCode = patientCodeEval ? patient.codigoSistrat === patientCodeEval : false;
+                // Comparamos con el nombre que estamos buscando
+                const matchesName = normalize(patient.name) === normalizedTarget;
+                const matchesCode = patientCodeEval ? patient.codigoSistrat === patientCodeEval : false;
 
-              if (matchesCode || matchesName) {
-                console.log("patient encontrado", patient);
+                if (matchesCode || matchesName) {
+                  console.log("patient encontrado", patient);
 
-                // Si el nombre coincide se da click en boton Crear Ficha Ingreso
-                const button = objCells.item(5)?.querySelector("span[name='fmensual']") as HTMLElement;
+                  // Si el nombre coincide se da click en boton Crear Ficha Ingreso
+                  const button = objCells.item(5)?.querySelector("span[name='fmensual']") as HTMLElement;
 
-                if (button) {
-                  // Realizamos el clic en el botón
-                  button.click();
-                  console.log(`Se hizo clic en el botón de crear ficha mensual para ${patient.name}`);
-                  return patient;
+                  if (button) {
+                    // Realizamos el clic en el botón
+                    button.click();
+                    console.log(`Se hizo clic en el botón de crear ficha mensual para ${patient.name}`);
+                    return patient;
+                  }
+                  break; // Salimos del bucle cuando encontramos y hacemos clic en el botón
                 }
-                break; // Salimos del bucle cuando encontramos y hacemos clic en el botón
               }
             }
+          } else {
+            return null; // Tabla no encontrada
           }
-        } else {
-          return null; // Tabla no encontrada
-        }
-        //return data; // Devuelve los datos capturados
-      }, normalizedTarget, patientCode);
+          //return data; // Devuelve los datos capturados
+        },
+        normalizedTarget,
+        patientCode
+      );
 
       await this.logStep(logger, `[Sistrat][registrarMedicalRecordsByMonth] Paciente en tabla: ${rowPatientSistrat ? "sí" : "no"}`);
       if (!rowPatientSistrat) {
@@ -464,8 +523,8 @@ class Sistrat {
       console.log(`[Sistrat][registrarMedicalRecordsByMonth] Tabla mensual disponible, aplicando registros ${month}/${year}`);
 
       const medicalRecordsGrouped = await getGroupedRecordsByPatientAndMonth(String(patient._id), month, year);
-      console.log('[N°medicalRecordsGrouped ]', medicalRecordsGrouped.length);
-      console.log('[grouper]', medicalRecordsGrouped);
+      console.log("[N°medicalRecordsGrouped ]", medicalRecordsGrouped.length);
+      console.log("[grouper]", medicalRecordsGrouped);
 
       await page.evaluate((medicalRecordsGrouped) => {
         // Buscar la tabla donde están los registros mensuales
@@ -534,7 +593,7 @@ class Sistrat {
       // 3. Esperar al botón y hacer click
 
       // await this.scrapper.waitForSeconds(50);
-      await this.scrapper.clickButton(page, '#mysubmit', 30000);
+      await this.scrapper.clickButton(page, "#mysubmit", 30000);
       console.log("REGISTRO EXITOSO ATENCIONES MENSUALES");
       console.log("[Sistrat][registrarMedicalRecordsByMonth] Proceso mensual completado");
       await this.logStep(logger, "[Sistrat][registrarMedicalRecordsByMonth] Proceso completado");
@@ -550,7 +609,6 @@ class Sistrat {
       console.groupEnd();
     }
   }
-
 
   async registrarMedicalRecordsByMonth(patient: Patient, month: number, year: number) {
     const data: RowData[] = []; // Cambiar aquí el tipo a RowData[]
@@ -581,66 +639,70 @@ class Sistrat {
       const normalizedTarget = this.normalizeName(patientName);
       const patientCode = patient.codigoSistrat?.trim() || null;
 
-      const rowPatientSistrat: any = await page.evaluate((normalizedTarget, patientCodeEval) => {
-        console.log("rowPatientSistrat");
-        // función de normalización DENTRO del contexto de la página
-        const normalize = (name?: string) => {
-          if (!name) return "";
-          return name
-            .normalize("NFD") // separar diacríticos
-            .replace(/[\u0300-\u036f]/g, "") // quitar tildes
-            .replace(/\s+/g, "") // quitar espacios
-            .toLowerCase();
-        };
+      const rowPatientSistrat: any = await page.evaluate(
+        (normalizedTarget, patientCodeEval) => {
+          console.log("rowPatientSistrat");
+          // función de normalización DENTRO del contexto de la página
+          const normalize = (name?: string) => {
+            if (!name) return "";
+            return name
+              .normalize("NFD") // separar diacríticos
+              .replace(/[\u0300-\u036f]/g, "") // quitar tildes
+              .replace(/\s+/g, "") // quitar espacios
+              .toLowerCase();
+          };
 
-        const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
-        console.log("table getElementById", table);
+          const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
+          console.log("table getElementById", table);
 
-        if (table) {
-          console.log("table");
+          if (table) {
+            console.log("table");
 
-          // Iteramos sobre las filas de la tabla, comenzando desde la segunda fila (i = 1)
-          for (let i = 1; i < table.rows.length; i++) {
-            const objCells = table.rows.item(i)?.cells;
-            console.log("tabla paciente encontrada", objCells);
+            // Iteramos sobre las filas de la tabla, comenzando desde la segunda fila (i = 1)
+            for (let i = 1; i < table.rows.length; i++) {
+              const objCells = table.rows.item(i)?.cells;
+              console.log("tabla paciente encontrada", objCells);
 
-            if (objCells) {
-              // Obtenemos el texto de cada celda relevante
-              const patient = {
-                id: objCells.item(0)?.innerText || "", // Captura el texto de la primera celda (ID)
-                name: objCells.item(1)?.innerText?.toLowerCase() || "", // Captura el texto de la segunda celda (nombre)
-                codigoSistrat: objCells.item(2)?.innerText?.trim() || "", // Captura el texto de la tercera celda (código Sistrat)
-              };
+              if (objCells) {
+                // Obtenemos el texto de cada celda relevante
+                const patient = {
+                  id: objCells.item(0)?.innerText || "", // Captura el texto de la primera celda (ID)
+                  name: objCells.item(1)?.innerText?.toLowerCase() || "", // Captura el texto de la segunda celda (nombre)
+                  codigoSistrat: objCells.item(2)?.innerText?.trim() || "", // Captura el texto de la tercera celda (código Sistrat)
+                };
 
-              // console.log("patient evaluado", patient);
+                // console.log("patient evaluado", patient);
 
-              // console.log("patient.name", normalize(patient.name));
-              // console.log("normalizedTarget", normalizedTarget);
+                // console.log("patient.name", normalize(patient.name));
+                // console.log("normalizedTarget", normalizedTarget);
 
-              // Comparamos con el nombre o código que estamos buscando
-              const matchesName = normalize(patient.name) === normalizedTarget;
-              const matchesCode = patientCodeEval ? patient.codigoSistrat === patientCodeEval : false;
-              if (matchesCode || matchesName) {
-                console.log("patient encontrado", patient);
+                // Comparamos con el nombre o código que estamos buscando
+                const matchesName = normalize(patient.name) === normalizedTarget;
+                const matchesCode = patientCodeEval ? patient.codigoSistrat === patientCodeEval : false;
+                if (matchesCode || matchesName) {
+                  console.log("patient encontrado", patient);
 
-                // Si el nombre coincide se da click en boton Crear Ficha Ingreso
-                const button = objCells.item(5)?.querySelector("span[name='fmensual']") as HTMLElement;
+                  // Si el nombre coincide se da click en boton Crear Ficha Ingreso
+                  const button = objCells.item(5)?.querySelector("span[name='fmensual']") as HTMLElement;
 
-                if (button) {
-                  // Realizamos el clic en el botón
-                  button.click();
-                  console.log(`Se hizo clic en el botón de crear ficha mensual para ${patient.name}`);
-                  return patient;
+                  if (button) {
+                    // Realizamos el clic en el botón
+                    button.click();
+                    console.log(`Se hizo clic en el botón de crear ficha mensual para ${patient.name}`);
+                    return patient;
+                  }
+                  break; // Salimos del bucle cuando encontramos y hacemos clic en el botón
                 }
-                break; // Salimos del bucle cuando encontramos y hacemos clic en el botón
               }
             }
+          } else {
+            return null; // Tabla no encontrada
           }
-        } else {
-          return null; // Tabla no encontrada
-        }
-        //return data; // Devuelve los datos capturados
-      }, normalizedTarget, patientCode);
+          //return data; // Devuelve los datos capturados
+        },
+        normalizedTarget,
+        patientCode
+      );
 
       console.log(`rowPatientSistrat resultado: ${rowPatientSistrat}`);
       await this.logStep(logger, `[Sistrat][registrarMedicalRecordsByMonth] Paciente en tabla: ${rowPatientSistrat ? "sí" : "no"}`);
@@ -650,8 +712,8 @@ class Sistrat {
       await page.waitForSelector(".tabla_mensual", { timeout: 5000 });
       console.log("[Sistrat][registrarMedicalRecordsByMonth] Tabla mensual disponible, aplicando registros");
 
-  const medicalRecordsGrouped = await getGroupedRecordsByPatientAndMonth(String(patient._id), month, year);
-  console.log("IMPORTANTE medicalRecordsGrouped", medicalRecordsGrouped);
+      const medicalRecordsGrouped = await getGroupedRecordsByPatientAndMonth(String(patient._id), month, year);
+      console.log("IMPORTANTE medicalRecordsGrouped", medicalRecordsGrouped);
 
       await page.evaluate((medicalRecordsGrouped) => {
         // Buscar la tabla donde están los registros mensuales
@@ -921,10 +983,10 @@ class Sistrat {
       await this.scrapper.setSelectValue(page, "#txtnacionalidad", admissionForm.txtnacionalidad);
       await this.scrapper.waitForSeconds(2);
       // 46 Chile - aparecen nuevos select
-      
-      if(admissionForm.txtnacionalidad ==="46"){
+
+      if (admissionForm.txtnacionalidad === "46") {
         await this.scrapper.setSelectValue(page, "#seletnia", admissionForm.seletnia);
-      }else{
+      } else {
         await this.scrapper.setSelectValue(page, "#documentacion_regularizada", admissionForm.documentacion_regularizada);
       }
       await this.scrapper.setSelectValue(page, "#selestado_civil", admissionForm.selestado_civil);
@@ -935,24 +997,22 @@ class Sistrat {
 
       await this.scrapper.setSelectValue(page, "#escolaridad_opc", admissionForm.escolaridad_opc);
 
-
-
       await this.scrapper.setSelectValue(page, "#selmujer_embarazada", admissionForm.selmujer_embarazada);
       await this.scrapper.setSelectValue(page, "#tiene_menores_a_cargo", admissionForm.tiene_menores_a_cargo);
       await this.scrapper.setSelectValue(page, "#selestado_ocupacional", admissionForm.selestado_ocupacional);
       await this.scrapper.waitForSeconds(2);
-      if(['17', '18'].includes(admissionForm.selestado_ocupacional)) {
+      if (["17", "18"].includes(admissionForm.selestado_ocupacional)) {
         await this.scrapper.setSelectValue(page, "#laboral_ingresos", admissionForm.laboral_ingresos);
       }
-     if(['19', '22'].includes(admissionForm.selestado_ocupacional)) {
+      if (["19", "22"].includes(admissionForm.selestado_ocupacional)) {
         await this.scrapper.setSelectValue(page, "#laboral_ingresos", admissionForm.laboral_detalle);
-     }
+      }
 
       await this.scrapper.setSelectValue(page, "#selcon_quien_vive", admissionForm.selcon_quien_vive);
       await this.scrapper.setSelectValue(page, "#selparentesco", admissionForm.selparentesco);
       await this.scrapper.setSelectValue(page, "#seldonde_vive", admissionForm.seldonde_vive);
-      
-      if(['1','2','3','4','5','6'].includes( admissionForm.seldonde_vive)) {        
+
+      if (["1", "2", "3", "4", "5", "6"].includes(admissionForm.seldonde_vive)) {
         await this.scrapper.waitForSeconds(2);
         await this.scrapper.setSelectValue(page, "#perso_dormitorio_vivienda", admissionForm.perso_dormitorio_vivienda);
         await this.scrapper.setSelectValue(page, "#precariedad_vivienda", admissionForm.precariedad_vivienda);
@@ -1032,10 +1092,10 @@ class Sistrat {
       await this.scrapper.setSelectValue(page, "#sel_diagnostico_4", admissionForm.sel_diagnostico_4);
       await this.logStep(logger, "[Sistrat][completeAdmissionForm] Formulario completado");
       await this.logStep(logger, "[Sistrat][completeAdmissionForm] Click en grabar usuario");
-      await this.scrapper.clickButton(page, '#mysubmit');
+      await this.scrapper.clickButton(page, "#mysubmit");
       await this.logStep(logger, "[Sistrat][Ficha de ingreso registrada");
 
-    //  await this.scrapper.waitForSeconds(300);
+      //  await this.scrapper.waitForSeconds(300);
       return true;
     } catch (error) {
       await this.logStep(logger, `[Sistrat][completeAdmissionForm] Error: ${error}`);
@@ -1043,6 +1103,76 @@ class Sistrat {
     } finally {
       console.groupEnd();
     }
+  }
+
+  private async logStep(logger: ProcessLogger | undefined, message: string) {
+    if (logger) {
+      await logger.log(message);
+    }
+  }
+
+  async listActiveDemands(page: Page, logger?: ProcessLogger) {
+    console.group("[Sistrat][listActiveDemands]");
+    await this.logStep(logger, "[Sistrat][listActiveDemands] Apertura de menú de demandas activas");
+    try {
+      console.log("[Sistrat][listActiveDemands] Esperando menú principal");
+      await this.scrapper.waitForSeconds(3);
+      await this.scrapper.clickButton(page, "#flyout2");
+      console.log("[Sistrat][listActiveDemands] Menú flyout2 abierto, navegando a listado");
+      await this.scrapper.waitForSeconds(3);
+      await this.scrapper.clickButton(page, 'a[href="php/conv1/listado_demanda.php"].ui-corner-all');
+      console.log("[Sistrat][listActiveDemands] Listado de demandas solicitado");
+      await this.logStep(logger, "[Sistrat][listActiveDemands] Listado solicitado correctamente");
+    } catch (error) {
+      await this.logStep(logger, `[Sistrat][listActiveDemands] Error: ${error}`);
+      throw new Error("Error al listar demandaas");
+    } finally {
+      console.groupEnd();
+    }
+  }
+
+  private async openActiveUsersList(page: Page, logger?: ProcessLogger) {
+    console.log("[Sistrat] Preparando navegación hacia listado de pacientes activos");
+    try {
+      await page.waitForFunction(() => document.readyState === "complete", { timeout: 20000 });
+      await page.waitForSelector("#flyout", { visible: true, timeout: 20000 });
+
+      const linkSelector = 'a[href*="consultar_paciente.php"]';
+      const maxAttempts = 3;
+      let menuReady = false;
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        console.log(`[Sistrat] Intentando desplegar flyout (intento ${attempt})`);
+
+        await this.scrapper.waitForSeconds(3);
+        await this.scrapper.clickButton(page, "#flyout");
+        await this.scrapper.waitForSeconds(3);
+
+        await this.scrapper.clickButton(page, 'a[href*="consultar_paciente.php"]');
+
+        console.warn("[Sistrat] Flyout no respondió, reintentando...");
+        await this.scrapper.waitForSeconds(1);
+      }
+
+      if (!menuReady) {
+        throw new Error("No fue posible desplegar el menú principal (flyout)");
+      }
+
+      // await this.scrapper.clickButton(page, linkSelector, 20000);
+      // console.log("[Sistrat] Vista de usuarios activos abierta");
+
+      // await page.waitForSelector("#filtrar", { visible: true, timeout: 20000 });
+      await this.scrapper.waitForSeconds(3);
+      await this.scrapper.clickButton(page, "#filtrar");
+      await this.logStep(logger, "[Sistrat] Filtro aplicado en listado de pacientes");
+    } catch (error) {
+      await this.logStep(logger, `[Sistrat] Error preparando listado de pacientes: ${error}`);
+      throw error;
+    }
+  }
+
+  private getPatientLabel(patient: Patient): string {
+    return [patient.name, patient.surname, patient.secondSurname].filter(Boolean).join(" ").trim() || "paciente";
   }
 
   async updateAlerts(patient: Patient) {
@@ -1241,61 +1371,6 @@ class Sistrat {
       .replace(/[\u0300-\u036f]/g, "") // quita tildes y diacríticos
       .replace(/\s+/g, "") // elimina TODOS los espacios en blanco
       .toLowerCase(); // pasa todo a minúsculas
-  }
-
-  private async logStep(logger: ProcessLogger | undefined, message: string) {
-    if (logger) {
-      await logger.log(message);
-    }
-  }
-
-  private async openActiveUsersList(page: Page, logger?: ProcessLogger) {
-    console.log("[Sistrat] Preparando navegación hacia listado de pacientes activos");
-    try {
-      await page.waitForFunction(() => document.readyState === "complete", { timeout: 20000 });
-      await page.waitForSelector("#flyout", { visible: true, timeout: 20000 });
-
-      const linkSelector = 'a[href*="consultar_paciente.php"]';
-      const maxAttempts = 3;
-      let menuReady = false;
-      
-
-      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        console.log(`[Sistrat] Intentando desplegar flyout (intento ${attempt})`);
-        await this.scrapper.clickButton(page, "#flyout", 20000);
-
-        menuReady = await page
-          .waitForSelector(linkSelector, { visible: true, timeout: 5000 })
-          .then(() => true)
-          .catch(() => false);
-
-        if (menuReady) {
-          console.log("[Sistrat] Flyout desplegado correctamente");
-          break;
-        }
-
-        console.warn("[Sistrat] Flyout no respondió, reintentando...");
-        await this.scrapper.waitForSeconds(1);
-      }
-
-      if (!menuReady) {
-        throw new Error("No fue posible desplegar el menú principal (flyout)");
-      }
-
-      await this.scrapper.clickButton(page, linkSelector, 20000);
-      console.log("[Sistrat] Vista de usuarios activos abierta");
-
-      await page.waitForSelector("#filtrar", { visible: true, timeout: 20000 });
-      await this.scrapper.clickButton(page, "#filtrar", 20000);
-      await this.logStep(logger, "[Sistrat] Filtro aplicado en listado de pacientes");
-    } catch (error) {
-      await this.logStep(logger, `[Sistrat] Error preparando listado de pacientes: ${error}`);
-      throw error;
-    }
-  }
-
-  private getPatientLabel(patient: Patient): string {
-    return [patient.name, patient.surname, patient.secondSurname].filter(Boolean).join(" ").trim() || "paciente";
   }
 }
 

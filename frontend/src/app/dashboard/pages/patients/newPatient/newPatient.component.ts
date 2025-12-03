@@ -93,11 +93,6 @@ export default class NewPatientComponent {
       this.isEditable = true; // Puedes usar esta flag para controlar lógica de edición si es necesario
     }
 
-      this.userForm.get('name')?.disable(); // deja el campo solo lectura
-      this.userForm.get('surname')?.disable(); // deja el campo solo lectura
-      this.userForm.get('secondSurname')?.disable(); // deja el campo solo lectura
-      this.userForm.get('birthDate')?.disable(); // deja el campo solo lectura
-      this.userForm.get('sex')?.disable(); // deja el campo solo lectura
 
   }
 
@@ -177,7 +172,9 @@ export default class NewPatientComponent {
     Notiflix.Loading.circle('Registrando nueva demanda en Ficlin...');
 
 
-    const dataUser = this.formatFormDates(this.userForm.value);
+    const dataUser = this.formatFormDates(this.userForm.getRawValue());
+    console.log('[Data User]', dataUser);
+
     this.patientService.addPatient(dataUser).subscribe((patient) => {
       this.registeredOnFiclin.set(patient.registeredOnFiclin!);
       this.patient = patient;
@@ -199,7 +196,7 @@ export default class NewPatientComponent {
 
     if (this.patient._id === undefined) return;
 
-    const dataUser = this.formatFormDates(this.userForm.value);
+    const dataUser = this.formatFormDates(this.userForm.getRawValue());
     this.patientService.updatePatient(this.patient._id, dataUser).subscribe((response) => {
       console.log('patient onSave response', response);
       this.changeDetectorRef.detectChanges();
@@ -270,7 +267,6 @@ export default class NewPatientComponent {
           Notiflix.Notify.failure('Respuesta inválida del servicio.');
           return;
         }
-
         // Rellenamos los campos disponibles sin tocar el resto del formulario.
         this.userForm.patchValue({
           name: data.name ?? this.userForm.get('name')?.value,
@@ -278,7 +274,7 @@ export default class NewPatientComponent {
           secondSurname: data.secondSurname ?? this.userForm.get('secondSurname')?.value,
           birthDate: this.formatDateStringToDate(data.birthDate) || this.userForm.get('birthDate')?.value,
           sex: data.sex ?? this.userForm.get('sex')?.value,
-        });
+        });        
 
         this.changeDetectorRef.detectChanges();
         Notiflix.Notify.success('Datos recuperados con éxito.');
