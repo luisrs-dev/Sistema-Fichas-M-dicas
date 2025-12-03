@@ -434,12 +434,6 @@ async dataPatientFromDemand(rut: string) {
       page = await this.login(patient.sistratCenter, logger);
       console.log("[Sistrat][registrarMedicalRecordsByMonth] Login exitoso, navegando a pacientes");
       await this.logStep(logger, "[Sistrat][registrarMedicalRecordsByMonth] Login completado");
-      await this.scrapper.waitForSeconds(5);
-
-      // page.on("dialog", async (dialog) => {
-      //   await this.logStep(logger, `[Sistrat][registrarMedicalRecordsByMonth] Diálogo: ${dialog.message()}`);
-      //   await dialog.accept();
-      // });
 
       console.log("registrarMedicalRecordsByMonth lueg de login");
       await this.openActiveUsersList(page, logger);
@@ -902,21 +896,6 @@ async dataPatientFromDemand(rut: string) {
     console.group(`[Sistrat][completeAdmissionForm] ${patient._id}`);
     await this.logStep(logger, "[Sistrat][completeAdmissionForm] Inicio de formulario");
 
-    // page.on("response", async (response) => {
-    //   if (response.url().includes(urlToCapture)) {
-    //     const responseFonasa = await response.json();
-    //     console.log("Respuesta capturada:", responseFonasa);
-    //     if (responseFonasa === 0) {
-    //       console.log("Fonasa ok");
-    //       const patientEntity = await PatientModel.findOne({ _id: patient._id });
-    //       if (patientEntity) {
-    //         patientEntity.fonasa = true;
-    //         await patientEntity.save();
-    //       }
-    //     }
-    //   }
-    // });
-
     page.on("response", async (response) => {
       try {
         if (response.url().includes(urlToCapture)) {
@@ -1068,7 +1047,7 @@ async dataPatientFromDemand(rut: string) {
       // await this.scrapper.setDateValue(page, "#txt_fecha_nacimiento", patient.birthDate);
 
       await this.scrapper.setDateValue(page, "#txtfecha_ingreso_tratamiento", admissionForm.txtfecha_ingreso_tratamiento);
-      await this.scrapper.setSelectValue(page, "#selconvenio_conace", admissionForm.selconvenio_conace);
+      await this.scrapper.setSelectValue(page, "#selconvenio_conace", 'Si');
       await this.scrapper.setDateValue(page, "#txtfecha_ingreso_conace", admissionForm.txtfecha_ingreso_conace);
       await this.scrapper.setSelectValue(page, "#seltipo_programa", admissionForm.seltipo_programa);
       await this.scrapper.waitForSeconds(2);
@@ -1134,29 +1113,13 @@ async dataPatientFromDemand(rut: string) {
   private async openActiveUsersList(page: Page, logger?: ProcessLogger) {
     console.log("[Sistrat] Preparando navegación hacia listado de pacientes activos");
     try {
-      await page.waitForFunction(() => document.readyState === "complete", { timeout: 20000 });
-      await page.waitForSelector("#flyout", { visible: true, timeout: 20000 });
+        await page.hover("#flyout");
+        // await this.scrapper.waitForSeconds(3);
+        await page.click("#flyout");
+        await this.scrapper.waitForSeconds(2);
 
-      const linkSelector = 'a[href*="consultar_paciente.php"]';
-      const maxAttempts = 3;
-      let menuReady = false;
+        await this.scrapper.clickButton(page, 'a[href="php/consultar_paciente.php"].ui-corner-all');
 
-      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        console.log(`[Sistrat] Intentando desplegar flyout (intento ${attempt})`);
-
-        await this.scrapper.waitForSeconds(3);
-        await this.scrapper.clickButton(page, "#flyout");
-        await this.scrapper.waitForSeconds(3);
-
-        await this.scrapper.clickButton(page, 'a[href*="consultar_paciente.php"]');
-
-        console.warn("[Sistrat] Flyout no respondió, reintentando...");
-        await this.scrapper.waitForSeconds(1);
-      }
-
-      if (!menuReady) {
-        throw new Error("No fue posible desplegar el menú principal (flyout)");
-      }
 
       // await this.scrapper.clickButton(page, linkSelector, 20000);
       // console.log("[Sistrat] Vista de usuarios activos abierta");
