@@ -198,7 +198,7 @@ async dataPatientFromDemand(rut: string) {
   } catch (error) {
     console.error("[Sistrat][Datos con rut] ERROR:", error);
     await this.logStep(logger, "[Sistrat][Datos con rut] Error: " + error);
-    throw error;
+    return {};
 
   } finally {
     if (page) {

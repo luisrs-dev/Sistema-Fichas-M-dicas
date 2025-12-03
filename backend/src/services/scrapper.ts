@@ -8,6 +8,8 @@ import puppeteer from "puppeteer-extra";
 import { promises as fs } from "fs";
 import path from "path";
 
+const SYSTEM_CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+
 
 class Scrapper {
   protected browser: Browser | null = null;
@@ -78,7 +80,7 @@ class Scrapper {
     const sessionHash = Date.now().toString();
     // const userDataDir = await this.createCacheDirectory(sessionHash);
     const userDataDir = await this.createCacheDirectory(sessionHash);
-    // const executablePath = await this.getSystemChromePath();
+    const executablePath = await this.getSystemChromePath();
 
     console.log('[LaunchBrowser] Obteniendo browser...');
     
@@ -239,6 +241,16 @@ class Scrapper {
     console.log({ userDataDir });
 
     return userDataDir;
+  }
+
+  private async getSystemChromePath(): Promise<string> {
+    try {
+      await fs.access(SYSTEM_CHROME_PATH);
+      console.log(`[LaunchBrowser] Usando Chrome del sistema: ${SYSTEM_CHROME_PATH}`);
+      return SYSTEM_CHROME_PATH;
+    } catch {
+      throw new Error(`[LaunchBrowser] Chrome no encontrado en ${SYSTEM_CHROME_PATH}`);
+    }
   }
 
 }

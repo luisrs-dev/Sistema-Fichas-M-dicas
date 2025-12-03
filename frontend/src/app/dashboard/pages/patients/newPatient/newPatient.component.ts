@@ -251,6 +251,19 @@ export default class NewPatientComponent {
     return this.registeredOnFiclin() ? 'Actualizar' : 'Registrar';
   }
 
+  onRutInput(event: Event): void {
+    const target = event.target as HTMLInputElement | null;
+    if (!target) return;
+
+    const digitsOnly = target.value.replace(/\D+/g, '');
+    if (digitsOnly === target.value) {
+      return;
+    }
+
+    target.value = digitsOnly;
+    this.userForm.get('rut')?.setValue(digitsOnly, { emitEvent: false });
+  }
+
   onFetchDataWithRut(): void {
     Notiflix.Loading.circle('Recuperando datos desde SISTRAT');
 

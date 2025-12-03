@@ -14,7 +14,7 @@
           <div class="col-4">
               <mat-form-field class="w-full" appearance="outline">
                 <mat-label>RUT</mat-label>
-                <input matInput formControlName="rut" placeholder="11.222.333-4" />
+                <input matInput formControlName="rut" placeholder="Sin puntos o guión" (input)="onRutInput($event)" />
                 <span *ngIf="isValidField('rut')" class="form-text text-danger"> El nombre es requerido </span>
                 <mat-icon matSuffix>person</mat-icon>
                 <!-- <mat-hint>Hint</mat-hint> -->
