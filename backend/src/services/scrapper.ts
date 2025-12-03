@@ -86,31 +86,31 @@ class Scrapper {
     this.browser =  await puppeteer.launch(
       
       // Prod
-      // {
-      //   userDataDir: userDataDir,
-      //   executablePath: '/usr/bin/google-chrome',
-      //   args: [
-      //     `--proxy-server=http://${"geo.iproyal.com:12321"}`,
-      //     "--no-sandbox",
-      //     "--disable-setuid-sandbox",
-      //   ],
-      // }
-      // Local
       {
-        headless: headless,
-        executablePath,
-        //slowMo: 300, sirve para darle tiempe a cada operacion
-        userDataDir: userDataDir, // Establecer la carpeta de caché,
+        userDataDir: userDataDir,
+        executablePath: '/usr/bin/google-chrome',
         args: [
+          `--proxy-server=http://${"geo.iproyal.com:12321"}`,
           "--no-sandbox",
           "--disable-setuid-sandbox",
-          "--use-gl=egl",
-          "--blink-settings=imagesEnabled=false,cssEnabled=false",
-          "--disable-dev-shm-usage"
         ],
-        timeout: 0,
-        protocolTimeout: 300000,
       }
+      // Local
+      // {
+      //   headless: headless,
+      //   executablePath,
+      //   //slowMo: 300, sirve para darle tiempe a cada operacion
+      //   userDataDir: userDataDir, // Establecer la carpeta de caché,
+      //   args: [
+      //     "--no-sandbox",
+      //     "--disable-setuid-sandbox",
+      //     "--use-gl=egl",
+      //     "--blink-settings=imagesEnabled=false,cssEnabled=false",
+      //     "--disable-dev-shm-usage"
+      //   ],
+      //   timeout: 0,
+      //   protocolTimeout: 300000,
+      // }
       );
 
     console.log('[LaunchBrowser] Browser obtenido');
