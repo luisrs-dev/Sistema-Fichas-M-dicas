@@ -249,12 +249,21 @@ async dataPatientFromDemand(rut: string) {
     return trimmedValue;
   }
 
+  private cleanPatientRut(rut?: string | null): string {
+    if (!rut) {
+      return '';
+    }
+
+    return rut.replace(/\D+/g, '');
+  }
+
 
   async crearDemanda(patient: Patient) {
     const center = patient.sistratCenter;
+    const cleanedRut = this.cleanPatientRut(patient.rut);
     this.gender = patient.sex;
     console.log("center", center);
-    console.group(`[Sistrat][crearDemanda] ${patient.rut}`);
+    console.group(`[Sistrat][crearDemanda] ${cleanedRut}`);
     console.log(`[Sistrat][crearDemanda] Iniciando flujo para centro ${center}`);
     const logger = new ProcessLogger(this.getPatientLabel(patient), "crear-demanda");
 
@@ -276,10 +285,10 @@ async dataPatientFromDemand(rut: string) {
       await this.listActiveDemands(page, logger);
       console.log("[Sistrat][crearDemanda] Menú de demandas activas listo, abriendo formulario de creación");
       await this.scrapper.clickButton(page, "#crea_demanda", 15000);
-      console.log("Creando demanda en SISTRAT...", patient);
+      console.log("Creando demanda en SISTRAT. RUT: ", cleanedRut);
       await this.logStep(logger, "[Sistrat][crearDemanda] Formulario de creación abierto");
-      await this.scrapper.waitAndType(page, "#txtrut", patient.rut);
-
+      await this.scrapper.waitAndType(page, "#txtrut", cleanedRut);
+      await this.scrapper.waitForSeconds(2);
       // Se da click en botón "Traer datos con rut"
       // Se autocompletan campos nombre, apellidos, birthdate y sexo
 
@@ -319,8 +328,8 @@ async dataPatientFromDemand(rut: string) {
       await this.scrapper.setSelectValue(page, "#sel_intervencion_a_b", patient.interventionAB);
       await this.scrapper.waitAndType(page, "#obs", patient.observations);
       //await this.scrapper.setSelectValue(page, "#selcomuna", "150");
-      // await this.scrapper.clickButton(page, "#mysubmit");
-      await this.scrapper.waitForSeconds(120);
+      await this.scrapper.clickButton(page, "#mysubmit");
+      // await this.scrapper.waitForSeconds(120);
       console.log("[Sistrat][crearDemanda] Formulario enviado, refrescando listado para validar creación");
       await this.logStep(logger, "[Sistrat][crearDemanda] Formulario enviado");
 
@@ -1065,16 +1074,16 @@ async dataPatientFromDemand(rut: string) {
     await this.logStep(logger, "[Sistrat][listActiveDemands] Apertura de menú de demandas activas");
     try {
       console.log("[Sistrat][listActiveDemands] Esperando menú principal");
-      await this.scrapper.waitForSeconds(3);
+      await this.scrapper.waitForSeconds(2);
       await this.scrapper.clickButton(page, "#flyout2");
       console.log("[Sistrat][listActiveDemands] Menú flyout2 abierto, navegando a listado");
-      await this.scrapper.waitForSeconds(3);
+      await this.scrapper.waitForSeconds(2);
       await this.scrapper.clickButton(page, 'a[href="php/conv1/listado_demanda.php"].ui-corner-all');
       console.log("[Sistrat][listActiveDemands] Listado de demandas solicitado");
       await this.logStep(logger, "[Sistrat][listActiveDemands] Listado solicitado correctamente");
     } catch (error) {
       await this.logStep(logger, `[Sistrat][listActiveDemands] Error: ${error}`);
-      throw new Error("Error al listar demandaas");
+      throw new Error("Error al listar demandas");
     } finally {
       console.groupEnd();
     }
