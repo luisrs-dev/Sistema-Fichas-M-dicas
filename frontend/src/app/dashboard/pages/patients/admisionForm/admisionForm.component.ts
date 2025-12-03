@@ -72,11 +72,12 @@ export default class AdmisionFormComponent {
       
       this.admissionForm = response.data.admissionForm;
       console.log('admissionForm', this.admissionForm);
-      if(this.patient && this.admissionForm) this.loading.set(false);
+      // if(this.patient && this.admissionForm)
       
       if (this.patient && this.patient.registeredAdmissionForm) {
         this.editMode = true;
       }
+      this.loading.set(false);
     });
   }
 
