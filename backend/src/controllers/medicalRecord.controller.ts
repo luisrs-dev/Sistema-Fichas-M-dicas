@@ -9,6 +9,8 @@ import {
   postMedicalRecordsPerMonthOnSistrat,
   getGroupedRecordsByPatientAndMonth,
   postMedicalRecordsPerMonthForAllPatients,
+  listMonthlyLogFiles,
+  readMonthlyLogFile,
 } from "../services/medicalRecord.service";
 import { allServices } from "../services/service.service";
 import ejs from "ejs";
@@ -282,6 +284,25 @@ const deleteMedicalRecords = async ({ params }: Request, res: Response) => {
   }
 };
 
+const getMonthlyLogs = async (_req: Request, res: Response) => {
+  try {
+    const logs = await listMonthlyLogFiles();
+    res.status(200).json({ status: true, logs });
+  } catch (error) {
+    handleHttp(res, "ERROR_FETCH_MONTHLY_LOGS", error);
+  }
+};
+
+const getMonthlyLogContent = async ({ params }: Request, res: Response) => {
+  const { fileName } = params;
+  try {
+    const logFile = await readMonthlyLogFile(fileName);
+    res.status(200).json({ status: true, ...logFile });
+  } catch (error) {
+    handleHttp(res, "ERROR_FETCH_MONTHLY_LOG_CONTENT", error);
+  }
+};
+
 export {
   postMedicalRecord,
   postMedicalRecordPerMonth,
@@ -293,4 +314,6 @@ export {
   getPdfMedicalRecordsByPatient,
   getPdfMedicalRecords,
   deleteMedicalRecords,
+  getMonthlyLogs,
+  getMonthlyLogContent,
 };

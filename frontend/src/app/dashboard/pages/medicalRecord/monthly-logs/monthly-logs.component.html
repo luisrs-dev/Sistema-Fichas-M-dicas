@@ -1,0 +1,68 @@
+<section class="monthly-logs">
+  <header class="monthly-logs__header">
+    <div>
+      <h1>Fichas mensuales</h1>
+      <p class="monthly-logs__subtitle">
+        Revisa el detalle de cada ejecución masiva realizada (generalmente los domingos).
+      </p>
+    </div>
+
+    <button mat-stroked-button color="primary" (click)="refresh()" [disabled]="loading">
+      <mat-icon>refresh</mat-icon>
+      Actualizar
+    </button>
+  </header>
+
+  <div class="monthly-logs__content">
+    <div *ngIf="loading" class="monthly-logs__state">
+      <mat-spinner diameter="40"></mat-spinner>
+      <span>Cargando registros...</span>
+    </div>
+
+    <div *ngIf="!loading && error" class="monthly-logs__state monthly-logs__state--error">
+      <p>{{ error }}</p>
+      <button mat-raised-button color="primary" (click)="refresh()">
+        Reintentar
+      </button>
+    </div>
+
+    <p *ngIf="!loading && !error && !logs.length" class="monthly-logs__state">
+      Aún no hay archivos de registro para mostrar.
+    </p>
+
+    <mat-accordion *ngIf="!loading && !error && logs.length" class="monthly-logs__accordion">
+      <mat-expansion-panel
+        *ngFor="let log of logs; trackBy: trackByFileName"
+        (opened)="onPanelOpened(log.fileName)"
+      >
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            {{ log.fileName }}
+          </mat-panel-title>
+          <mat-panel-description>
+            <span>{{ log.updatedAt | date: 'medium' }}</span>
+            <span class="monthly-logs__size">{{ formatSize(log.size) }}</span>
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <ng-container *ngIf="panelState[log.fileName] as state">
+          <div *ngIf="state.loading" class="monthly-logs__panel-loading">
+            <mat-spinner diameter="30"></mat-spinner>
+            <span>Cargando contenido...</span>
+          </div>
+
+          <div *ngIf="!state.loading && state.error" class="monthly-logs__panel-error">
+            <p>{{ state.error }}</p>
+            <button mat-button color="primary" (click)="onPanelOpened(log.fileName)">
+              Reintentar
+            </button>
+          </div>
+
+          <pre *ngIf="!state.loading && !state.error" class="monthly-logs__log">
+{{ state.content }}
+          </pre>
+        </ng-container>
+      </mat-expansion-panel>
+    </mat-accordion>
+  </div>
+</section>

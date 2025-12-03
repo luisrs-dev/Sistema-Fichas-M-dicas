@@ -106,11 +106,6 @@ const demandByPatient = async (patientId: string) => {
 
 const dataPatientByRut = async (rut: string) => {
   try {
-    // const patient = await PatientModel.findOne({ rut });
-    // if (!patient) {
-    //   return null;
-    // }
-
     const sistratPlatform = new Sistrat();
     const dataFromDemand = await sistratPlatform.dataPatientFromDemand(rut); // Esta rutina realiza login, lista demandas y carga el formulario
 

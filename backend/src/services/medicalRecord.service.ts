@@ -7,6 +7,8 @@ import PatientModel from "../models/patient.model";
 import { getBase64Image } from "../utils/base64Image";
 import { getGroupedRecordsByPatientAndMonth } from "./medicalRecordGrouping.service";
 import ProcessLogger from "../utils/processLogger";
+import { promises as fs } from "fs";
+import path from "path";
 
 const insertMedicalRecord = async (medicalRecord: MedicalRecord) => {
   
@@ -70,7 +72,8 @@ const postMedicalRecordsPerMonthForAllPatients = async (month: number, year: num
 
   const results: BulkMonthlyRecordResult[] = [];
   const bulkLogger = new ProcessLogger("bulk-registro", `fichas-mensuales-${year}-${month}`);
-  await bulkLogger.log(`Inicio de registro masivo para ${month}/${year}`);
+  const executionTimestamp = new Date().toISOString();
+  await bulkLogger.log(`Inicio de registro masivo para ${month}/${year} | timestamp=${executionTimestamp}`);
 
   for (const patientId of patientIds) {
     const patient = await PatientModel.findById(patientId);
@@ -95,14 +98,14 @@ const postMedicalRecordsPerMonthForAllPatients = async (month: number, year: num
 
       await sistratPlatform.recordMonthlySheet(patient, month, year);
       results.push({ patientId: String(patient._id), status: "registered" });
-      await bulkLogger.log(`REGISTERED | pacienteId=${patient._id} | ${patient.name} ${patient.surname}`);
+      await bulkLogger.log(`Registro exitoso | ${patient.name} ${patient.surname}`);
     } catch (error: any) {
       results.push({
         patientId: String(patient._id),
         status: "error",
         reason: error?.message || "Error desconocido al registrar la ficha mensual",
       });
-      await bulkLogger.log(`ERROR | pacienteId=${patient._id} | ${patient.name} ${patient.surname} | ${error?.message || error}`);
+      await bulkLogger.log(`ERROR | ${patient.name} ${patient.surname} | ${error?.message || error}`);
     } finally {
       await sistratPlatform.scrapper.closeBrowser();
     }
@@ -121,6 +124,47 @@ const postMedicalRecordsPerMonthForAllPatients = async (month: number, year: num
     results,
     logPath: bulkLogger.path,
   };
+};
+
+const logsDirectory = path.resolve(__dirname, "..", "..", "logs");
+
+const listMonthlyLogFiles = async () => {
+  try {
+    const files = await fs.readdir(logsDirectory);
+    const monthlyLogs = files.filter((fileName) => fileName.includes("fichas-mensuales") && fileName.endsWith(".log"));
+
+    const stats = await Promise.all(
+      monthlyLogs.map(async (fileName) => {
+        const filePath = path.join(logsDirectory, fileName);
+        const fileStats = await fs.stat(filePath);
+
+        return {
+          fileName,
+          size: fileStats.size,
+          createdAt: fileStats.birthtime.toISOString(),
+          updatedAt: fileStats.mtime.toISOString(),
+        };
+      })
+    );
+
+    return stats.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  } catch (error) {
+    throw new Error(`No fue posible obtener los logs: ${error}`);
+  }
+};
+
+const readMonthlyLogFile = async (fileName: string) => {
+  if (!/^[a-z0-9_.-]+\.log$/i.test(fileName)) {
+    throw new Error("Nombre de archivo inválido");
+  }
+
+  try {
+    const filePath = path.join(logsDirectory, fileName);
+    const content = await fs.readFile(filePath, { encoding: "utf8" });
+    return { fileName, content };
+  } catch (error) {
+    throw new Error(`No fue posible leer el log solicitado: ${error}`);
+  }
 };
 
 
@@ -223,5 +267,7 @@ export {
   deleteRecord,
   getGroupedRecordsByPatientAndMonth,
   postMedicalRecordsPerMonthForAllPatients,
+  listMonthlyLogFiles,
+  readMonthlyLogFile,
 };
 

@@ -422,30 +422,21 @@ async dataPatientFromDemand(rut: string) {
 
   // Registrar Ficha Mensual en SISTRAT
   async recordMonthlySheet(patient: Patient, month: number = 11, year: number = 2025) {
-    console.group(`[Sistrat][registrarMedicalRecordsByMonth] ${patient._id}`);
-    console.log(`[Sistrat][registrarMedicalRecordsByMonth] Iniciando registro para ${month}/${year}`);
-    const logger = new ProcessLogger(this.getPatientLabel(patient), "registros-mensuales");
 
     // this.gender = patient.sex;
     let page: Page | null = null;
 
     try {
-      await this.logStep(logger, `[Sistrat][registrarMedicalRecordsByMonth] Inicio ${month}/${year}`);
-      page = await this.login(patient.sistratCenter, logger);
-      console.log("[Sistrat][registrarMedicalRecordsByMonth] Login exitoso, navegando a pacientes");
-      await this.logStep(logger, "[Sistrat][registrarMedicalRecordsByMonth] Login completado");
+      page = await this.login(patient.sistratCenter);
 
-      console.log("registrarMedicalRecordsByMonth lueg de login");
-      await this.openActiveUsersList(page, logger);
+      await this.openActiveUsersList(page);
       await this.scrapper.waitForSeconds(3);
       const patientName = `${patient.name.trim()} ${patient.surname.trim()} ${patient.secondSurname.trim()}`.toLowerCase();
-      console.log("patientName", patientName);
       const normalizedTarget = this.normalizeName(patientName);
       const patientCode = patient.codigoSistrat?.trim() || null;
 
       const rowPatientSistrat: any = await page.evaluate(
         (normalizedTarget, patientCodeEval) => {
-          console.log("rowPatientSistrat");
           // función de normalización DENTRO del contexto de la página
           const normalize = (name?: string) => {
             if (!name) return "";
@@ -457,7 +448,6 @@ async dataPatientFromDemand(rut: string) {
           };
 
           const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
-          console.log("table getElementById", table);
 
           if (table) {
             // console.log("table");
@@ -465,7 +455,6 @@ async dataPatientFromDemand(rut: string) {
             // Iteramos sobre las filas de la tabla, comenzando desde la segunda fila (i = 1)
             for (let i = 1; i < table.rows.length; i++) {
               const objCells = table.rows.item(i)?.cells;
-              console.log("tabla paciente encontrada", objCells);
 
               if (objCells) {
                 // Obtenemos el texto de cada celda relevante
@@ -475,17 +464,11 @@ async dataPatientFromDemand(rut: string) {
                   codigoSistrat: objCells.item(2)?.innerText?.trim() || "", // Captura el texto de la tercera celda (código Sistrat)
                 };
 
-                // console.log("patient evaluado", patient);
-
-                // console.log("patient.name", normalize(patient.name));
-                // console.log("normalizedTarget", normalizedTarget);
-
                 // Comparamos con el nombre que estamos buscando
                 const matchesName = normalize(patient.name) === normalizedTarget;
                 const matchesCode = patientCodeEval ? patient.codigoSistrat === patientCodeEval : false;
 
                 if (matchesCode || matchesName) {
-                  console.log("patient encontrado", patient);
 
                   // Si el nombre coincide se da click en boton Crear Ficha Ingreso
                   const button = objCells.item(5)?.querySelector("span[name='fmensual']") as HTMLElement;
@@ -493,7 +476,6 @@ async dataPatientFromDemand(rut: string) {
                   if (button) {
                     // Realizamos el clic en el botón
                     button.click();
-                    console.log(`Se hizo clic en el botón de crear ficha mensual para ${patient.name}`);
                     return patient;
                   }
                   break; // Salimos del bucle cuando encontramos y hacemos clic en el botón
@@ -509,16 +491,12 @@ async dataPatientFromDemand(rut: string) {
         patientCode
       );
 
-      await this.logStep(logger, `[Sistrat][registrarMedicalRecordsByMonth] Paciente en tabla: ${rowPatientSistrat ? "sí" : "no"}`);
       if (!rowPatientSistrat) {
         throw new Error("Paciente no encontrado en listado de SISTRAT");
       }
       await page.waitForSelector(".tabla_mensual", { timeout: 5000 });
-      console.log(`[Sistrat][registrarMedicalRecordsByMonth] Tabla mensual disponible, aplicando registros ${month}/${year}`);
 
       const medicalRecordsGrouped = await getGroupedRecordsByPatientAndMonth(String(patient._id), month, year);
-      console.log("[N°medicalRecordsGrouped ]", medicalRecordsGrouped.length);
-      console.log("[grouper]", medicalRecordsGrouped);
 
       await page.evaluate((medicalRecordsGrouped) => {
         // Buscar la tabla donde están los registros mensuales
@@ -553,12 +531,10 @@ async dataPatientFromDemand(rut: string) {
             };
 
             const normalizedServiceOnSistrat = mappedServicesSISTRAT[serviceNameOnTableSistrat];
-            console.log("normalizedServiceOnSistrat", normalizedServiceOnSistrat);
 
             const normalizedServiceFiclin = recordFiclin.service.trim().toLowerCase();
 
             if (normalizedServiceOnSistrat === normalizedServiceFiclin) {
-              console.log("IGUALES");
 
               // Rellenar los días (cada celda debería tener un input)
               recordFiclin.days.forEach((value: number, dayIndex: number) => {
@@ -582,24 +558,18 @@ async dataPatientFromDemand(rut: string) {
       // const filePath = `uploads/screenshots/septiembre2025/${safePatientName}_mes_septiembre.png`;
       // await page.screenshot({ path: filePath, fullPage: true });
       // console.log('screenshot tomado y guardado en:', filePath);
-      console.log("esperando mysubmit");
 
       // 3. Esperar al botón y hacer click
 
       // await this.scrapper.waitForSeconds(50);
       await this.scrapper.clickButton(page, "#mysubmit", 30000);
-      console.log("REGISTRO EXITOSO ATENCIONES MENSUALES");
-      console.log("[Sistrat][registrarMedicalRecordsByMonth] Proceso mensual completado");
-      await this.logStep(logger, "[Sistrat][registrarMedicalRecordsByMonth] Proceso completado");
 
       return "REGISTRO EXITOSO ATENCIONES MENSUALES";
     } catch (error) {
       console.log("errror", error);
-      await this.logStep(logger, `[Sistrat][registrarMedicalRecordsByMonth] Error: ${error}`);
       throw new Error(`Error en registrar atenciones mensuales: ${error}`);
     } finally {
       console.log("[Sistrat][registrarMedicalRecordsByMonth] Cerrando grupo de logs");
-      await logger.close();
       console.groupEnd();
     }
   }

@@ -71,6 +71,13 @@ export const routes: Routes = [
           import('./dashboard/pages/patients/newPatient/newPatient.component'),
       },
       {
+        path: 'fichas-mensuales',
+        title: 'Fichas mensuales',
+        data: { icon: 'description', child: false },
+        loadComponent: () =>
+          import('./dashboard/pages/medicalRecord/monthly-logs/monthly-logs.component'),
+      },
+      {
         path: 'patient/:id/ficha-clinica/nueva',
         title: 'Nueva Ficha',
         data: { icon: 'group', child: true },

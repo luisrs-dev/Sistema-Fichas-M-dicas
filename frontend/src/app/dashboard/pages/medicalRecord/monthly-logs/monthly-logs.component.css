@@ -1,0 +1,73 @@
+.monthly-logs {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.monthly-logs__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.monthly-logs__subtitle {
+  margin: 0.25rem 0 0;
+  color: #616161;
+}
+
+.monthly-logs__content {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.monthly-logs__state {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: center;
+  color: #455a64;
+  min-height: 150px;
+  text-align: center;
+}
+
+.monthly-logs__state--error {
+  flex-direction: column;
+  color: #c62828;
+}
+
+.monthly-logs__accordion {
+  width: 100%;
+}
+
+.monthly-logs__size {
+  margin-left: 1rem;
+  font-weight: 500;
+}
+
+.monthly-logs__panel-loading,
+.monthly-logs__panel-error {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.monthly-logs__panel-error {
+  color: #c62828;
+}
+
+.monthly-logs__log {
+  background-color: #0d1117;
+  color: #f1f5f9;
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  max-height: 400px;
+  white-space: pre-wrap;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.85rem;
+}

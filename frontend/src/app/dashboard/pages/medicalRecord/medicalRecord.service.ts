@@ -49,6 +49,15 @@ export class MedicalRecordService {
       retry(3),
       catchError((err) => throwError(() => err.error.message)));
   }
+
+  getMonthlyLogs(): Observable<MonthlyLogListResponse> {
+    return this.http.get<MonthlyLogListResponse>(`${this.backend}/medicalRecord/monthRecords/logs`);
+  }
+
+  getMonthlyLogContent(fileName: string): Observable<MonthlyLogContentResponse> {
+    const encodedFileName = encodeURIComponent(fileName);
+    return this.http.get<MonthlyLogContentResponse>(`${this.backend}/medicalRecord/monthRecords/logs/${encodedFileName}`);
+  }
 }
 
 
@@ -69,4 +78,22 @@ export interface RegisteredBy {
   permissions: string[];
   createdAt:   Date;
   updatedAt:   Date;
+}
+
+export interface MonthlyLogSummary {
+  fileName: string;
+  size: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MonthlyLogListResponse {
+  status: boolean;
+  logs: MonthlyLogSummary[];
+}
+
+export interface MonthlyLogContentResponse {
+  status: boolean;
+  fileName: string;
+  content: string;
 }
