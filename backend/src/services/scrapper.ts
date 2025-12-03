@@ -80,7 +80,7 @@ class Scrapper {
     const sessionHash = Date.now().toString();
     // const userDataDir = await this.createCacheDirectory(sessionHash);
     const userDataDir = await this.createCacheDirectory(sessionHash);
-    const executablePath = await this.getSystemChromePath();
+    // const executablePath = await this.getSystemChromePath();
 
     console.log('[LaunchBrowser] Obteniendo browser...');
     
