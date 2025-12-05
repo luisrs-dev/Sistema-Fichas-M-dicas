@@ -1,24 +1,27 @@
-<div class="container">
-  <div *ngIf="patient() as p">
-    <h4>
-      Información Paciente >
-      <span>
-        {{ p.name }} {{ p.surname }} {{ p.secondSurname }}
-        <mat-chip matTooltip="Copiar">Código usuario {{ p.codigoSistrat || "" }}</mat-chip>
-      </span>
-    </h4>
-  </div>
+<div *ngIf="patient() as p">
+<div class=" mb-4">
 
-  <div class="header">
-    <h1>Historial Clínico</h1>
+
+</div>
+
+<div class="container">
+    <div class="header">
+      <div>
+        <h4>
+          Historial Clínico >
+          <a [routerLink]="['/dashboard/patients/nuevo/', p._id]" class="patient-link">
+            {{ p.name }} {{ p.surname }} {{ p.secondSurname }} ({{ p.phone || '-' }})
+          </a>
+        </h4>
+        <button mat-stroked-button color="primary" class="info-button" (click)="openClinicalInfo()">
+          Información clínica
+        </button>
+      </div>
+
     <mat-form-field appearance="outline">
       <mat-label>Mes</mat-label>
-      <mat-select matNativeControl required (selectionChange)="onMonthChange($event.value)">
-        <mat-option value="8">Agosto</mat-option>
-        <mat-option selected value="9">Septiembre</mat-option>
-        <mat-option value="10">Octubre</mat-option>
-        <mat-option value="11">Noviembre</mat-option>
-        <mat-option value="11">Diciembre</mat-option>
+      <mat-select required [value]="selectedMonth()" (selectionChange)="onMonthChange($event.value)">
+        <mat-option *ngFor="let month of months" [value]="month.value">{{ month.label }}</mat-option>
       </mat-select>
     </mat-form-field>
   </div>
@@ -64,11 +67,10 @@
     </table>
   </div>
 
-  } 
-  
+  }
+
   <img [src]="screenshotImage()" alt="" />
-  
-  
+
   @if(state().filteredMedicalRecords.length > 0){
   <div class="mat-elevation-z1 mt-4">
     <mat-accordion class="example-headers-align">
@@ -86,12 +88,15 @@
         <div class="medical-record-details">
           <div class="record-item"><strong>Fecha:</strong> {{ medicalRecord.date | date : "dd-MM-yyyy" }}</div>
           <!--<div class="record-item"><strong>Tipo entrada:</strong> {{ medicalRecord.entryType }}</div>-->
-          <div class="record-item"><strong>Prestación:</strong> {{ medicalRecord.service.description }}</div>
-          <div class="record-item"><strong>Elementos relevantes:</strong> {{ medicalRecord.relevantElements }}</div>
-          <div class="record-item"><strong>Objetivo intervención:</strong> {{ medicalRecord.interventionObjective }}</div>
-          <div class="record-item" *ngIf="medicalRecord.diagnosticMedic"><strong>Diagnóstico del profesional:</strong> {{ medicalRecord.diagnosticMedic }}</div>
-          <div class="record-item" *ngIf="medicalRecord.diagnostic"><strong>Diagnóstico:</strong> {{ getDiagnosticText(medicalRecord.diagnostic) }}</div>
-          <div class="record-item" *ngIf="medicalRecord.pharmacologicalScheme"><strong>Esquema farmacológico:</strong> {{ medicalRecord.pharmacologicalScheme }}</div>
+          <div class="record-item" ><strong>Prestación:</strong> {{ medicalRecord.service.description }}</div>
+          <div class="record-item"  *ngIf="medicalRecord.relevantElements != ''"><strong>Elementos relevantes:</strong> {{ medicalRecord.relevantElements }}</div>
+          <div class="record-item"  *ngIf="medicalRecord.interventionObjective != ''"><strong>Objetivo intervención:</strong> {{ medicalRecord.interventionObjective }}</div>
+          <div class="record-item" *ngIf="medicalRecord.diagnosticMedic != ''"><strong>Diagnóstico del profesional:</strong> {{ medicalRecord.diagnosticMedic }}</div>
+          <div class="record-item" *ngIf="medicalRecord.diagnostic != ''"><strong>Diagnóstico:</strong> {{ getDiagnosticText(medicalRecord.diagnostic) }}</div>
+          <div class="record-item" *ngIf="medicalRecord.pharmacologicalScheme != ''"><strong>Esquema farmacológico:</strong> {{ medicalRecord.pharmacologicalScheme }}</div>
+          <div class="record-item" *ngIf="medicalRecord.rescueAction != ''"><strong>Acción de rescate:</strong> {{ medicalRecord.rescueAction }}</div>
+
+          
         </div>
         <!--<button mat-stroked-button color="warn" class="my-2 mat-elevation-z1" >-->
         <button mat-stroked-button color="warn" class="my-2 mat-elevation-z1" (click)="onDeleteMedicalRecord(medicalRecord._id)">Eliminar</button>
@@ -104,4 +109,5 @@
     <h2 class="justify-content-center">Aún no registra historial clínico</h2>
   </div>
   }
+</div>
 </div>

@@ -6,7 +6,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import Notiflix from 'notiflix';
 import { MaterialModule } from '../../../../angular-material/material.module';
 import { MedicalRecord } from '../../../interfaces/medicalRecord.interface';
@@ -15,6 +15,8 @@ import { MedicalRecordService } from '../../medicalRecord/medicalRecord.service'
 import { PatientService } from '../patient.service';
 import { diagnosticMap } from './diagnosticMap.constant';
 import { MatSelectModule } from '@angular/material/select';
+import { ClinicalInfoDialogComponent } from './clinical-info-dialog.component';
+import NewMedicalRecord from '../../medicalRecord/new/new.component';
 
 interface State {
   patient: Patient | null;
@@ -32,7 +34,7 @@ export interface MedicalRecordGrouped {
 @Component({
   selector: 'app-detail',
   standalone: true,
-  imports: [MaterialModule, MatExpansionModule, CommonModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, DatePipe, MatSelectModule],
+  imports: [MaterialModule, MatExpansionModule, CommonModule, RouterModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, DatePipe, MatSelectModule],
   templateUrl: './detail.component.html',
   styleUrl: './detail.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,10 +46,29 @@ export default class DetailComponent {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
-  selectedMonth = signal<number>(9);
+  private readonly currentYear = new Date().getFullYear();
+  selectedMonth = signal<number>(new Date().getMonth() + 1);
+  readonly months = [
+    { value: 1, label: 'Enero' },
+    { value: 2, label: 'Febrero' },
+    { value: 3, label: 'Marzo' },
+    { value: 4, label: 'Abril' },
+    { value: 5, label: 'Mayo' },
+    { value: 6, label: 'Junio' },
+    { value: 7, label: 'Julio' },
+    { value: 8, label: 'Agosto' },
+    { value: 9, label: 'Septiembre' },
+    { value: 10, label: 'Octubre' },
+    { value: 11, label: 'Noviembre' },
+    { value: 12, label: 'Diciembre' },
+  ];
 
   registeredRecordsPerMonth = signal<boolean>(false);
   screenshotPath = signal<string | null>(null);
+  public latestMedicalRecordWithScheme: MedicalRecord | null;
+  readonly panelOpenState = signal(false);
+
+
 
   screenshotImage = computed( () => this.screenshotPath() )
 
@@ -78,6 +99,24 @@ export default class DetailComponent {
     });
   }
 
+
+      //   this.patientService.getPatientById(id!).subscribe((response) => {
+      //   console.log('response', response);
+      //   this.patient = response.patient;
+
+      //   this.latestMedicalRecordWithScheme = this.medicalRecordService.getLastPharmacologicalScheme(response.medicalRecords);
+      //   console.log('latestMedicalRecordWithScheme', this.latestMedicalRecordWithScheme);
+
+      //   this.medicalRecordForm.get('entryType')?.valueChanges.subscribe((value) => {
+      //     this.hideServiceSelect = value === 'Informacion';
+      //     if (this.hideServiceSelect) {
+      //       this.medicalRecordForm.get('service')?.reset(); // Resetea el campo service si se oculta
+      //     }
+      //   });
+      // });
+
+  
+
   private loadPatientData(id: string) {
     this.#state.update((s) => ({ ...s, loading: true }));
     this.patientService.getPatientById(id).subscribe((response) => {
@@ -88,24 +127,46 @@ export default class DetailComponent {
         const tb = Date.parse(b.date) || 0;
         return ta - tb; // ascendente
       });
-
-      //const medicalRecordAgosto = medicalRecordsOrdered.filter((record) => {
-      //  const recordDate = new Date(record.date);
-      //  return recordDate.getMonth() + 1 === this.selectedMonth() && recordDate.getFullYear() === 2025;
-      //});
-
-      //console.log('medicalRecordAgosto', medicalRecordAgosto);
       
+      const filteredRecords = this.filterRecordsByMonth(medicalRecordsOrdered, this.selectedMonth(), this.currentYear);
+
       this.#state.set({
         loading: false,
         patient: response.patient,
         medicalRecords: medicalRecordsOrdered,
-        filteredMedicalRecords: medicalRecordsOrdered,
+        filteredMedicalRecords: filteredRecords,
       });
+
+      if (this.showTable()) {
+        this.buildDataMonth(this.selectedMonth());
+      }
+
+
+      this.latestMedicalRecordWithScheme = this.medicalRecordService.getLastPharmacologicalScheme(response.medicalRecords);
+      console.log('latestMedicalRecordWithScheme', this.latestMedicalRecordWithScheme);
 
       console.log('setstate', this.#state());
       
     });
+  }
+
+  openClinicalInfo() {
+    const patient = this.state().patient;
+    this.dialog.open(ClinicalInfoDialogComponent, {
+      data: {
+        patient,
+        latestRecord: this.latestMedicalRecordWithScheme,
+        treatmentTime: this.treatmentTime,
+      },
+      panelClass: 'clinical-info-dialog',
+      width: '900px'
+    });
+  }
+
+    getLastPharmacologicalScheme(medicalRecords: MedicalRecord[]): MedicalRecord | null{
+    const medicalRecordSorted = medicalRecords.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const latestMedicalRecordWithScheme = medicalRecordSorted.find((record) => record.pharmacologicalScheme);
+    return latestMedicalRecordWithScheme || null;
   }
 
   onDeleteMedicalRecord(id: string) {
@@ -149,7 +210,23 @@ export default class DetailComponent {
   }
 
   onNewMedicalRecord() {
-    this.router.navigate(['dashboard/patient', this.patientId(), 'ficha-clinica', 'nueva']);
+    const patientId = this.patientId();
+    if (!patientId) {
+      return;
+    }
+
+    const dialogRef = this.dialog.open(NewMedicalRecord, {
+      width: '1080px',
+      height: '90vh',
+      panelClass: 'medical-record-dialog',
+      data: { patientId },
+    });
+
+    dialogRef.afterClosed().subscribe((created) => {
+      if (created) {
+        this.loadPatientData(patientId);
+      }
+    });
   }
 
   getDiagnosticText(code: string | null | undefined): string {
@@ -165,10 +242,10 @@ export default class DetailComponent {
     }
   }
 
-  buildDataMonth(monthSelected: number = this.selectedMonth(), year: number = 2025) {
+  buildDataMonth(monthSelected: number = this.selectedMonth(), year: number = this.currentYear) {
     // Inicializamos un objeto para agrupar
     let grouped: Record<string, number[]> = {};
-    const records = this.state().medicalRecords;
+    const records = this.state().medicalRecords ?? [];
 
     console.log('records', records);
     
@@ -220,7 +297,7 @@ export default class DetailComponent {
         
         // Success
         if(patientId === undefined) return;
-        this.medicalRecordService.monthRecords(patientId, this.selectedMonth(), 2025, this.medicalRecordsGrouped()).subscribe({
+        this.medicalRecordService.monthRecords(patientId, this.selectedMonth(), this.currentYear, this.medicalRecordsGrouped()).subscribe({
           next: () => {
             //this.#state.update((state) => ({
             //  ...state,
@@ -244,38 +321,78 @@ export default class DetailComponent {
     );
   }
 
-onMonthChange(event: number) {
-  this.selectedMonth.set(event);
-  console.log(this.selectedMonth());
-  
-  const state = this.#state();
-  // Usamos todos los registros del paciente
-  const allRecords = state.medicalRecords ?? [];
-  console.log('allRecords', allRecords);
-  
+  onMonthChange(event: number) {
+    const month = Number(event);
+    this.selectedMonth.set(month);
+    this.applyMonthFilter(month);
 
+    if (this.showTable()) {
+      this.buildDataMonth(month);
+    }
+  }
 
-  // Filtramos los del mes seleccionado
-    const filteredRecords = allRecords.filter((record) => {
-    const recordDate = new Date(record.date);
-    return (
-      (recordDate.getMonth() + 1) === Number(event) &&
-      recordDate.getFullYear() === 2025
-    );
-  });
+  private applyMonthFilter(month: number) {
+    const state = this.#state();
+    const filteredRecords = this.filterRecordsByMonth(state.medicalRecords, month, this.currentYear);
 
+    this.#state.set({
+      ...state,
+      filteredMedicalRecords: filteredRecords,
+    });
+  }
 
-  // Actualizamos el state con los registros filtrados
-  this.#state.set({
-    ...state,
-    filteredMedicalRecords: filteredRecords
-  });
+  private filterRecordsByMonth(records: MedicalRecord[], month: number, year: number): MedicalRecord[] {
+    if (!records) {
+      return [];
+    }
 
-  console.log('state', this.#state());
-  
+    return records.filter((record) => {
+      const recordDate = new Date(record.date);
+      return recordDate.getMonth() + 1 === month && recordDate.getFullYear() === year;
+    });
+  }
 
-  // Recalculamos la tabla agrupada
-  //this.buildDataMonth(event); 
-}
+  get treatmentTime(): string {
+    if (!this.state().patient?.admissionDate) {
+      return '';
+    }
+
+    const [day, month, year] = this.state().patient!.admissionDate.split('/').map(Number);
+    const admission = new Date(year, month - 1, day);
+    const today = new Date();
+
+    if (admission > today) {
+      return 'Fecha futura';
+    }
+
+    let years = today.getFullYear() - admission.getFullYear();
+    let months = today.getMonth() - admission.getMonth();
+    let days = today.getDate() - admission.getDate();
+
+    if (days < 0) {
+      months--;
+      // Obtener los días del mes anterior
+      const prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+      days += prevMonth.getDate();
+    }
+
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+
+    const parts: string[] = [];
+    if (years > 0) {
+      parts.push(`${years} año${years > 1 ? 's' : ''}`);
+    }
+    if (months > 0) {
+      parts.push(`${months} mes${months > 1 ? 'es' : ''}`);
+    }
+    if (days > 0) {
+      parts.push(`${days} día${days > 1 ? 's' : ''}`);
+    }
+
+    return parts.length > 0 ? parts.join(' ') : '0 días';
+  }
 
 }

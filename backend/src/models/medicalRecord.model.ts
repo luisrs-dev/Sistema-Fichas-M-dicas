@@ -30,6 +30,9 @@ const MedicalRecordSchema = new Schema<MedicalRecord>(
     pharmacologicalScheme: {
       type: String
     },
+    rescueAction: {
+      type: String,
+    },
     patient: {
       type: Schema.Types.ObjectId,
       ref: 'Patients',

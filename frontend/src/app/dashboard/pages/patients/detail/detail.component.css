@@ -53,3 +53,74 @@ table.mat-table {
   justify-content: space-between;
   margin-bottom: 16px;
 }
+
+.info-button {
+  margin-top: 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.patient-summary {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px 20px;
+  background-color: #fff;
+  margin-top: 16px;
+}
+
+.summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.summary-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.summary-date {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.summary-date.muted {
+  font-style: italic;
+}
+
+.summary-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.summary-table th {
+  text-align: left;
+  width: 40%;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #6b7280;
+  padding: 10px 0;
+}
+
+.summary-table td {
+  padding: 10px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+}
+
+.summary-table tr + tr {
+  border-top: 1px solid #e5e7eb;
+}
+
+.placeholder-text {
+  color: #9ca3af;
+  font-style: italic;
+}

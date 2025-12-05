@@ -1,29 +1,26 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, Inject, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatChipsModule } from '@angular/material/chips';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import Notiflix, { Report } from 'notiflix';
+import { Observable, switchMap, tap } from 'rxjs';
 import { MaterialModule } from '../../../../angular-material/material.module';
 import { AuthService } from '../../../../auth/auth.service';
 import { User } from '../../../../auth/interfaces/login-response.interface';
 import { MedicalRecord } from '../../../interfaces/medicalRecord.interface';
 import { Patient } from '../../../interfaces/patient.interface';
+import { diagnosticMap } from '../../patients/detail/diagnosticMap.constant';
+import { PatientService } from '../../patients/patient.service';
 import { UserService } from '../../users/user.service';
 import { MedicalRecordService } from '../medicalRecord.service';
-import { ValueEntryType } from '../../../interfaces/entryType.interface';
-import { Report } from 'notiflix';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'highcharts';
-import { Observable, switchMap } from 'rxjs';
-import { PatientService } from '../../patients/patient.service';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { diagnosticMap } from '../../patients/detail/diagnosticMap.constant';
 
 @Component({
   selector: 'app-new',
@@ -40,6 +37,7 @@ import { diagnosticMap } from '../../patients/detail/diagnosticMap.constant';
     MatDividerModule,
     MatChipsModule,
     MatExpansionModule,
+    MatDialogModule,
   ],
 
   providers: [provideNativeDateAdapter(), DatePipe],
@@ -55,12 +53,19 @@ export default class NewMedicalRecord {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private patientService = inject(PatientService);
+  private dialogRef = inject(MatDialogRef<NewMedicalRecord>, { optional: true });
+  private dialogData = inject<{ patientId: string | null }>(MAT_DIALOG_DATA, { optional: true });
 
   public patient: Patient;
   public latestMedicalRecordWithScheme: MedicalRecord | null;
   public user: User;
   public services: any[];
   public hideServiceSelect: boolean = false;
+  public isSubmitting = false;
+  private entryTypeWatcherBound = false;
+  private serviceWatcherBound = false;
+  public requiresRescueAction = false;
+  public readonly isDialogInstance = Boolean(this.dialogRef);
   // public data: { patient: Patient; latestMedicalRecordWithScheme: MedicalRecord | null };
 
   response$: Observable<{ patient: Patient; medicalRecords: MedicalRecord[] }>;
@@ -69,45 +74,102 @@ export default class NewMedicalRecord {
   patientId = signal<string | null>(null);
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
     const groupIntervention = this.route.snapshot.paramMap.get('groupIntervention');
     console.log('groupIntervention', groupIntervention);
 
-    if (id) {
-      this.response$ = this.patientService.getPatientById(id);
-    }
-    this.route.paramMap.subscribe((params) => {
-      const id = params.get('id');
-      console.log('id', id);
+    const dialogPatientId = this.dialogData?.patientId;
 
-      if (id) this.patientId.set(id);
+    if (dialogPatientId) {
+      this.initializePatientContext(dialogPatientId);
+    } else {
+      this.route.paramMap.subscribe((params) => {
+        const id = params.get('id');
+        console.log('id', id);
 
-      this.patientService.getPatientById(id!).subscribe((response) => {
-        console.log('response', response);
-        this.patient = response.patient;
-
-        this.latestMedicalRecordWithScheme = this.medicalRecordService.getLastPharmacologicalScheme(response.medicalRecords);
-        console.log('latestMedicalRecordWithScheme', this.latestMedicalRecordWithScheme);
-
-        this.medicalRecordForm.get('entryType')?.valueChanges.subscribe((value) => {
-          this.hideServiceSelect = value === 'Informacion';
-          if (this.hideServiceSelect) {
-            this.medicalRecordForm.get('service')?.reset(); // Resetea el campo service si se oculta
-          }
-        });
+        if (id) {
+          this.initializePatientContext(id);
+        }
       });
-    });
+    }
 
     this.user = this.authService.getUser();
+    this.bindServiceWatcher();
 
-    this.userService.getUserById(this.user._id).pipe(
-      switchMap( (response) =>
-        this.userService.getServicesByProfile(response.user.profile._id)
-      )
-    ).subscribe( services => {
-      this.services = services;
-    })
+    this.userService
+      .getUserById(this.user._id)
+      .pipe(switchMap((response) => this.userService.getServicesByProfile(response.user.profile._id)))
+      .subscribe((services) => {
+        this.services = services;
+        const selectedServiceId = this.medicalRecordForm.get('service')?.value;
+        if (selectedServiceId) {
+          this.updateRescueActionRequirement(selectedServiceId);
+        }
+      });
+  }
 
+  private initializePatientContext(id: string): void {
+    this.patientId.set(id);
+    this.bindEntryTypeWatcher();
+
+    this.response$ = this.patientService.getPatientById(id).pipe(
+      tap((response) => {
+        this.patient = response.patient;
+        this.latestMedicalRecordWithScheme = this.medicalRecordService.getLastPharmacologicalScheme(response.medicalRecords);
+      })
+    );
+  }
+
+  private bindEntryTypeWatcher(): void {
+    if (this.entryTypeWatcherBound) {
+      return;
+    }
+
+    const entryTypeControl = this.medicalRecordForm.get('entryType');
+    if (entryTypeControl) {
+      entryTypeControl.valueChanges.subscribe((value) => {
+        this.hideServiceSelect = value === 'Informacion';
+        if (this.hideServiceSelect) {
+          this.medicalRecordForm.get('service')?.reset();
+          this.updateRescueActionRequirement(null);
+        }
+      });
+    }
+
+    this.entryTypeWatcherBound = true;
+  }
+
+  private bindServiceWatcher(): void {
+    if (this.serviceWatcherBound) {
+      return;
+    }
+
+    const serviceControl = this.medicalRecordForm.get('service');
+    if (serviceControl) {
+      serviceControl.valueChanges.subscribe((value) => this.updateRescueActionRequirement(value));
+      this.serviceWatcherBound = true;
+    }
+  }
+
+  private updateRescueActionRequirement(serviceId: string | null): void {
+    const rescueControl = this.medicalRecordForm.get('rescueAction');
+    if (!rescueControl) {
+      return;
+    }
+
+    const normalizedTarget = 'no se presenta';
+    const selectedService = this.services?.find((service) => service._id === serviceId);
+    const requiresRescue = selectedService?.description?.toLowerCase().trim() === normalizedTarget;
+
+    this.requiresRescueAction = Boolean(requiresRescue);
+
+    if (this.requiresRescueAction) {
+      rescueControl.addValidators(Validators.required);
+    } else {
+      rescueControl.clearValidators();
+      rescueControl.reset();
+    }
+
+    rescueControl.updateValueAndValidity();
   }
 
   public medicalRecordForm: FormGroup = this.fb.group({
@@ -115,11 +177,12 @@ export default class NewMedicalRecord {
     // entryType: [this.setValueEntryType(), [Validators.required]],
     service: ['', [Validators.minLength(3), Validators.required]],
     //typeContact: ['presencial', [Validators.minLength(3), Validators.required]],
-    interventionObjective: ['', [Validators.minLength(3), Validators.required]],
-    relevantElements: ['', [Validators.required]],
+    interventionObjective: ['', []],
+    relevantElements: ['', []],
     diagnosticMedic: [''],
     diagnostic: [''],
     pharmacologicalScheme: [''],
+    rescueAction: [''],
   });
 
   // setValueEntryType(){
@@ -128,24 +191,55 @@ export default class NewMedicalRecord {
   // }
 
   onSave() {
+    if (this.isSubmitting) {
+      return;
+    }
+
     if (this.medicalRecordForm.invalid) {
       this.medicalRecordForm.markAllAsTouched();
       return;
     }
+
+    this.isSubmitting = true;
+    Notiflix.Loading.circle('Registrando atención');
+
     this.medicalRecordService
       .addMedicalRecord({
         ...this.medicalRecordForm.value,
         patient: this.patientId(),
         registeredBy: this.user._id,
       })
-      .subscribe((user) => {
-        console.log({ user });
-        // this.dialogRef.close(true);
-
-        // console.log('redirigiendo a  nueva ficha');
-        this.router.navigate(['dashboard/patient', this.patientId()]);
-        Report.success('Registro exitoso', 'Ficha clínica registrada con éxito', 'Entendido');
+      .subscribe({
+        next: (user) => {
+          console.log({ user });
+          Notiflix.Loading.remove();
+          Report.success('Registro exitoso', 'Ficha clínica registrada con éxito', 'Entendido');
+          if (this.dialogRef) {
+            this.dialogRef.close(true);
+          } else {
+            this.router.navigate(['dashboard/patient', this.patientId()]);
+          }
+          this.isSubmitting = false;
+        },
+        error: (error) => {
+          console.error('Error al registrar ficha clínica', error);
+          Report.failure('Error', 'No pudimos registrar la ficha, inténtalo nuevamente', 'Entendido');
+          Notiflix.Loading.remove();
+          this.isSubmitting = false;
+        },
       });
+  }
+
+  onCancel() {
+    if (this.dialogRef) {
+      this.dialogRef.close(false);
+      return;
+    }
+
+    const targetId = this.patientId();
+    if (targetId) {
+      this.router.navigate(['dashboard/patient', targetId]);
+    }
   }
 
   isValidField(field: string): boolean {

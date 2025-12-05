@@ -9,6 +9,7 @@ export interface MedicalRecord {
   diagnostic: string;
   diagnosticMedic: string;
   pharmacologicalScheme: string;
+  rescueAction?: string;
   patient: Types.ObjectId | string[];
   registeredBy: Types.ObjectId;
 }
