@@ -9,6 +9,8 @@ import { getGroupedRecordsByPatientAndMonth } from "./medicalRecordGrouping.serv
 import ProcessLogger from "../utils/processLogger";
 import { promises as fs } from "fs";
 import path from "path";
+import { BulkMonthlyProcessSummary, BulkMonthlyRecordResult } from "../interfaces/bulkMonthlyRecord.interface";
+import { sendMonthlyBulkSummaryEmail, sendTestMonthlyBulkEmail } from "./email.service";
 
 const insertMedicalRecord = async (medicalRecord: MedicalRecord) => {
   
@@ -45,12 +47,6 @@ const postMedicalRecordsPerMonthOnSistrat = async (patientId: string, month: num
   await sistratPlatform.recordMonthlySheet(patient, month, year);
 };
 
-interface BulkMonthlyRecordResult {
-  patientId: string;
-  status: "registered" | "skipped" | "error";
-  reason?: string;
-}
-
 const postMedicalRecordsPerMonthForAllPatients = async (month: number, year: number) => {
   if (!Number.isInteger(month) || month < 1 || month > 12) {
     throw new Error("Mes inválido, debe estar entre 1 y 12");
@@ -72,8 +68,8 @@ const postMedicalRecordsPerMonthForAllPatients = async (month: number, year: num
 
   const results: BulkMonthlyRecordResult[] = [];
   const bulkLogger = new ProcessLogger("bulk-registro", `fichas-mensuales-${year}-${month}`);
-  const executionTimestamp = new Date().toISOString();
-  await bulkLogger.log(`Inicio de registro masivo para ${month}/${year} | timestamp=${executionTimestamp}`);
+  const startedAt = new Date().toISOString();
+  await bulkLogger.log(`Inicio de registro masivo para ${month}/${year} | timestamp=${startedAt}`);
 
   for (const patientId of patientIds) {
     const patient = await PatientModel.findById(patientId);
@@ -111,19 +107,40 @@ const postMedicalRecordsPerMonthForAllPatients = async (month: number, year: num
     }
   }
 
-  await bulkLogger.log(`Fin de registro masivo. Total pacientes con fichas: ${patientIds.length}`);
-  await bulkLogger.close();
+  const finishedAt = new Date().toISOString();
+  await bulkLogger.log(`Fin de registro masivo. Total pacientes con fichas: ${patientIds.length} | timestamp=${finishedAt}`);
 
-  return {
+  const registered = results.filter((result) => result.status === "registered").length;
+  const skipped = results.filter((result) => result.status === "skipped").length;
+  const errors = results.filter((result) => result.status === "error").length;
+
+  const summaryPayload: BulkMonthlyProcessSummary = {
     month,
     year,
     totalPatientsWithRecords: patientIds.length,
-    registered: results.filter((result) => result.status === "registered").length,
-    skipped: results.filter((result) => result.status === "skipped").length,
-    errors: results.filter((result) => result.status === "error").length,
+    registered,
+    skipped,
+    errors,
     results,
     logPath: bulkLogger.path,
+    startedAt,
+    finishedAt,
   };
+
+  try {
+    const recipients = await sendMonthlyBulkSummaryEmail(summaryPayload);
+    await bulkLogger.log(`Correo de resumen enviado a: ${recipients.join(", ")}`);
+  } catch (emailError: any) {
+    await bulkLogger.log(`ERROR al enviar correo de resumen | ${emailError?.message || emailError}`);
+  }
+
+  await bulkLogger.close();
+
+  return summaryPayload;
+};
+
+const sendTestBulkSummaryEmail = async (options: { recipient?: string; month?: number; year?: number } = {}) => {
+  return sendTestMonthlyBulkEmail(options);
 };
 
 const logsDirectory = path.resolve(__dirname, "..", "..", "logs");
@@ -267,6 +284,7 @@ export {
   deleteRecord,
   getGroupedRecordsByPatientAndMonth,
   postMedicalRecordsPerMonthForAllPatients,
+  sendTestBulkSummaryEmail,
   listMonthlyLogFiles,
   readMonthlyLogFile,
 };

@@ -11,6 +11,7 @@ import {
   postMedicalRecordsPerMonthForAllPatients,
   listMonthlyLogFiles,
   readMonthlyLogFile,
+  sendTestBulkSummaryEmail,
 } from "../services/medicalRecord.service";
 import { allServices } from "../services/service.service";
 import ejs from "ejs";
@@ -71,12 +72,13 @@ const postMedicalRecordPerMonth = async ({ params, body }: Request, res: Respons
 };
 
 const postMedicalRecordPerMonthBulk = async ({ body }: Request, res: Response) => {
-  const month = Number(body?.month);
-  const year = Number(body?.year);
+  const providedMonth = Number(body?.month);
+  const providedYear = Number(body?.year);
+  const now = new Date();
 
-  if (!month || !year) {
-    return res.status(400).json({ status: false, message: "Debe indicar mes y año" });
-  }
+  // Default to current month/year when they are not provided
+  const month = Number.isFinite(providedMonth) && providedMonth > 0 ? providedMonth : now.getMonth() + 1;
+  const year = Number.isFinite(providedYear) && providedYear > 0 ? providedYear : now.getFullYear();
 
   try {
     const bulkResult = await postMedicalRecordsPerMonthForAllPatients(month, year);
@@ -87,6 +89,28 @@ const postMedicalRecordPerMonthBulk = async ({ body }: Request, res: Response) =
     });
   } catch (error) {
     handleHttp(res, "ERROR_BULK_MEDICAL_RECORDS_PER_MONTH", error);
+  }
+};
+
+const testBulkEmail = async ({ body }: Request, res: Response) => {
+  const bodyEmail = typeof body?.email === "string" ? body.email.trim() : undefined;
+  const parsedMonth = Number(body?.month);
+  const parsedYear = Number(body?.year);
+
+  try {
+    const recipients = await sendTestBulkSummaryEmail({
+      recipient: bodyEmail || undefined,
+      month: Number.isFinite(parsedMonth) ? parsedMonth : undefined,
+      year: Number.isFinite(parsedYear) ? parsedYear : undefined,
+    });
+
+    res.status(200).json({
+      status: true,
+      message: "Correo de prueba enviado",
+      recipients,
+    });
+  } catch (error) {
+    handleHttp(res, "ERROR_TEST_BULK_EMAIL", error);
   }
 };
 
@@ -316,4 +340,5 @@ export {
   deleteMedicalRecords,
   getMonthlyLogs,
   getMonthlyLogContent,
+  testBulkEmail,
 };
