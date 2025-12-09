@@ -133,7 +133,6 @@
           </mat-panel-description>
         </mat-expansion-panel-header>
         <div class="medical-record-details">
-          <pre>rescue action {{ medicalRecord.rescueAction | json }}</pre>
           <div class="record-item"><strong>Fecha:</strong> {{ medicalRecord.date | date : "dd-MM-yyyy" }}</div>
           <!--<div class="record-item"><strong>Tipo entrada:</strong> {{ medicalRecord.entryType }}</div>-->
           <div class="record-item" ><strong>Prestación:</strong> {{ medicalRecord.service.description }}</div>
