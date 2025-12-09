@@ -8,17 +8,21 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Report } from 'notiflix';
-import { Observable, switchMap } from 'rxjs';
+import { switchMap } from 'rxjs';
 import { MaterialModule } from '../../../../angular-material/material.module';
 import { AuthService } from '../../../../auth/auth.service';
 import { User } from '../../../../auth/interfaces/login-response.interface';
 import { MedicalRecord } from '../../../interfaces/medicalRecord.interface';
 import { Patient } from '../../../interfaces/patient.interface';
 import { PatientService } from '../../patients/patient.service';
+import { diagnosticMap } from '../../patients/detail/diagnosticMap.constant';
 import { UserService } from '../../users/user.service';
 import { MedicalRecordService } from '../medicalRecord.service';
+import { GroupInterventionFormValueSnapshot, GroupInterventionSummaryDialogComponent } from './group-intervention-summary-dialog.component';
+
 
 @Component({
   selector: 'app-new',
@@ -35,6 +39,7 @@ import { MedicalRecordService } from '../medicalRecord.service';
     MatDividerModule,
     MatChipsModule,
     MatExpansionModule,
+    MatDialogModule,
   ],
 
   providers: [provideNativeDateAdapter(), DatePipe],
@@ -47,6 +52,7 @@ export default class GroupInterventionComponent {
   private medicalRecordService = inject(MedicalRecordService);
   private authService = inject(AuthService);
   private userService = inject(UserService);
+  private dialog = inject(MatDialog);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private patientService = inject(PatientService);
@@ -104,7 +110,10 @@ export default class GroupInterventionComponent {
       return;
     }
     
-    const patients = this.patientsList.value?.map( patient => patient._id);
+    const selectedPatients = this.patientsList.value ?? [];
+    const patients = selectedPatients
+      .map((patient) => patient._id)
+      .filter((id): id is string => Boolean(id));
     
     this.medicalRecordService
       .addMedicalRecord({
@@ -112,9 +121,32 @@ export default class GroupInterventionComponent {
         patient: patients,
         registeredBy: this.user._id,
       })
-      .subscribe((user) => {
-        console.log({ user });
-        Report.success('Registro exitoso', 'Ficha clínica registrada con éxito', 'Entendido');
+      .subscribe({
+        next: (user) => {
+          console.log({ user });
+          const formSnapshot = this.groupInterventionForm.getRawValue() as GroupInterventionFormValueSnapshot;
+          console.log('[formSnapshot 1]', formSnapshot);
+          const summaryValues: GroupInterventionFormValueSnapshot = {
+            ...formSnapshot,
+            service: this.resolveServiceName(formSnapshot.service),
+            diagnostic: this.resolveDiagnosticLabel(formSnapshot.diagnostic),
+          };
+          console.log('[formSnapshot 2]', summaryValues);
+          const dialogRef = this.dialog.open(GroupInterventionSummaryDialogComponent, {
+            data: {
+              patients: selectedPatients,
+              formValues: summaryValues,
+            },
+          });
+
+          dialogRef.afterClosed().subscribe(() => {
+            this.router.navigate(['dashboard', 'patients']);
+          });
+        },
+        error: (error) => {
+          console.error('Error al registrar intervención grupal', error);
+          Report.failure('Error', 'No pudimos registrar la ficha, inténtalo nuevamente', 'Entendido');
+        },
       });
   }
 
@@ -172,5 +204,24 @@ export default class GroupInterventionComponent {
   removePatient(patient: Patient) {
     const current = this.patientsList.value ?? [];
     this.patientsList.setValue(current.filter((p) => p._id !== patient._id));
+  }
+
+  private resolveServiceName(serviceId: string | null | undefined): string | null {
+    if (!serviceId) {
+      return null;
+    }
+
+    console.log('[resolveServiceName services]', this.services);
+    const service = this.services?.find?.((service: any) => service._id === serviceId);
+    console.log('[resolveServiceName sevice]', service);
+    return service?.description ?? serviceId;
+  }
+
+  private resolveDiagnosticLabel(code: string | null | undefined): string | null {
+    if (!code) {
+      return null;
+    }
+
+    return diagnosticMap[code] ?? code;
   }
 }
