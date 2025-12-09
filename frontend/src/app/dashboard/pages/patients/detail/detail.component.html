@@ -32,6 +32,10 @@
 
   <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2" (click)="onMonthRegisters()">Resumen Mensual</button>
 
+  <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2" (click)="onProfessionalRegisters()">
+    Atenciones por profesional
+  </button>
+
   @if(medicalRecordsGrouped().length > 0){
   <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2" (click)="onSistratRecord()">Registrar en SISTRAT</button>
   } @if(showTable()){
@@ -69,6 +73,49 @@
 
   }
 
+  @if(showProfessionalTable()){
+  <div class="table-container">
+    <table
+      mat-table
+      [dataSource]="medicalRecordsProfessionalGrouped()"
+      class="mat-elevation-z2 my-4 professional-table"
+    >
+      <ng-container matColumnDef="service">
+        <th mat-header-cell *matHeaderCellDef>Atención / Profesional</th>
+        <td mat-cell *matCellDef="let element">
+          <strong *ngIf="element.isServiceRow">{{ element.label }}</strong>
+          <span *ngIf="!element.isServiceRow">{{ element.label }}</span>
+        </td>
+      </ng-container>
+
+      <ng-container *ngFor="let day of daysInMonth; let i = index" [matColumnDef]="i.toString()">
+        <th mat-header-cell *matHeaderCellDef>{{ i + 1 }}</th>
+        <td mat-cell *matCellDef="let element">
+          @if(element.days[i] != 0){
+          <strong>{{ element.days[i] }}</strong>
+          }@else{
+          <span style="color: #cccccc">0</span>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="total">
+        <th mat-header-cell *matHeaderCellDef>Total</th>
+        <td mat-cell *matCellDef="let element">
+          <strong>{{ element.total }}</strong>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: displayedColumns"
+        [ngClass]="row.isServiceRow ? 'service-row' : 'professional-row'"
+      ></tr>
+    </table>
+  </div>
+  }
+
   <img [src]="screenshotImage()" alt="" />
 
   @if(state().filteredMedicalRecords.length > 0){
@@ -86,15 +133,30 @@
           </mat-panel-description>
         </mat-expansion-panel-header>
         <div class="medical-record-details">
+          <pre>rescue action {{ medicalRecord.rescueAction | json }}</pre>
           <div class="record-item"><strong>Fecha:</strong> {{ medicalRecord.date | date : "dd-MM-yyyy" }}</div>
           <!--<div class="record-item"><strong>Tipo entrada:</strong> {{ medicalRecord.entryType }}</div>-->
           <div class="record-item" ><strong>Prestación:</strong> {{ medicalRecord.service.description }}</div>
-          <div class="record-item"  *ngIf="medicalRecord.relevantElements != ''"><strong>Elementos relevantes:</strong> {{ medicalRecord.relevantElements }}</div>
-          <div class="record-item"  *ngIf="medicalRecord.interventionObjective != ''"><strong>Objetivo intervención:</strong> {{ medicalRecord.interventionObjective }}</div>
-          <div class="record-item" *ngIf="medicalRecord.diagnosticMedic != ''"><strong>Diagnóstico del profesional:</strong> {{ medicalRecord.diagnosticMedic }}</div>
-          <div class="record-item" *ngIf="medicalRecord.diagnostic != ''"><strong>Diagnóstico:</strong> {{ getDiagnosticText(medicalRecord.diagnostic) }}</div>
-          <div class="record-item" *ngIf="medicalRecord.pharmacologicalScheme != ''"><strong>Esquema farmacológico:</strong> {{ medicalRecord.pharmacologicalScheme }}</div>
-          <div class="record-item" *ngIf="medicalRecord.rescueAction != ''"><strong>Acción de rescate:</strong> {{ medicalRecord.rescueAction }}</div>
+          <div class="record-item" *ngIf="medicalRecord.relevantElements | nonEmpty">
+            <strong>Elementos relevantes:</strong> {{ medicalRecord.relevantElements }}
+          </div>
+          <div class="record-item" *ngIf="medicalRecord.interventionObjective | nonEmpty">
+            <strong>Objetivo intervención:</strong> {{ medicalRecord.interventionObjective }}
+          </div>
+          <div class="record-item" *ngIf="medicalRecord.diagnosticMedic | nonEmpty">
+            <strong>Diagnóstico del profesional:</strong> {{ medicalRecord.diagnosticMedic }}
+          </div>
+          <div class="record-item" *ngIf="medicalRecord.diagnostic | nonEmpty">
+            <strong>Diagnóstico:</strong> {{ getDiagnosticText(medicalRecord.diagnostic) }}
+          </div>
+          <div class="record-item" *ngIf="medicalRecord.pharmacologicalScheme | nonEmpty">
+            <strong>Esquema farmacológico:</strong> {{ medicalRecord.pharmacologicalScheme }}
+          </div>
+          @if(medicalRecord.rescueAction | nonEmpty){
+            <div class="record-item">
+              <strong>Acción de rescate:</strong> {{ medicalRecord.rescueAction }}
+            </div>
+          }
 
           
         </div>

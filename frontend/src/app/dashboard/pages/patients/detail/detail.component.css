@@ -47,6 +47,22 @@ table.mat-table {
   border-collapse: collapse;
 }
 
+.professional-table .service-row td {
+  background-color: #e8f4ff;
+  font-weight: 600;
+  border-bottom: 1px solid #c5dcf6;
+}
+
+.professional-table .professional-row td {
+  background-color: #f8fbff;
+}
+
+.professional-table .professional-row td:first-child {
+  padding-left: 16px;
+  font-style: italic;
+  color: #355c7d;
+}
+
 .header{
   display: flex;
   align-items: center;

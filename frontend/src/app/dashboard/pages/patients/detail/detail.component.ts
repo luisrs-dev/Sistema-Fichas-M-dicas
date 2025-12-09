@@ -17,6 +17,7 @@ import { diagnosticMap } from './diagnosticMap.constant';
 import { MatSelectModule } from '@angular/material/select';
 import { ClinicalInfoDialogComponent } from './clinical-info-dialog.component';
 import NewMedicalRecord from '../../medicalRecord/new/new.component';
+import { NonEmptyPipe } from '../../../../shared/pipes/non-empty.pipe';
 
 interface State {
   patient: Patient | null;
@@ -31,10 +32,30 @@ export interface MedicalRecordGrouped {
   total: number;
 }
 
+export interface MedicalRecordProfessionalRow {
+  service: string;
+  label: string;
+  isServiceRow: boolean;
+  days: number[];
+  total: number;
+}
+
 @Component({
   selector: 'app-detail',
   standalone: true,
-  imports: [MaterialModule, MatExpansionModule, CommonModule, RouterModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, DatePipe, MatSelectModule],
+  imports: [
+    MaterialModule,
+    MatExpansionModule,
+    CommonModule,
+    RouterModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    DatePipe,
+    MatSelectModule,
+    NonEmptyPipe,
+  ],
   templateUrl: './detail.component.html',
   styleUrl: './detail.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -86,10 +107,17 @@ export default class DetailComponent {
     medicalRecords: [],
   });
 
+  showProfessionalTable = signal(false);
+  medicalRecordsProfessionalGrouped = signal<MedicalRecordProfessionalRow[]>([]);
+
   state = this.#state; // acceso público para el template
   patient = computed(() => this.state().patient);
 
   ngOnInit(): void {
+
+    if (this.showProfessionalTable()) {
+      this.buildProfessionalDataMonth(this.selectedMonth());
+    }
     this.route.paramMap.subscribe((params) => {
       const id = params.get('id');
       if (id) {
@@ -242,6 +270,15 @@ export default class DetailComponent {
     }
   }
 
+  onProfessionalRegisters() {
+    if (!this.showProfessionalTable()) {
+      this.showTable.set(false);
+      this.buildProfessionalDataMonth();
+    } else {
+      this.showProfessionalTable.set(false);
+    }
+  }
+
   buildDataMonth(monthSelected: number = this.selectedMonth(), year: number = this.currentYear) {
     // Inicializamos un objeto para agrupar
     let grouped: Record<string, number[]> = {};
@@ -282,6 +319,74 @@ export default class DetailComponent {
 
     this.medicalRecordsGrouped.set(groupedArray); // ahora es array
     this.showTable.set(true);
+  }
+
+  private buildProfessionalDataMonth(monthSelected: number = this.selectedMonth(), year: number = this.currentYear) {
+    const records = this.state().medicalRecords ?? [];
+    const groupedRows: MedicalRecordProfessionalRow[] = [];
+    const recordsByService: Record<string, MedicalRecord[]> = {};
+
+    records.forEach((record) => {
+      const recordDate = new Date(record.date);
+      const recordYear = recordDate.getFullYear();
+      const recordMonth = recordDate.getMonth() + 1;
+
+      if (recordMonth !== monthSelected || recordYear !== year) {
+        return;
+      }
+
+      const serviceName = record.service.description;
+      if (!recordsByService[serviceName]) {
+        recordsByService[serviceName] = [];
+      }
+
+      recordsByService[serviceName].push(record);
+    });
+
+    Object.entries(recordsByService).forEach(([serviceName, serviceRecords]) => {
+      const serviceDays = Array(31).fill(0);
+      serviceRecords.forEach((record) => {
+        const day = new Date(record.date).getDate();
+        serviceDays[day - 1] += 1;
+      });
+
+      groupedRows.push({
+        service: serviceName,
+        label: serviceName,
+        isServiceRow: true,
+        days: serviceDays,
+        total: serviceDays.reduce((acc, value) => acc + value, 0),
+      });
+
+      const recordsByProfessional: Record<string, MedicalRecord[]> = {};
+      serviceRecords.forEach((record) => {
+        const professionalName = record.registeredBy?.name ?? 'Profesional no identificado';
+        if (!recordsByProfessional[professionalName]) {
+          recordsByProfessional[professionalName] = [];
+        }
+
+        recordsByProfessional[professionalName].push(record);
+      });
+
+      Object.entries(recordsByProfessional).forEach(([professionalName, professionalRecords]) => {
+        const professionalDays = Array(31).fill(0);
+        professionalRecords.forEach((record) => {
+          const day = new Date(record.date).getDate();
+          professionalDays[day - 1] += 1;
+        });
+
+        groupedRows.push({
+          service: serviceName,
+          label: `— ${professionalName}`,
+          isServiceRow: false,
+          days: professionalDays,
+          total: professionalDays.reduce((acc, value) => acc + value, 0),
+        });
+      });
+    });
+
+    this.medicalRecordsProfessionalGrouped.set(groupedRows);
+    this.showProfessionalTable.set(true);
   }
 
 
@@ -328,6 +433,10 @@ export default class DetailComponent {
 
     if (this.showTable()) {
       this.buildDataMonth(month);
+    }
+
+    if (this.showProfessionalTable()) {
+      this.buildProfessionalDataMonth(month);
     }
   }
 
