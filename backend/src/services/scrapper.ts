@@ -80,16 +80,28 @@ class Scrapper {
     const sessionHash = Date.now().toString();
     // const userDataDir = await this.createCacheDirectory(sessionHash);
     const userDataDir = await this.createCacheDirectory(sessionHash);
-    const executablePath = await this.getSystemChromePath();
+    // const executablePath = await this.getSystemChromePath();
 
     console.log('[LaunchBrowser] Obteniendo browser...');
     
     this.browser =  await puppeteer.launch(
       
       // Prod
+      {
+        userDataDir: userDataDir,
+        executablePath: '/usr/bin/google-chrome',
+        args: [
+          `--proxy-server=http://${"geo.iproyal.com:12321"}`,
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+        ],
+      }
+      // Local
       // {
-      //   userDataDir: userDataDir,
-      //   executablePath: '/usr/bin/google-chrome',
+      //   headless: headless,
+      //   executablePath,
+      //   //slowMo: 300, sirve para darle tiempe a cada operacion
+      //   userDataDir: userDataDir, // Establecer la carpeta de caché,
       //   args: [
       //     "--no-sandbox",
       //     "--disable-setuid-sandbox",
