@@ -25,6 +25,7 @@ export interface Patient {
   alertCie10: Boolean;
   alertConsentimiento: Boolean;
   alertTreatment?: Boolean;
+  active?: boolean;
   mainSubstance: string;
   previousTreatments: string;
   atentionRequestDate: string;

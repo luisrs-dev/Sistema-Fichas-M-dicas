@@ -36,7 +36,8 @@ const buildHtmlSummary = (summary: BulkMonthlyProcessSummary) => {
     .map(
       (item) => `
         <tr>
-          <td style="padding:4px 8px">${item.patientId}</td>
+          <td style="padding:4px 8px">${item.patientName}</td>
+          <td style="padding:4px 8px">${item.programName || "-"}</td>
           <td style="padding:4px 8px;text-transform:capitalize">${item.status}</td>
           <td style="padding:4px 8px">${item.reason || "-"}</td>
         </tr>`
@@ -60,6 +61,7 @@ const buildHtmlSummary = (summary: BulkMonthlyProcessSummary) => {
         <thead>
           <tr>
             <th style="text-align:left;border-bottom:1px solid #ccc;padding:4px 8px">Paciente</th>
+            <th style="text-align:left;border-bottom:1px solid #ccc;padding:4px 8px">Programa</th>
             <th style="text-align:left;border-bottom:1px solid #ccc;padding:4px 8px">Estado</th>
             <th style="text-align:left;border-bottom:1px solid #ccc;padding:4px 8px">Detalle</th>
           </tr>
@@ -86,7 +88,9 @@ const buildTextSummary = (summary: BulkMonthlyProcessSummary) => {
   }
 
   summary.results.forEach((item) => {
-    lines.push(`- ${item.patientId} => ${item.status}${item.reason ? ` (${item.reason})` : ""}`);
+    const label = `${item.patientName} [${item.programName || "-"}]`;
+    const detail = item.reason ? ` (${item.reason})` : "";
+    lines.push(`- ${label} => ${item.status}${detail}`);
   });
 
   return lines.join("\n");
@@ -144,9 +148,9 @@ const sendTestMonthlyBulkEmail = async (options: SendTestEmailOptions = {}): Pro
     finishedAt,
     logPath: "logs/fichas-mensuales-test.log",
     results: [
-      { patientId: "TEST-001", status: "registered" },
-      { patientId: "TEST-002", status: "skipped", reason: "Sin fichas en el mes" },
-      { patientId: "TEST-003", status: "error", reason: "Credenciales inválidas en Sistrat" },
+      { patientId: "TEST-001", patientName: "Test Paciente 1", programName: "Programa Alfa", status: "registered" },
+      { patientId: "TEST-002", patientName: "Test Paciente 2", programName: "Programa Beta", status: "skipped", reason: "Sin fichas en el mes" },
+      { patientId: "TEST-003", patientName: "Test Paciente 3", programName: "Programa Gamma", status: "error", reason: "Credenciales inválidas en Sistrat" },
     ],
   };
 

@@ -10,7 +10,11 @@ import ProcessLogger from "../utils/processLogger";
 import { promises as fs } from "fs";
 import path from "path";
 import { BulkMonthlyProcessSummary, BulkMonthlyRecordResult } from "../interfaces/bulkMonthlyRecord.interface";
+import { Patient } from "../interfaces/patient.interface";
 import { sendMonthlyBulkSummaryEmail, sendTestMonthlyBulkEmail } from "./email.service";
+export { getGroupedRecordsByPatientAndMonth } from "./medicalRecordGrouping.service";
+
+type PatientWithProgram = (Patient & { program?: Types.ObjectId | { name?: string } | string | null }) | null;
 
 const insertMedicalRecord = async (medicalRecord: MedicalRecord) => {
   
@@ -71,11 +75,48 @@ const postMedicalRecordsPerMonthForAllPatients = async (month: number, year: num
   const startedAt = new Date().toISOString();
   await bulkLogger.log(`Inicio de registro masivo para ${month}/${year} | timestamp=${startedAt}`);
 
+  const formatPatientName = (patient: PatientWithProgram): string => {
+    if (!patient) {
+      return "Paciente no encontrado";
+    }
+
+    const nameParts = [patient.name, patient.surname, patient.secondSurname].filter(Boolean);
+    return nameParts.join(" ").trim() || "Paciente sin nombre";
+  };
+
+  const resolveProgramName = (patient: PatientWithProgram): string => {
+    if (!patient?.program) {
+      return "-";
+    }
+
+    if (typeof patient.program === "string") {
+      return patient.program;
+    }
+
+    if ("name" in patient.program && typeof patient.program.name === "string") {
+      return patient.program.name;
+    }
+
+    if (patient.program instanceof Types.ObjectId) {
+      return patient.program.toString();
+    }
+
+    return "-";
+  };
+
   for (const patientId of patientIds) {
-    const patient = await PatientModel.findById(patientId);
+    const patient = (await PatientModel.findById(patientId).populate("program")) as PatientWithProgram;
+    const patientName = formatPatientName(patient);
+    const programName = resolveProgramName(patient);
 
     if (!patient) {
-      results.push({ patientId: String(patientId), status: "error", reason: "Paciente no encontrado" });
+      results.push({
+        patientId: String(patientId),
+        patientName,
+        programName,
+        status: "error",
+        reason: "Paciente no encontrado",
+      });
       await bulkLogger.log(`ERROR | pacienteId=${patientId} | Paciente no encontrado`);
       continue;
     }
@@ -86,18 +127,31 @@ const postMedicalRecordsPerMonthForAllPatients = async (month: number, year: num
       const groupedRecords = await getGroupedRecordsByPatientAndMonth(String(patient._id), month, year);
 
       if (!groupedRecords.length) {
-        results.push({ patientId: String(patient._id), status: "skipped", reason: "Sin fichas en el mes solicitado" });
+        results.push({
+          patientId: String(patient._id),
+          patientName,
+          programName,
+          status: "skipped",
+          reason: "Sin fichas en el mes solicitado",
+        });
         await sistratPlatform.scrapper.closeBrowser();
         await bulkLogger.log(`SKIPPED | pacienteId=${patient._id} | ${patient.name} ${patient.surname} | Sin fichas en el mes`);
         continue;
       }
 
       await sistratPlatform.recordMonthlySheet(patient, month, year);
-      results.push({ patientId: String(patient._id), status: "registered" });
+      results.push({
+        patientId: String(patient._id),
+        patientName,
+        programName,
+        status: "registered",
+      });
       await bulkLogger.log(`Registro exitoso | ${patient.name} ${patient.surname}`);
     } catch (error: any) {
       results.push({
         patientId: String(patient._id),
+        patientName,
+        programName,
         status: "error",
         reason: error?.message || "Error desconocido al registrar la ficha mensual",
       });
@@ -238,7 +292,7 @@ let medicalRecords = [];
     
 
   for (const record of medicalRecords) {
-    const registeredBy = record.registeredBy as any;
+    const registeredBy = record.registeredBy;
 
     if (registeredBy?.signature) {
       // Quitar "/uploads/" si está en la ruta
@@ -282,7 +336,6 @@ export {
   allMedicalRecordsUser,
   getRecordsByMonthAndYear,
   deleteRecord,
-  getGroupedRecordsByPatientAndMonth,
   postMedicalRecordsPerMonthForAllPatients,
   sendTestBulkSummaryEmail,
   listMonthlyLogFiles,

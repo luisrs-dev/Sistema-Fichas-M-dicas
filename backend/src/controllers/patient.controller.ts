@@ -16,7 +16,8 @@ import {
   updateFormCie10,
   demandByPatient,
   update,
-  dataPatientByRut
+  dataPatientByRut,
+  updateActiveStatus
 } from "../services/patient.service";
 
 const getPatientsById = async ({ params }: Request, res: Response) => {
@@ -34,16 +35,33 @@ const getPatientsById = async ({ params }: Request, res: Response) => {
 
 const getPatients = async (req: Request, res: Response) => {
   try {
-    const { programs } = req.query;
+    const { programs, active } = req.query;
 
     // Asegúrate de que `programs` sea un array, incluso si se pasa un solo valor
     const programsArray = Array.isArray(programs) ? programs : [programs];
     const validProgramsArray = programsArray.filter((p): p is string => typeof p === "string");
 
-    const responseItems = await allPatients(validProgramsArray);
+    const activeFilter = typeof active === "string" ? active : undefined;
+    const responseItems = await allPatients(validProgramsArray, activeFilter);
     res.send(responseItems);
   } catch (error) {
     handleHttp(res, "ERROR_GET_ITEMS", error);
+  }
+};
+
+const updatePatientActiveStatus = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { active } = req.body as { active?: unknown };
+
+    if (typeof active !== "boolean") {
+      return res.status(400).json({ success: false, message: "El estado activo es requerido" });
+    }
+
+    const patient = await updateActiveStatus(id, active);
+    res.status(200).json({ success: true, patient });
+  } catch (error) {
+    handleHttp(res, "ERROR_UPDATE_PATIENT_ACTIVE", error);
   }
 };
 
@@ -266,5 +284,6 @@ export {
   updateAlerts,
   formCie10,
   getDemand,
-  getDataByRut
+  getDataByRut,
+  updatePatientActiveStatus
 };

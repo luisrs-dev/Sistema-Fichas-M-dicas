@@ -239,12 +239,41 @@ const getAllPatients = async () => {
 
 
 
-const allPatients = async (programs: string[]) => {
-  const programArray = programs[0].split(",");
-  const responsePatients = await PatientModel.find({
-    program: { $in: programArray },
-  }).populate("program");
+const allPatients = async (programs: string[], active?: string) => {
+  const programArray = programs
+    .flatMap((program) => (program ? program.split(",") : []))
+    .filter(Boolean);
+
+  const filters: Record<string, unknown> = {};
+
+  if (programArray.length) {
+    filters.program = { $in: programArray };
+  }
+
+  if (typeof active === 'string') {
+    if (active === 'true') {
+      filters.$or = [{ active: true }, { active: { $exists: false } }];
+    } else if (active === 'false') {
+      filters.active = false;
+    }
+  }
+
+  const responsePatients = await PatientModel.find(filters).populate("program");
   return responsePatients;
+};
+
+const updateActiveStatus = async (id: string, active: boolean) => {
+  const updatedPatient = await PatientModel.findByIdAndUpdate(
+    id,
+    { active },
+    { new: true }
+  );
+
+  if (!updatedPatient) {
+    throw new Error("Paciente no encontrado");
+  }
+
+  return updatedPatient;
 };
 
 const PatientsByProfile = async (profile: string) => {
@@ -327,5 +356,6 @@ export {
   updateFormCie10,
   updateAF,
   getAllPatients,
-  dataPatientByRut
+  dataPatientByRut,
+  updateActiveStatus
 };

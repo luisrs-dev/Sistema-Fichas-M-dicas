@@ -34,6 +34,7 @@ export default class ListPatientsComponent {
   public authService = inject(AuthService);
   public dialog = inject(MatDialog);
   public bottomSheet = inject(MatBottomSheet);
+  private cdr = inject(ChangeDetectorRef);
 
 
 
@@ -44,13 +45,14 @@ export default class ListPatientsComponent {
   public programsIds: string[];
   public programs: Parameter[] = [];
   public selectedOptionToExport: string | null = null;
+  public togglingActive: Record<string, boolean> = {};
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
 
   ngOnInit(): void {    
     if(this.authService.isAdmin()){
-      this.displayedColumns = ['codigoSistrat', 'name', 'program', 'phone', 'fonasa', 'alertas', 'actions'];
+      this.displayedColumns = ['active','codigoSistrat', 'name', 'program', 'phone', 'fonasa', 'alertas', 'actions'];
     }
     this.dataSource.filterPredicate = (data: any, filter: string) => {
       // Convertir el filtro a minúsculas para una comparación sin distinción de mayúsculas y minúsculas
@@ -106,6 +108,30 @@ export default class ListPatientsComponent {
       data: { patientId },
     });
 
+  }
+
+  onToggleActive(patient: Patient, isActive: boolean): void {
+    if (!patient._id) {
+      return;
+    }
+
+    const previousValue = patient.active !== false;
+    this.togglingActive[patient._id] = true;
+    patient.active = isActive;
+    this.cdr.markForCheck();
+
+    this.patientService.updateActiveStatus(patient._id, isActive).subscribe({
+      next: () => {
+        this.togglingActive[patient._id!] = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        patient.active = previousValue;
+        this.togglingActive[patient._id!] = false;
+        this.cdr.markForCheck();
+        Notiflix.Report.failure('Error', 'No se pudo actualizar el estado del paciente', 'Entendido');
+      },
+    });
   }
 
 exportData(): void {

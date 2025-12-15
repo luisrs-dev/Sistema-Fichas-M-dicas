@@ -1,7 +1,9 @@
 export type BulkRecordStatus = "registered" | "skipped" | "error";
 
 export interface BulkMonthlyRecordResult {
-  patientId: string;
+  patientId?: string;
+  patientName: string;
+  programName: string;
   status: BulkRecordStatus;
   reason?: string;
 }

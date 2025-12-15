@@ -255,13 +255,13 @@ export default class NewPatientComponent {
     const target = event.target as HTMLInputElement | null;
     if (!target) return;
 
-    const digitsOnly = target.value.replace(/\D+/g, '');
-    if (digitsOnly === target.value) {
+    const allowedRutValue = target.value.replaceAll(/[^0-9kK]+/g, '').toUpperCase();
+    if (allowedRutValue === target.value) {
       return;
     }
 
-    target.value = digitsOnly;
-    this.userForm.get('rut')?.setValue(digitsOnly, { emitEvent: false });
+    target.value = allowedRutValue;
+    this.userForm.get('rut')?.setValue(allowedRutValue, { emitEvent: false });
   }
 
   onFetchDataWithRut(): void {

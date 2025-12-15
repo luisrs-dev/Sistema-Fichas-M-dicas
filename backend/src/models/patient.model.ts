@@ -89,6 +89,10 @@ const PatientSchema = new Schema<Patient>(
       type: Boolean,
       default: false
     },
+    active: {
+      type: Boolean,
+      default: true,
+    },
     mainSubstance: {
       type: String,
       required: true,

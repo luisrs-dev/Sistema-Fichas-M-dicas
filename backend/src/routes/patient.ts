@@ -16,7 +16,8 @@ import {
   updateAlerts,
   formCie10,
   getDemand,
-  getDataByRut
+  getDataByRut,
+  updatePatientActiveStatus
 } from "../controllers/patient.controller";
 // import { logMiddleware } from "../middleware/log";
 const router = Router();
@@ -38,6 +39,7 @@ router.post("/sistrat/formCie10", formCie10);
 router.get("/", getPatients);
 router.get("/:id", getPatientsById);
 router.post("/", postPatient);
+router.patch("/:id/active", updatePatientActiveStatus);
 router.put("/:id", updatePatient);
 
 

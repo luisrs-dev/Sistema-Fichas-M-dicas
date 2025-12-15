@@ -119,11 +119,15 @@ export class PatientService {
     return this.http.post<any>(`${this.backend}/patient/sistrat/alerts`, { patientId }).pipe(catchError((err) => throwError(() => err.error.message)));
   }
 
-  getPatients(programsIds: string[]): Observable<Patient[]> {
+  getPatients(programsIds: string[], options?: { active?: boolean }): Observable<Patient[]> {
     let params = new HttpParams();
 
     if (programsIds.length > 0) {
       params = params.set('programs', programsIds.join(',')); // Convertimos el array a string separado por comas
+    }
+
+    if (options?.active !== undefined) {
+      params = params.set('active', String(options.active));
     }
 
     return this.http.get<Patient[]>(`${this.backend}/patient`, { params }).pipe(
@@ -133,8 +137,12 @@ export class PatientService {
     );
   }
 
-  updatePatients(programsIds: string[]): void {
-    this.getPatients(programsIds).subscribe(); // Actualiza automáticamente el BehaviorSubject
+  updatePatients(programsIds: string[], options?: { active?: boolean }): void {
+    this.getPatients(programsIds, options).subscribe(); // Actualiza automáticamente el BehaviorSubject
+  }
+
+  updateActiveStatus(patientId: string, active: boolean): Observable<Patient> {
+    return this.http.patch<Patient>(`${this.backend}/patient/${patientId}/active`, { active });
   }
 
   setFormCie10(patientId: string, optionSelected: any){
