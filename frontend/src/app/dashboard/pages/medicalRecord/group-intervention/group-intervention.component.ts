@@ -1,5 +1,5 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatChipsModule } from '@angular/material/chips';
 import { provideNativeDateAdapter } from '@angular/material/core';
@@ -47,15 +47,15 @@ import { GroupInterventionFormValueSnapshot, GroupInterventionSummaryDialogCompo
   styleUrl: './group-intervention.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export default class GroupInterventionComponent {
-  private fb = inject(FormBuilder);
-  private medicalRecordService = inject(MedicalRecordService);
-  private authService = inject(AuthService);
-  private userService = inject(UserService);
-  private dialog = inject(MatDialog);
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
-  private patientService = inject(PatientService);
+export default class GroupInterventionComponent implements OnInit {
+  private readonly fb = inject(FormBuilder);
+  private readonly medicalRecordService = inject(MedicalRecordService);
+  private readonly authService = inject(AuthService);
+  private readonly userService = inject(UserService);
+  private readonly dialog = inject(MatDialog);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly patientService = inject(PatientService);
 
   public patient: Patient;
   public latestMedicalRecordWithScheme: MedicalRecord | null;
@@ -63,25 +63,36 @@ export default class GroupInterventionComponent {
   public services: any[];
   public hideServiceSelect: boolean = false;
   // public data: { patient: Patient; latestMedicalRecordWithScheme: MedicalRecord | null };
+  private readonly allPatients = signal<Patient[]>([]);
   public patients = signal<Patient[]>([]);
+  public programs = signal<Array<{ _id: string; name: string }>>([]);
+  public programFilter = new FormControl<string | null>(null);
   public patientsList = new FormControl<Patient[]>([]);
 
   readonly panelOpenState = signal(false);
 
   patientId = signal<string | null>(null);
 
-  programsIds: string[] = [];
-
   ngOnInit(): void {
     this.user = this.authService.getUser();
-    const user = this.userService.getUserById(this.user._id).pipe(
+    this.programFilter.valueChanges.subscribe((programId) => this.applyProgramFilter(programId));
+    this.userService.getUserById(this.user._id).pipe(
       switchMap( (user: any) =>{
         const userFetched = user.user;        
-        const programsIds = userFetched.programs.map( (program: any) => program._id);
+        console.log('[userFetched.programs]', userFetched.programs);
+        const userPrograms = userFetched.programs ?? [];
+        this.programs.set(userPrograms);
+        const programsIds = userPrograms.map( (program: any) => program._id);
         
         return this.patientService.getPatients(programsIds)
       })
-    ).subscribe(patients => this.patients.set(patients))
+    ).subscribe(patients => {
+    console.log('[patients]', patients);    
+      const activePatients = patients.filter((patient) => patient.active === true);
+      this.allPatients.set(activePatients);
+      this.applyProgramFilter(this.programFilter.value);
+    } 
+  )
   
     this.userService.getServicesByProfile(this.user.profile._id).subscribe((services) => {
       this.services = services;
@@ -113,7 +124,7 @@ export default class GroupInterventionComponent {
     const selectedPatients = this.patientsList.value ?? [];
     const patients = selectedPatients
       .map((patient) => patient._id)
-      .filter((id): id is string => Boolean(id));
+      .filter((id): id is string => typeof id === 'string' && id.length > 0);
     
     this.medicalRecordService
       .addMedicalRecord({
@@ -223,5 +234,16 @@ export default class GroupInterventionComponent {
     }
 
     return diagnosticMap[code] ?? code;
+  }
+
+  private applyProgramFilter(programId: string | null | undefined): void {
+    const patients = this.allPatients();
+    if (!programId) {
+      this.patients.set(patients);
+      return;
+    }
+
+    const filteredPatients = patients.filter((patient) => patient.program?._id === programId);
+    this.patients.set(filteredPatients);
   }
 }

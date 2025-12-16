@@ -1,14 +1,4 @@
 :host {
   display: block;
 
-  .patients{
-    display: flex;
-    flex-direction: column;
-
-    &__select{
-      max-width: 420px;
-      margin-top: 24px;
-    }
-
-  }
 }
