@@ -21,7 +21,7 @@ export class SocioDemographicComponent extends FormBaseComponent {
   ngOnInit() {
     this.form = this.fb.group({
       txtnacionalidad: ['', []],
-      etnia: ['', []],
+      seletnia: ['', []],
       documentacion_regularizada: ['', []],
       selestado_civil: ['', []],
       int_numero_hijos: ['', []],

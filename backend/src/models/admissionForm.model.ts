@@ -70,6 +70,9 @@ const AdmissionFormSchema = new Schema<AdmissionForm>(
     selcon_quien_vive: {
       type: String
     }, 
+    seletnia: {
+      type: String
+    }, 
     selconcentimiento_informado: {
       type: String
     }, 
