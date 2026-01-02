@@ -68,7 +68,10 @@ export default class DetailComponent {
   private route = inject(ActivatedRoute);
 
   private readonly currentYear = new Date().getFullYear();
+  private readonly firstAvailableYear = 2023;
+
   selectedMonth = signal<number>(new Date().getMonth() + 1);
+  selectedYear = signal<number>(this.currentYear);
   readonly months = [
     { value: 1, label: 'Enero' },
     { value: 2, label: 'Febrero' },
@@ -83,6 +86,7 @@ export default class DetailComponent {
     { value: 11, label: 'Noviembre' },
     { value: 12, label: 'Diciembre' },
   ];
+  readonly years = this.buildYearOptions();
 
   registeredRecordsPerMonth = signal<boolean>(false);
   screenshotPath = signal<string | null>(null);
@@ -116,7 +120,7 @@ export default class DetailComponent {
   ngOnInit(): void {
 
     if (this.showProfessionalTable()) {
-      this.buildProfessionalDataMonth(this.selectedMonth());
+      this.buildProfessionalDataMonth(this.selectedMonth(), this.selectedYear());
     }
     this.route.paramMap.subscribe((params) => {
       const id = params.get('id');
@@ -156,7 +160,9 @@ export default class DetailComponent {
         return ta - tb; // ascendente
       });
       
-      const filteredRecords = this.filterRecordsByMonth(medicalRecordsOrdered, this.selectedMonth(), this.currentYear);
+      const month = this.selectedMonth();
+      const year = this.selectedYear();
+      const filteredRecords = this.filterRecordsByMonth(medicalRecordsOrdered, month, year);
 
       this.#state.set({
         loading: false,
@@ -166,9 +172,12 @@ export default class DetailComponent {
       });
 
       if (this.showTable()) {
-        this.buildDataMonth(this.selectedMonth());
+        this.buildDataMonth(month, year);
       }
 
+      if (this.showProfessionalTable()) {
+        this.buildProfessionalDataMonth(month, year);
+      }
 
       this.latestMedicalRecordWithScheme = this.medicalRecordService.getLastPharmacologicalScheme(response.medicalRecords);
       console.log('latestMedicalRecordWithScheme', this.latestMedicalRecordWithScheme);
@@ -279,7 +288,7 @@ export default class DetailComponent {
     }
   }
 
-  buildDataMonth(monthSelected: number = this.selectedMonth(), year: number = this.currentYear) {
+  buildDataMonth(monthSelected: number = this.selectedMonth(), year: number = this.selectedYear()) {
     // Inicializamos un objeto para agrupar
     let grouped: Record<string, number[]> = {};
     const records = this.state().medicalRecords ?? [];
@@ -321,7 +330,7 @@ export default class DetailComponent {
     this.showTable.set(true);
   }
 
-  private buildProfessionalDataMonth(monthSelected: number = this.selectedMonth(), year: number = this.currentYear) {
+  private buildProfessionalDataMonth(monthSelected: number = this.selectedMonth(), year: number = this.selectedYear()) {
     const records = this.state().medicalRecords ?? [];
     const groupedRows: MedicalRecordProfessionalRow[] = [];
     const recordsByService: Record<string, MedicalRecord[]> = {};
@@ -402,7 +411,7 @@ export default class DetailComponent {
         
         // Success
         if(patientId === undefined) return;
-        this.medicalRecordService.monthRecords(patientId, this.selectedMonth(), this.currentYear, this.medicalRecordsGrouped()).subscribe({
+        this.medicalRecordService.monthRecords(patientId, this.selectedMonth(), this.selectedYear(), this.medicalRecordsGrouped()).subscribe({
           next: () => {
             //this.#state.update((state) => ({
             //  ...state,
@@ -428,21 +437,37 @@ export default class DetailComponent {
 
   onMonthChange(event: number) {
     const month = Number(event);
+    console.log('[month]', month);
+    const year = this.selectedYear();
     this.selectedMonth.set(month);
-    this.applyMonthFilter(month);
+    this.applyDateFilter(month, year);
 
     if (this.showTable()) {
-      this.buildDataMonth(month);
+      this.buildDataMonth(month, year);
     }
 
     if (this.showProfessionalTable()) {
-      this.buildProfessionalDataMonth(month);
+      this.buildProfessionalDataMonth(month, year);
     }
   }
 
-  private applyMonthFilter(month: number) {
+  onYearChange(year: number) {
+    const month = this.selectedMonth();
+    this.selectedYear.set(year);
+    this.applyDateFilter(month, year);
+
+    if (this.showTable()) {
+      this.buildDataMonth(month, year);
+    }
+
+    if (this.showProfessionalTable()) {
+      this.buildProfessionalDataMonth(month, year);
+    }
+  }
+
+  private applyDateFilter(month: number, year: number) {
     const state = this.#state();
-    const filteredRecords = this.filterRecordsByMonth(state.medicalRecords, month, this.currentYear);
+    const filteredRecords = this.filterRecordsByMonth(state.medicalRecords, month, year);
 
     this.#state.set({
       ...state,
@@ -459,6 +484,13 @@ export default class DetailComponent {
       const recordDate = new Date(record.date);
       return recordDate.getMonth() + 1 === month && recordDate.getFullYear() === year;
     });
+  }
+
+  private buildYearOptions(): number[] {
+    const startYear = this.firstAvailableYear;
+    const endYear = this.currentYear;
+    const totalYears = Math.max(1, endYear - startYear + 1);
+    return Array.from({ length: totalYears }, (_, index) => startYear + index);
   }
 
   get treatmentTime(): string {

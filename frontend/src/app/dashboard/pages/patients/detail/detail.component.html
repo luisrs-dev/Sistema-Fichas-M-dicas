@@ -18,12 +18,22 @@
         </button>
       </div>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Mes</mat-label>
-      <mat-select required [value]="selectedMonth()" (selectionChange)="onMonthChange($event.value)">
-        <mat-option *ngFor="let month of months" [value]="month.value">{{ month.label }}</mat-option>
-      </mat-select>
-    </mat-form-field>
+      <div class="filters">
+        <mat-form-field appearance="outline">
+          <mat-label>Mes</mat-label>
+          <mat-select required [value]="selectedMonth()" (selectionChange)="onMonthChange($event.value)">
+            <mat-option *ngFor="let month of months" [value]="month.value">{{ month.label }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Año</mat-label>
+          <mat-select required [value]="selectedYear()" (selectionChange)="onYearChange($event.value)">
+            <mat-option *ngFor="let year of years" [value]="year">{{ year }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+      </div>
+
   </div>
 
   <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1" (click)="onNewMedicalRecord()">Nuevo Registro</button>

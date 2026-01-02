@@ -58,13 +58,20 @@ const postMedicalRecord = async ({ body }: Request, res: Response) => {
 const postMedicalRecordPerMonth = async ({ params, body }: Request, res: Response) => {
   const { patientId } = params;
   const { month, year } = body;
+  const now = new Date();
+
+  const parsedMonth = Number(month);
+  const parsedYear = Number(year);
+  const safeMonth = Number.isInteger(parsedMonth) && parsedMonth >= 1 && parsedMonth <= 12 ? parsedMonth : now.getMonth() + 1;
+  const safeYear = Number.isInteger(parsedYear) && parsedYear > 0 ? parsedYear : now.getFullYear();
+
   console.log("patientId", patientId);
   console.log("body", body);
+  console.log("resolved month/year", safeMonth, safeYear);
 
   try {
-    const responsepostMedicalRecordsPerMonthOnSistrat = await postMedicalRecordsPerMonthOnSistrat(patientId, +month, +year);
+    const responsepostMedicalRecordsPerMonthOnSistrat = await postMedicalRecordsPerMonthOnSistrat(patientId, safeMonth, safeYear);
 
-    
     res.send(responsepostMedicalRecordsPerMonthOnSistrat);
   } catch (error) {
     handleHttp(res, "ERROR_MEDICAL_RECORDS_PER_MONTH", error);

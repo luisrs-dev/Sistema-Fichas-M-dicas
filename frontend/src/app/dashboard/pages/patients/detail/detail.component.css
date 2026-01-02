@@ -68,6 +68,7 @@ table.mat-table {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
+  gap: 16px;
 }
 
 .info-button {
@@ -139,4 +140,10 @@ table.mat-table {
 .placeholder-text {
   color: #9ca3af;
   font-style: italic;
+}
+
+.filters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
 }

@@ -121,6 +121,18 @@ const postMedicalRecordsPerMonthForAllPatients = async (month: number, year: num
       continue;
     }
 
+    if (!patient.active) {
+      results.push({
+        patientId: String(patient._id),
+        patientName,
+        programName,
+        status: "skipped",
+        reason: "Paciente inactivo",
+      });
+      await bulkLogger.log(`SKIPPED | pacienteId=${patient._id} | ${patient.name} ${patient.surname} | Paciente inactivo`);
+      continue;
+    }
+
     const sistratPlatform = new Sistrat();
 
     try {

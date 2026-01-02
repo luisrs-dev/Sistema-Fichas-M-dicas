@@ -438,6 +438,18 @@ async dataPatientFromDemand(rut: string) {
     try {
       page = await this.login(patient.sistratCenter);
 
+      page.on("dialog", async (dialog) => {
+        const message = dialog.message() || "";
+        console.log(`[Sistrat][recordMonthlySheet] Diálogo detectado: ${message}`);
+        if (message.toLowerCase().includes("Debe ingresar al menos una prestación")) {
+          await dialog.accept();
+          console.log("[Sistrat][recordMonthlySheet] Alerta por registros vacíos aceptada");
+          return;
+        }
+
+        await dialog.accept();
+      });
+
       await this.openActiveUsersList(page);
       await this.scrapper.waitForSeconds(3);
       const patientName = `${patient.name.trim()} ${patient.surname.trim()} ${patient.secondSurname.trim()}`.toLowerCase();

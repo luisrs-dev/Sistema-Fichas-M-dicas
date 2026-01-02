@@ -43,7 +43,7 @@ export class MedicalRecordService {
     return this.http.delete<any>(`${this.backend}/medicalRecord/${id}`).pipe(catchError((err) => throwError(() => err.error.message)));
   }
 
-  monthRecords(id: string, month: number, year: number = 2025, medicalRecordsGrouped: MedicalRecordGrouped[]): Observable<any> {
+  monthRecords(id: string, month: number, year: number, medicalRecordsGrouped: MedicalRecordGrouped[]): Observable<any> {
     return this.http.post<any>(`${this.backend}/medicalRecord/monthRecords/${id}`, { medicalRecordsGrouped, month, year })
     .pipe(
       retry(3),
