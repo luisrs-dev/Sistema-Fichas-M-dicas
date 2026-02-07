@@ -335,7 +335,7 @@ async dataPatientFromDemand(rut: string) {
 
       //await this.scrapper.waitForSeconds(90);
       await this.listActiveDemands(page, logger);
-      await this.setDataSistrat(page, patient, logger);
+      await this.setCodeAlertSistrat(page, patient, logger);
       console.log("[Sistrat][crearDemanda] Datos sincronizados correctamente");
       await this.logStep(logger, "[Sistrat][crearDemanda] Datos sincronizados");
 
@@ -353,18 +353,18 @@ async dataPatientFromDemand(rut: string) {
     }
   }
 
-  async setDataSistrat(page: Page, patient: Patient, logger?: ProcessLogger) {
+  async setCodeAlertSistrat(page: Page, patient: Patient, logger?: ProcessLogger) {
     await this.listActiveDemands(page, logger);
-    console.group(`[Sistrat][setDataSistrat] ${patient._id}`);
-    await this.logStep(logger, `[Sistrat][setDataSistrat] Buscando ${patient._id}`);
-    console.log("[Sistrat][setDataSistrat] Refrescando listado para buscar paciente");
+    console.group(`[Sistrat][setCodeAlertSistrat] ${patient._id}`);
+    await this.logStep(logger, `[Sistrat][setCodeAlertSistrat] Buscando ${patient._id}`);
+    console.log("[Sistrat][setCodeAlertSistrat] Refrescando listado para buscar paciente");
 
     try {
-      console.log("[Sistrat][setDataSistrat] Esperando tabla de pacientes");
+      console.log("[Sistrat][setCodeAlertSistrat] Esperando tabla de pacientes");
       await page.waitForSelector("#table_pacientes", { visible: true });
 
       const patientName = `${patient.name.trim()} ${patient.surname.trim()}`.toLowerCase();
-      console.log(`[Sistrat][setDataSistrat] Buscando coincidencia para ${patientName}`);
+      console.log(`[Sistrat][setCodeAlertSistrat] Buscando coincidencia para ${patientName}`);
 
       const patientOnSistrat: any = await page.evaluate((patientName) => {
         const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
@@ -393,16 +393,16 @@ async dataPatientFromDemand(rut: string) {
       }, patientName);
 
       console.log({ patientOnSistrat });
-      await this.logStep(logger, `[Sistrat][setDataSistrat] Resultado búsqueda: ${patientOnSistrat ? "encontrado" : "no encontrado"}`);
+      await this.logStep(logger, `[Sistrat][setCodeAlertSistrat] Resultado búsqueda: ${patientOnSistrat ? "encontrado" : "no encontrado"}`);
 
       if (!patientOnSistrat) {
         console.log(`Paciente ${patientName} no registrado en SISTRAT. `);
         this.scrapper.closeBrowser();
-        await this.logStep(logger, `[Sistrat][setDataSistrat] Paciente no encontrado`);
+        await this.logStep(logger, `[Sistrat][setCodeAlertSistrat] Paciente no encontrado`);
         return null;
       } else {
-        console.log("[Sistrat][setDataSistrat] Paciente encontrado, sincronizando campos locales");
-        await this.logStep(logger, "[Sistrat][setDataSistrat] Paciente encontrado, actualizando datos");
+        console.log("[Sistrat][setCodeAlertSistrat] Paciente encontrado, sincronizando campos locales");
+        await this.logStep(logger, "[Sistrat][setCodeAlertSistrat] Paciente encontrado, actualizando datos");
         if (patientOnSistrat?.codigoSistrat) {
           const patientEntity = await PatientModel.findOne({ _id: patient._id });
           if (patientEntity) {
@@ -420,11 +420,11 @@ async dataPatientFromDemand(rut: string) {
         }
       }
     } catch (error) {
-      await this.logStep(logger, `[Sistrat][setDataSistrat] Error: ${error}`);
+      await this.logStep(logger, `[Sistrat][setCodeAlertSistrat] Error: ${error}`);
       throw new Error(`Error al setear datos desde SISTRAT. Error: ${error}`);
     } finally {
-      console.log("[Sistrat][setDataSistrat] Finalizando sincronización con listado");
-      await this.logStep(logger, "[Sistrat][setDataSistrat] Finalizado");
+      console.log("[Sistrat][setCodeAlertSistrat] Finalizando sincronización con listado");
+      await this.logStep(logger, "[Sistrat][setCodeAlertSistrat] Finalizado");
       console.groupEnd();
     }
   }
@@ -803,22 +803,21 @@ async dataPatientFromDemand(rut: string) {
       await page.waitForSelector("#table_pacientes", { visible: true, timeout: 15000 });
 
       const codigoSistrat = patient.codigoSistrat?.trim();
-      console.log(`[Ficha de Ingreso] Codigo Sistrat: ${codigoSistrat}`);
+      console.log(`[Ficha de Ingreso] Codigo Sistrat: ${codigoSistrat || 'No tiene - se buscará por nombre'}`);
       if (!codigoSistrat) {
-        console.warn("[Sistrat][registrarFichaIngreso] Paciente sin código SISTRAT, no es posible continuar");
-        await this.logStep(logger, "[Sistrat][registrarFichaIngreso] Paciente sin código SISTRAT");
-        return false;
+        console.warn("[Sistrat][registrarFichaIngreso] Paciente sin código SISTRAT, se buscará por nombre");
+        await this.logStep(logger, "[Sistrat][registrarFichaIngreso] Sin código SISTRAT, buscando por nombre");
       }
 
       console.log("[Sistrat][registrarFichaIngreso] Buscando fila del paciente en tabla");
-      const rowPatientSistrat = await this.openAdmissionFormFromList(page, codigoSistrat);
+      const rowPatientSistrat = await this.openAdmissionFormFromList(page, patient);
       console.log("rowPatientSistrat", rowPatientSistrat);
       await this.logStep(logger, `[Sistrat][registrarFichaIngreso] Paciente encontrado: ${!!rowPatientSistrat}`);
 
       if (!rowPatientSistrat) {
         console.log(`[Ficha de Ingreso] Paciente No encontrado para código: ${codigoSistrat}`);
         await this.logStep(logger, "[Sistrat][registrarFichaIngreso] Paciente no encontrado en listado");
-        return false;
+        throw new Error("Paciente no encontrado en listado de SISTRAT");
       }
 
       console.log(`[Ficha de Ingreso] Paciente encontrado: ${rowPatientSistrat.codigoSistrat}`);
@@ -828,7 +827,7 @@ async dataPatientFromDemand(rut: string) {
       return formCompleted;
     } catch (error: any) {
       await this.logStep(logger, `[Sistrat][registrarFichaIngreso] Error: ${error}`);
-      throw new Error(`Error al registrar ficha de ingreso en función registrarFichaIngreso: ${error}`);
+      throw new Error(`${error}`);
     } finally {
       console.log("[Sistrat][registrarFichaIngreso] Finalizó el proceso de ficha de ingreso");
       if (page) {
@@ -839,12 +838,34 @@ async dataPatientFromDemand(rut: string) {
     }
   }
 
-  private async openAdmissionFormFromList(page: Page, codigoSistrat: string): Promise<RowData | null> {
-    return page.evaluate((codigo) => {
-      const normalizedCode = (codigo || "").toString().trim();
-      if (!normalizedCode) {
-        return null;
-      }
+  private async openAdmissionFormFromList(page: Page, patient: Patient): Promise<RowData | null> {
+    const codigoSistrat = patient.codigoSistrat?.trim() || "";
+    const firstName = (patient.name || "").trim().split(" ").filter(Boolean)[0] || "";
+    const firstSurname = (patient.surname || "").trim().split(" ").filter(Boolean)[0] || "";
+    const targetName = `${firstName} ${firstSurname}`.trim();
+
+    // Función de normalización para comparar nombres
+    const normalizeName = (name: string): string => {
+      return name
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, " ")
+        .toLowerCase()
+        .trim();
+    };
+
+    const normalizedTargetName = normalizeName(targetName);
+
+    return page.evaluate((codigo, targetName) => {
+      // Función de normalización dentro del contexto de la página
+      const normalize = (name: string): string => {
+        return name
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/\s+/g, " ")
+          .toLowerCase()
+          .trim();
+      };
 
       const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
       if (!table) {
@@ -857,18 +878,23 @@ async dataPatientFromDemand(rut: string) {
           continue;
         }
 
-        const patientSistrat: RowData = {
+        const patientSistrat = {
           i,
           id: objCells.item(0)?.innerText?.trim() || "",
           name: objCells.item(1)?.innerText?.toLowerCase().trim() || "",
           codigoSistrat: objCells.item(2)?.innerText?.trim() || "",
         };
 
-        if (patientSistrat.codigoSistrat === normalizedCode) {
+        // Primero buscar por código SISTRAT si existe
+        const matchesByCode = codigo && patientSistrat.codigoSistrat === codigo;
+        // Si no hay código, buscar por nombre normalizado usando includes
+        const matchesByName = !codigo && normalize(patientSistrat.name).includes(targetName);
+
+        if (matchesByCode || matchesByName) {
           const button = objCells.item(4)?.querySelector("span[name='crear_ficha_ingreso']") as HTMLElement | null;
           if (button) {
             button.click();
-            console.log(`[Ficha de ingreso] Click en crear ficha ingreso para ${patientSistrat.name}`);
+            console.log(`[Ficha de ingreso] Click en crear ficha ingreso para ${patientSistrat.name} (búsqueda por ${matchesByCode ? 'código' : 'nombre'})`);
             return patientSistrat;
           }
           break;
@@ -876,7 +902,7 @@ async dataPatientFromDemand(rut: string) {
       }
 
       return null;
-    }, codigoSistrat);
+    }, codigoSistrat, normalizedTargetName);
   }
 
   async completeAdmissionForm(page: Page, patient: Patient, admissionForm: AdmissionForm, logger?: ProcessLogger) {
@@ -1062,7 +1088,10 @@ async dataPatientFromDemand(rut: string) {
       await this.scrapper.setSelectValue(page, "#sel_diagnostico_4", admissionForm.sel_diagnostico_4);
       await this.logStep(logger, "[Sistrat][completeAdmissionForm] Formulario completado");
       await this.logStep(logger, "[Sistrat][completeAdmissionForm] Click en grabar usuario");
-      await this.scrapper.clickButton(page, "#mysubmit");
+      await this.logStep(logger, "[Sistrat][completeAdmissionForm] Esperando antes de enviar formulario");
+
+      await this.scrapper.waitForSeconds(120);
+      // await this.scrapper.clickButton(page, "#mysubmit");
       await this.logStep(logger, "[Sistrat][Ficha de ingreso registrada");
 
       //  await this.scrapper.waitForSeconds(300);

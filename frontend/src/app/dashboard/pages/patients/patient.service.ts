@@ -145,6 +145,13 @@ export class PatientService {
     return this.http.patch<Patient>(`${this.backend}/patient/${patientId}/active`, { active });
   }
 
+  fetchCodigoSistrat(patientId: string): Observable<{ success: boolean; patient: Patient; message?: string }> {
+    return this.http.post<{ success: boolean; patient: Patient; message?: string }>(
+      `${this.backend}/patient/${patientId}/sistrat-code`,
+      {}
+    );
+  }
+
   setFormCie10(patientId: string, optionSelected: any){
     console.log({optionSelected});
 

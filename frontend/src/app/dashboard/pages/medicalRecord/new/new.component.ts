@@ -5,6 +5,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatDividerModule } from '@angular/material/divider';
+import {MatCheckboxModule} from '@angular/material/checkbox';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -38,6 +39,7 @@ import { MedicalRecordService } from '../medicalRecord.service';
     MatChipsModule,
     MatExpansionModule,
     MatDialogModule,
+    MatCheckboxModule
   ],
 
   providers: [provideNativeDateAdapter(), DatePipe],
@@ -105,6 +107,13 @@ export default class NewMedicalRecord {
           this.updateRescueActionRequirement(selectedServiceId);
         }
       });
+
+    // Reset remoteMethod if isRemote is toggled off
+    this.medicalRecordForm.get('isRemote')?.valueChanges.subscribe((val) => {
+      if (!val) {
+        this.medicalRecordForm.get('remoteMethod')?.reset();
+      }
+    });
   }
 
   private initializePatientContext(id: string): void {
@@ -183,6 +192,8 @@ export default class NewMedicalRecord {
     diagnostic: [''],
     pharmacologicalScheme: [''],
     rescueAction: [''],
+    isRemote: [false],
+    remoteMethod: [''],
   });
 
   // setValueEntryType(){

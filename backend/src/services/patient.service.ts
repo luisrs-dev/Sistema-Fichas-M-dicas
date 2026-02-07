@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { Patient } from "../interfaces/patient.interface";
 import MedicalRecordModel from "../models/medicalRecord.model";
 import PatientModel from "../models/patient.model";
@@ -6,9 +6,9 @@ import { Demand } from "../interfaces/demand.interface";
 import DemandModel from "../models/demand.model";
 import Sistrat from "./sistrat/sistrat.class";
 import AdmissionFormModel from "../models/admissionForm.model";
-import mongoose from 'mongoose';
 import UserModel from "../models/user.model";
 import { encrypt } from "../utils/bcrypt.handle";
+import ProcessLogger from "../utils/processLogger";
 
 
 const inerPatient = async (Patient: Patient) => {
@@ -231,6 +231,42 @@ const recordDemandToSistrat = async (patientId: string): Promise<{success:boolea
   }
 };
 
+const syncCodigoSistrat = async (patientId: string) => {
+  const patient = await PatientModel.findById(patientId);
+
+  if (!patient) {
+    throw new Error("Paciente no encontrado");
+  }
+
+  if (!patient.sistratCenter) {
+    throw new Error("Paciente sin centro SISTRAT configurado");
+  }
+
+  const patientLabel = [patient.name, patient.surname, patient.secondSurname].filter(Boolean).join(" ").trim() || patient.rut || "paciente";
+  const logger = new ProcessLogger(patientLabel, "buscar-codigo-sistrat");
+  const sistratPlatform = new Sistrat();
+
+  try {
+    const page = await sistratPlatform.login(patient.sistratCenter, logger);
+    await sistratPlatform.setCodeAlertSistrat(page, patient, logger);
+
+    const updatedPatient = await PatientModel.findById(patientId).populate("program");
+
+    if (!updatedPatient?.codigoSistrat) {
+      throw new Error("No se encontró el código SISTRAT para el paciente");
+    }
+
+    return updatedPatient;
+  } catch (error) {
+    console.error("Error al sincronizar código en SISTRAT", error);
+    const message = error instanceof Error ? error.message : "Error desconocido al sincronizar código";
+    throw new Error(message);
+  } finally {
+    await sistratPlatform.scrapper.closeBrowser();
+    await logger.close();
+  }
+};
+
 
 const getAllPatients = async () => {
   const responsePatients = await PatientModel.find().populate("program");
@@ -357,5 +393,6 @@ export {
   updateAF,
   getAllPatients,
   dataPatientByRut,
-  updateActiveStatus
+  updateActiveStatus,
+  syncCodigoSistrat
 };

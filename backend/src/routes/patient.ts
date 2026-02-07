@@ -8,7 +8,6 @@ import {
   postPatient,
   updatePatient,
   postPatientSistrat,
-  //recordPatientSistrat,
   getAdmissionForm,
   postAdmissionForm,
   updateAdmissionForm,
@@ -17,9 +16,9 @@ import {
   formCie10,
   getDemand,
   getDataByRut,
-  updatePatientActiveStatus
+  updatePatientActiveStatus,
+  fetchCodigoSistrat
 } from "../controllers/patient.controller";
-// import { logMiddleware } from "../middleware/log";
 const router = Router();
 
 router.get("/profile/:profile", getPatientsByProfile);
@@ -36,15 +35,12 @@ router.post("/ficha-ingreso/sistrat", postAdmissionFormSistrat);
 router.post("/sistrat", postPatientSistrat);
 router.post("/sistrat/alerts", updateAlerts);
 router.post("/sistrat/formCie10", formCie10);
+router.post("/:id/sistrat-code", fetchCodigoSistrat);
 router.get("/", getPatients);
 router.get("/:id", getPatientsById);
 router.post("/", postPatient);
 router.patch("/:id/active", updatePatientActiveStatus);
 router.put("/:id", updatePatient);
-
-
-
-//router.post("/sistrat/record", recordPatientSistrat);
 
 export { router };
 

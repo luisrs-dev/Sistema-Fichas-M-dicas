@@ -61,7 +61,24 @@
     }
     <ng-container matColumnDef="codigoSistrat">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Codigo Usuario</th>
-      <td class="text-center" mat-cell *matCellDef="let element">{{ element.codigoSistrat || "-" }}</td>
+      <td class="text-center" mat-cell *matCellDef="let element">
+        @if (element.codigoSistrat) {
+          {{ element.codigoSistrat }}
+        } @else {
+          <button
+            mat-stroked-button
+            color="accent"
+            class="text-xs"
+            (click)="onFetchCodigoSistrat(element)"
+            [disabled]="!element._id || fetchingCodigo[element._id || '']"
+            matTooltip="Buscar código en SISTRAT"
+            matTooltipPosition="above"
+          >
+            <mat-icon class="mr-1">manage_search</mat-icon>
+            Buscar
+          </button>
+        }
+      </td>
     </ng-container>
 
     <!-- Name Column -->

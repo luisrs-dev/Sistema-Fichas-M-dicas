@@ -171,17 +171,25 @@ export default class AdmisionFormComponent {
         this.patientService.addFichaIngresoToSistrat(this.patient!._id!).subscribe({
           next: (response) => {
             console.log(response);
-            if (response.status) {
+            if (response.success) {
               this.admissionFormRegistered = true;
+              Notiflix.Notify.success('Ficha de ingreso registrada en SISTRAT');
+            } else {
+              Notiflix.Report.warning(
+                'Atención',
+                response.message || 'No fue posible registrar en SISTRAT',
+                'Cerrar'
+              );
             }
             Notiflix.Loading.remove();
           },
           error: (err) => {
             console.error('Error al agregar ficha de ingreso a Sistrat:', err);
             Notiflix.Loading.remove();
+            const errorMessage = typeof err === 'string' ? err : 'Ocurrió un error al registrar en SISTRAT. Por favor, intenta nuevamente.';
             Notiflix.Report.failure(
               'Error',
-              'Ocurrió un error al registrar en SISTRAT. Por favor, intenta nuevamente.',
+              errorMessage,
               'Cerrar'
             );
           }

@@ -11,6 +11,8 @@ export interface MedicalRecord {
   diagnosticMedic?: string;
   pharmacologicalScheme: string;
   rescueAction?: string;
+  isRemote?: boolean;
+  remoteMethod?: string;
   patient: Patient;
   registeredBy: RegisteredBy;
   createdAt?: string;

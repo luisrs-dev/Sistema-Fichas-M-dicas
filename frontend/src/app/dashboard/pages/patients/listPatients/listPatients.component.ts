@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ViewChild, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, ViewChild, inject } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatPaginator } from '@angular/material/paginator';
@@ -26,7 +26,7 @@ import Notiflix from 'notiflix';
   styleUrl: './listPatients.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export default class ListPatientsComponent {
+export default class ListPatientsComponent implements OnInit {
   displayedColumns: string[] = ['codigoSistrat', 'name', 'program', 'phone', 'alertas', 'actions'];
   //displayedColumns: string[] = ['codigoSistrat', 'name', 'program', 'phone', 'admissionDate', 'fonasa', 'alertas', 'actions'];
   dataSource = new MatTableDataSource<Patient>([]);
@@ -46,6 +46,7 @@ export default class ListPatientsComponent {
   public programs: Parameter[] = [];
   public selectedOptionToExport: string | null = null;
   public togglingActive: Record<string, boolean> = {};
+  public fetchingCodigo: Record<string, boolean> = {};
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
@@ -96,6 +97,34 @@ export default class ListPatientsComponent {
   onUpdateAlerts(patientId: string) {
     this.patientService.updateAlertSistrat(patientId).subscribe((response) => {
       this.patientService.updatePatients(this.programsIds);
+    });
+  }
+
+  onFetchCodigoSistrat(patient: Patient): void {
+    if (!patient._id) {
+      return;
+    }
+
+    this.fetchingCodigo[patient._id] = true;
+    this.cdr.markForCheck();
+    Notiflix.Loading.circle('Buscando código SISTRAT');
+
+    this.patientService.fetchCodigoSistrat(patient._id).subscribe({
+      next: (response) => {
+        const message = response.message ?? 'Código sincronizado correctamente';
+        Notiflix.Notify.success(message);
+        Notiflix.Loading.remove();
+        this.fetchingCodigo[patient._id!] = false;
+        this.patientService.updatePatients(this.programsIds);
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        const message = error?.error?.message ?? 'No fue posible obtener el código';
+        Notiflix.Report.failure('Error', message, 'Entendido');
+        Notiflix.Loading.remove();
+        this.fetchingCodigo[patient._id!] = false;
+        this.cdr.markForCheck();
+      },
     });
   }
 

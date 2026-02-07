@@ -85,8 +85,11 @@ const postMedicalRecordPerMonthBulk = async ({ body }: Request, res: Response) =
 
   // Default to current month/year when they are not provided
   const month = Number.isFinite(providedMonth) && providedMonth > 0 ? providedMonth : now.getMonth() + 1;
+  console.log("🚀 ~ postMedicalRecordPerMonthBulk ~ month:", month)
   const year = Number.isFinite(providedYear) && providedYear > 0 ? providedYear : now.getFullYear();
+  console.log("🚀 ~ postMedicalRecordPerMonthBulk ~ year:", year)
 
+  
   try {
     const bulkResult = await postMedicalRecordsPerMonthForAllPatients(month, year);
     res.status(200).json({

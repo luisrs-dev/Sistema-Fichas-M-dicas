@@ -17,7 +17,8 @@ import {
   demandByPatient,
   update,
   dataPatientByRut,
-  updateActiveStatus
+  updateActiveStatus,
+  syncCodigoSistrat
 } from "../services/patient.service";
 
 const getPatientsById = async ({ params }: Request, res: Response) => {
@@ -214,7 +215,7 @@ const getDataByRut = async (req: Request, res: Response) => {
 const postAdmissionFormSistrat = async ({ body }: Request, res: Response) => {
   const { patientId } = body;
   if (!patientId) {
-    res.status(500).json({ success: true, message: "Usuario no existe para registrar ficha de ingreso en SISTRAT" });
+    return res.status(400).json({ success: false, message: "Usuario no existe para registrar ficha de ingreso en SISTRAT" });
   }
   try {
     const responseAdmissionForm = await saveAdmissionFormToSistrat(patientId);
@@ -224,7 +225,16 @@ const postAdmissionFormSistrat = async ({ body }: Request, res: Response) => {
       res.status(400).json({ success: false, message: "No fue posible el registro en SISTRAT" });
     }
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    // Extraer mensaje de error más limpio
+    let errorMessage = error.message || "Error desconocido al registrar en SISTRAT";
+    
+    // Si el mensaje contiene el wrapper del service, extraer el mensaje original
+    const match = errorMessage.match(/Error: (.+)$/);
+    if (match) {
+      errorMessage = match[1];
+    }
+    
+    res.status(500).json({ success: false, message: errorMessage });
   }
 };
 
@@ -268,6 +278,22 @@ const formCie10 = async (req: Request, res: Response) => {
   }
 }
 
+const fetchCodigoSistrat = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const patient = await syncCodigoSistrat(id);
+
+    res.status(200).json({
+      success: true,
+      message: "Código SISTRAT sincronizado correctamente",
+      patient,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "No se pudo sincronizar el código";
+    res.status(400).json({ success: false, message });
+  }
+};
+
 export {
   postPatient,
   updatePatient,
@@ -285,5 +311,6 @@ export {
   formCie10,
   getDemand,
   getDataByRut,
-  updatePatientActiveStatus
+  updatePatientActiveStatus,
+  fetchCodigoSistrat
 };
