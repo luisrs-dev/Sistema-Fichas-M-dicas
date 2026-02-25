@@ -1,5 +1,5 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatExpansionModule } from '@angular/material/expansion';
@@ -18,18 +18,13 @@ import { MatSelectModule } from '@angular/material/select';
 import { ClinicalInfoDialogComponent } from './clinical-info-dialog.component';
 import NewMedicalRecord from '../../medicalRecord/new/new.component';
 import { NonEmptyPipe } from '../../../../shared/pipes/non-empty.pipe';
+import { MedicalRecordGrouped } from '../../medicalRecord/interfaces/medicalRecord-grouped.interface';
 
 interface State {
   patient: Patient | null;
   medicalRecords: MedicalRecord[];
   filteredMedicalRecords: MedicalRecord[];
   loading: boolean;
-}
-
-export interface MedicalRecordGrouped {
-  service: string;
-  days: number[];
-  total: number;
 }
 
 export interface MedicalRecordProfessionalRow {
@@ -60,12 +55,12 @@ export interface MedicalRecordProfessionalRow {
   styleUrl: './detail.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export default class DetailComponent {
-  private dialog = inject(MatDialog);
-  private patientService = inject(PatientService);
-  private medicalRecordService = inject(MedicalRecordService);
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
+export default class DetailComponent implements OnInit {
+  private readonly dialog = inject(MatDialog);
+  private readonly patientService = inject(PatientService);
+  private readonly medicalRecordService = inject(MedicalRecordService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   private readonly currentYear = new Date().getFullYear();
   private readonly firstAvailableYear = 2023;
@@ -93,8 +88,6 @@ export default class DetailComponent {
   public latestMedicalRecordWithScheme: MedicalRecord | null;
   readonly panelOpenState = signal(false);
 
-
-
   screenshotImage = computed( () => this.screenshotPath() )
 
 
@@ -104,7 +97,7 @@ export default class DetailComponent {
   medicalRecordsGrouped = signal<MedicalRecordGrouped[]>([]);
   daysInMonth = Array.from({ length: 31 }); // días 1-31
   displayedColumns = ['service', ...this.daysInMonth.map((_, i) => i.toString()), 'total'];
-  #state = signal<State>({
+  readonly #state = signal<State>({
     loading: true,
     patient: null,
     filteredMedicalRecords: [],
@@ -130,22 +123,6 @@ export default class DetailComponent {
       }
     });
   }
-
-
-      //   this.patientService.getPatientById(id!).subscribe((response) => {
-      //   console.log('response', response);
-      //   this.patient = response.patient;
-
-      //   this.latestMedicalRecordWithScheme = this.medicalRecordService.getLastPharmacologicalScheme(response.medicalRecords);
-      //   console.log('latestMedicalRecordWithScheme', this.latestMedicalRecordWithScheme);
-
-      //   this.medicalRecordForm.get('entryType')?.valueChanges.subscribe((value) => {
-      //     this.hideServiceSelect = value === 'Informacion';
-      //     if (this.hideServiceSelect) {
-      //       this.medicalRecordForm.get('service')?.reset(); // Resetea el campo service si se oculta
-      //     }
-      //   });
-      // });
 
   
 
@@ -201,7 +178,7 @@ export default class DetailComponent {
   }
 
     getLastPharmacologicalScheme(medicalRecords: MedicalRecord[]): MedicalRecord | null{
-    const medicalRecordSorted = medicalRecords.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const medicalRecordSorted = [...medicalRecords].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     const latestMedicalRecordWithScheme = medicalRecordSorted.find((record) => record.pharmacologicalScheme);
     return latestMedicalRecordWithScheme || null;
   }
@@ -212,21 +189,7 @@ export default class DetailComponent {
       'Se eliminará la ficha clínica.',
       'Confirmar',
       'Cancelar',
-      () => {
-        // Success
-        this.medicalRecordService.deleteMedicalRecord(id).subscribe({
-          next: () => {
-            this.#state.update((state) => ({
-              ...state,
-              medicalRecords: state.medicalRecords.filter((record) => record._id !== id),
-            }));
-            Notiflix.Notify.success('Ficha Clínica Eliminada');
-          },
-          error: (err) => {
-            console.error('Error al eliminar la ficha médica:', err);
-          },
-        });
-      },
+      () => this.confirmDeleteMedicalRecord(id),
       () => {
         // Cancel
         console.log('Cancelado registro en SISTRAT');
@@ -234,10 +197,27 @@ export default class DetailComponent {
     );
   }
 
+  private confirmDeleteMedicalRecord(id: string) {
+    this.medicalRecordService.deleteMedicalRecord(id).subscribe({
+      next: () => this.handleMedicalRecordDeleted(id),
+      error: (err) => {
+        console.error('Error al eliminar la ficha médica:', err);
+      },
+    });
+  }
+
+  private handleMedicalRecordDeleted(id: string) {
+    this.#state.update((state) => ({
+      ...state,
+      medicalRecords: state.medicalRecords.filter((record) => record._id !== id),
+    }));
+    Notiflix.Notify.success('Ficha Clínica Eliminada');
+  }
+
   generatePdf() {
     if (!this.patientId()) return;
     this.patientService.getPdfByPatientId(this.patientId()!).subscribe((blob) => {
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `historial-${this.patientId()!}.pdf`;
@@ -272,19 +252,19 @@ export default class DetailComponent {
   }
 
   onMonthRegisters() {
-    if (!this.showTable()) {
-      this.buildDataMonth();
-    } else {
+    if (this.showTable()) {
       this.showTable.set(false);
+    } else {
+      this.buildDataMonth();
     }
   }
 
   onProfessionalRegisters() {
-    if (!this.showProfessionalTable()) {
+    if (this.showProfessionalTable()) {
+      this.showProfessionalTable.set(false);
+    } else {
       this.showTable.set(false);
       this.buildProfessionalDataMonth();
-    } else {
-      this.showProfessionalTable.set(false);
     }
   }
 
@@ -310,7 +290,7 @@ export default class DetailComponent {
 
       // Si no existe la fila para este servicio, creamos array con 31 posiciones
       if (!grouped[service]) {
-        grouped[service] = Array(31).fill(0);
+        grouped[service] = new Array(31).fill(0);
       }
 
       // Sumamos 1 a la posición correspondiente al día (day-1 porque array inicia en 0)
@@ -353,7 +333,7 @@ export default class DetailComponent {
     });
 
     Object.entries(recordsByService).forEach(([serviceName, serviceRecords]) => {
-      const serviceDays = Array(31).fill(0);
+      const serviceDays = new Array(31).fill(0);
       serviceRecords.forEach((record) => {
         const day = new Date(record.date).getDate();
         serviceDays[day - 1] += 1;
@@ -378,7 +358,7 @@ export default class DetailComponent {
       });
 
       Object.entries(recordsByProfessional).forEach(([professionalName, professionalRecords]) => {
-        const professionalDays = Array(31).fill(0);
+        const professionalDays = new Array(31).fill(0);
         professionalRecords.forEach((record) => {
           const day = new Date(record.date).getDate();
           professionalDays[day - 1] += 1;
@@ -413,14 +393,9 @@ export default class DetailComponent {
         if(patientId === undefined) return;
         this.medicalRecordService.monthRecords(patientId, this.selectedMonth(), this.selectedYear(), this.medicalRecordsGrouped()).subscribe({
           next: () => {
-            //this.#state.update((state) => ({
-            //  ...state,
-            //  medicalRecords: state.medicalRecords.filter((record) => record._id !== id),
-            //}));
             Notiflix.Notify.success('Registrado en SISTRAT');
             this.registeredRecordsPerMonth.set(true);
-            this.screenshotPath.set(`http://ficlin.cl/uploads/screenshots/septiembre2025/${this.patient()?.name.replace(/\s+/g, '_').toLowerCase()}_mes_septiembre.png`);
-            //this.imagePath = `http://localhost:3002${response.user.signature}`;
+            this.screenshotPath.set(`http://ficlin.cl/uploads/screenshots/septiembre2025/${this.patient()?.name.replaceAll(/\s+/g, '_').toLowerCase()}_mes_septiembre.png`);
 
           },
           error: (err: any) => {

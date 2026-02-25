@@ -1,0 +1,43 @@
+<div class="config-container">
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Parámetros</p>
+      <h1>Configuración de ambiente</h1>
+      <p class="subtitle">
+        Define valores globales que afectan los procesos automáticos y scrappers.
+      </p>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="state">Cargando configuraciones...</div>
+  } @else {
+    <section class="config-card">
+      <div class="card-content">
+        <div>
+          <span class="config-tag">Scrapper</span>
+          <h2>{{ directRecordLabel }}</h2>
+          <p>
+            Controla si las atenciones obtenidas por scrapping se registran directamente en SISTRAT
+            o solo ejecutan una prueba de registro.
+          </p>
+        </div>
+        <mat-slide-toggle
+          color="primary"
+          [checked]="directRecordValue()"
+          (change)="onToggleDirectRecord($event.checked)"
+          [disabled]="saving()"
+        >
+          {{ directRecordValue() ? 'Activo' : 'Inactivo' }}
+        </mat-slide-toggle>
+      </div>
+
+      <div class="card-footer">
+        <span class="hint">Al desactivar, ningún registro automático impactará el SISTRAT.</span>
+        <button mat-flat-button color="primary" (click)="onSaveDirectRecord()" [disabled]="saving()">
+          {{ saving() ? 'Guardando...' : 'Guardar' }}
+        </button>
+      </div>
+    </section>
+  }
+</div>

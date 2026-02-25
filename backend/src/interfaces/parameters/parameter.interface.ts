@@ -19,3 +19,13 @@ export interface ProfesionalRole {
   name: string;
   services: Schema.Types.ObjectId[];
 }
+
+export type EnvironmentConfigType = "boolean" | "string" | "number";
+
+export interface EnvironmentConfiguration {
+  key: string;
+  label: string;
+  type: EnvironmentConfigType;
+  value: boolean | string | number;
+  description?: string;
+}

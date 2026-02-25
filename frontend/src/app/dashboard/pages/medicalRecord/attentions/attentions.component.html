@@ -1,0 +1,85 @@
+<div class="container">
+  <div class="header">
+    <div>
+      <h2>Atenciones</h2>
+      <p class="subtitle">Registro masivo de fichas mensuales por centro.</p>
+    </div>
+  </div>
+
+  <div class="filters">
+    <mat-form-field appearance="outline">
+      <mat-label>Centro</mat-label>
+      <mat-select required [value]="selectedCenter()" (selectionChange)="onCenterChange($event.value)">
+        <mat-option value="">Selecciona</mat-option>
+        <mat-option *ngFor="let center of sistratCenters" [value]="center.value">{{ center.label }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Mes</mat-label>
+      <mat-select required [value]="selectedMonth()" (selectionChange)="selectedMonth.set($event.value)">
+        <mat-option *ngFor="let month of months" [value]="month.value">{{ month.label }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Año</mat-label>
+      <mat-select required [value]="selectedYear()" (selectionChange)="selectedYear.set($event.value)">
+        <mat-option *ngFor="let year of years" [value]="year">{{ year }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <button
+      mat-flat-button
+      color="primary"
+      class="text-white"
+      [disabled]="bulkLoading()"
+      (click)="onBulkSistratRecord()"
+    >
+      Registrar
+    </button>
+  </div>
+
+  <div class="summary" *ngIf="centerPatients().length > 0">
+    <span>{{ centerPatients().length }} pacientes</span>
+    <span>Seleccionados: {{ selectedCount() }}</span>
+    <button
+      mat-stroked-button
+      color="primary"
+      (click)="toggleSelectAllPatients()"
+      [disabled]="bulkLoading()"
+    >
+      {{ isAllSelected() ? 'Deseleccionar todos' : 'Seleccionar todos' }}
+    </button>
+  </div>
+
+  <div class="patient-list" *ngIf="centerPatients().length > 0">
+    <div *ngFor="let patientItem of centerPatients()" class="patient-item">
+      <mat-checkbox
+        [checked]="selectedPatients()[patientItem._id || '']"
+        (change)="togglePatientSelection(patientItem._id || '', $event.checked)"
+        [disabled]="bulkLoading()"
+      >
+        {{ patientItem.name | uppercase}} {{ patientItem.surname | uppercase }} {{ patientItem.secondSurname | uppercase}}
+      </mat-checkbox>
+
+      <span class="status">
+        @if (registrationStatus()[patientItem._id || ''] === 'success') {
+          <mat-icon color="primary">check_circle</mat-icon>
+        } @else if (registrationStatus()[patientItem._id || ''] === 'error') {
+          <mat-icon color="warn">cancel</mat-icon>
+        } @else if (registrationStatus()[patientItem._id || ''] === 'pending') {
+          <mat-icon color="accent">hourglass_top</mat-icon>
+        }
+      </span>
+    </div>
+  </div>
+
+  <div *ngIf="selectedCenter() && centerPatients().length === 0" class="empty">
+    No hay pacientes para el centro seleccionado.
+  </div>
+
+  <div *ngIf="!selectedCenter()" class="empty">
+    Selecciona un centro para cargar pacientes.
+  </div>
+</div>

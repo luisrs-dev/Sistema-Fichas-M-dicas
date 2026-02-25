@@ -50,6 +50,13 @@ export const routes: Routes = [
           import('./dashboard/pages/patients/listPatients/listPatients.component'),
       },
       {
+        path: 'registro-masivo',
+        title: 'Registro Masivo',
+        data: { icon: 'group', child: false },
+        loadComponent: () =>
+          import('./dashboard/pages/medicalRecord/attentions/attentions.component'),
+      },
+      {
         path: 'patients/nuevo',
         title: 'Nuevo Paciente',
         data: { icon: 'group', child: true },
@@ -69,13 +76,6 @@ export const routes: Routes = [
         data: { icon: 'group', child: true },
         loadComponent: () =>
           import('./dashboard/pages/patients/newPatient/newPatient.component'),
-      },
-      {
-        path: 'fichas-mensuales',
-        title: 'Fichas mensuales',
-        data: { icon: 'description', child: false },
-        loadComponent: () =>
-          import('./dashboard/pages/medicalRecord/monthly-logs/monthly-logs.component'),
       },
       {
         path: 'patient/:id/ficha-clinica/nueva',
@@ -133,6 +133,13 @@ export const routes: Routes = [
         data: { icon: 'manage_accounts', parameter: true},
         loadComponent: () =>
           import('./dashboard/pages/parameters/permissions/list/permissions.component'),
+      },
+       {
+        path: 'configuracion',
+        title: 'Configuración',
+        data: { icon: 'manage_accounts', parameter: true},
+        loadComponent: () =>
+          import('./dashboard/pages/parameters/configuration/configuration.component'),
       },
       {
         path: 'programas',

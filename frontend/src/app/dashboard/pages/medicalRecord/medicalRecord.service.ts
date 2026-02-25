@@ -2,9 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../../environments/environment';
 import { Observable, catchError, retry, throwError } from 'rxjs';
-import { Service } from '../parameters/services/profesionalService.service';
 import { MedicalRecord } from '../../interfaces/medicalRecord.interface';
-import { MedicalRecordGrouped } from '../patients/detail/detail.component';
+import { MedicalRecordGrouped } from './interfaces/medicalRecord-grouped.interface';
 
 @Injectable({
   providedIn: 'root',
@@ -12,7 +11,7 @@ import { MedicalRecordGrouped } from '../patients/detail/detail.component';
 export class MedicalRecordService {
   constructor() {}
 
-  private http = inject(HttpClient);
+  private readonly http = inject(HttpClient);
   backend: string = environment.baseUrl;
 
   getMedialRecords(): Observable<MedicalRecord[]> {
@@ -34,7 +33,7 @@ export class MedicalRecordService {
   }
 
   getLastPharmacologicalScheme(medicalRecords: MedicalRecord[]): MedicalRecord | null{
-    const medicalRecordSorted = medicalRecords.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const medicalRecordSorted = [...medicalRecords].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     const latestMedicalRecordWithScheme = medicalRecordSorted.find((record) => record.pharmacologicalScheme);
     return latestMedicalRecordWithScheme || null;
   }

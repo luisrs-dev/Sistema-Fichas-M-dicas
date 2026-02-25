@@ -9,5 +9,17 @@ export interface Parameter{
     Program = "program",
     ProfesionalRole = "profesional-role",
     Services = "service",
+    Environment = "environment",
 
+  }
+
+  export type EnvironmentConfigType = 'boolean' | 'string' | 'number';
+
+  export interface EnvironmentConfig {
+    _id?: string;
+    key: string;
+    label: string;
+    type: EnvironmentConfigType;
+    value: boolean | string | number;
+    description?: string;
   }

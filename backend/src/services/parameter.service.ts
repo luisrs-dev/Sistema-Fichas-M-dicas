@@ -1,6 +1,7 @@
-import { Permission, Program } from "../interfaces/parameters/parameter.interface";
+import { EnvironmentConfiguration, Permission, Program } from "../interfaces/parameters/parameter.interface";
 import PermissionModel from "../models/parameters/permission.model";
 import ProgramModel from "../models/parameters/program.model";
+import EnvironmentConfigModel from "../models/parameters/environmentConfig.model";
 
 const inerPermission = async (permission: Permission) => {
   const responseInsert = await PermissionModel.create(permission);
@@ -22,12 +23,28 @@ const allProgram = async () => {
   return responseAll;
 };
 
+const upsertEnvironmentConfig = async (config: EnvironmentConfiguration) => {
+  const response = await EnvironmentConfigModel.findOneAndUpdate(
+    { key: config.key },
+    config,
+    { new: true, upsert: true, setDefaultsOnInsert: true }
+  );
+  return response;
+};
+
+const allEnvironmentConfigs = async () => {
+  const responseAll = await EnvironmentConfigModel.find({});
+  return responseAll;
+};
+
 
 
 export {
   allPermissions,
   allProgram,
+  allEnvironmentConfigs,
   inerPermission,
-  inerProgram
+  inerProgram,
+  upsertEnvironmentConfig
 };
 

@@ -5,6 +5,7 @@ import Scrapper from "../scrapper";
 import { AdmissionForm } from "./../../interfaces/admissionForm.interface";
 import ProcessLogger from "../../utils/processLogger";
 import { getGroupedRecordsByPatientAndMonth } from "../medicalRecordGrouping.service";
+import { getEnvironmentConfigValue } from "../environmentConfig.service";
 
 
 interface RowData {
@@ -22,6 +23,7 @@ enum Gender {
 class Sistrat {
   scrapper: Scrapper;
   private gender: string | null = null;
+  private readonly directRecordConfigKey = "sistrat-direct-record";
 
   constructor() {
     this.scrapper = new Scrapper(); // Composición: Usa una instancia de Scrapper
@@ -328,10 +330,21 @@ async dataPatientFromDemand(rut: string) {
       await this.scrapper.setSelectValue(page, "#sel_intervencion_a_b", patient.interventionAB);
       await this.scrapper.waitAndType(page, "#obs", patient.observations);
       //await this.scrapper.setSelectValue(page, "#selcomuna", "150");
-      await this.scrapper.clickButton(page, "#mysubmit");
       // await this.scrapper.waitForSeconds(120);
-      console.log("[Sistrat][crearDemanda] Formulario enviado, refrescando listado para validar creación");
-      await this.logStep(logger, "[Sistrat][crearDemanda] Formulario enviado");
+
+      const directRecordValue = await getEnvironmentConfigValue(this.directRecordConfigKey);
+      console.log(`[Sistrat][crearDemanda] Valor de configuración para registro directo: ${directRecordValue}`);
+
+      if (directRecordValue) {
+        await this.scrapper.clickButton(page, "#mysubmit");
+        console.log("[Sistrat][crearDemanda] Formulario enviado, refrescando listado para validar creación");
+        await this.logStep(logger, "[Sistrat][crearDemanda] Formulario enviado");
+      } else {
+        console.log("[Sistrat][crearDemanda] Registro directo deshabilitado: se omite envío del formulario");
+        await this.logStep(logger, "[Sistrat][crearDemanda] Envío omitido por configuración");
+        this.scrapper.waitForSeconds(50);
+        return true;
+      }
 
       //await this.scrapper.waitForSeconds(90);
       await this.listActiveDemands(page, logger);
@@ -363,10 +376,22 @@ async dataPatientFromDemand(rut: string) {
       console.log("[Sistrat][setCodeAlertSistrat] Esperando tabla de pacientes");
       await page.waitForSelector("#table_pacientes", { visible: true });
 
-      const patientName = `${patient.name.trim()} ${patient.surname.trim()}`.toLowerCase();
+      const patientName = `${patient.name.trim()} ${patient.surname.trim()} ${patient.secondSurname.trim()}`.toLowerCase();
+      const normalizedTarget = this.normalizeName(patientName);
+      await this.logStep(logger, `[Sistrat][setCodeAlertSistrat] Nombre paciente ${patientName}`);
+
       console.log(`[Sistrat][setCodeAlertSistrat] Buscando coincidencia para ${patientName}`);
 
-      const patientOnSistrat: any = await page.evaluate((patientName) => {
+      const patientOnSistrat: any = await page.evaluate((normalizedTargetEval) => {
+        const normalize = (name?: string) => {
+          if (!name) return "";
+          return name
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/\s+/g, "")
+            .toLowerCase();
+        };
+
         const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
 
         if (table) {
@@ -381,8 +406,9 @@ async dataPatientFromDemand(rut: string) {
                 codigoSistrat: objCells.item(2)?.innerText || "", // Captura el texto de la tercera celda (código Sistrat)
                 alertTreatment: objCells.item(7)?.querySelector("img")?.getAttribute("title")?.includes("Este usuario ya está en tratamiento en otro Centro") ? true : false, // Captura el atributo "title" de la imagen en la celda
               };
-              //// Comparamos con el nombre que estamos buscando
-              if (patient.name == patientName) {
+              // Comparamos con el nombre que estamos buscando
+              const matchesName = normalize(patient.name) === normalizedTargetEval;
+              if (matchesName) {
                 return patient;
               }
             }
@@ -390,16 +416,79 @@ async dataPatientFromDemand(rut: string) {
         } else {
           return "Tabla no encontrada";
         }
-      }, patientName);
+      }, normalizedTarget);
 
       console.log({ patientOnSistrat });
       await this.logStep(logger, `[Sistrat][setCodeAlertSistrat] Resultado búsqueda: ${patientOnSistrat ? "encontrado" : "no encontrado"}`);
 
       if (!patientOnSistrat) {
         console.log(`Paciente ${patientName} no registrado en SISTRAT. `);
-        this.scrapper.closeBrowser();
-        await this.logStep(logger, `[Sistrat][setCodeAlertSistrat] Paciente no encontrado`);
-        return null;
+        await this.logStep(logger, `[Sistrat][setCodeAlertSistrat] No encontrado en demandas, buscando en pacientes activos`);
+
+        await this.openActiveUsersList(page, logger);
+        await this.scrapper.waitForSeconds(2);
+        await page.waitForSelector("#table_pacientes", { visible: true });
+
+        const patientOnActiveUsers: any = await page.evaluate((normalizedTargetEval) => {
+          const normalize = (name?: string) => {
+            if (!name) return "";
+            return name
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+              .replace(/\s+/g, "")
+              .toLowerCase();
+          };
+
+          const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
+
+          if (table) {
+            // Iteramos sobre las filas de la tabla, comenzando desde la segunda fila (i = 1)
+            for (let i = 1; i < table.rows.length; i++) {
+              const objCells = table.rows.item(i)?.cells;
+
+              if (objCells) {
+                const patient = {
+                  id: objCells.item(0)?.innerText || "", // Captura el texto de la primera celda (ID)
+                  name: objCells.item(1)?.innerText?.toLowerCase() || "", // Captura el texto de la segunda celda (nombre)
+                  codigoSistrat: objCells.item(2)?.innerText || "", // Captura el texto de la tercera celda (código Sistrat)
+                  alertTreatment: objCells.item(7)?.querySelector("img")?.getAttribute("title")?.includes("Este usuario ya está en tratamiento en otro Centro") ? true : false, // Captura el atributo "title" de la imagen en la celda
+                };
+                // Comparamos con el nombre que estamos buscando
+                const matchesName = normalize(patient.name) === normalizedTargetEval;
+                if (matchesName) {
+                  return patient;
+                }
+              }
+            }
+          } else {
+            return "Tabla no encontrada";
+          }
+        }, normalizedTarget);
+
+        console.log({ patientOnActiveUsers });
+        await this.logStep(logger, `[Sistrat][setCodeAlertSistrat] Resultado búsqueda en pacientes activos: ${patientOnActiveUsers ? "encontrado" : "no encontrado"}`);
+
+        if (!patientOnActiveUsers) {
+          console.log(`Paciente ${patientName} no registrado en SISTRAT (demandas ni pacientes activos).`);
+          await this.logStep(logger, `[Sistrat][setCodeAlertSistrat] Paciente no encontrado en ningún listado`);
+          return null;
+        }
+
+        if (patientOnActiveUsers?.codigoSistrat) {
+          const patientEntity = await PatientModel.findOne({ _id: patient._id });
+          if (patientEntity) {
+            patientEntity.codigoSistrat = patientOnActiveUsers.codigoSistrat;
+            await patientEntity.save();
+          }
+        }
+
+        if (patientOnActiveUsers?.alertTreatment) {
+          const patientEntity = await PatientModel.findOne({ _id: patient._id });
+          if (patientEntity) {
+            patientEntity.alertTreatment = patientOnActiveUsers.alertTreatment;
+            await patientEntity.save();
+          }
+        }
       } else {
         console.log("[Sistrat][setCodeAlertSistrat] Paciente encontrado, sincronizando campos locales");
         await this.logStep(logger, "[Sistrat][setCodeAlertSistrat] Paciente encontrado, actualizando datos");
@@ -530,6 +619,15 @@ async dataPatientFromDemand(rut: string) {
           return;
         }
 
+        // Limpiar todos los inputs de la tabla (todos los servicios y todos los días)
+        const allInputs = table.querySelectorAll("input");
+        allInputs.forEach((inputEl) => {
+          const input = inputEl as HTMLInputElement;
+          input.value = "";
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+          input.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+
         // Iterar sobre los registros que mandas desde Node
         medicalRecordsGrouped.forEach((recordFiclin: any) => {
           // Buscar la fila cuyo servicio coincida con el nombre (columna 0)
@@ -581,11 +679,18 @@ async dataPatientFromDemand(rut: string) {
       // console.log('screenshot tomado y guardado en:', filePath);
 
       // 3. Esperar al botón y hacer click
-
-      // await this.scrapper.waitForSeconds(50);
-      await this.scrapper.clickButton(page, "#mysubmit", 30000);
-
-      return "REGISTRO EXITOSO ATENCIONES MENSUALES";
+      
+      const directRecordValue = await getEnvironmentConfigValue(this.directRecordConfigKey);
+      console.log(`[Sistrat][recordMonthlySheet] Valor de configuración para registro directo: ${directRecordValue}`);
+      if(directRecordValue) {
+        await this.scrapper.clickButton(page, "#mysubmit", 30000);
+        console.log("[Sistrat][recordMonthlySheet] Formulario enviado");
+      } else {
+        console.log("[Sistrat][recordMonthlySheet] Registro directo deshabilitado: se omite envío del formulario");
+        this.scrapper.waitForSeconds(60);
+        return "REGISTRO PREPARADO, ENVÍO OMITIDO POR CONFIGURACIÓN";
+      }
+      return true;
     } catch (error) {
       console.log("errror", error);
       throw new Error(`Error en registrar atenciones mensuales: ${error}`);
