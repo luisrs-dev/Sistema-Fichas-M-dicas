@@ -681,13 +681,12 @@ async dataPatientFromDemand(rut: string) {
       // 3. Esperar al botón y hacer click
       
       const directRecordValue = await getEnvironmentConfigValue(this.directRecordConfigKey);
-      console.log(`[Sistrat][recordMonthlySheet] Valor de configuración para registro directo: ${directRecordValue}`);
+      console.log(`[Sistrat][recordMonthlySheet] Valor de configuración para registro directo: ${JSON.stringify(directRecordValue)}`);
       if(directRecordValue) {
         await this.scrapper.clickButton(page, "#mysubmit", 30000);
         console.log("[Sistrat][recordMonthlySheet] Formulario enviado");
       } else {
         console.log("[Sistrat][recordMonthlySheet] Registro directo deshabilitado: se omite envío del formulario");
-        this.scrapper.waitForSeconds(60);
         return "REGISTRO PREPARADO, ENVÍO OMITIDO POR CONFIGURACIÓN";
       }
       return true;
@@ -695,6 +694,9 @@ async dataPatientFromDemand(rut: string) {
       console.log("errror", error);
       throw new Error(`Error en registrar atenciones mensuales: ${error}`);
     } finally {
+      if (page) {
+        await this.scrapper.closeBrowser();
+      }
       console.log("[Sistrat][registrarMedicalRecordsByMonth] Cerrando grupo de logs");
       console.groupEnd();
     }

@@ -45,7 +45,7 @@ export class MedicalRecordService {
   monthRecords(id: string, month: number, year: number, medicalRecordsGrouped: MedicalRecordGrouped[]): Observable<any> {
     return this.http.post<any>(`${this.backend}/medicalRecord/monthRecords/${id}`, { medicalRecordsGrouped, month, year })
     .pipe(
-      retry(3),
+      // retry(3),
       catchError((err) => throwError(() => err.error.message)));
   }
 
