@@ -243,15 +243,25 @@ class Scrapper {
     return userDataDir;
   }
 
+
+
   private async getSystemChromePath(): Promise<string> {
+  const possiblePaths = [
+    path.join(process.env.PROGRAMFILES || "", "Google/Chrome/Application/chrome.exe"),
+    path.join(process.env["PROGRAMFILES(X86)"] || "", "Google/Chrome/Application/chrome.exe"),
+    path.join(process.env.LOCALAPPDATA || "", "Google/Chrome/Application/chrome.exe"),
+  ];
+
+  for (const chromePath of possiblePaths) {
     try {
-      await fs.access(SYSTEM_CHROME_PATH);
-      console.log(`[LaunchBrowser] Usando Chrome del sistema: ${SYSTEM_CHROME_PATH}`);
-      return SYSTEM_CHROME_PATH;
-    } catch {
-      throw new Error(`[LaunchBrowser] Chrome no encontrado en ${SYSTEM_CHROME_PATH}`);
-    }
+      await fs.access(chromePath);
+      console.log(`[LaunchBrowser] Usando Chrome del sistema: ${chromePath}`);
+      return chromePath;
+    } catch {}
   }
+
+  throw new Error("[LaunchBrowser] Chrome no encontrado en el sistema");
+}
 
 }
 

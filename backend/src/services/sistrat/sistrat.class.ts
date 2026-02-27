@@ -342,7 +342,7 @@ async dataPatientFromDemand(rut: string) {
       } else {
         console.log("[Sistrat][crearDemanda] Registro directo deshabilitado: se omite envío del formulario");
         await this.logStep(logger, "[Sistrat][crearDemanda] Envío omitido por configuración");
-        this.scrapper.waitForSeconds(50);
+        await this.scrapper.waitForSeconds(50);
         return true;
       }
 
@@ -1197,8 +1197,15 @@ async dataPatientFromDemand(rut: string) {
       await this.logStep(logger, "[Sistrat][completeAdmissionForm] Click en grabar usuario");
       await this.logStep(logger, "[Sistrat][completeAdmissionForm] Esperando antes de enviar formulario");
 
+      const directRecordValue = await getEnvironmentConfigValue(this.directRecordConfigKey);
+      console.log('directRecordValue', directRecordValue)
       await this.scrapper.waitForSeconds(120);
-      // await this.scrapper.clickButton(page, "#mysubmit");
+      if(directRecordValue){
+        await this.scrapper.clickButton(page, "#mysubmit");
+      }else{
+        console.log('Simulación: no registra ficha ingreso.', directRecordValue);
+        await this.scrapper.waitForSeconds(120);
+      }
       await this.logStep(logger, "[Sistrat][Ficha de ingreso registrada");
 
       //  await this.scrapper.waitForSeconds(300);
