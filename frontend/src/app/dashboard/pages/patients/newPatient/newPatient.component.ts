@@ -45,6 +45,7 @@ export default class NewPatientComponent {
     //admissionDate: ['', [Validators.required]],
     program: ['', [Validators.required]],
     sistratCenter: ['', [Validators.required]],
+    codigoSistrat: [''],
     rut: ['', [Validators.required, Validators.minLength(3)]],
     name: ['', [Validators.required, Validators.minLength(3)]],
     surname: ['', [Validators.required, Validators.minLength(3)]],
@@ -52,7 +53,7 @@ export default class NewPatientComponent {
     birthDate: ['', [Validators.required]],
     sex: ['', [Validators.required]],
     region: ['7', [Validators.required]],
-    comuna: ['', [Validators.required]],
+    comuna: [''],
     phone: ['', [Validators.required, Validators.minLength(6)]],
     phoneFamily: ['', [Validators.required, Validators.minLength(3)]],
     centerOrigin: ['', [Validators.required, Validators.minLength(3)]],
@@ -117,6 +118,7 @@ export default class NewPatientComponent {
         this.userForm.patchValue({
           //admissionDate: new Date(this.patient.admissionDate),
           program: this.patient.program._id,
+          codigoSistrat: this.patient.codigoSistrat,
           sistratCenter: this.patient.sistratCenter,
           rut: this.patient.rut,
           name: this.patient.name,
@@ -188,6 +190,7 @@ export default class NewPatientComponent {
   async onUpdate() {
     Notiflix.Loading.circle('Actualizando Demanda en Ficlin...');
     if (this.userForm.invalid) {
+      alert('Formulario inválido. Por favor, revisa los campos requeridos.');
       const controls = this.userForm.controls;
       this.userForm.markAllAsTouched();
       Notiflix.Loading.remove();
