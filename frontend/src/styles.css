@@ -24,3 +24,8 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
   align-items: center;
   justify-content: space-between;
 }
+
+.cdk-overlay-pane.medical-record-dialog .mat-mdc-dialog-surface,
+.cdk-overlay-pane.medical-record-dialog .mdc-dialog__surface {
+  overflow-y: hidden;
+}

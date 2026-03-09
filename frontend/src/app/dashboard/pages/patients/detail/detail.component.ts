@@ -236,6 +236,7 @@ export default class DetailComponent implements OnInit {
       width: '1080px',
       height: '90vh',
       panelClass: 'medical-record-dialog',
+      disableClose: true,
       data: { patientId },
     });
 
