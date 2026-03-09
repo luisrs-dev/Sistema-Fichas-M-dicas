@@ -519,7 +519,7 @@ async dataPatientFromDemand(rut: string) {
   }
 
   // Registrar Ficha Mensual en SISTRAT
-  async recordMonthlySheet(patient: Patient, month: number = 11, year: number = 2025) {
+  async recordMonthlySheet(patient: Patient, month: number, year: number) {
 
     // this.gender = patient.sex;
     let page: Page | null = null;
@@ -606,6 +606,7 @@ async dataPatientFromDemand(rut: string) {
       }
       await page.waitForSelector(".tabla_mensual", { timeout: 5000 });
 
+      console.log(`[recordMonthtlySheet][Mes Año a registrar] ${month} / ${year}`);
       const medicalRecordsGrouped = await getGroupedRecordsByPatientAndMonth(String(patient._id), month, year);
 
       await page.evaluate((medicalRecordsGrouped) => {

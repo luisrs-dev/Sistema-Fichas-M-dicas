@@ -10,33 +10,31 @@ import path from "path";
 
 const SYSTEM_CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
-
 class Scrapper {
   protected browser: Browser | null = null;
 
   async getPage(): Promise<Page> {
     const browser: Browser = await this.launchBrowser();
-    console.log('[Scrapper] Browser obtenido');
+    console.log("[Scrapper] Browser obtenido");
 
     const page: Page = await browser.newPage();
 
-    console.log('[Scrapper] Página obtenida');
-    
+    console.log("[Scrapper] Página obtenida");
+
     // Propagar los console.log del navegador hacia la terminal de Node
-    page.on('console', (msg) => {
+    page.on("console", (msg) => {
       const type = msg.type();
       const text = msg.text();
       console.log(`[Browser::${type}] ${text}`);
     });
-    page.on('pageerror', (error) => {
-      console.error('[Browser::pageerror]', error);
+    page.on("pageerror", (error) => {
+      console.error("[Browser::pageerror]", error);
     });
 
-
     await page.authenticate({
-    username: "4y0YVHAHmRvZMtOx",
-    password: "ZuVPtBuURBDDI6C9_country-cl_city-talca",
-  });
+      username: "4y0YVHAHmRvZMtOx",
+      password: "ZuVPtBuURBDDI6C9_country-cl_city-talca",
+    });
     // await page.setDefaultNavigationTimeout(300000); // 5 minutos
 
     // Ajustar el viewport para usar la pantalla completa del entorno disponible
@@ -243,26 +241,34 @@ class Scrapper {
     return userDataDir;
   }
 
-
-
   private async getSystemChromePath(): Promise<string> {
-  const possiblePaths = [
-    path.join(process.env.PROGRAMFILES || "", "Google/Chrome/Application/chrome.exe"),
-    path.join(process.env["PROGRAMFILES(X86)"] || "", "Google/Chrome/Application/chrome.exe"),
-    path.join(process.env.LOCALAPPDATA || "", "Google/Chrome/Application/chrome.exe"),
-  ];
-
-  for (const chromePath of possiblePaths) {
     try {
-      await fs.access(chromePath);
-      console.log(`[LaunchBrowser] Usando Chrome del sistema: ${chromePath}`);
-      return chromePath;
-    } catch {}
+      await fs.access(SYSTEM_CHROME_PATH);
+      console.log(`[LaunchBrowser] Usando Chrome del sistema: ${SYSTEM_CHROME_PATH}`);
+      return SYSTEM_CHROME_PATH;
+    } catch {
+      throw new Error(`[LaunchBrowser] Chrome no encontrado en ${SYSTEM_CHROME_PATH}`);
+    }
   }
 
-  throw new Error("[LaunchBrowser] Chrome no encontrado en el sistema");
-}
+  // Para windows
+  //   private async getSystemChromePath(): Promise<string> {
+  //   const possiblePaths = [
+  //     path.join(process.env.PROGRAMFILES || "", "Google/Chrome/Application/chrome.exe"),
+  //     path.join(process.env["PROGRAMFILES(X86)"] || "", "Google/Chrome/Application/chrome.exe"),
+  //     path.join(process.env.LOCALAPPDATA || "", "Google/Chrome/Application/chrome.exe"),
+  //   ];
 
+  //   for (const chromePath of possiblePaths) {
+  //     try {
+  //       await fs.access(chromePath);
+  //       console.log(`[LaunchBrowser] Usando Chrome del sistema: ${chromePath}`);
+  //       return chromePath;
+  //     } catch {}
+  //   }
+
+  //   throw new Error("[LaunchBrowser] Chrome no encontrado en el sistema");
+  // }
 }
 
 export default Scrapper;

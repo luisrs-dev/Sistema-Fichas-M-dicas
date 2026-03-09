@@ -1,1 +1,112 @@
-<iframe width="100%" height="100%" [src]="urlSafe"></iframe>
+<div class="system-status-container">
+	<div class="page-header">
+		<div>
+			<p class="eyebrow">Administración</p>
+			<h1>Estado del sistema</h1>
+			<p class="subtitle">
+				Abre o cierra el sistema y deja persistido el estado actual en la base de datos.
+			</p>
+		</div>
+	</div>
+
+	@if (loading()) {
+		<div class="state-message">Cargando estado del sistema...</div>
+	} @else {
+		<section class="status-card">
+			<div class="status-card__header">
+				<div>
+					<span class="status-label">Estado actual</span>
+					<h2>{{ systemStatus()?.isOpen ? 'Sistema abierto' : 'Sistema cerrado' }}</h2>
+				</div>
+
+				<span class="status-badge" [class.status-badge--closed]="!systemStatus()?.isOpen">
+					{{ systemStatus()?.isOpen ? 'Abierto' : 'Cerrado' }}
+				</span>
+			</div>
+
+			<mat-divider></mat-divider>
+
+			<div class="status-card__content">
+				<mat-radio-group
+					class="state-selector"
+					[value]="selectedState()"
+					(change)="onStateChange($event.value)"
+					[disabled]="saving()"
+				>
+					<mat-radio-button [value]="true">Abrir sistema</mat-radio-button>
+					<mat-radio-button [value]="false">Cerrar sistema</mat-radio-button>
+				</mat-radio-group>
+
+				<mat-form-field appearance="outline" class="full-width">
+					<mat-label>Observación</mat-label>
+					<textarea
+						matInput
+						rows="4"
+						[ngModel]="note()"
+						(ngModelChange)="onNoteChange($event)"
+						[disabled]="saving()"
+						placeholder="Describe el motivo del cambio de estado"
+					></textarea>
+				</mat-form-field>
+
+				<div class="metadata" *ngIf="systemStatus() as status">
+					<p>
+						<strong>Última actualización:</strong>
+						{{ status.updatedAt ? (status.updatedAt | date:'dd/MM/yyyy HH:mm') : 'Sin registros' }}
+					</p>
+					<p>
+						<strong>Actualizado por:</strong>
+						{{ status.updatedByName || 'Sin registros' }}
+					</p>
+				</div>
+			</div>
+
+			<div class="status-card__footer">
+				<span class="helper-text">
+					Cuando el sistema está cerrado, el cambio queda registrado y disponible para futuras validaciones.
+				</span>
+
+				<button mat-flat-button color="primary" (click)="saveStatus()" [disabled]="saving()">
+					{{ saving() ? 'Guardando...' : 'Guardar estado' }}
+				</button>
+			</div>
+		</section>
+
+		<section class="history-card">
+			<div class="history-card__header">
+				<div>
+					<span class="status-label">Historial</span>
+					<h2>Últimos cambios</h2>
+				</div>
+				<span class="history-count">{{ history().length }} registros</span>
+			</div>
+
+			@if (history().length) {
+				<div class="history-list">
+					@for (item of history(); track item._id || $index) {
+						<div class="history-item">
+							<div class="history-item__top">
+								<span class="history-action" [class.history-action--close]="!item.isOpen">
+									{{ item.isOpen ? 'Apertura' : 'Cierre' }}
+								</span>
+								<span class="history-date">
+									{{ item.createdAt ? (item.createdAt | date:'dd/MM/yyyy HH:mm') : 'Sin fecha' }}
+								</span>
+							</div>
+
+							<p class="history-user">
+								<strong>Usuario:</strong> {{ item.updatedByName || 'Sin registro' }}
+							</p>
+
+							@if (item.note) {
+								<p class="history-note">{{ item.note }}</p>
+							}
+						</div>
+					}
+				</div>
+			} @else {
+				<div class="history-empty">Aún no hay aperturas o cierres registrados.</div>
+			}
+		</section>
+	}
+</div>

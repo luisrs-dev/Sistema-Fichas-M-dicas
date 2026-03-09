@@ -1,0 +1,189 @@
+.system-status-container {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 32px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+  font-weight: 600;
+  color: #5c6bc0;
+}
+
+.subtitle {
+  margin: 8px 0 0;
+  color: #5f6368;
+}
+
+.state-message {
+  padding: 32px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.status-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.history-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.status-card__header,
+.status-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.history-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.status-card__header h2 {
+  margin: 6px 0 0;
+  font-size: 28px;
+}
+
+.status-label {
+  color: #5f6368;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.status-badge {
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.status-badge--closed {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.status-card__content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.state-selector {
+  display: flex;
+  gap: 24px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.metadata {
+  display: grid;
+  gap: 8px;
+  color: #374151;
+}
+
+.metadata p {
+  margin: 0;
+}
+
+.helper-text {
+  color: #5f6368;
+  max-width: 700px;
+}
+
+.history-count {
+  color: #5f6368;
+  font-weight: 600;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-item__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.history-action {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.history-action--close {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.history-date,
+.history-user,
+.history-note,
+.history-empty {
+  margin: 0;
+  color: #374151;
+}
+
+.history-note {
+  color: #5f6368;
+}
+
+@media (max-width: 768px) {
+  .system-status-container {
+    padding: 16px;
+  }
+
+  .status-card__header,
+  .status-card__footer,
+  .history-card__header,
+  .state-selector,
+  .history-item__top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

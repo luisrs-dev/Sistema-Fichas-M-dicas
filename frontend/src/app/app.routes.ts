@@ -52,9 +52,16 @@ export const routes: Routes = [
       {
         path: 'registro-masivo',
         title: 'Registro Masivo',
-        data: { icon: 'group', child: false },
+        data: { icon: 'group', child: false, forAdmin: true  },
         loadComponent: () =>
           import('./dashboard/pages/medicalRecord/attentions/attentions.component'),
+      },
+      {
+        path: 'estado-sistema',
+        title: 'Estado del Sistema',
+        data: { icon: 'group', child: false, forAdmin: true  },
+        loadComponent: () =>
+          import('./dashboard/pages/healthCheck/healthCheck.component'),
       },
       {
         path: 'patients/nuevo',
