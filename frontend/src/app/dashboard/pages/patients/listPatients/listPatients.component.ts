@@ -74,8 +74,7 @@ export default class ListPatientsComponent implements OnInit {
     this.programsIds = this.user.programs.map((program) => program._id);
 
     this.patientService.patients.subscribe((patients) => {
-      this.patients = [];
-      this.patients = patients;
+      this.patients = this.sortPatients(patients ?? []);
       this.dataSource.sort = this.sort;
       this.dataSource.paginator = this.paginator;
       this.dataSource.data = this.patients;
@@ -147,20 +146,44 @@ export default class ListPatientsComponent implements OnInit {
     const previousValue = patient.active !== false;
     this.togglingActive[patient._id] = true;
     patient.active = isActive;
+    this.refreshSortedDataSource();
     this.cdr.markForCheck();
 
     this.patientService.updateActiveStatus(patient._id, isActive).subscribe({
       next: () => {
         this.togglingActive[patient._id!] = false;
+        this.refreshSortedDataSource();
         this.cdr.markForCheck();
       },
       error: () => {
         patient.active = previousValue;
         this.togglingActive[patient._id!] = false;
+        this.refreshSortedDataSource();
         this.cdr.markForCheck();
         Notiflix.Report.failure('Error', 'No se pudo actualizar el estado del paciente', 'Entendido');
       },
     });
+  }
+
+  private sortPatients(patients: Patient[]): Patient[] {
+    return [...patients].sort((firstPatient, secondPatient) => {
+      const firstActiveWeight = firstPatient.active === false ? 1 : 0;
+      const secondActiveWeight = secondPatient.active === false ? 1 : 0;
+
+      if (firstActiveWeight !== secondActiveWeight) {
+        return firstActiveWeight - secondActiveWeight;
+      }
+
+      const firstCreatedAt = firstPatient.createdAt ? new Date(firstPatient.createdAt).getTime() : 0;
+      const secondCreatedAt = secondPatient.createdAt ? new Date(secondPatient.createdAt).getTime() : 0;
+
+      return secondCreatedAt - firstCreatedAt;
+    });
+  }
+
+  private refreshSortedDataSource(): void {
+    this.patients = this.sortPatients(this.dataSource.data);
+    this.dataSource.data = this.patients;
   }
 
 exportData(): void {

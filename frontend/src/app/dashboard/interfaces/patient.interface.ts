@@ -1,5 +1,7 @@
 export interface Patient {
   _id?: string;
+  createdAt?: string;
+  updatedAt?: string;
   admissionDate: string;
   program: {
     _id?: string,
