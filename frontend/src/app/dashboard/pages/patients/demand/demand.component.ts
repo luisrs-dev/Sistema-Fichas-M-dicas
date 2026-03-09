@@ -7,15 +7,15 @@ import { PatientService } from '../patient.service';
 import { Patient } from '../../../interfaces/patient.interface';
 import { ActivatedRoute } from '@angular/router';
 import moment from 'moment';
-import { provideNativeDateAdapter } from '@angular/material/core';
 import { catchError, map, of, switchMap } from 'rxjs';
 import { Demand } from '../../../interfaces/demand.interface';
+import { MONDAY_FIRST_DATE_PROVIDERS } from '../../../../shared/date/monday-first-date-adapter';
 
 @Component({
   selector: 'app-demand',
   standalone: true,
   imports: [CommonModule, MaterialModule, ReactiveFormsModule, FormsModule],
-  providers: [provideNativeDateAdapter()],
+  providers: [...MONDAY_FIRST_DATE_PROVIDERS],
 
   templateUrl: './demand.component.html',
   //changeDetection: ChangeDetectionStrategy.OnPush,

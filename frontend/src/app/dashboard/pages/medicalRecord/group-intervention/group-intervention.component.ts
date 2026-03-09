@@ -2,7 +2,6 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatChipsModule } from '@angular/material/chips';
-import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatExpansionModule } from '@angular/material/expansion';
@@ -22,6 +21,7 @@ import { diagnosticMap } from '../../patients/detail/diagnosticMap.constant';
 import { UserService } from '../../users/user.service';
 import { MedicalRecordService } from '../medicalRecord.service';
 import { GroupInterventionFormValueSnapshot, GroupInterventionSummaryDialogComponent } from './group-intervention-summary-dialog.component';
+import { MONDAY_FIRST_DATE_PROVIDERS } from '../../../../shared/date/monday-first-date-adapter';
 
 
 @Component({
@@ -42,7 +42,7 @@ import { GroupInterventionFormValueSnapshot, GroupInterventionSummaryDialogCompo
     MatDialogModule,
   ],
 
-  providers: [provideNativeDateAdapter(), DatePipe],
+  providers: [...MONDAY_FIRST_DATE_PROVIDERS, DatePipe],
   templateUrl: './group-intervention.component.html',
   styleUrl: './group-intervention.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject, signal, ViewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { provideNativeDateAdapter } from '@angular/material/core';
 import { ActivatedRoute } from '@angular/router';
 import { MaterialModule } from '../../../../angular-material/material.module';
 import { Patient } from '../../../interfaces/patient.interface';
@@ -16,11 +15,12 @@ import { MatDialog } from '@angular/material/dialog';
 import { InvalidFormsDialogComponent } from './components/invalidFormsDialog/invalidFormsDialog.component';
 import Notiflix from 'notiflix';
 import { AdmissionForm } from '../../../interfaces/admissionForm.interface';
+import { MONDAY_FIRST_DATE_PROVIDERS } from '../../../../shared/date/monday-first-date-adapter';
 
 @Component({
   selector: 'app-admision-form',
   standalone: true,
-  providers: [provideNativeDateAdapter()],
+  providers: [...MONDAY_FIRST_DATE_PROVIDERS],
   imports: [
     CommonModule,
     MaterialModule,

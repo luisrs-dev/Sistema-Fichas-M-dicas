@@ -1,8 +1,7 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatChipsModule } from '@angular/material/chips';
-import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatDividerModule } from '@angular/material/divider';
 import {MatCheckboxModule} from '@angular/material/checkbox';
@@ -21,7 +20,9 @@ import { Patient } from '../../../interfaces/patient.interface';
 import { diagnosticMap } from '../../patients/detail/diagnosticMap.constant';
 import { PatientService } from '../../patients/patient.service';
 import { UserService } from '../../users/user.service';
+import { SystemStatusService } from '../../healthCheck/system-status.service';
 import { MedicalRecordService } from '../medicalRecord.service';
+import { MONDAY_FIRST_DATE_PROVIDERS } from '../../../../shared/date/monday-first-date-adapter';
 
 @Component({
   selector: 'app-new',
@@ -42,21 +43,22 @@ import { MedicalRecordService } from '../medicalRecord.service';
     MatCheckboxModule
   ],
 
-  providers: [provideNativeDateAdapter(), DatePipe],
+  providers: [...MONDAY_FIRST_DATE_PROVIDERS, DatePipe],
   templateUrl: './new.component.html',
   styleUrl: './new.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export default class NewMedicalRecord {
-  private fb = inject(FormBuilder);
-  private medicalRecordService = inject(MedicalRecordService);
-  private authService = inject(AuthService);
-  private userService = inject(UserService);
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
-  private patientService = inject(PatientService);
-  private dialogRef = inject(MatDialogRef<NewMedicalRecord>, { optional: true });
-  private dialogData = inject<{ patientId: string | null }>(MAT_DIALOG_DATA, { optional: true });
+export default class NewMedicalRecord implements OnInit {
+  private readonly fb = inject(FormBuilder);
+  private readonly medicalRecordService = inject(MedicalRecordService);
+  private readonly authService = inject(AuthService);
+  private readonly userService = inject(UserService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly patientService = inject(PatientService);
+  private readonly systemStatusService = inject(SystemStatusService);
+  private readonly dialogRef = inject(MatDialogRef<NewMedicalRecord>, { optional: true });
+  private readonly dialogData = inject<{ patientId: string | null }>(MAT_DIALOG_DATA, { optional: true });
 
   public patient: Patient;
   public latestMedicalRecordWithScheme: MedicalRecord | null;
@@ -64,10 +66,12 @@ export default class NewMedicalRecord {
   public services: any[];
   public hideServiceSelect: boolean = false;
   public isSubmitting = false;
+  public isAdmin = false;
   private entryTypeWatcherBound = false;
   private serviceWatcherBound = false;
   public requiresRescueAction = false;
   public readonly isDialogInstance = Boolean(this.dialogRef);
+  readonly latestSystemCloseDate = signal<Date | null>(null);
   // public data: { patient: Patient; latestMedicalRecordWithScheme: MedicalRecord | null };
 
   response$: Observable<{ patient: Patient; medicalRecords: MedicalRecord[] }>;
@@ -95,7 +99,9 @@ export default class NewMedicalRecord {
     }
 
     this.user = this.authService.getUser();
+    this.isAdmin = this.authService.isAdmin();
     this.bindServiceWatcher();
+    this.loadLatestSystemCloseDate();
 
     this.userService
       .getUserById(this.user._id)
@@ -115,6 +121,23 @@ export default class NewMedicalRecord {
       }
     });
   }
+
+  readonly systemCloseDateFilter = (date: Date | null): boolean => {
+    if (!date) {
+      return false;
+    }
+
+    if (this.isAdmin) {
+      return true;
+    }
+
+    const latestCloseDate = this.latestSystemCloseDate();
+    if (!latestCloseDate) {
+      return true;
+    }
+
+    return this.startOfDay(date).getTime() >= latestCloseDate.getTime();
+  };
 
   private initializePatientContext(id: string): void {
     this.patientId.set(id);
@@ -179,6 +202,39 @@ export default class NewMedicalRecord {
     }
 
     rescueControl.updateValueAndValidity();
+  }
+
+  private loadLatestSystemCloseDate(): void {
+    if (this.isAdmin) {
+      this.latestSystemCloseDate.set(null);
+      return;
+    }
+
+    this.systemStatusService.getHistory().subscribe({
+      next: (history) => {
+        const latestClose = history.find((status) => status.isOpen === false);
+
+        if (!latestClose?.createdAt) {
+          this.latestSystemCloseDate.set(null);
+          return;
+        }
+
+        const latestCloseDate = this.startOfDay(new Date(latestClose.createdAt));
+        this.latestSystemCloseDate.set(latestCloseDate);
+
+        const selectedDate = this.medicalRecordForm.get('date')?.value;
+        if (selectedDate && this.startOfDay(new Date(selectedDate)).getTime() < latestCloseDate.getTime()) {
+          this.medicalRecordForm.get('date')?.setValue(latestCloseDate);
+        }
+      },
+      error: (error) => {
+        console.error('No se pudo obtener el último cierre del sistema', error);
+      },
+    });
+  }
+
+  private startOfDay(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
   }
 
   public medicalRecordForm: FormGroup = this.fb.group({

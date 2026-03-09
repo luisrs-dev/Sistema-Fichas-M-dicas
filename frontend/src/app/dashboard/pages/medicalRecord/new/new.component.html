@@ -1,19 +1,29 @@
 <div>
   <div class="section">
     <ng-container *ngIf="response$ | async as data; else loading">
-      <!-- <div *ngIf="patient$ | async as patient; else loading"> -->
       <div class="mt-2 mb-8">
         <div class="clinical-record mb-3">
 
         <div class="container">
           <h2>Nueva Atención</h2>
+          @if (!isAdmin && latestSystemCloseDate(); as closeDate) {
+            <div class="system-close-badge">
+              Calendario bloqueado hasta el cierre del {{ closeDate | date:'dd/MM/yyyy' }}
+            </div>
+          }
+
+          @if (isAdmin) {
+            <div class="system-close-badge system-close-badge--admin">
+              Administrador: calendario sin restricciones
+            </div>
+          }
           <form [formGroup]="medicalRecordForm" autocomplete="off" (ngSubmit)="onSave()">
             <div class="grid">
               <div class="col-3">
+
                 <mat-form-field class="w-full" appearance="outline">
                   <mat-label>Fecha</mat-label>
-                  <input matInput formControlName="date" [matDatepicker]="picker" />
-                  <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
+                  <input matInput formControlName="date" [matDatepicker]="picker" [matDatepickerFilter]="systemCloseDateFilter" />
                   <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
                   <mat-datepicker #picker></mat-datepicker>
                 </mat-form-field>

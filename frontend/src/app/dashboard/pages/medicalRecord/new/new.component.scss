@@ -103,3 +103,21 @@ h3 {
 .value {
   font-size: 1rem;
 }
+
+.system-close-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #fff4e5;
+  color: #9a5b00;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.system-close-badge--admin {
+  background: #e8f5e9;
+  color: #2e7d32;
+}

@@ -3,7 +3,6 @@ import { ChangeDetectorRef, Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MaterialModule } from '../../../../angular-material/material.module';
 import { PatientService } from '../patient.service';
-import { provideNativeDateAdapter } from '@angular/material/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import Notiflix, { Report } from 'notiflix';
 import { Observable } from 'rxjs';
@@ -13,12 +12,13 @@ import { UserService } from '../../users/user.service';
 import { AuthService } from '../../../../auth/auth.service';
 import moment from 'moment';
 import { Patient } from '../../../interfaces/patient.interface';
+import { MONDAY_FIRST_DATE_PROVIDERS } from '../../../../shared/date/monday-first-date-adapter';
 
 @Component({
   selector: 'app-new-patient',
   standalone: true,
   imports: [CommonModule, MaterialModule, FormsModule, ReactiveFormsModule, RouterModule],
-  providers: [provideNativeDateAdapter()],
+  providers: [...MONDAY_FIRST_DATE_PROVIDERS],
   templateUrl: './newPatient.component.html',
   styleUrl: './newPatient.component.css',
 })
