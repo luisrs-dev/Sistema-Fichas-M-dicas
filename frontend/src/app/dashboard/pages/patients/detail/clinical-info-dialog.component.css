@@ -1,0 +1,141 @@
+:host {
+  display: block;
+}
+
+.modern-dialog-content {
+  min-width: 450px;
+  max-width: 600px;
+  padding: 10px 24px 20px !important;
+}
+
+.dialog-header {
+  border-bottom: 2px solid #f3f4f6;
+  padding-bottom: 12px;
+  margin-bottom: 0;
+}
+
+.title-text {
+  color: #1f2937;
+  font-weight: 800;
+  font-size: 1.25rem;
+}
+
+.dialog-section {
+  padding: 16px 0;
+}
+
+.section-tag {
+  background-color: #eff6ff;
+  color: #2563eb;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-block;
+  margin-bottom: 12px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #9ca3af;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+  margin-bottom: 2px;
+}
+
+.value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.highlight {
+  color: #111827;
+  font-size: 15px;
+}
+
+.text-primary {
+  color: #2563eb;
+}
+
+.badge {
+  background-color: #f3f4f6;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.divider {
+  height: 1px;
+  background-color: #f3f4f6;
+  margin: 0;
+}
+
+.diagnostic-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.diag-card {
+  padding: 12px;
+  border-left: 4px solid #e5e7eb;
+  background-color: #f9fafb;
+  border-radius: 0 8px 8px 0;
+}
+
+.medic-diag {
+  border-left-color: #3b82f6;
+}
+
+.system-diag {
+  border-left-color: #10b981;
+}
+
+.muted-date {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.treatment-box {
+  background: linear-gradient(to right, #ffffff, #f9fafb);
+  border: 1px solid #e5e7eb;
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.scheme-text {
+  color: #4b5563;
+  white-space: pre-wrap;
+  font-weight: 500;
+}
+
+.placeholder {
+  color: #d1d5db;
+  font-weight: 400;
+  font-style: italic;
+  margin: 0;
+}
+
+.dialog-footer {
+  padding: 12px 24px !important;
+  background-color: #f9fafb;
+}
+
+.btn-close {
+  font-weight: 700 !important;
+  color: #6b7280 !important;
+}

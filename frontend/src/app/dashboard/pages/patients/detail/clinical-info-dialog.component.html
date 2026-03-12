@@ -1,0 +1,105 @@
+<h2 mat-dialog-title class="dialog-header">
+  <span class="title-text">Resumen de Información Clínica</span>
+</h2>
+
+<mat-dialog-content class="modern-dialog-content">
+  
+  <!-- SECCIÓN 1: IDENTIFICACIÓN -->
+  <section class="dialog-section">
+    <div class="section-header">
+      <span class="section-tag">Paciente</span>
+    </div>
+    <div class="info-grid personal-info">
+      <div class="info-item">
+        <p class="label">Nombre completo</p>
+        <p class="value highlight">
+          {{ data.patient?.name }} {{ data.patient?.surname }} {{ data.patient?.secondSurname }}
+        </p>
+      </div>
+      <div class="info-item">
+        <p class="label">Programa asignado</p>
+        <p class="value text-primary">
+          {{ data.patient?.program?.name || '-' }}
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECCIÓN 2: SEGUIMIENTO -->
+  <section class="dialog-section">
+    <div class="section-header">
+      <span class="section-tag">Seguimiento</span>
+    </div>
+    <div class="info-grid status-info">
+      <div class="info-item">
+        <p class="label">Fecha de ingreso</p>
+        <p class="value">
+          {{ data.patient?.admissionDate || 'No registrada' }}
+        </p>
+      </div>
+      <div class="info-item">
+        <p class="label">Tiempo en tratamiento</p>
+        <p class="value badge">
+          {{ data.treatmentTime || 'Sin datos' }}
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECCIÓN 3: DIAGNÓSTICOS -->
+  <section class="dialog-section">
+    <div class="section-header">
+      <span class="section-tag">Historial de Diagnóstico</span>
+    </div>
+    
+    <div class="diagnostic-container">
+      <!-- Diagnóstico Médico -->
+      <div class="diag-card medic-diag">
+        <p class="label">Diagnóstico del Médico</p>
+        @if(data.latestRecord?.diagnosticMedic){
+          <p class="value">{{ data.latestRecord?.diagnosticMedic }}</p>
+          <p class="muted-date">Actualizado: {{ data.latestRecord?.date | date: 'dd-MM-yyyy' }}</p>
+        } @else {
+          <p class="placeholder">Sin registro de diagnóstico médico</p>
+        }
+      </div>
+
+      <!-- Diagnóstico Sistema -->
+      <div class="diag-card system-diag">
+        <p class="label">Último Diagnóstico (Sistema)</p>
+        @if(data.latestRecord?.diagnostic){
+          <p class="value">{{ getDiagnosticText(data.latestRecord?.diagnostic) }}</p>
+          <p class="muted-date">Actualizado: {{ data.latestRecord?.date | date: 'dd-MM-yyyy' }}</p>
+        } @else {
+          <p class="placeholder">Sin registro de diagnóstico en sistema</p>
+        }
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECCIÓN 4: TRATAMIENTO -->
+  <section class="dialog-section">
+    <div class="section-header">
+      <span class="section-tag">Tratamiento</span>
+    </div>
+    <div class="treatment-box">
+      <p class="label">Esquema Farmacológico</p>
+      @if(data.latestRecord?.pharmacologicalScheme){
+        <p class="value scheme-text">{{ data.latestRecord?.pharmacologicalScheme }}</p>
+      } @else {
+        <p class="placeholder italic">Sin esquema farmacológico registrado</p>
+      }
+    </div>
+  </section>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="dialog-footer">
+  <button mat-button mat-dialog-close class="btn-close">Entendido</button>
+</mat-dialog-actions>
