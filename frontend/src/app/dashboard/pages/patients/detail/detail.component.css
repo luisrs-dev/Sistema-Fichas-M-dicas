@@ -78,6 +78,19 @@ table.mat-table {
   letter-spacing: 0.08em;
 }
 
+.patient-link {
+  color: #2196f3;
+  /* font-weight: 600; */
+  text-decoration: none;
+  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+}
+
+.patient-link:hover,
+.patient-link:focus-visible {
+  color: #4caf50 !important;
+  text-decoration: underline;
+}
+
 .patient-summary {
   border: 1px solid #e5e7eb;
   border-radius: 12px;

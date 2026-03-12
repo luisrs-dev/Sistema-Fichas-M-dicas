@@ -69,6 +69,7 @@ export default class DashboardComponent implements OnInit {
         path: route.path,
         title: route.title,
         icon: route.data?.['icon'],
+        forAdmin: route.data?.['forAdmin'] || false,
       };
     });
     

@@ -77,3 +77,22 @@ module.exports = {
 
     - `email` es opcional; si se omite se usan los destinatarios configurados en `BULK_MONTHLY_REPORT_RECIPIENTS`.
     - `month` y `year` son opcionales; por defecto se envía un resumen de prueba usando el mes/año actual.
+
+---
+
+## 🔐 Configuración de Conexión Segura (SSH Tunnel)
+
+Para que el sistema conecte a la base de datos de la VPS automáticamente sin pedir contraseña:
+
+### En Mac / Linux
+1. **Generar llave**: `ssh-keygen -t rsa -b 4096` (Pulsa Enter a todo).
+2. **Subir llave**: `ssh-copy-id root@31.97.9.216`
+3. **Ejecutar**: `npm run dev`
+
+### En Windows (PowerShell)
+1. **Generar llave**: `ssh-keygen -t rsa -b 4096`
+2. **Subir llave**: 
+   ```powershell
+   type $env:USERPROFILE\.ssh\id_rsa.pub | ssh root@31.97.9.216 "cat >> .ssh/authorized_keys"
+   ```
+3. **Ejecutar**: `npm run dev:windows` (Esto abrirá las ventanas necesarias automáticamente).

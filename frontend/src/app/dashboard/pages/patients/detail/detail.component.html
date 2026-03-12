@@ -1,21 +1,18 @@
 <div *ngIf="patient() as p">
-<div class=" mb-4">
+  <button mat-stroked-button color="primary" class="mb-2" [routerLink]="['/dashboard/patients']">
+    <mat-icon>arrow_back</mat-icon>
+    Volver
+  </button>
+  <div class="mb-4"></div>
 
-
-</div>
-
-<div class="container">
+  <div class="container">
     <div class="header">
       <div>
         <h4>
           Historial Clínico >
-          <a [routerLink]="['/dashboard/patients/nuevo/', p._id]" class="patient-link">
-            {{ p.name }} {{ p.surname }} {{ p.secondSurname }} ({{ p.phone || '-' }})
-          </a>
+          <a [routerLink]="['/dashboard/patients/nuevo/', p._id]" class="patient-link"> {{ p.name }} {{ p.surname }} {{ p.secondSurname }} ({{ p.phone || "-" }}) </a>
         </h4>
-        <button mat-stroked-button color="primary" class="info-button" (click)="openClinicalInfo()">
-          Información clínica
-        </button>
+        <button mat-stroked-button color="primary" class="info-button" (click)="openClinicalInfo()">Información clínica</button>
       </div>
 
       <div class="filters">
@@ -31,151 +28,129 @@
             <mat-option *ngFor="let year of years" [value]="year">{{ year }}</mat-option>
           </mat-select>
         </mat-form-field>
-
       </div>
+    </div>
 
-  </div>
+    <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1" (click)="onNewMedicalRecord()">Nuevo Registro</button>
 
-  <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1" (click)="onNewMedicalRecord()">Nuevo Registro</button>
+    <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2" (click)="generatePdf()">PDF</button>
 
-  <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2" (click)="generatePdf()">PDF</button>
+    <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2" (click)="onMonthRegisters()">Resumen Mensual</button>
 
-  <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2" (click)="onMonthRegisters()">Resumen Mensual</button>
+    <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2" (click)="onProfessionalRegisters()">Atenciones por profesional</button>
 
-  <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2" (click)="onProfessionalRegisters()">
-    Atenciones por profesional
-  </button>
+    @if (medicalRecordsGrouped().length > 0) {
+      <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2" (click)="onSistratRecord()">Registrar en SISTRAT</button>
+    }
+    @if (showTable()) {
+      <div class="table-container">
+        <table mat-table [dataSource]="medicalRecordsGrouped()" class="mat-elevation-z2 my-4">
+          <!-- Columna de servicio -->
+          <ng-container matColumnDef="service">
+            <th mat-header-cell *matHeaderCellDef>Servicio</th>
+            <td mat-cell *matCellDef="let element">{{ element.service }}</td>
+          </ng-container>
 
-  @if(medicalRecordsGrouped().length > 0){
-  <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2" (click)="onSistratRecord()">Registrar en SISTRAT</button>
-  } @if(showTable()){
-  <div class="table-container">
-    <table mat-table [dataSource]="medicalRecordsGrouped()" class="mat-elevation-z2 my-4">
-      <!-- Columna de servicio -->
-      <ng-container matColumnDef="service">
-        <th mat-header-cell *matHeaderCellDef>Servicio</th>
-        <td mat-cell *matCellDef="let element">{{ element.service }}</td>
-      </ng-container>
+          <!-- Columnas de días -->
+          <ng-container *ngFor="let day of daysInMonth; let i = index" [matColumnDef]="i.toString()">
+            <th mat-header-cell *matHeaderCellDef>{{ i + 1 }}</th>
+            <td mat-cell *matCellDef="let element">
+              @if (element.days[i] != 0) {
+                <strong>{{ element.days[i] }}</strong>
+              } @else {
+                <span style="color: #cccccc">0</span>
+              }
+            </td>
+          </ng-container>
 
-      <!-- Columnas de días -->
-      <ng-container *ngFor="let day of daysInMonth; let i = index" [matColumnDef]="i.toString()">
-        <th mat-header-cell *matHeaderCellDef>{{ i + 1 }}</th>
-        <td mat-cell *matCellDef="let element">
-          @if(element.days[i] != 0){
-          <strong>{{ element.days[i] }}</strong>
-          }@else{
-          <span style="color: #cccccc">0</span>
-          }
-        </td>
-      </ng-container>
+          <ng-container matColumnDef="total">
+            <th mat-header-cell *matHeaderCellDef>Total</th>
+            <td mat-cell *matCellDef="let element">
+              <strong>{{ element.total }}</strong>
+            </td>
+          </ng-container>
 
-      <ng-container matColumnDef="total">
-        <th mat-header-cell *matHeaderCellDef>Total</th>
-        <td mat-cell *matCellDef="let element">
-          <strong>{{ element.total }}</strong>
-        </td>
-      </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </div>
+    }
 
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-    </table>
-  </div>
+    @if (showProfessionalTable()) {
+      <div class="table-container">
+        <table mat-table [dataSource]="medicalRecordsProfessionalGrouped()" class="mat-elevation-z2 my-4 professional-table">
+          <ng-container matColumnDef="service">
+            <th mat-header-cell *matHeaderCellDef>Atención / Profesional</th>
+            <td mat-cell *matCellDef="let element">
+              <strong *ngIf="element.isServiceRow">{{ element.label }}</strong>
+              <span *ngIf="!element.isServiceRow">{{ element.label }}</span>
+            </td>
+          </ng-container>
 
-  }
+          <ng-container *ngFor="let day of daysInMonth; let i = index" [matColumnDef]="i.toString()">
+            <th mat-header-cell *matHeaderCellDef>{{ i + 1 }}</th>
+            <td mat-cell *matCellDef="let element">
+              @if (element.days[i] != 0) {
+                <strong>{{ element.days[i] }}</strong>
+              } @else {
+                <span style="color: #cccccc">0</span>
+              }
+            </td>
+          </ng-container>
 
-  @if(showProfessionalTable()){
-  <div class="table-container">
-    <table
-      mat-table
-      [dataSource]="medicalRecordsProfessionalGrouped()"
-      class="mat-elevation-z2 my-4 professional-table"
-    >
-      <ng-container matColumnDef="service">
-        <th mat-header-cell *matHeaderCellDef>Atención / Profesional</th>
-        <td mat-cell *matCellDef="let element">
-          <strong *ngIf="element.isServiceRow">{{ element.label }}</strong>
-          <span *ngIf="!element.isServiceRow">{{ element.label }}</span>
-        </td>
-      </ng-container>
+          <ng-container matColumnDef="total">
+            <th mat-header-cell *matHeaderCellDef>Total</th>
+            <td mat-cell *matCellDef="let element">
+              <strong>{{ element.total }}</strong>
+            </td>
+          </ng-container>
 
-      <ng-container *ngFor="let day of daysInMonth; let i = index" [matColumnDef]="i.toString()">
-        <th mat-header-cell *matHeaderCellDef>{{ i + 1 }}</th>
-        <td mat-cell *matCellDef="let element">
-          @if(element.days[i] != 0){
-          <strong>{{ element.days[i] }}</strong>
-          }@else{
-          <span style="color: #cccccc">0</span>
-          }
-        </td>
-      </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns" [ngClass]="row.isServiceRow ? 'service-row' : 'professional-row'"></tr>
+        </table>
+      </div>
+    }
 
-      <ng-container matColumnDef="total">
-        <th mat-header-cell *matHeaderCellDef>Total</th>
-        <td mat-cell *matCellDef="let element">
-          <strong>{{ element.total }}</strong>
-        </td>
-      </ng-container>
+    <img [src]="screenshotImage()" alt="" />
 
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr
-        mat-row
-        *matRowDef="let row; columns: displayedColumns"
-        [ngClass]="row.isServiceRow ? 'service-row' : 'professional-row'"
-      ></tr>
-    </table>
-  </div>
-  }
-
-  <img [src]="screenshotImage()" alt="" />
-
-  @if(state().filteredMedicalRecords.length > 0){
-  <div class="mat-elevation-z1 mt-4">
-    <mat-accordion class="example-headers-align">
-      <mat-expansion-panel *ngFor="let medicalRecord of state().filteredMedicalRecords; index as i" hideToggle>
-        <mat-expansion-panel-header>
-          <mat-panel-title class="mr-1">
-            <mat-chip>{{ medicalRecord.date | date : "dd-MM-yyyy" }}</mat-chip>
-            <span class="ml-2">{{ medicalRecord.service.description }}</span>
-          </mat-panel-title>
-          <mat-panel-description>
-            Registrado por {{ medicalRecord.registeredBy.name }} ({{ medicalRecord.registeredBy.profile.name }})
-            <mat-icon>add_circle</mat-icon>
-          </mat-panel-description>
-        </mat-expansion-panel-header>
-        <div class="medical-record-details">
-          <div class="record-item"><strong>Fecha:</strong> {{ medicalRecord.date | date : "dd-MM-yyyy" }}</div>
-          <div class="record-item" ><strong>Prestación:</strong> {{ medicalRecord.service.description }}</div>
-          <div class="record-item" *ngIf="medicalRecord.relevantElements | nonEmpty">
-            <strong>Elementos relevantes:</strong> {{ medicalRecord.relevantElements }}
-          </div>
-          <div class="record-item" *ngIf="medicalRecord.interventionObjective | nonEmpty">
-            <strong>Objetivo intervención:</strong> {{ medicalRecord.interventionObjective }}
-          </div>
-          <div class="record-item" *ngIf="medicalRecord.diagnosticMedic | nonEmpty">
-            <strong>Diagnóstico del profesional:</strong> {{ medicalRecord.diagnosticMedic }}
-          </div>
-          <div class="record-item" *ngIf="medicalRecord.diagnostic | nonEmpty">
-            <strong>Diagnóstico:</strong> {{ getDiagnosticText(medicalRecord.diagnostic) }}
-          </div>
-          <div class="record-item" *ngIf="medicalRecord.pharmacologicalScheme | nonEmpty">
-            <strong>Esquema farmacológico:</strong> {{ medicalRecord.pharmacologicalScheme }}
-          </div>
-          @if(medicalRecord.rescueAction | nonEmpty){
-            <div class="record-item">
-              <strong>Acción de rescate:</strong> {{ medicalRecord.rescueAction }}
+    @if (state().filteredMedicalRecords.length > 0) {
+      <div class="mat-elevation-z1 mt-4">
+        <mat-accordion class="example-headers-align">
+          <mat-expansion-panel *ngFor="let medicalRecord of state().filteredMedicalRecords; index as i" hideToggle>
+            <mat-expansion-panel-header>
+              <mat-panel-title class="mr-1">
+                <mat-chip>{{ medicalRecord.date | date: "dd-MM-yyyy" }}</mat-chip>
+                <span class="ml-2">{{ medicalRecord.service.description }}</span>
+              </mat-panel-title>
+              <mat-panel-description>
+                Registrado por {{ medicalRecord.registeredBy.name }} ({{ medicalRecord.registeredBy.profile.name }})
+                <mat-icon>add_circle</mat-icon>
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+            <div class="medical-record-details">
+              <div class="record-item"><strong>Fecha:</strong> {{ medicalRecord.date | date: "dd-MM-yyyy" }}</div>
+              <div class="record-item"><strong>Prestación:</strong> {{ medicalRecord.service.description }}</div>
+              <div class="record-item" *ngIf="medicalRecord.relevantElements | nonEmpty"><strong>Elementos relevantes:</strong> {{ medicalRecord.relevantElements }}</div>
+              <div class="record-item" *ngIf="medicalRecord.interventionObjective | nonEmpty">
+                <strong>Objetivo intervención:</strong> {{ medicalRecord.interventionObjective }}
+              </div>
+              <div class="record-item" *ngIf="medicalRecord.diagnosticMedic | nonEmpty"><strong>Diagnóstico del profesional:</strong> {{ medicalRecord.diagnosticMedic }}</div>
+              <div class="record-item" *ngIf="medicalRecord.diagnostic | nonEmpty"><strong>Diagnóstico:</strong> {{ getDiagnosticText(medicalRecord.diagnostic) }}</div>
+              <div class="record-item" *ngIf="medicalRecord.pharmacologicalScheme | nonEmpty">
+                <strong>Esquema farmacológico:</strong> {{ medicalRecord.pharmacologicalScheme }}
+              </div>
+              @if (medicalRecord.rescueAction | nonEmpty) {
+                <div class="record-item"><strong>Acción de rescate:</strong> {{ medicalRecord.rescueAction }}</div>
+              }
             </div>
-          }
-
-          
-        </div>
-        <button mat-stroked-button color="warn" class="my-2 mat-elevation-z1" (click)="onDeleteMedicalRecord(medicalRecord._id)">Eliminar</button>
-      </mat-expansion-panel>
-    </mat-accordion>
+            <button mat-stroked-button color="warn" class="my-2 mat-elevation-z1" (click)="onDeleteMedicalRecord(medicalRecord._id)">Eliminar</button>
+          </mat-expansion-panel>
+        </mat-accordion>
+      </div>
+    } @else {
+      <div class="flex justify-content-center flex-wrap mt-8">
+        <h2 class="justify-content-center">Aún no registra historial clínico</h2>
+      </div>
+    }
   </div>
-  }@else {
-  <div class="flex justify-content-center flex-wrap mt-8">
-    <h2 class="justify-content-center">Aún no registra historial clínico</h2>
-  </div>
-  }
-</div>
 </div>

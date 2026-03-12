@@ -105,111 +105,111 @@ class Sistrat {
   }
 
 
-async dataPatientFromDemand(rut: string) {
-  const center = "mujeres";
-  console.group(`[Sistrat][Datos con rut] ${rut}`);
-  const logger = new ProcessLogger(rut, "datos-paciente-desde-crear-demanda");
+  async dataPatientFromDemand(rut: string) {
+    const center = "mujeres";
+    console.group(`[Sistrat][Datos con rut] ${rut}`);
+    const logger = new ProcessLogger(rut, "datos-paciente-desde-crear-demanda");
 
-  let page: Page | null = null;
+    let page: Page | null = null;
 
-  try {
-    await this.logStep(logger, `[Sistrat][Datos con rut] Inicio flujo centro ${center}`);
-    page = await this.login(center, logger);
+    try {
+      await this.logStep(logger, `[Sistrat][Datos con rut] Inicio flujo centro ${center}`);
+      page = await this.login(center, logger);
 
-    page.on("dialog", async (dialog) => {
-      console.log("[Sistrat] Diálogo detectado:", dialog.message());
-      await dialog.accept();
-    });
+      page.on("dialog", async (dialog) => {
+        console.log("[Sistrat] Diálogo detectado:", dialog.message());
+        await dialog.accept();
+      });
 
-    await this.listActiveDemands(page, logger);
-    await this.scrapper.clickButton(page, "#crea_demanda", 15000);
-    await this.scrapper.waitAndType(page, "#txtrut", rut);
+      await this.listActiveDemands(page, logger);
+      await this.scrapper.clickButton(page, "#crea_demanda", 15000);
+      await this.scrapper.waitAndType(page, "#txtrut", rut);
 
-    // Espera explícitamente la respuesta del endpoint que trae los datos de Fonasa
-    const fonasaResponsePromise = page.waitForResponse((response) => {
-      const url = response.url();
-      return (
-        url.includes("php/conv1/ajaxs/checar.php") &&
-        response.request().method() === "GET"
-      );
-    });
+      // Espera explícitamente la respuesta del endpoint que trae los datos de Fonasa
+      const fonasaResponsePromise = page.waitForResponse((response) => {
+        const url = response.url();
+        return (
+          url.includes("php/conv1/ajaxs/checar.php") &&
+          response.request().method() === "GET"
+        );
+      });
 
-    await this.scrapper.clickButton(page, "#traeDatoFonasa");
+      await this.scrapper.clickButton(page, "#traeDatoFonasa");
 
-    await fonasaResponsePromise;
+      await fonasaResponsePromise;
 
-    await page.waitForFunction(() => {
-      const getValue = (selector: string) => {
-        const element = document.querySelector(selector) as HTMLInputElement | HTMLSelectElement | null;
-        return element?.value?.trim();
-      };
+      await page.waitForFunction(() => {
+        const getValue = (selector: string) => {
+          const element = document.querySelector(selector) as HTMLInputElement | HTMLSelectElement | null;
+          return element?.value?.trim();
+        };
 
-      const nameValue = getValue('#txtnombre_usuario');
-      const surnameValue = getValue('#txtapellido_usuario');
-      const secondSurnameValue = getValue('#txtapellido2_usuario');
-      const birthDateValue = getValue('#txt_fecha_nacimiento');
-      const sexValue = getValue('#sexo');
+        const nameValue = getValue('#txtnombre_usuario');
+        const surnameValue = getValue('#txtapellido_usuario');
+        const secondSurnameValue = getValue('#txtapellido2_usuario');
+        const birthDateValue = getValue('#txt_fecha_nacimiento');
+        const sexValue = getValue('#sexo');
 
-      return Boolean(nameValue || surnameValue || secondSurnameValue || birthDateValue || sexValue);
-    }, { timeout: 15000 });
+        return Boolean(nameValue || surnameValue || secondSurnameValue || birthDateValue || sexValue);
+      }, { timeout: 15000 });
 
-    const fonasaData = await page.evaluate(() => {
-      const getInputValue = (selector: string) => {
-        const element = document.querySelector(selector) as HTMLInputElement | null;
-        return element?.value?.trim() ?? '';
-      };
+      const fonasaData = await page.evaluate(() => {
+        const getInputValue = (selector: string) => {
+          const element = document.querySelector(selector) as HTMLInputElement | null;
+          return element?.value?.trim() ?? '';
+        };
 
-      const getSelectValue = (selector: string) => {
-        const element = document.querySelector(selector) as HTMLSelectElement | null;
-        if (!element) return '';
-        const selectedText = element.options[element.selectedIndex]?.textContent?.trim();
-        return selectedText || element.value?.trim() || '';
-      };
+        const getSelectValue = (selector: string) => {
+          const element = document.querySelector(selector) as HTMLSelectElement | null;
+          if (!element) return '';
+          const selectedText = element.options[element.selectedIndex]?.textContent?.trim();
+          return selectedText || element.value?.trim() || '';
+        };
+
+        return {
+          name: getInputValue('#txtnombre_usuario'),
+          surname: getInputValue('#txtapellido_usuario'),
+          secondSurname: getInputValue('#txtapellido2_usuario'),
+          birthDate: getInputValue('#txt_fecha_nacimiento'),
+          sexLabel: getSelectValue('#sexo'),
+          sexValue: getInputValue('#sexo')
+        };
+      });
+
+      const normalizedSex = this.normalizeSexFromFonasa(fonasaData.sexValue || fonasaData.sexLabel);
+      const normalizedBirthDate = this.normalizeBirthDateFormat(fonasaData.birthDate);
+
+      console.log({
+        name: fonasaData.name,
+        surname: fonasaData.surname,
+        secondSurname: fonasaData.secondSurname,
+        birthDate: normalizedBirthDate,
+        sex: normalizedSex,
+      });
+
+      await this.logStep(logger, "[Sistrat][Datos con rut] Datos extraídos correctamente");
 
       return {
-        name: getInputValue('#txtnombre_usuario'),
-        surname: getInputValue('#txtapellido_usuario'),
-        secondSurname: getInputValue('#txtapellido2_usuario'),
-        birthDate: getInputValue('#txt_fecha_nacimiento'),
-        sexLabel: getSelectValue('#sexo'),
-        sexValue: getInputValue('#sexo')
+        name: fonasaData.name,
+        surname: fonasaData.surname,
+        secondSurname: fonasaData.secondSurname,
+        birthDate: normalizedBirthDate,
+        sex: normalizedSex,
       };
-    });
 
-    const normalizedSex = this.normalizeSexFromFonasa(fonasaData.sexValue || fonasaData.sexLabel);
-    const normalizedBirthDate = this.normalizeBirthDateFormat(fonasaData.birthDate);
+    } catch (error) {
+      console.error("[Sistrat][Datos con rut] ERROR:", error);
+      await this.logStep(logger, "[Sistrat][Datos con rut] Error: " + error);
+      return {};
 
-    console.log({
-      name: fonasaData.name,
-      surname: fonasaData.surname,
-      secondSurname: fonasaData.secondSurname,
-      birthDate: normalizedBirthDate,
-      sex: normalizedSex,
-    });
-
-    await this.logStep(logger, "[Sistrat][Datos con rut] Datos extraídos correctamente");
-
-    return {
-      name: fonasaData.name,
-      surname: fonasaData.surname,
-      secondSurname: fonasaData.secondSurname,
-      birthDate: normalizedBirthDate,
-      sex: normalizedSex,
-    };
-
-  } catch (error) {
-    console.error("[Sistrat][Datos con rut] ERROR:", error);
-    await this.logStep(logger, "[Sistrat][Datos con rut] Error: " + error);
-    return {};
-
-  } finally {
-    if (page) {
-      await this.scrapper.closeBrowser();
+    } finally {
+      if (page) {
+        await this.scrapper.closeBrowser();
+      }
+      await logger.close();
+      console.groupEnd();
     }
-    await logger.close();
-    console.groupEnd();
   }
-}
 
   private normalizeSexFromFonasa(rawValue: string): string {
     const value = (rawValue || '').toString().trim().toLowerCase();
@@ -680,10 +680,10 @@ async dataPatientFromDemand(rut: string) {
       // console.log('screenshot tomado y guardado en:', filePath);
 
       // 3. Esperar al botón y hacer click
-      
+
       const directRecordValue = await getEnvironmentConfigValue(this.directRecordConfigKey);
       console.log(`[Sistrat][recordMonthlySheet] Valor de configuración para registro directo: ${JSON.stringify(directRecordValue)}`);
-      if(directRecordValue) {
+      if (directRecordValue) {
         await this.scrapper.clickButton(page, "#mysubmit", 30000);
         console.log("[Sistrat][recordMonthlySheet] Formulario enviado");
       } else {
@@ -1201,9 +1201,9 @@ async dataPatientFromDemand(rut: string) {
       const directRecordValue = await getEnvironmentConfigValue(this.directRecordConfigKey);
       console.log('directRecordValue', directRecordValue)
       await this.scrapper.waitForSeconds(120);
-      if(directRecordValue){
+      if (directRecordValue) {
         await this.scrapper.clickButton(page, "#mysubmit");
-      }else{
+      } else {
         console.log('Simulación: no registra ficha ingreso.', directRecordValue);
         await this.scrapper.waitForSeconds(120);
       }
@@ -1248,12 +1248,12 @@ async dataPatientFromDemand(rut: string) {
   private async openActiveUsersList(page: Page, logger?: ProcessLogger) {
     console.log("[Sistrat] Preparando navegación hacia listado de pacientes activos");
     try {
-        await page.hover("#flyout");
-        // await this.scrapper.waitForSeconds(3);
-        await page.click("#flyout");
-        await this.scrapper.waitForSeconds(2);
+      await page.hover("#flyout");
+      // await this.scrapper.waitForSeconds(3);
+      await page.click("#flyout");
+      await this.scrapper.waitForSeconds(2);
 
-        await this.scrapper.clickButton(page, 'a[href="php/consultar_paciente.php"].ui-corner-all');
+      await this.scrapper.clickButton(page, 'a[href="php/consultar_paciente.php"].ui-corner-all');
 
 
       // await this.scrapper.clickButton(page, linkSelector, 20000);

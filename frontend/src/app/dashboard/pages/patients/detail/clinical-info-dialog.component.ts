@@ -26,12 +26,20 @@ interface ClinicalDialogData {
           <p class="value">
             {{ data.patient?.name }} {{ data.patient?.surname }} {{ data.patient?.secondSurname }}
           </p>
-          <p class="muted">
-            Programa: {{ data.patient?.program?.name || '-' }}
+          <p class="label">
+            Programa
           </p>
-          <p class="muted">Fecha ingreso: {{ data.patient?.admissionDate || '-' }}</p>
+          <p class="value">
+            {{ data.patient?.program?.name || '-' }}
+          </p>
+          <!-- Este valor esta asociado a si está rgistrada la ficha de ingeso -->
+          <p class="label">Fecha ingreso:</p>
+          <p class="value">
+            {{ data.patient?.admissionDate || 'Ficha ingreso no registrada' }}
+          </p> 
         </div>
         <div>
+          <!-- Este valor esta asociado a si está rgistrada la ficha de ingeso -->
           <p class="label">Tiempo en tratamiento</p>
           <p class="value">{{ data.treatmentTime || 'Sin datos' }}</p>
         </div>

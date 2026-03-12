@@ -88,7 +88,7 @@ export default class DetailComponent implements OnInit {
   public latestMedicalRecordWithScheme: MedicalRecord | null;
   readonly panelOpenState = signal(false);
 
-  screenshotImage = computed( () => this.screenshotPath() )
+  screenshotImage = computed(() => this.screenshotPath())
 
 
   patientId = signal<string | null>(null);
@@ -124,19 +124,19 @@ export default class DetailComponent implements OnInit {
     });
   }
 
-  
+
 
   private loadPatientData(id: string) {
     this.#state.update((s) => ({ ...s, loading: true }));
     this.patientService.getPatientById(id).subscribe((response) => {
-      
+
       // safe sort asc (no muta el array original)
       const medicalRecordsOrdered = [...(response.medicalRecords ?? [])].sort((a, b) => {
         const ta = Date.parse(a.date) || 0;
         const tb = Date.parse(b.date) || 0;
         return ta - tb; // ascendente
       });
-      
+
       const month = this.selectedMonth();
       const year = this.selectedYear();
       const filteredRecords = this.filterRecordsByMonth(medicalRecordsOrdered, month, year);
@@ -160,12 +160,13 @@ export default class DetailComponent implements OnInit {
       console.log('latestMedicalRecordWithScheme', this.latestMedicalRecordWithScheme);
 
       console.log('setstate', this.#state());
-      
+
     });
   }
 
   openClinicalInfo() {
     const patient = this.state().patient;
+    console.log('[openClinicalInfo][latestMedicalRecordWithScheme]', this.latestMedicalRecordWithScheme);
     this.dialog.open(ClinicalInfoDialogComponent, {
       data: {
         patient,
@@ -177,7 +178,7 @@ export default class DetailComponent implements OnInit {
     });
   }
 
-    getLastPharmacologicalScheme(medicalRecords: MedicalRecord[]): MedicalRecord | null{
+  getLastPharmacologicalScheme(medicalRecords: MedicalRecord[]): MedicalRecord | null {
     const medicalRecordSorted = [...medicalRecords].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     const latestMedicalRecordWithScheme = medicalRecordSorted.find((record) => record.pharmacologicalScheme);
     return latestMedicalRecordWithScheme || null;
@@ -275,17 +276,17 @@ export default class DetailComponent implements OnInit {
     const records = this.state().medicalRecords ?? [];
 
     console.log('records', records);
-    
+
     records.forEach((record) => {
       const dateMedicalRecord = new Date(record.date);
       const yearMedicalRecord = Number(new Date(record.date).getFullYear());
       const monthMedicalRecord = Number(dateMedicalRecord.getMonth() + 1);
 
-      
+
       // Solo del mes y año que nos interesa
       if (monthMedicalRecord !== Number(monthSelected) || yearMedicalRecord !== year) return;
 
-      
+
       const day = dateMedicalRecord.getDate(); // día 1-31      
       const service = record.service.description;
 
@@ -389,9 +390,9 @@ export default class DetailComponent implements OnInit {
       'Cancelar',
       () => {
         console.log('this.medicalRecordsGrouped()', this.medicalRecordsGrouped());
-        
+
         // Success
-        if(patientId === undefined) return;
+        if (patientId === undefined) return;
         this.medicalRecordService.monthRecords(patientId, this.selectedMonth(), this.selectedYear(), this.medicalRecordsGrouped()).subscribe({
           next: () => {
             Notiflix.Notify.success('Registrado en SISTRAT');
@@ -471,7 +472,7 @@ export default class DetailComponent implements OnInit {
 
   get treatmentTime(): string {
     if (!this.state().patient?.admissionDate) {
-      return '';
+      return 'Ficha ingreso no registrada';
     }
 
     const [day, month, year] = this.state().patient!.admissionDate.split('/').map(Number);

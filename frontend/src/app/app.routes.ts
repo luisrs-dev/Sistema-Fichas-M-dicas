@@ -30,14 +30,14 @@ export const routes: Routes = [
       },
       {
         path: 'users/nuevo',
-        title: 'Nuevo Usiaro',
+        title: 'Nuevo Usuario',
         data: { icon: 'user', child: true },
         loadComponent: () =>
           import('./dashboard/pages/users/new/new.component'),
       },
       {
         path: 'users/nuevo/:id',
-        title: 'Nuevo Usiaro',
+        title: 'Nuevo Usuario',
         data: { icon: 'user', child: true },
         loadComponent: () =>
           import('./dashboard/pages/users/new/new.component'),

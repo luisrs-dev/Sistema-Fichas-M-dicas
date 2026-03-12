@@ -32,8 +32,8 @@
     <mat-nav-list>
       @for (menuItem of menuItems; track $index) {
 
-        @if(menuItem.title == 'Profesionales'){
-          @if(isAdmin){
+        <!-- Items sólo para admins -->
+         @if(isAdmin && menuItem.forAdmin){
             <mat-list-item
             [routerLink]="menuItem.path"
             (click)="isMobile ? sidenav.toggle() : false"
@@ -41,21 +41,20 @@
             <mat-icon matListItemIcon class="mat-18">{{ menuItem.icon }}</mat-icon>
             {{ menuItem.title }}
           </mat-list-item>
-
-          }
-
-
-        }@else{
-          <mat-list-item
-            [routerLink]="menuItem.path"
-            (click)="isMobile ? sidenav.toggle() : false"
-          >
-            <mat-icon matListItemIcon class="mat-18">{{ menuItem.icon }}</mat-icon>
-            {{ menuItem.title }}
-          </mat-list-item>
-
         }
+        @else{
+            <!-- Items para profesionales no admins -->
+            @if(!menuItem.forAdmin){
+              <mat-list-item
+              [routerLink]="menuItem.path"
+              (click)="isMobile ? sidenav.toggle() : false"
+            >
+              <mat-icon matListItemIcon class="mat-18">{{ menuItem.icon }}</mat-icon>
+              {{ menuItem.title }}
+            </mat-list-item>
+          }
       }
+    }
        @if(isAdmin){
       <mat-toolbar>
         <span>Parámetros</span>
