@@ -30,7 +30,11 @@ const UserSchema = new Schema<User>(
     programs: [{
       type: Schema.Types.ObjectId,
       ref: 'program'
-    }]
+    }],
+    active: {
+      type: Boolean,
+      default: true,
+    }
   },
   { timestamps: true, versionKey: false }
 );

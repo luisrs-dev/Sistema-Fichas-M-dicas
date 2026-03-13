@@ -46,10 +46,14 @@ const updateUser = async ({ user, permissions, programs }: any) => {
     if (!userFetched) return "USER_NOT_FOUND";
 
     // Actualizar los campos del usuario existente
-    userFetched.name = user.name || userFetched.name; // Actualiza solo si se proporciona un nuevo valor
-    userFetched.profile = user.profile || userFetched.profile; // Actualiza solo si se proporciona un nuevo valor
-    userFetched.permissions = permissions || userFetched.permissions; // Actualiza solo si se proporciona un nuevo valor
-    userFetched.programs = programs || userFetched.programs; // Actualiza solo si se proporciona un nuevo valor
+    userFetched.name = user.name || userFetched.name;
+    userFetched.profile = user.profile || userFetched.profile;
+    userFetched.permissions = permissions || userFetched.permissions;
+    userFetched.programs = programs || userFetched.programs;
+    
+    if (typeof user.active === 'boolean') {
+      userFetched.active = user.active;
+    }
 
     // Guardar los cambios en la base de datos
     await userFetched.save();
@@ -78,5 +82,10 @@ const updateUser = async ({ user, permissions, programs }: any) => {
 //   return responseItem;
 // };
 
-export { allUsers, findServicesByProfile, findUser, inerUser, updateUser, usersByProfile };
+const updateActiveStatus = async (id: string, active: boolean) => {
+  const responseItem = await UserModel.findByIdAndUpdate(id, { active }, { new: true });
+  return responseItem;
+};
+
+export { allUsers, findServicesByProfile, findUser, inerUser, updateUser, usersByProfile, updateActiveStatus };
 

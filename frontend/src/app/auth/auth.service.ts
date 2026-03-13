@@ -45,7 +45,8 @@ export class AuthService {
       map(() => true),
       catchError((err) => {
         console.log(err);
-        return throwError(() => 'Error de comunicación con el servidor');
+        const message = err.error?.msg || 'Error de comunicación con el servidor';
+        return throwError(() => message);
       }),
     );
   }

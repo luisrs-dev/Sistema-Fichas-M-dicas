@@ -15,6 +15,7 @@ export interface User {
     programs:    Permission[];
     createdAt:   Date;
     updatedAt:   Date;
+    active?:     boolean;
 }
 
 export interface Permission {

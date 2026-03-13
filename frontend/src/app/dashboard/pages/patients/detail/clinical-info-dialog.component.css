@@ -3,9 +3,23 @@
 }
 
 .modern-dialog-content {
-  min-width: 450px;
+  min-width: 95%;
   max-width: 600px;
   padding: 10px 24px 20px !important;
+  max-height: 70vh;
+  /* Limita la altura al 70% de la pantalla */
+  overflow-y: auto;
+  /* Muestra scroll solo si es necesario */
+}
+
+/* Opcional: Estilo para que el scrollbar sea siempre visible o más elegante */
+.modern-dialog-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modern-dialog-content::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 10px;
 }
 
 .dialog-header {

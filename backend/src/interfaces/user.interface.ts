@@ -7,4 +7,5 @@ export interface User extends Auth {
   profile: Types.ObjectId;
   permissions: string[];
   programs: string[];
+  active?: boolean;
 }

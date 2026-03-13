@@ -5,7 +5,8 @@ import {
   putUser,
   getUsersByProfile,
   getUsersById,
-  getServicesByProfile
+  getServicesByProfile,
+  updateUserActiveStatus
 } from "../controllers/user.controller";
 // import { logMiddleware } from "../middleware/log";
 const router = Router();
@@ -18,6 +19,7 @@ router.get("/services/:id", getServicesByProfile);
 // router.get("/:id", getItem);
 router.put("/", putUser);
 router.post("/", postUser);
+router.patch("/:id/active", updateUserActiveStatus);
 // router.delete("/:id", deleteItem);
 // router.put("/:id", updateItem);
 

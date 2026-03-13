@@ -66,4 +66,8 @@ export class UserService {
       })
     );
   }
+
+  updateActiveStatus(userId: string, active: boolean): Observable<any> {
+    return this.http.patch<any>(`${this.backend}/user/${userId}/active`, { active });
+  }
 }

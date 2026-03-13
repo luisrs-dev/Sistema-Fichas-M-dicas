@@ -36,6 +36,18 @@
     </mat-form-field>
     <div class="pb-4">
       <mat-table #table [dataSource]="dataSource" matSort class="p-4 mat-elevation-z1">
+        <!-- Active Status Column -->
+        <ng-container matColumnDef="active">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Activo</th>
+          <td class="text-center" mat-cell *matCellDef="let element">
+            <mat-slide-toggle
+              [checked]="element.active !== false"
+              (change)="onToggleActive(element, $event.checked)"
+              [disabled]="togglingActive[element._id || '']"
+            ></mat-slide-toggle>
+          </td>
+        </ng-container>
+
       <!-- Position Column -->
       <ng-container matColumnDef="name">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Nombre</th>

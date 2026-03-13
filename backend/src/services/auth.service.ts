@@ -6,7 +6,7 @@ import { encrypt, verified } from "../utils/bcrypt.handle";
 const JWT_SECRET = process.env.JWT_SECRET || "token.010101";
 
 const updateUserPassword = async (id: string, password: string) => {
-  const user = await UserModel.findOne({ _id:id });
+  const user = await UserModel.findOne({ _id: id });
 
   if (!user) {
     return 'USER_NOT_FOUND';
@@ -20,10 +20,10 @@ const updateUserPassword = async (id: string, password: string) => {
 };
 
 const registerNewUser = async (user: any, imageFile: Express.Multer.File | undefined) => {
-  
-// Normalizar el email a minúsculas
+
+  // Normalizar el email a minúsculas
   const email = user.email.toLowerCase().trim();
-const userFetched = await UserModel.findOne({ email});
+  const userFetched = await UserModel.findOne({ email });
   if (userFetched) return "ALREADY_EXIST";
 
   console.log('data imageFile en registerNewUser', imageFile);
@@ -59,6 +59,7 @@ const updateUser = async (user: any, imageFile: Express.Multer.File | undefined)
         profile: user.profile || userFetched.profile,
         permissions: user.permissions || userFetched.permissions,
         programs: user.programs || userFetched.programs,
+        active: (typeof user.active === 'boolean') ? user.active : userFetched.active,
         signature: imageFile ? `/uploads/${imageFile.filename}` : userFetched.signature, // Actualizar la firma si hay una nueva imagen
       }
     );
@@ -70,9 +71,14 @@ const updateUser = async (user: any, imageFile: Express.Multer.File | undefined)
 
 const loginUser = async ({ email, password }: Auth) => {
   try {
-	const emailLowercase = email.toLowerCase().trim();
+    const emailLowercase = email.toLowerCase().trim();
     const userFetched = await UserModel.findOne({ email: emailLowercase }).populate(["permissions", "programs", "profile"]);
+    console.log('userFetched', userFetched)
     if (!userFetched) return { status: false, msg: "No existe usuario" };
+
+    if (userFetched.active === false) {
+      return { status: false, msg: "Usuario desactivado. Contacte al administrador." };
+    }
 
     const passwordHash = userFetched.password;
     const isCorrect = await verified(password, passwordHash);
