@@ -24,6 +24,8 @@ export interface Patient extends Auth {
   fonasa: boolean;
   alertCie10: boolean;
   alertConsentimiento: boolean;
+  alertEvaluacion: boolean;
+  alertIntegracionSocial: boolean;
   alertTreatment?: boolean;
   active: boolean;
   mainSubstance: string;

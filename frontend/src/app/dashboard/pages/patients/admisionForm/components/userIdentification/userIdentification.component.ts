@@ -39,17 +39,29 @@ export class UserIdentificationComponent extends FormBaseComponent {
 
     // Si existe el paciente, se cargan los valores en el formulario
     if (this.patient) {
+      console.log('this.patient', this.patient);
+
+      let parsedDate: Date | null = null;
+      if (this.patient.birthDate) {
+        if (typeof this.patient.birthDate === 'string' && this.patient.birthDate.includes('/')) {
+          const [day, month, year] = this.patient.birthDate.split('/');
+          parsedDate = new Date(+year, +month - 1, +day);
+        } else {
+          parsedDate = new Date(this.patient.birthDate);
+        }
+      }
+
       this.form.patchValue({
         name: this.patient.name,
         surname: this.patient.surname,
         secondSurname: this.patient.secondSurname,
-        birthDate: new Date(this.patient.birthDate),
+        birthDate: parsedDate,
         sex: this.patient.sex,
         region: this.patient.region,
         phone: this.patient.phone,
         phoneFamily: this.patient.phoneFamily,
         centerOrigin: this.patient.centerOrigin,
-        opcion_discapacidad: this.patient.opcion_discapacidad ,
+        opcion_discapacidad: this.patient.opcion_discapacidad,
       });
     }
 

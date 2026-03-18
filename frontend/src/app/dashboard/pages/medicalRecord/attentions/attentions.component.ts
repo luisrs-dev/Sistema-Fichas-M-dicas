@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { firstValueFrom } from 'rxjs';
 import Notiflix from 'notiflix';
@@ -21,6 +22,7 @@ import { PatientService } from '../../patients/patient.service';
     MatButtonModule,
     MatCheckboxModule,
     MatIconModule,
+    MatProgressSpinnerModule,
   ],
   templateUrl: './attentions.component.html',
   styleUrl: './attentions.component.css',
@@ -45,8 +47,10 @@ export default class AttentionsComponent {
 
   centerPatients = signal<Patient[]>([]);
   selectedPatients = signal<Record<string, boolean>>({});
-  registrationStatus = signal<Record<string, 'pending' | 'success' | 'error'>>({});
+  registrationStatus = signal<Record<string, 'queued' | 'pending' | 'success' | 'error' | 'warning'>>({});
+  registrationMessages = signal<Record<string, string>>({});
   bulkLoading = signal<boolean>(false);
+  isUpdatingAlerts = signal<boolean>(false);
 
   readonly months = [
     { value: 1, label: 'Enero' },
@@ -117,55 +121,191 @@ export default class AttentionsComponent {
     }
 
     this.bulkLoading.set(true);
-    Notiflix.Loading.standard('Registrando...');
+    Notiflix.Notify.info('Iniciando registro secuencial...');
 
-    const statuses: Record<string, 'pending' | 'success' | 'error'> = {
+    const statuses: Record<string, 'queued' | 'pending' | 'success' | 'error' | 'warning'> = {
       ...this.registrationStatus(),
     };
+    const messages = { ...this.registrationMessages() };
+
     selectedIds.forEach((id) => {
-      statuses[id] = 'pending';
+      statuses[id] = 'queued';
+      messages[id] = '';
     });
     this.registrationStatus.set(statuses);
+    this.registrationMessages.set(messages);
 
     for (const patientId of selectedIds) {
+      this.registrationStatus.set({
+        ...this.registrationStatus(),
+        [patientId]: 'pending',
+      });
+
       try {
-        await firstValueFrom(
+        const response: any = await firstValueFrom(
           this.medicalRecordService.monthRecords(patientId, month, year, [])
         );
+
+        let statusToSet: 'success' | 'warning' | 'error' = 'success';
+        let msgToSet = '';
+
+        if (response?.data && typeof response.data === 'string' && response.data.toLowerCase().includes('no cuenta con registros')) {
+          statusToSet = 'warning';
+          msgToSet = response.data;
+          Notiflix.Notify.warning(msgToSet);
+        } else if (response?.data && typeof response.data === 'string') {
+          msgToSet = response.data;
+        }
+
         this.registrationStatus.set({
           ...this.registrationStatus(),
-          [patientId]: 'success',
+          [patientId]: statusToSet,
         });
-      } catch (error) {
+
+        if (msgToSet) {
+          this.registrationMessages.set({
+            ...this.registrationMessages(),
+            [patientId]: msgToSet,
+          });
+        }
+      } catch (error: any) {
         console.error('Error registrando en SISTRAT:', error);
+
+        let errorMessage = 'Ocurrió un error en el registro';
+        if (typeof error === 'string') {
+          errorMessage = error;
+        } else if (error?.error?.message) {
+          errorMessage = error.error.message;
+        } else if (error?.message) {
+          errorMessage = error.message;
+        }
+
+        let statusToSet: 'error' | 'warning' = 'error';
+
+        if (errorMessage.toLowerCase().includes('no cuenta con registros')) {
+          statusToSet = 'warning';
+          Notiflix.Notify.warning(errorMessage);
+        } else {
+          Notiflix.Notify.failure(errorMessage);
+        }
+
         this.registrationStatus.set({
           ...this.registrationStatus(),
-          [patientId]: 'error',
+          [patientId]: statusToSet,
+        });
+
+        this.registrationMessages.set({
+          ...this.registrationMessages(),
+          [patientId]: errorMessage,
         });
       }
     }
 
     this.bulkLoading.set(false);
-    Notiflix.Loading.remove();
     Notiflix.Notify.success('Registro masivo finalizado');
   }
 
-  private loadPatientsForCenter(center: string) {
+  async onBulkUpdateAlerts() {
+    const center = this.selectedCenter();
+    if (!center) {
+      Notiflix.Notify.failure('Selecciona un centro');
+      return;
+    }
+
+    const selectedIds = Object.entries(this.selectedPatients())
+      .filter(([, checked]) => checked)
+      .map(([id]) => id);
+
+    if (!selectedIds.length) {
+      Notiflix.Notify.failure('Selecciona al menos un paciente para actualizar sus alertas');
+      return;
+    }
+
+    this.isUpdatingAlerts.set(true);
+    Notiflix.Notify.info('Iniciando actualización de alertas...');
+
+    const statuses: Record<string, 'queued' | 'pending' | 'success' | 'error' | 'warning'> = {
+      ...this.registrationStatus(),
+    };
+    const messages = { ...this.registrationMessages() };
+
+    selectedIds.forEach((id) => {
+      statuses[id] = 'queued';
+      messages[id] = 'En cola para actualizar alertas';
+    });
+    this.registrationStatus.set(statuses);
+    this.registrationMessages.set(messages);
+
+    let count = 0;
+    for (const patientId of selectedIds) {
+      this.registrationStatus.set({
+        ...this.registrationStatus(),
+        [patientId]: 'pending',
+      });
+      this.registrationMessages.set({
+        ...this.registrationMessages(),
+        [patientId]: `Actualizando alertas (${++count}/${selectedIds.length})...`,
+      });
+
+      try {
+        // 1. Capturamos la respuesta exitosa
+        const response = await firstValueFrom(this.patientService.updateAlertSistrat(patientId));
+        console.log('[updateAlertSistrat ]response', response);
+
+        // Aquí puedes validar si la 'response' misma indica un error de negocio
+        // Por ejemplo: if (response.status === 'error') { throw new Error(response.message); }
+
+        this.registrationStatus.set({ ...this.registrationStatus(), [patientId]: 'success' });
+        this.registrationMessages.set({ ...this.registrationMessages(), [patientId]: 'Alertas actualizadas correctamente' });
+      } catch (error: any) {
+        console.error('Error actualizando alertas en SISTRAT:', error);
+
+        let errorMessage = 'Error al actualizar alertas';
+        if (typeof error === 'string') {
+          errorMessage = error;
+        } else if (error?.error?.message) {
+          errorMessage = error.error.message;
+        } else if (error?.message) {
+          errorMessage = error.message;
+        }
+
+        this.registrationStatus.set({ ...this.registrationStatus(), [patientId]: 'error' });
+        this.registrationMessages.set({ ...this.registrationMessages(), [patientId]: `${errorMessage}: ${error.message}` });
+      }
+    }
+
+    this.isUpdatingAlerts.set(false);
+    Notiflix.Notify.success('Actualización de alertas finalizada');
+  }
+
+  private async loadPatientsForCenter(center: string) {
     if (!center) {
       this.centerPatients.set([]);
       this.selectedPatients.set({});
       this.registrationStatus.set({});
+      this.registrationMessages.set({});
       return;
     }
 
-    this.patientService.getPatients([], { active: true }).subscribe((patients) => {
-      const filtered = (patients || [])
-        .filter((p) => p.sistratCenter === center)
-        .sort((a, b) => {
-          const aName = `${a.name || ''} ${a.surname || ''} ${a.secondSurname || ''}`.trim();
-          const bName = `${b.name || ''} ${b.surname || ''} ${b.secondSurname || ''}`.trim();
-          return aName.localeCompare(bName, 'es', { sensitivity: 'base' });
-        });
+    Notiflix.Loading.standard('Cargando pacientes desde SISTRAT...');
+
+    try {
+      const response = await firstValueFrom(this.patientService.getActiveSistratPatients(center));
+      const patientsFromSistrat = response.data || [];
+
+      const filtered = patientsFromSistrat.sort((a, b) => {
+        const aName = a.name.trim();
+        const bName = b.name.trim();
+        return aName.localeCompare(bName, 'es', { sensitivity: 'base' });
+      }).map((p: any) => ({
+        _id: p.mongoId || undefined,
+        name: p.name,
+        surname: '',
+        secondSurname: '',
+        codigoSistrat: p.codigoSistrat,
+        sistratCenter: center
+      } as Patient));
+
       this.centerPatients.set(filtered);
       const selected: Record<string, boolean> = {};
       filtered.forEach((p) => {
@@ -175,7 +315,17 @@ export default class AttentionsComponent {
       });
       this.selectedPatients.set(selected);
       this.registrationStatus.set({});
-    });
+      this.registrationMessages.set({});
+    } catch (error) {
+      console.error('Error cargando pacientes desde SISTRAT:', error);
+      Notiflix.Notify.failure('Fallo al obtener pacientes de SISTRAT');
+      this.centerPatients.set([]);
+      this.selectedPatients.set({});
+      this.registrationStatus.set({});
+      this.registrationMessages.set({});
+    } finally {
+      Notiflix.Loading.remove();
+    }
   }
 
   private buildYearOptions(): number[] {

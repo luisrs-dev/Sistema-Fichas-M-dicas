@@ -85,7 +85,15 @@ const PatientSchema = new Schema<Patient>(
       type: Boolean,
       default: false
     },
+    alertEvaluacion: {
+      type: Boolean,
+      default: false
+    },
     alertTreatment: {
+      type: Boolean,
+      default: false
+    },
+    alertIntegracionSocial: {
       type: Boolean,
       default: false
     },
@@ -133,7 +141,7 @@ const PatientSchema = new Schema<Patient>(
     },
     interventionAB: {
       type: String
-        },
+    },
     observations: {
       type: String
     },

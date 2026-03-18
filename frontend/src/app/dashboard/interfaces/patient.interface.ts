@@ -26,6 +26,8 @@ export interface Patient {
   fonasa: Boolean;
   alertCie10: Boolean;
   alertConsentimiento: Boolean;
+  alertEvaluacion: Boolean;
+  alertIntegracionSocial: Boolean;
   alertTreatment?: Boolean;
   active?: boolean;
   mainSubstance: string;
@@ -44,7 +46,7 @@ export interface Patient {
   opcion_discapacidad?: string;
 }
 
-interface Program{
+interface Program {
   _id: string;
   name: string;
 }

@@ -12,7 +12,7 @@ import ProcessLogger from "../utils/processLogger";
 
 
 const inerPatient = async (Patient: Patient) => {
-  const responseInsert = await PatientModel.create({...Patient, registeredOnFiclin: true});
+  const responseInsert = await PatientModel.create({ ...Patient, registeredOnFiclin: true });
   console.log("Paciente registrado");
   console.log({ responseInsert });
   return responseInsert;
@@ -82,25 +82,25 @@ const updateUserPassword = async (email: string, newPassword: string) => {
 const admisionFormmByPatient = async (patientId: string) => {
 
   try {
-    const patient = await PatientModel.findOne({ _id: patientId });
+    const patient = await PatientModel.findOne({ _id: patientId }).populate('program');
     const admissionForm = await AdmissionFormModel.findOne({ patientId });
-   
-    return {patient, admissionForm};
+
+    return { patient, admissionForm };
   } catch (error) {
-    
+
   }
 };
 
 const demandByPatient = async (patientId: string) => {
 
   try {
-    const patient = await PatientModel.findOne({ _id: patientId });
+    const patient = await PatientModel.findOne({ _id: patientId }).populate('program');
     const demand = await DemandModel.findOne({ patientId });
-   
-    return {patient, demand};
+
+    return { patient, demand };
   } catch (error) {
     console.log(`No hay registro de demanda para paciente con id ${patientId}`);
-        
+
   }
 };
 
@@ -119,17 +119,17 @@ const dataPatientByRut = async (rut: string) => {
 
 
 const updateAF = async (patientId: string, admissionFormData: any) => {
-   
+
   console.log('admissionFormData', admissionFormData);
-  
+
   try {
     const patient = await PatientModel.findOne({ _id: patientId });
     console.log(patient?.name);
     console.log(patient?._id);
     console.log('recibido');
-    console.log({patientId});
-    
-    
+    console.log({ patientId });
+
+
     const patientObjectId = new mongoose.Types.ObjectId(patientId);
 
 
@@ -138,8 +138,8 @@ const updateAF = async (patientId: string, admissionFormData: any) => {
     }
 
     const admissionForm = await AdmissionFormModel.findOne({ patientId });
-    console.log({admissionForm});
-  
+    console.log({ admissionForm });
+
     const updatedAdmissionForm = await AdmissionFormModel.updateOne({ _id: admissionForm!._id }, admissionFormData);
 
     if (!updatedAdmissionForm) {
@@ -208,7 +208,7 @@ const updatePatientSistrat = async (patientId: string, demanda: Demand) => {
   }
 };
 
-const recordDemandToSistrat = async (patientId: string): Promise<{success:boolean}> => {
+const recordDemandToSistrat = async (patientId: string): Promise<{ success: boolean }> => {
   try {
     const patient = await PatientModel.findOne({ _id: patientId });
     const demand = await DemandModel.findOne({ patientId });
@@ -219,9 +219,9 @@ const recordDemandToSistrat = async (patientId: string): Promise<{success:boolea
 
     const sistratPlatform = new Sistrat();
     const createdDemand = await sistratPlatform.crearDemanda(patient);
-    if(createdDemand){
-      return {success: true} 
-    }else{
+    if (createdDemand) {
+      return { success: true }
+    } else {
       throw new Error("Error al registrar demanda en SISTRAT");
     }
 
@@ -267,6 +267,40 @@ const syncCodigoSistrat = async (patientId: string) => {
   }
 };
 
+const activeSistratPatientsByCenter = async (center: string) => {
+  try {
+    const logger = new ProcessLogger(`sistrat-listado-${center}`, "obtener-pacientes-activos-centro");
+    const sistratPlatform = new Sistrat();
+    const data = await sistratPlatform.getActivePatientsByCenter(center, logger);
+    await logger.close();
+
+    // Buscar pacientes locales de ese centro para cruzarlos y obtener el _id de Mongo
+    const localPatients = await PatientModel.find({ sistratCenter: center });
+
+    const normalize = (name: string) =>
+      name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "").toLowerCase();
+
+    // Mapear inyectando _id de la DB
+    const matchedData = data.map((sistratP) => {
+      const matchedLocal = localPatients.find(lp => {
+        const matchesCode = sistratP.codigoSistrat && lp.codigoSistrat === sistratP.codigoSistrat;
+        const localName = `${lp.name.trim()} ${lp.surname.trim()} ${lp.secondSurname.trim()}`;
+        const matchesName = normalize(localName) === normalize(sistratP.name);
+        return matchesCode || matchesName;
+      });
+
+      return {
+        ...sistratP,
+        mongoId: matchedLocal ? matchedLocal._id.toString() : null
+      };
+    });
+
+    return matchedData;
+  } catch (error) {
+    console.error(`Error obteniendo pacientes activos para ${center} desde SISTRAT:`, error);
+    throw error;
+  }
+};
 
 const getAllPatients = async () => {
   const responsePatients = await PatientModel.find().populate("program");
@@ -354,7 +388,7 @@ const updateAlertsFromSistrat = async (patientId: string) => {
     } else {
       throw new Error("Paciente no registrado");
     }
-  } catch (error) {}
+  } catch (error) { }
 };
 
 const updateFormCie10 = async (patientId: string, optionSelected: string) => {
@@ -369,7 +403,7 @@ const updateFormCie10 = async (patientId: string, optionSelected: string) => {
     } else {
       throw new Error("Paciente no registrado");
     }
-  } catch (error) {}
+  } catch (error) { }
 };
 
 ;
@@ -394,5 +428,6 @@ export {
   getAllPatients,
   dataPatientByRut,
   updateActiveStatus,
-  syncCodigoSistrat
+  syncCodigoSistrat,
+  activeSistratPatientsByCenter
 };

@@ -17,23 +17,23 @@ export { getGroupedRecordsByPatientAndMonth } from "./medicalRecordGrouping.serv
 type PatientWithProgram = (Patient & { program?: Types.ObjectId | { name?: string } | string | null }) | null;
 
 const insertMedicalRecord = async (medicalRecord: MedicalRecord) => {
-  
-    if (Array.isArray(medicalRecord.patient)) {
-      // Caso: varios pacientes → crear un registro por cada uno
-      const recordsToInsert = medicalRecord.patient.map((p) => ({
-        ...medicalRecord,
-        patient: new Types.ObjectId(p), // asegurar que sea ObjectId si viene como string
-      }));
 
-       const responseInsert = await MedicalRecordModel.insertMany(recordsToInsert);
-      return responseInsert;
-      
-    } else {
-      const responseInsert = await MedicalRecordModel.create(medicalRecord);
-      // Aquí TS ya sabe que patient es un ObjectId
-      return responseInsert;
-    }
-    
+  if (Array.isArray(medicalRecord.patient)) {
+    // Caso: varios pacientes → crear un registro por cada uno
+    const recordsToInsert = medicalRecord.patient.map((p) => ({
+      ...medicalRecord,
+      patient: new Types.ObjectId(p), // asegurar que sea ObjectId si viene como string
+    }));
+
+    const responseInsert = await MedicalRecordModel.insertMany(recordsToInsert);
+    return responseInsert;
+
+  } else {
+    const responseInsert = await MedicalRecordModel.create(medicalRecord);
+    // Aquí TS ya sabe que patient es un ObjectId
+    return responseInsert;
+  }
+
 };
 
 const postMedicalRecordsPerMonthOnSistrat = async (patientId: string, month: number, year: number) => {
@@ -48,7 +48,10 @@ const postMedicalRecordsPerMonthOnSistrat = async (patientId: string, month: num
     throw new Error("Paciente no encontrado");
   }
 
-  await sistratPlatform.recordMonthlySheet(patient, month, year);
+  const response = await sistratPlatform.recordMonthlySheet(patient, month, year);
+  console.log('[recordMonthlySheet] response: ', response);
+
+  return response;
 };
 
 const postMedicalRecordsPerMonthForAllPatients = async (month: number, year: number) => {
@@ -254,54 +257,55 @@ const readMonthlyLogFile = async (fileName: string) => {
 
 const deleteRecord = async (id: string) => {
   try {
-    const responseDelete = await MedicalRecordModel.findByIdAndDelete(id);  
+    const responseDelete = await MedicalRecordModel.findByIdAndDelete(id);
     if (!responseDelete) {
       throw new Error("No se encontró la ficha médica para eliminar");
-    } 
+    }
     console.log("Ficha médica eliminada correctamente");
     return responseDelete;
   } catch (error) {
     console.error("Error al eliminar la ficha médica:", error);
     throw new Error(`Error al eliminar la ficha médica: ${error}`);
-  } 
+  }
 };
 
 const allMedicalRecords = async () => {
   const responseUsers = await MedicalRecordModel.find({}).populate([
     { path: 'service' },
-    { path: 'registeredBy', select: 'name profile',
-      populate: { 
+    {
+      path: 'registeredBy', select: 'name profile',
+      populate: {
         path: 'profile',
         select: 'name'
       }
-     }
+    }
   ]);
   return responseUsers;
 };
 
 const allMedicalRecordsUser = async (userId: string, startDate?: string, endDate?: string) => {
 
-let medicalRecords = [];
+  let medicalRecords = [];
 
-  if(startDate && endDate){
-   medicalRecords = await MedicalRecordModel.find({ 
-    patient: userId,
-    date: { $gte: startDate, $lte: endDate },
-  })
-    .populate('service')
-    .populate('patient')
-    .populate('registeredBy')
-    .lean();
-  }else{
-       medicalRecords = await MedicalRecordModel.find({ 
-    patient: userId,
-  })
-    .populate('service')
-    .populate('patient')
-    .populate('registeredBy')
-    .lean();
+  if (startDate && endDate) {
+    medicalRecords = await MedicalRecordModel.find({
+      patient: userId,
+      date: { $gte: startDate, $lte: endDate },
+    })
+      .populate('service')
+      .populate('patient')
+      .populate('registeredBy')
+      .lean();
+  } else {
+    medicalRecords = await MedicalRecordModel.find({
+      patient: userId,
+    })
+      .populate('service')
+      .populate('patient')
+      .populate('registeredBy')
+      .lean();
   }
-    
+
 
   for (const record of medicalRecords) {
     const registeredBy = record.registeredBy;
@@ -322,7 +326,7 @@ let medicalRecords = [];
 const getRecordsByMonthAndYear = async (month: number, year: number) => {
 
   try {
-    
+
     const startOfMonth = new Date(year, month - 1, 1); // Primer día del mes
     const endOfMonth = new Date(year, month, 0); // Último día del mes
 
@@ -336,7 +340,7 @@ const getRecordsByMonthAndYear = async (month: number, year: number) => {
     return medicalRecords;
   } catch (error) {
     throw new Error(`Error to fetch medical records: ${error}`);
-    
+
   }
 
 };

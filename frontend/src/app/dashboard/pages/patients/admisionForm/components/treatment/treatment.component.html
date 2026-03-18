@@ -5,12 +5,14 @@
     <div class="col-6">
       <mat-form-field appearance="outline" class="w-full">
         <mat-label>Fecha ingreso tratamiento</mat-label>
-        <input formControlName="txtfecha_ingreso_tratamiento" matInput [matDatepicker]="picker_txtfecha_ingreso_tratamiento" />
+        <input formControlName="txtfecha_ingreso_tratamiento" matInput
+          [matDatepicker]="picker_txtfecha_ingreso_tratamiento" />
         <!--<mat-hint>MM/DD/YYYY</mat-hint>-->
         <mat-datepicker-toggle matIconSuffix [for]="picker_txtfecha_ingreso_tratamiento"></mat-datepicker-toggle>
         <mat-datepicker #picker_txtfecha_ingreso_tratamiento></mat-datepicker>
       </mat-form-field>
-      <span *ngIf="isValidField('txtfecha_ingreso_tratamiento')" class="text-red-500"> Debe seleccionar una opción </span>
+      <span *ngIf="isValidField('txtfecha_ingreso_tratamiento')" class="text-red-500"> Debe seleccionar una opción
+      </span>
     </div>
 
     <div class="col-6">
@@ -43,8 +45,13 @@
         <mat-label>Tipo programa</mat-label>
         <mat-select formControlName="seltipo_programa">
           <mat-option value="null">Seleccione una opción</mat-option>
+          @if(program.toLowerCase().includes('hombre') || program.toLowerCase().includes('alameda')){
           <mat-option value="1">Programa Población General</mat-option>
+          }
+
+          @if(program.toLowerCase().includes('mujer')){
           <mat-option value="2">Programa Específico Mujeres</mat-option>
+          }
         </mat-select>
         <span *ngIf="isValidField('seltipo_programa')" class="text-red-500"> Debe seleccionar una opción </span>
       </mat-form-field>
@@ -56,10 +63,23 @@
         <!--// Modificar si es mujeres u hombres-->
         <mat-select formControlName="seltipo_plan">
           <mat-option value="null">Seleccione una opción</mat-option>
+
+          @if( program.toLowerCase().includes('hombre')){
           <mat-option value="15">PG-PR</mat-option>
           <mat-option value="14">PG-PAI</mat-option>
-          <mat-option value="24">Otro</mat-option>
+          }
+
+          @if( program.toLowerCase().includes('alameda')){
+          <mat-option value="14">PG-PAI</mat-option>
+          }
+
+          @if( program.toLowerCase().includes('mujer')){
           <mat-option value="18">M-PR</mat-option>
+          <mat-option value="57">M PAI (p)</mat-option>
+          <mat-option value="17">M-PAI</mat-option>
+          }
+
+          <mat-option value="24">Otro</mat-option>
         </mat-select>
         <span *ngIf="isValidField('seltipo_plan')" class="text-red-500"> Debe seleccionar una opción </span>
       </mat-form-field>
@@ -94,7 +114,8 @@
           <mat-option value="Si">Si</mat-option>
           <mat-option value="No">No</mat-option>
         </mat-select>
-        <span *ngIf="isValidField('selconcentimiento_informado')" class="text-red-500"> Debe seleccionar una opción </span>
+        <span *ngIf="isValidField('selconcentimiento_informado')" class="text-red-500"> Debe seleccionar una opción
+        </span>
       </mat-form-field>
     </div>
   </div>

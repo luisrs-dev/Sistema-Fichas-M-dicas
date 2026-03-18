@@ -6,6 +6,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { MaterialModule } from '../../../../angular-material/material.module';
 import { Patient } from '../../../interfaces/patient.interface';
 import { PatientService } from '../patient.service';
@@ -47,6 +48,7 @@ export default class ListPatientsComponent implements OnInit {
   public selectedOptionToExport: string | null = null;
   public togglingActive: Record<string, boolean> = {};
   public fetchingCodigo: Record<string, boolean> = {};
+  public isUpdatingAlerts: boolean = false;
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
@@ -94,8 +96,16 @@ export default class ListPatientsComponent implements OnInit {
   }
 
   onUpdateAlerts(patientId: string) {
-    this.patientService.updateAlertSistrat(patientId).subscribe((response) => {
-      this.patientService.updatePatients(this.programsIds);
+    Notiflix.Loading.circle('Actualizando...');
+    this.patientService.updateAlertSistrat(patientId).subscribe({
+      next: () => {
+        Notiflix.Loading.remove();
+        this.patientService.updatePatients(this.programsIds);
+      },
+      error: () => {
+        Notiflix.Loading.remove();
+        Notiflix.Notify.failure('Error actualizando alerta');
+      }
     });
   }
 

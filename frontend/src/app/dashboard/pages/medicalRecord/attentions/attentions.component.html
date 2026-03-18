@@ -29,48 +29,58 @@
       </mat-select>
     </mat-form-field>
 
-    <button
-      mat-flat-button
-      color="primary"
-      class="text-white"
-      [disabled]="bulkLoading()"
-      (click)="onBulkSistratRecord()"
-    >
+    <button mat-flat-button color="primary" class="text-white" [disabled]="bulkLoading() || isUpdatingAlerts()"
+      (click)="onBulkSistratRecord()">
       Registrar
+    </button>
+    <button mat-flat-button color="accent" class="text-white ml-2" [disabled]="bulkLoading() || isUpdatingAlerts()"
+      (click)="onBulkUpdateAlerts()">
+      Actualizar Alertas
     </button>
   </div>
 
   <div class="summary" *ngIf="centerPatients().length > 0">
     <span>{{ centerPatients().length }} pacientes</span>
     <span>Seleccionados: {{ selectedCount() }}</span>
-    <button
-      mat-stroked-button
-      color="primary"
-      (click)="toggleSelectAllPatients()"
-      [disabled]="bulkLoading()"
-    >
+    <button mat-stroked-button color="primary" (click)="toggleSelectAllPatients()" [disabled]="bulkLoading()">
       {{ isAllSelected() ? 'Deseleccionar todos' : 'Seleccionar todos' }}
     </button>
   </div>
 
   <div class="patient-list" *ngIf="centerPatients().length > 0">
     <div *ngFor="let patientItem of centerPatients()" class="patient-item">
-      <mat-checkbox
-        [checked]="selectedPatients()[patientItem._id || '']"
+      <mat-checkbox [checked]="selectedPatients()[patientItem._id || '']"
         (change)="togglePatientSelection(patientItem._id || '', $event.checked)"
-        [disabled]="bulkLoading()"
-      >
-        {{ patientItem.name | uppercase}} {{ patientItem.surname | uppercase }} {{ patientItem.secondSurname | uppercase}}
+        [disabled]="bulkLoading() || !patientItem._id || !patientItem.codigoSistrat">
+        <span class="patient-name">{{ patientItem.name | uppercase}}</span>
+        <span *ngIf="patientItem.codigoSistrat" class="text-muted ml-2">
+          (Cód. Sistrat: {{ patientItem.codigoSistrat }})
+        </span>
+        <span *ngIf="patientItem._id && !patientItem.codigoSistrat" class="text-danger ml-2"
+          style="color: #f44336; font-size: 0.85em;">
+          [Sin código SISTRAT]
+        </span>
+        <span *ngIf="!patientItem._id" class="text-danger ml-2" style="color: #f44336; font-size: 0.85em;">
+          [No registrado localmente]
+        </span>
       </mat-checkbox>
 
       <span class="status">
         @if (registrationStatus()[patientItem._id || ''] === 'success') {
-          <mat-icon color="primary">check_circle</mat-icon>
+        <mat-icon color="primary">check_circle</mat-icon>
+        } @else if (registrationStatus()[patientItem._id || ''] === 'warning') {
+        <mat-icon color="accent" style="color: #ff9800;">info</mat-icon>
         } @else if (registrationStatus()[patientItem._id || ''] === 'error') {
-          <mat-icon color="warn">cancel</mat-icon>
+        <mat-icon color="warn">cancel</mat-icon>
         } @else if (registrationStatus()[patientItem._id || ''] === 'pending') {
-          <mat-icon color="accent">hourglass_top</mat-icon>
+        <mat-spinner diameter="20" color="primary"></mat-spinner>
+        } @else if (registrationStatus()[patientItem._id || ''] === 'queued') {
+        <mat-icon color="accent">schedule</mat-icon>
         }
+      </span>
+      <span *ngIf="registrationMessages()[patientItem._id || '']" class="text-xs"
+        style="margin-left: 10px; color: #666; font-style: italic;">
+        {{ registrationMessages()[patientItem._id || ''] }}
       </span>
     </div>
   </div>

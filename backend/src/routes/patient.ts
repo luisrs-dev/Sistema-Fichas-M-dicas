@@ -17,7 +17,8 @@ import {
   getDemand,
   getDataByRut,
   updatePatientActiveStatus,
-  fetchCodigoSistrat
+  fetchCodigoSistrat,
+  getActiveSistratPatients
 } from "../controllers/patient.controller";
 const router = Router();
 
@@ -35,6 +36,7 @@ router.post("/ficha-ingreso/sistrat", postAdmissionFormSistrat);
 router.post("/sistrat", postPatientSistrat);
 router.post("/sistrat/alerts", updateAlerts);
 router.post("/sistrat/formCie10", formCie10);
+router.get("/sistrat/patients/:center", getActiveSistratPatients);
 router.post("/:id/sistrat-code", fetchCodigoSistrat);
 router.get("/", getPatients);
 router.get("/:id", getPatientsById);

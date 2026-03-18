@@ -58,8 +58,8 @@ class Scrapper {
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
       "(KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
     );
-    
-    
+
+
     // Bypass básico antibot
     await page.evaluateOnNewDocument(() => {
       Object.defineProperty(navigator, "webdriver", { get: () => false });
@@ -76,26 +76,38 @@ class Scrapper {
   async launchBrowser(headless: boolean = false): Promise<Browser> {
 
     const sessionHash = Date.now().toString();
-    // const userDataDir = await this.createCacheDirectory(sessionHash);
     const userDataDir = await this.createCacheDirectory(sessionHash);
-    const executablePath = await this.getSystemChromePath();
 
     console.log('[LaunchBrowser] Obteniendo browser...');
-    
-    this.browser =  await puppeteer.launch(
-      
-      // Prod
-      // {
-      //   userDataDir: userDataDir,
-      //   executablePath: '/usr/bin/google-chrome',
-      //   args: [
-      //     `--proxy-server=http://${"geo.iproyal.com:12321"}`,
-      //     "--no-sandbox",
-      //     "--disable-setuid-sandbox",
-      //   ],
-      // }
-      // Local
-      {
+
+    // Detectamos si estamos en el VPS porque el sistema operativo es Linux (o si la variable NODE_ENV es production)
+    const isProduction = process.platform === 'linux' || process.env.NODE_ENV === 'production';
+
+    console.log('isProduction', isProduction);
+    console.log('process.platform', process.platform);
+    console.log('process.env.NODE_ENV', process.env.NODE_ENV);
+
+
+    if (isProduction) {
+      console.log('[LaunchBrowser] Entorno Producción detectado (VPS)');
+
+      this.browser = await puppeteer.launch({
+        headless: true, // Se recomienda true para VPS
+        userDataDir: userDataDir,
+        executablePath: '/usr/bin/google-chrome',
+        args: [
+          `--proxy-server=http://${"geo.iproyal.com:12321"}`,
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+        ],
+      });
+
+    } else {
+      console.log('[LaunchBrowser] Entorno Local detectado');
+
+      const executablePath = await this.getSystemChromePath();
+
+      this.browser = await puppeteer.launch({
         headless: headless,
         executablePath,
         //slowMo: 300, sirve para darle tiempe a cada operacion
@@ -109,8 +121,8 @@ class Scrapper {
         ],
         timeout: 0,
         protocolTimeout: 300000,
-      }
-      );
+      });
+    }
 
     console.log('[LaunchBrowser] Browser obtenido');
     const browserVersion = await this.browser.version();
@@ -139,9 +151,9 @@ class Scrapper {
     try {
       await page.waitForSelector(selector, { visible: true, timeout: timeoutValue });
       await page.click(selector);
-      
+
     } catch (error) {
-      console.error(`Error al hacer click en el selector: ${selector}`, error);            
+      console.error(`Error al hacer click en el selector: ${selector}`, error);
     }
   }
 
@@ -167,9 +179,9 @@ class Scrapper {
   // Método para seleccionar un valor en un select
   async setSelectValue(page: Page, selector: string, value: string): Promise<void> {
     try {
-      
+
       await page.waitForSelector(selector, { visible: true, timeout: 10000 });
-  
+
       await page.evaluate(
         (selector, value) => {
           const select = document.querySelector(selector) as HTMLSelectElement;
@@ -187,7 +199,7 @@ class Scrapper {
       );
     } catch (error) {
       console.warn(`[Scrapper] setSelectValue omitido para ${selector}: ${error}`);
-      
+
     }
   }
 

@@ -1,12 +1,11 @@
 <div class="container">
-@if(!loading()){
-    <div class="flex justify-content-between flex-wrap">
+  @if(!loading()){
+  <div class="flex justify-content-between flex-wrap">
     <div class="flex align-items-center justify-content-center border-round">
       <h4>
         Ficha de ingreso >
         <a mat-button color="primary" matTooltip="Ver Perfil">
-          {{ patient!.name }} {{ patient!.surname }} {{ patient!.secondSurname }}</a
-        >
+          {{ patient!.name }} {{ patient!.surname }} {{ patient!.secondSurname }}</a>
       </h4>
     </div>
     <div>
@@ -16,10 +15,11 @@
           <mat-icon>save</mat-icon>
         </button>
 
-        @if(patient){ 
-          @if(admissionFormRegistered || patient.registeredAdmissionForm){
-            <button class="ml-1 my-2" mat-raised-button color="primary" (click)="onSaveSistrat()">SISTRAT<mat-icon>save</mat-icon></button>
-          } 
+        @if(patient){
+        @if(admissionFormRegistered || patient.registeredAdmissionForm){
+        <button class="ml-1 my-2" mat-raised-button color="primary"
+          (click)="onSaveSistrat()">SISTRAT<mat-icon>save</mat-icon></button>
+        }
         }
       </div>
     </div>
@@ -41,13 +41,14 @@
         <clinical-diagnosis-form [admissionForm]="admissionForm" />
       </mat-tab>
 
-      <mat-tab label="Tratamiento/Convenio "><treatment-form [rut]="patient.rut" [admissionForm]="admissionForm" /></mat-tab>
+      <mat-tab label="Tratamiento/Convenio "><treatment-form [program]="patient.program.name" [rut]="patient.rut"
+          [admissionForm]="admissionForm" /></mat-tab>
 
       <mat-tab label="Diagnósitco de Int. Social"><social-diagnosis-form [admissionForm]="admissionForm" /> </mat-tab>
       }
     </mat-tab-group>
   </div>
-}@else {
+  }@else {
   Cargando...
-}
+  }
 </div>

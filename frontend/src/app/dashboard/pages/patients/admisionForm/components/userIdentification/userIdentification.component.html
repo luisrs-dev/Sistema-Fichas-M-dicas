@@ -48,7 +48,7 @@
   <div class="grid">
     <div class="col-4">
       <mat-form-field class="w-full" appearance="outline">
-        <mat-label>Fecha Nacimiento</mat-label>
+        <mat-label>Fecha de nacimiento</mat-label>
         <input matInput [matDatepicker]="pickerBirthday" formControlName="birthDate" />
         <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
         <mat-datepicker-toggle matIconSuffix [for]="pickerBirthday"></mat-datepicker-toggle>
@@ -130,23 +130,22 @@
       </mat-form-field>
     </div>
     @if (mostrarCampoExtra) {
-      <div class="col-4">
-        <mat-form-field class="w-full" appearance="outline">
-          <mat-label>Opciones Discapacidad</mat-label>
-          <mat-select formControlName="opcion_discapacidad" id="selorigen_ingreso">
-            <mat-option value="">Seleccione</mat-option>
-            <mat-option value="1">De origen físico</mat-option>
-            <mat-option value="2">De origen Intelectual</mat-option>
-            <mat-option value="3">De causa Psíquica</mat-option>
-            <mat-option value="4">De origen Visual</mat-option>
-            <mat-option value="5">De origen auditivo</mat-option>
-          </mat-select>
-          <span *ngIf="isValidField('opcion_discapacidad')" class="form-text text-danger">Campo requerido </span>
-          
-        </mat-form-field>
-      </div>
+    <div class="col-4">
+      <mat-form-field class="w-full" appearance="outline">
+        <mat-label>Opciones Discapacidad</mat-label>
+        <mat-select formControlName="opcion_discapacidad" id="selorigen_ingreso">
+          <mat-option value="">Seleccione</mat-option>
+          <mat-option value="1">De origen físico</mat-option>
+          <mat-option value="2">De origen Intelectual</mat-option>
+          <mat-option value="3">De causa Psíquica</mat-option>
+          <mat-option value="4">De origen Visual</mat-option>
+          <mat-option value="5">De origen auditivo</mat-option>
+        </mat-select>
+        <span *ngIf="isValidField('opcion_discapacidad')" class="form-text text-danger">Campo requerido </span>
+
+      </mat-form-field>
+    </div>
     }
   </div>
 </form>
 }
-

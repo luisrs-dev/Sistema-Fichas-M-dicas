@@ -72,7 +72,7 @@ const postMedicalRecordPerMonth = async ({ params, body }: Request, res: Respons
   try {
     const responsepostMedicalRecordsPerMonthOnSistrat = await postMedicalRecordsPerMonthOnSistrat(patientId, safeMonth, safeYear);
 
-    res.send(responsepostMedicalRecordsPerMonthOnSistrat);
+    res.send({ status: true, message: "Registro de Ficha mensual en Sistrat completado", data: responsepostMedicalRecordsPerMonthOnSistrat });
   } catch (error) {
     handleHttp(res, "ERROR_MEDICAL_RECORDS_PER_MONTH", error);
   }
@@ -89,7 +89,7 @@ const postMedicalRecordPerMonthBulk = async ({ body }: Request, res: Response) =
   const year = Number.isFinite(providedYear) && providedYear > 0 ? providedYear : now.getFullYear();
   console.log("🚀 ~ postMedicalRecordPerMonthBulk ~ year:", year)
 
-  
+
   try {
     const bulkResult = await postMedicalRecordsPerMonthForAllPatients(month, year);
     res.status(200).json({
@@ -183,10 +183,10 @@ const getPdfMedicalRecordsByPatient = async ({ params }: Request, res: Response)
       // userDataDir: userDataDir, // Establecer la carpeta de caché
       executablePath: "/usr/bin/google-chrome",
       args: [
-          `--proxy-server=http://geo.iproyal.com:12321`,
-          "--no-sandbox",
-          "--disable-setuid-sandbox",
-        ],      
+        `--proxy-server=http://geo.iproyal.com:12321`,
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+      ],
     });
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "networkidle0" });

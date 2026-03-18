@@ -18,8 +18,12 @@ export class TreatmentComponent extends FormBaseComponent {
   private fb = inject(FormBuilder);
 
   @Input() rut: string;
-  
+  @Input() program: string;
+
   ngOnInit() {
+
+    console.log('admisionform', this.admissionForm);
+
     this.form = this.fb.group({
       txtfecha_ingreso_tratamiento: [new Date()],
       selconvenio_conace: ['', []],

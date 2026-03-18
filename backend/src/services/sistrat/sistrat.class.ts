@@ -521,6 +521,13 @@ class Sistrat {
   // Registrar Ficha Mensual en SISTRAT
   async recordMonthlySheet(patient: Patient, month: number, year: number) {
 
+    console.log(`[recordMonthtlySheet][Mes Año a registrar] ${month} / ${year}`);
+    const medicalRecordsGrouped = await getGroupedRecordsByPatientAndMonth(String(patient._id), month, year);
+
+    if (!medicalRecordsGrouped || medicalRecordsGrouped.length === 0) {
+      return "El paciente no cuenta con registros de atenciones en el mes";
+    }
+
     // this.gender = patient.sex;
     let page: Page | null = null;
 
@@ -606,9 +613,6 @@ class Sistrat {
       }
       await page.waitForSelector(".tabla_mensual", { timeout: 5000 });
 
-      console.log(`[recordMonthtlySheet][Mes Año a registrar] ${month} / ${year}`);
-      const medicalRecordsGrouped = await getGroupedRecordsByPatientAndMonth(String(patient._id), month, year);
-
       await page.evaluate((medicalRecordsGrouped) => {
         // Buscar la tabla donde están los registros mensuales
         //const table = document.querySelector(".tabla_mensual") as HTMLTableElement | null;
@@ -680,16 +684,18 @@ class Sistrat {
       // console.log('screenshot tomado y guardado en:', filePath);
 
       // 3. Esperar al botón y hacer click
-
+      // await this.scrapper.waitForSeconds(10000);
       const directRecordValue = await getEnvironmentConfigValue(this.directRecordConfigKey);
       console.log(`[Sistrat][recordMonthlySheet] Valor de configuración para registro directo: ${JSON.stringify(directRecordValue)}`);
       if (directRecordValue) {
         await this.scrapper.clickButton(page, "#mysubmit", 30000);
-        console.log("[Sistrat][recordMonthlySheet] Formulario enviado");
+        await this.scrapper.waitForSeconds(2);
+        console.log("[Sistrat][recordMonthlySheet] submit clicked!");
       } else {
         console.log("[Sistrat][recordMonthlySheet] Registro directo deshabilitado: se omite envío del formulario");
         return "REGISTRO PREPARADO, ENVÍO OMITIDO POR CONFIGURACIÓN";
       }
+
       return true;
     } catch (error) {
       console.log("errror", error);
@@ -1174,6 +1180,7 @@ class Sistrat {
       await this.scrapper.setDateValue(page, "#txtfecha_ingreso_tratamiento", admissionForm.txtfecha_ingreso_tratamiento);
       await this.scrapper.setSelectValue(page, "#selconvenio_conace", 'Si');
       await this.scrapper.setDateValue(page, "#txtfecha_ingreso_conace", admissionForm.txtfecha_ingreso_conace);
+      await this.scrapper.waitForSeconds(2);
       await this.scrapper.setSelectValue(page, "#seltipo_programa", admissionForm.seltipo_programa);
       await this.scrapper.waitForSeconds(2);
       await this.scrapper.setSelectValue(page, "#seltipo_plan", admissionForm.seltipo_plan);
@@ -1261,6 +1268,8 @@ class Sistrat {
 
       // await page.waitForSelector("#filtrar", { visible: true, timeout: 20000 });
       await this.scrapper.waitForSeconds(3);
+      console.log('[openActiveUsersList] antes de click #filtrar');
+      await this.scrapper.waitForSeconds(1);
       await this.scrapper.clickButton(page, "#filtrar");
       await this.logStep(logger, "[Sistrat] Filtro aplicado en listado de pacientes");
     } catch (error) {
@@ -1281,9 +1290,19 @@ class Sistrat {
 
     try {
       await this.logStep(logger, "[Sistrat][updateAlerts] Inicio");
+      const patientCode = patient.codigoSistrat;
+      console.log('patientCode', patientCode);
+      if (!patientCode) {
+        return "Paciente no tiene código SISTRAT";
+      }
       page = await this.login(patient.sistratCenter, logger);
       await this.scrapper.clickButton(page, "#flyout");
+      await this.scrapper.waitForSeconds(1);
       await this.scrapper.clickButton(page, 'a[href="php/consultar_paciente.php"].ui-corner-all');
+      await this.scrapper.waitForSeconds(1);
+
+      console.log('[updateAlerts] antes de click #filtrar');
+      await this.scrapper.waitForSeconds(1);
       await this.scrapper.clickButton(page, "#filtrar");
       await this.logStep(logger, "[Sistrat][updateAlerts] Listado cargado");
       const patientName = `${patient.name.trim()} ${patient.surname.trim()} ${patient.secondSurname.trim()}`.toLowerCase();
@@ -1291,7 +1310,7 @@ class Sistrat {
       await page.waitForSelector("#table_pacientes", { visible: true });
       console.log("[Sistrat][updateAlerts] Tabla cargada, evaluando filas");
 
-      const patientWithAlerts: any = await page.evaluate((patientName) => {
+      const patientWithAlerts: any = await page.evaluate((patientCode) => {
         const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
 
         if (table) {
@@ -1302,40 +1321,52 @@ class Sistrat {
             const objCells = table.rows.item(i)?.cells;
 
             if (objCells) {
-              // Obtenemos el texto de cada celda relevante
-              const patient = {
-                id: objCells.item(0)?.innerText || "", // Captura el texto de la primera celda (ID)
-                name: objCells.item(1)?.innerText?.toLowerCase().trim().replace(/\s+/g, " ") || "", // Captura el texto de la segunda celda (nombre)
-                codigoSistrat: objCells.item(2)?.innerText || false, // Captura el texto de la tercera celda (código Sistrat)
-                cie10: false, // Valor booleano a asignar si se encuentra img en cie10
-                consentimiento: false,
-              };
+              const codigoSistrat = objCells.item(2)?.innerText || false;
 
-              // Obtenemos el id del paciente
-              const idMatch = objCells.item(8)?.querySelector("span[id^='evaluacion_']");
-              if (idMatch) {
-                const idSistrat = idMatch.id.split("_")[1]; // Captura el ID del paciente, ej. '251888'
+              // Solo si el código de la fila coincide con el que buscamos procesaremos el resto (ahorro enorme de DOM query)
+              if (codigoSistrat == patientCode) {
+                const patient = {
+                  id: objCells.item(0)?.innerText || "", // Captura el texto de la primera celda (ID)
+                  name: objCells.item(1)?.innerText?.toLowerCase().trim().replace(/\s+/g, " ") || "", // Captura el texto de la segunda celda (nombre)
+                  codigoSistrat: codigoSistrat,
+                  cie10: false,
+                  consentimiento: false,
+                  evaluacion: false,
+                  integracionSocial: false,
+                };
 
-                // Verificar si hay imágenes en 'cie10_' y 'consentimiento_'
-                const cie10Element = document.getElementById(`cie10_${idSistrat}`);
-                if (cie10Element && cie10Element.querySelector("img")) {
-                  patient.cie10 = true; // Asignamos true si hay img en cie10
+                // Obtenemos el id del paciente (desde el elemento evaluacion_XXXXX)
+                const idMatch = objCells.item(8)?.querySelector("span[id^='evaluacion_']");
+                if (idMatch) {
+                  const idSistrat = idMatch.id.split("_")[1]; // Captura el ID del paciente, ej. '251888'
+
+                  // Verificar si hay alerta en 'evaluacion_'
+                  const evaluacionElement = document.getElementById(`evaluacion_${idSistrat}`);
+                  if (evaluacionElement && evaluacionElement.querySelector("img")) {
+                    patient.evaluacion = true;
+                  }
+
+                  // Verificar si hay alerta en 'cie10_' 
+                  const cie10Element = document.getElementById(`cie10_${idSistrat}`);
+                  if (cie10Element && cie10Element.querySelector("img")) {
+                    patient.cie10 = true;
+                  }
+
+                  // Verificar si hay alerta en 'consentimiento_' (con o sin separador)
+                  const consentimientoElement = document.getElementById(`consentimiento${idSistrat}`);
+                  if (consentimientoElement && consentimientoElement.querySelector("img")) {
+                    patient.consentimiento = true;
+                  }
+
+                  // Verificar si hay alerta en Integración Social (imagen amarilla)
+                  const integracionImg = objCells.item(8)?.querySelector("img[src*='circulo_amarillo.png']");
+                  if (integracionImg) {
+                    patient.integracionSocial = true;
+                  }
                 }
 
-                const consentimientoElement = document.getElementById(`consentimiento${idSistrat}`);
-                if (consentimientoElement && consentimientoElement.querySelector("img")) {
-                  patient.consentimiento = true; // Asignamos true si hay img en consentimiento
-                }
-              }
-
-              // Comparamos con el nombre que estamos buscando
-              if (patient.name == patientName) {
-                //console.log(objCells.item(8));
                 console.log({ patient });
-
                 return patient;
-              } else {
-                console.log("NO SON IGUALES");
               }
             }
           }
@@ -1345,7 +1376,7 @@ class Sistrat {
         console.log("retornando null");
 
         return null; // Devuelve los datos capturados
-      }, patientName);
+      }, patientCode);
 
       if (patientWithAlerts) {
         console.log("[Sistrat][updateAlerts] Paciente encontrado en listado, sincronizando flags");
@@ -1357,8 +1388,18 @@ class Sistrat {
           await patientEntity.save();
         }
 
+        if (patientWithAlerts.evaluacion) {
+          patientEntity.alertEvaluacion = true;
+          await patientEntity.save();
+        }
+
         if (patientWithAlerts.consentimiento) {
           patientEntity.alertConsentimiento = true;
+          await patientEntity.save();
+        }
+
+        if (patientWithAlerts.integracionSocial) {
+          patientEntity.alertIntegracionSocial = true;
           await patientEntity.save();
         }
         return patientEntity;
@@ -1387,6 +1428,8 @@ class Sistrat {
       page = await this.login(patient.sistratCenter, logger);
       await this.scrapper.clickButton(page, "#flyout");
       await this.scrapper.clickButton(page, 'a[href="php/consultar_paciente.php"].ui-corner-all');
+      console.log('[updateFormCie10] antes de click #filtrar');
+      await this.scrapper.waitForSeconds(1);
       await this.scrapper.clickButton(page, "#filtrar");
       await this.logStep(logger, "[Sistrat][updateFormCie10] Tabla filtrada");
       const patientName = `${patient.name.trim()} ${patient.surname.trim()} ${patient.secondSurname.trim()}`.toLowerCase();
@@ -1469,6 +1512,52 @@ class Sistrat {
       .replace(/[\u0300-\u036f]/g, "") // quita tildes y diacríticos
       .replace(/\s+/g, "") // elimina TODOS los espacios en blanco
       .toLowerCase(); // pasa todo a minúsculas
+  }
+
+  async getActivePatientsByCenter(center: string, logger?: ProcessLogger): Promise<{ id: string, name: string, codigoSistrat: string }[]> {
+    console.group(`[Sistrat][getActivePatientsByCenter] ${center}`);
+    await this.logStep(logger, `[Sistrat][getActivePatientsByCenter] Inicio para centro ${center}`);
+
+    let page: Page | null = null;
+    try {
+      page = await this.login(center, logger);
+      await this.openActiveUsersList(page, logger);
+
+      await page.waitForSelector("#table_pacientes", { visible: true });
+      await this.logStep(logger, "[Sistrat][getActivePatientsByCenter] Tabla cargada, extrayendo datos");
+
+      const activePatients = await page.evaluate(() => {
+        const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
+        if (!table) return [];
+
+        const patients = [];
+        // Comenzamos desde la segunda fila (i = 1) para saltar el encabezado
+        for (let i = 1; i < table.rows.length; i++) {
+          const objCells = table.rows.item(i)?.cells;
+          if (objCells) {
+            patients.push({
+              id: objCells.item(0)?.innerText?.trim() || "",
+              name: objCells.item(1)?.innerText?.trim() || "",
+              codigoSistrat: objCells.item(2)?.innerText?.trim() || ""
+            });
+          }
+        }
+        return patients;
+      });
+
+      console.log(`[Sistrat][getActivePatientsByCenter] Devueltos ${activePatients.length} pacientes`);
+      await this.logStep(logger, `[Sistrat][getActivePatientsByCenter] Encontrados ${activePatients.length} pacientes activos`);
+      return activePatients;
+
+    } catch (error) {
+      await this.logStep(logger, `[Sistrat][getActivePatientsByCenter] Error: ${error}`);
+      throw new Error(`Error al listar pacientes activos del centro ${center}: ${error}`);
+    } finally {
+      if (page) {
+        await this.scrapper.closeBrowser();
+      }
+      console.groupEnd();
+    }
   }
 }
 

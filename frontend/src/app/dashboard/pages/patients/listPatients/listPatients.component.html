@@ -3,25 +3,30 @@
   <div class="buttons mb-4">
     <div>
       @if(canCreateUser || isAdmin){
-      <button [routerLink]="['nuevo']" mat-flat-button color="primary" class="border-round-xl ml-1 mr-2 my-auto mat-elevation-z2 text-white">
+      <button [routerLink]="['nuevo']" mat-flat-button color="primary"
+        class="border-round-xl ml-1 mr-2 my-auto mat-elevation-z2 text-white">
         <mat-icon>person</mat-icon>
         Nuevo Paciente
       </button>
-      <button [routerLink]="['intervencion-grupal']" mat-flat-button color="primary" class="border-round-xl ml-1 mr-2 my-auto mat-elevation-z2 text-white">
+      <button [routerLink]="['intervencion-grupal']" mat-flat-button color="primary"
+        class="border-round-xl ml-1 mr-2 my-auto mat-elevation-z2 text-white">
         <mat-icon>person</mat-icon>
         Intervención Grupal
       </button>
-      <button mat-flat-button (click)="exportData()" color="primary" class="border-round-xl ml-1 mr-2 my-auto mat-elevation-z2 text-white">
+      <button mat-flat-button (click)="exportData()" color="primary"
+        class="border-round-xl ml-1 mr-2 my-auto mat-elevation-z2 text-white">
         <mat-icon>person</mat-icon>
         Exportar datos
       </button>
       }
     </div>
     <div>
-      <button mat-icon-button color="primary" matTooltip="Actualizar transacciones" matTooltipPosition="above" class="mr-2 mat-elevation-z2">
+      <button mat-icon-button color="primary" matTooltip="Actualizar transacciones" matTooltipPosition="above"
+        class="mr-2 mat-elevation-z2">
         <mat-icon>refresh</mat-icon>
       </button>
-      <button mat-icon-button color="primary" class="button-with-icon" matTooltip="Limpiar filtros" matTooltipPosition="above" class="mr-1 mat-elevation-z2">
+      <button mat-icon-button color="primary" class="button-with-icon" matTooltip="Limpiar filtros"
+        matTooltipPosition="above" class="mr-1 mat-elevation-z2">
         <mat-icon>delete</mat-icon>
       </button>
     </div>
@@ -48,35 +53,26 @@
   <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z1">
 
     @if(authService.isAdmin()){
-            <ng-container matColumnDef="active">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Activo</th>
-        <td class="text-center" mat-cell *matCellDef="let element">
-          <mat-slide-toggle
-            [checked]="element.active !== false"
-            (change)="onToggleActive(element, $event.checked)"
-            [disabled]="togglingActive[element._id || '']"
-          ></mat-slide-toggle>
-        </td>
-      </ng-container>
+    <ng-container matColumnDef="active">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Activo</th>
+      <td class="text-center" mat-cell *matCellDef="let element">
+        <mat-slide-toggle [checked]="element.active !== false" (change)="onToggleActive(element, $event.checked)"
+          [disabled]="togglingActive[element._id || '']"></mat-slide-toggle>
+      </td>
+    </ng-container>
     }
     <ng-container matColumnDef="codigoSistrat">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Codigo Usuario</th>
       <td class="text-center" mat-cell *matCellDef="let element">
         @if (element.codigoSistrat) {
-          {{ element.codigoSistrat }}
+        {{ element.codigoSistrat }}
         } @else {
-          <button
-            mat-stroked-button
-            color="accent"
-            class="text-xs"
-            (click)="onFetchCodigoSistrat(element)"
-            [disabled]="!element._id || fetchingCodigo[element._id || '']"
-            matTooltip="Buscar código en SISTRAT"
-            matTooltipPosition="above"
-          >
-            <mat-icon class="mr-1">manage_search</mat-icon>
-            Buscar
-          </button>
+        <button mat-stroked-button color="accent" class="text-xs" (click)="onFetchCodigoSistrat(element)"
+          [disabled]="!element._id || fetchingCodigo[element._id || '']" matTooltip="Buscar código en SISTRAT"
+          matTooltipPosition="above">
+          <mat-icon class="mr-1">manage_search</mat-icon>
+          Buscar
+        </button>
         }
       </td>
     </ng-container>
@@ -100,16 +96,16 @@
     </ng-container>
 
     @if(authService.isAdmin()){
-      <ng-container matColumnDef="fonasa">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Fonasa</th>
-        <td class="text-center" mat-cell *matCellDef="let element">
-          @if(element.fonasa){
-          <mat-icon color="accent">task_alt</mat-icon>
-          } @else {
-          <mat-icon color="warn">cancel</mat-icon>
+    <ng-container matColumnDef="fonasa">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Fonasa</th>
+      <td class="text-center" mat-cell *matCellDef="let element">
+        @if(element.fonasa){
+        <mat-icon color="accent">task_alt</mat-icon>
+        } @else {
+        <mat-icon color="warn">cancel</mat-icon>
         }
-        </td>
-      </ng-container>
+      </td>
+    </ng-container>
 
     }
 
@@ -117,14 +113,20 @@
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Alertas</th>
       <td class="text-center" mat-cell *matCellDef="let element">
         @if(element.alertCie10){
-          <button mat-icon-button (click)="onDialogAlertCie10(element._id)" matTooltip="Han trascurrido 2 meses, corresponde confirmar si existe Diagnóstico de Trastorno Psiquiátrico CIE10">
-            <mat-icon class="custom-icon" 
-              >circle</mat-icon>            
-          </button>
-        } @if(element.alertConsentimiento){
+        <button mat-icon-button (click)="onDialogAlertCie10(element._id)"
+          matTooltip="Han trascurrido 2 meses, corresponde confirmar si existe Diagnóstico de Trastorno Psiquiátrico CIE10">
+          <mat-icon class="custom-icon">circle</mat-icon>
+        </button>
+        }
+        @if(element.alertConsentimiento){
         <mat-icon class="custom-icon-black" matTooltip="TOP">circle</mat-icon>
         }
-        
+        @if(element.alertIntegracionSocial){
+        <mat-icon class="custom-icon-yellow" matTooltip="Integración Social">circle</mat-icon>
+        }
+        @if(element.alertEvaluacion){
+        <mat-icon class="custom-icon-green" matTooltip="Evaluación">circle</mat-icon>
+        }
       </td>
     </ng-container>
 
@@ -141,40 +143,43 @@
             Tratamiento en otro centro
           </mat-chip>
           }-->
-          @if (authService.isAdmin()) {
-            <button mat-icon-button matTooltip="Editar" [routerLink]="['/dashboard/patients/nuevo', element._id]" color="primary" style="font-size: 12px !important">
-              <mat-icon>edit</mat-icon>
-            </button>
-  }
-            <button mat-icon-button matTooltip="Fichas Clínicas" [routerLink]="['/dashboard/patient', element._id]" color="primary" style="font-size: 12px !important">
-              <mat-icon>medical_information</mat-icon>
-            </button>
-          
- @if (authService.isAdmin()) {           
-            <!--@if(element.registeredDemand){-->
-              <button mat-icon-button matTooltip="Ficha de ingreso" [routerLink]="['/dashboard/patient/admision-form', element._id]" color="primary">
-                <mat-icon>apartment</mat-icon>
-              </button>
-              <!--}-->}
-    
-              <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="Alertas" color="warn text-xs">
-                <mat-icon>autorenew</mat-icon>
-              </button>
-              <mat-menu #menu="matMenu">
-                <button mat-menu-item (click)="onUpdateAlerts(element._id)">
-                  <mat-icon>autorenew</mat-icon>
-                  <span>Alertas</span>
-                </button>
-                <button mat-menu-item (click)="onUpdateAlerts(element._id)">
-                  <mat-icon>autorenew</mat-icon>
-                  <span>Alerta Citación</span>
-                </button>
-              </mat-menu>
-          
+        @if (authService.isAdmin()) {
+        <button mat-icon-button matTooltip="Editar" [routerLink]="['/dashboard/patients/nuevo', element._id]"
+          color="primary" style="font-size: 12px !important">
+          <mat-icon>edit</mat-icon>
+        </button>
+        }
+        <button mat-icon-button matTooltip="Fichas Clínicas" [routerLink]="['/dashboard/patient', element._id]"
+          color="primary" style="font-size: 12px !important">
+          <mat-icon>medical_information</mat-icon>
+        </button>
+
+        @if (authService.isAdmin()) {
+        <!--@if(element.registeredDemand){-->
+        <button mat-icon-button matTooltip="Ficha de ingreso"
+          [routerLink]="['/dashboard/patient/admision-form', element._id]" color="primary">
+          <mat-icon>apartment</mat-icon>
+        </button>
+        <!--}-->}
+
+        <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="Alertas" color="warn text-xs">
+          <mat-icon>autorenew</mat-icon>
+        </button>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item (click)="onUpdateAlerts(element._id)">
+            <mat-icon>autorenew</mat-icon>
+            <span>Alertas</span>
+          </button>
+          <button mat-menu-item (click)="onUpdateAlerts(element._id)">
+            <mat-icon>autorenew</mat-icon>
+            <span>Alerta Citación</span>
+          </button>
+        </mat-menu>
 
 
 
-    </td>
+
+      </td>
     </ng-container>
 
 

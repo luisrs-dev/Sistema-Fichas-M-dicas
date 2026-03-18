@@ -145,6 +145,12 @@ export class PatientService {
     return this.http.patch<Patient>(`${this.backend}/patient/${patientId}/active`, { active });
   }
 
+  getActiveSistratPatients(center: string): Observable<{ success: boolean; data: any[]; message?: string }> {
+    return this.http.get<{ success: boolean; data: any[]; message?: string }>(
+      `${this.backend}/patient/sistrat/patients/${center}`
+    );
+  }
+
   fetchCodigoSistrat(patientId: string): Observable<{ success: boolean; patient: Patient; message?: string }> {
     return this.http.post<{ success: boolean; patient: Patient; message?: string }>(
       `${this.backend}/patient/${patientId}/sistrat-code`,

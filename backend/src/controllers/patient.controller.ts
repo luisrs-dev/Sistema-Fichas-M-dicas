@@ -18,7 +18,8 @@ import {
   update,
   dataPatientByRut,
   updateActiveStatus,
-  syncCodigoSistrat
+  syncCodigoSistrat,
+  activeSistratPatientsByCenter
 } from "../services/patient.service";
 
 const getPatientsById = async ({ params }: Request, res: Response) => {
@@ -294,6 +295,20 @@ const fetchCodigoSistrat = async (req: Request, res: Response) => {
   }
 };
 
+const getActiveSistratPatients = async (req: Request, res: Response) => {
+  try {
+    const { center } = req.params;
+    if (!center) {
+      return res.status(400).json({ success: false, message: "El parámetro center es requerido" });
+    }
+
+    const data = await activeSistratPatientsByCenter(center);
+    res.status(200).json({ success: true, message: "Pacientes recuperados desde SISTRAT con éxito", data });
+  } catch (error) {
+    handleHttp(res, "ERROR_GET_SISTRAT_PATIENTS", error);
+  }
+};
+
 export {
   postPatient,
   updatePatient,
@@ -312,5 +327,6 @@ export {
   getDemand,
   getDataByRut,
   updatePatientActiveStatus,
-  fetchCodigoSistrat
+  fetchCodigoSistrat,
+  getActiveSistratPatients
 };
