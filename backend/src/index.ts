@@ -5,6 +5,7 @@ import express from "express";
 import path from 'path';
 import connectToDatabase from "./config/mongo";
 import { router } from "./routes";
+import { initCronJobs } from "./services/automation.service";
 
 // Cargar variables de entorno según el entorno actual
 if (process.env.NODE_ENV !== "production") {
@@ -22,6 +23,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 connectToDatabase().then(() => {
   app.listen(PORT, () => {
     console.log(`Servidor escuchando en http://localhost:${PORT}`);
+    // Inicializar tareas automatizadas programadas
+    initCronJobs();
   });
 }).catch(error => {
   console.error("Error al conectar a la base de datos", error);

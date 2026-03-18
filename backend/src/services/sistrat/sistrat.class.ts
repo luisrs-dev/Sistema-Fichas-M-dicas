@@ -709,6 +709,181 @@ class Sistrat {
     }
   }
 
+  async recordMonthlySheetBulk(center: string, patients: any[], month: number, year: number) {
+    console.log(`[recordMonthlySheetBulk][Mes Año a registrar] ${month} / ${year} - Centro: ${center}`);
+
+    if (!patients || patients.length === 0) {
+      return { success: false, message: "No patients provided" };
+    }
+
+    let page: Page | null = null;
+    const results = [];
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      page = await this.login(center);
+
+      page.on("dialog", async (dialog) => {
+        const message = dialog.message() || "";
+        console.log(`[Sistrat][recordMonthlySheetBulk] Diálogo detectado: ${message}`);
+        if (message.toLowerCase().includes("debe ingresar al menos una prestación")) {
+          await dialog.accept();
+          console.log("[Sistrat][recordMonthlySheetBulk] Alerta por registros vacíos aceptada");
+          return;
+        }
+        await dialog.accept();
+      });
+
+      for (let i = 0; i < patients.length; i++) {
+        const patientData = patients[i];
+        try {
+          console.log(`\n=== Procesando paciente ${i + 1}/${patients.length}: ${patientData.name || patientData.rut} ===`);
+          const medicalRecordsGrouped = await getGroupedRecordsByPatientAndMonth(String(patientData._id || patientData.mongoId), month, year);
+
+          if (!medicalRecordsGrouped || medicalRecordsGrouped.length === 0) {
+            console.log(`El paciente ${patientData.name} no cuenta con registros de atenciones en el mes`);
+            results.push({ patientId: patientData._id, status: 'warning', message: "Sin registros en el mes" });
+            continue;
+          }
+
+          // Navegar a listado de pacientes
+          await this.openActiveUsersList(page);
+          await this.scrapper.waitForSeconds(3); // Esperar que cargue
+
+          const patientName = `${(patientData.name || '').trim()} ${(patientData.surname || '').trim()} ${(patientData.secondSurname || '').trim()}`.toLowerCase();
+          const normalizedTarget = this.normalizeName(patientName);
+          const patientCode = patientData.codigoSistrat?.trim() || null;
+
+          const rowPatientSistrat: any = await page.evaluate(
+            (normalizedTarget, patientCodeEval) => {
+              const normalize = (name?: string) => {
+                if (!name) return "";
+                return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "").toLowerCase();
+              };
+
+              const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
+              if (table) {
+                for (let j = 1; j < table.rows.length; j++) {
+                  const objCells = table.rows.item(j)?.cells;
+                  if (objCells) {
+                    const mappedPatient = {
+                      id: objCells.item(0)?.innerText || "",
+                      name: objCells.item(1)?.innerText?.toLowerCase() || "",
+                      codigoSistrat: objCells.item(2)?.innerText?.trim() || "",
+                    };
+
+                    const matchesName = normalize(mappedPatient.name) === normalizedTarget;
+                    const matchesCode = patientCodeEval ? mappedPatient.codigoSistrat === patientCodeEval : false;
+
+                    if (matchesCode || matchesName) {
+                      const button = objCells.item(5)?.querySelector("span[name='fmensual']") as HTMLElement;
+                      if (button) {
+                        button.click();
+                        return mappedPatient;
+                      }
+                      break;
+                    }
+                  }
+                }
+              }
+              return null;
+            },
+            normalizedTarget,
+            patientCode
+          );
+
+          if (!rowPatientSistrat) {
+            console.log(`Paciente ${patientData.name} no encontrado en listado de SISTRAT`);
+            results.push({ patientId: patientData._id, status: 'error', message: "Paciente no encontrado" });
+            continue;
+          }
+
+          await page.waitForSelector(".tabla_mensual", { timeout: 5000 });
+
+          await page.evaluate((medicalRecordsGrouped) => {
+            const table = document.getElementsByClassName("tabla_mensual")[2] as HTMLTableElement | null;
+            if (!table) return;
+
+            const allInputs = table.querySelectorAll("input");
+            allInputs.forEach((inputEl) => {
+              const input = inputEl as HTMLInputElement;
+              input.value = "";
+              input.dispatchEvent(new Event("input", { bubbles: true }));
+              input.dispatchEvent(new Event("change", { bubbles: true }));
+            });
+
+            medicalRecordsGrouped.forEach((recordFiclin: any) => {
+              for (let j = 1; j < table.rows.length; j++) {
+                const row = table.rows[j];
+                const serviceNameOnTableSistrat = row.cells[0]?.innerText.trim().toLowerCase();
+
+                const mappedServicesSISTRAT: Record<string, string> = {
+                  "consulta de salud mental": "consulta de salud mental",
+                  "intervenci?n psicosocial de grupo": "intervención psicosocial de grupo",
+                  "visita domiciliaria": "visita domiciliaria",
+                  "consulta m?dica": "consulta médica",
+                  "consulta psicol?gica": "consulta psicológica",
+                  "consulta psiqui?trica": "consulta psiquiátrica",
+                  "psicoterapia individual": "psicoterapia individual",
+                  "psicoterapia grupal": "psicoterapia grupal",
+                  "psiocodiagn?stico": "psicodiagnóstico",
+                  "consultor?a de salud mental": "consulta de salud mental",
+                  "intervenci?n familiar": "intervención familiar",
+                };
+
+                const normalizedServiceOnSistrat = mappedServicesSISTRAT[serviceNameOnTableSistrat as keyof typeof mappedServicesSISTRAT];
+                const normalizedServiceFiclin = recordFiclin.service.trim().toLowerCase();
+
+                if (normalizedServiceOnSistrat === normalizedServiceFiclin) {
+                  recordFiclin.days.forEach((value: number, dayIndex: number) => {
+                    if (value > 0) {
+                      const input = row.cells[dayIndex + 1]?.querySelector("input") as HTMLInputElement;
+                      if (input) {
+                        input.value = value.toString();
+                        input.dispatchEvent(new Event("input", { bubbles: true }));
+                        input.dispatchEvent(new Event("change", { bubbles: true }));
+                      }
+                    }
+                  });
+                  break;
+                }
+              }
+            });
+          }, medicalRecordsGrouped);
+
+          // Click en mysubmit
+          const directRecordValue = await getEnvironmentConfigValue(this.directRecordConfigKey);
+          if (directRecordValue) {
+            await this.scrapper.clickButton(page, "#mysubmit", 30000);
+            await this.scrapper.waitForSeconds(2);
+            results.push({ patientId: patientData._id, status: 'success', message: "Ficha mensual registrada correctamente" });
+            successCount++;
+          } else {
+            console.log("[Sistrat][recordMonthlySheetBulk] Registro directo deshabilitado");
+            results.push({ patientId: patientData._id, status: 'warning', message: "Omitido por Config" });
+          }
+
+        } catch (error) {
+          console.log(`Error masivo procesando paciente ${patientData.name}:`, error);
+          results.push({ patientId: patientData._id, status: 'error', message: String(error) });
+          errorCount++;
+        }
+      }
+
+      console.log(`[Sistrat][recordMonthlySheetBulk] Finalizado. Exitosos: ${successCount}, Errores: ${errorCount}`);
+      return { success: true, processed: patients.length, successes: successCount, errors: errorCount, results };
+
+    } catch (error) {
+      console.error(`Error crítico en recordMonthlySheetBulk para ${center}:`, error);
+      throw error;
+    } finally {
+      if (page) {
+        await this.scrapper.closeBrowser();
+      }
+    }
+  }
+
   async registrarMedicalRecordsByMonth(patient: Patient, month: number, year: number) {
     const data: RowData[] = []; // Cambiar aquí el tipo a RowData[]
     console.log("patient for loooogiiiiiin", patient);
