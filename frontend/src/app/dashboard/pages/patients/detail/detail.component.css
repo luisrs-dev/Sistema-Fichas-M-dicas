@@ -3,35 +3,43 @@
   align-items: center;
 }
 
-.example-headers-align .mat-mdc-form-field + .mat-mdc-form-field {
+.example-headers-align .mat-mdc-form-field+.mat-mdc-form-field {
   margin-left: 8px;
 }
 
 
 .medical-record-details {
   padding: 16px;
-  background-color: #f9f9f9; /* Fondo claro para destacar el contenido */
-  border-radius: 4px; /* Bordes redondeados */
+  background-color: #f9f9f9;
+  /* Fondo claro para destacar el contenido */
+  border-radius: 4px;
+  /* Bordes redondeados */
 }
 
 .record-item {
-  margin-bottom: 8px; /* Espacio entre los elementos */
+  margin-bottom: 8px;
+  /* Espacio entre los elementos */
 }
 
 .record-item strong {
-  color: black; /* Color del texto en negrita */
+  color: black;
+  /* Color del texto en negrita */
 }
 
 /* Quitar padding y márgenes de celdas */
 table.mat-table {
-  font-size: 12px; /* Fuente más pequeña */
+  font-size: 12px;
+  /* Fuente más pequeña */
 }
 
 table.mat-table th.mat-header-cell,
 table.mat-table td.mat-cell {
-  padding: 4px 6px; /* Reducir padding vertical y horizontal */
-  text-align: center; /* Centrar contenido */
-  min-width: 24px; /* Ancho mínimo de columna */
+  padding: 4px 6px;
+  /* Reducir padding vertical y horizontal */
+  text-align: center;
+  /* Centrar contenido */
+  min-width: 24px;
+  /* Ancho mínimo de columna */
 }
 
 /* Si quieres la primera columna (servicio) un poco más ancha */
@@ -63,7 +71,7 @@ table.mat-table {
   color: #355c7d;
 }
 
-.header{
+.header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -146,7 +154,7 @@ table.mat-table {
   color: #111827;
 }
 
-.summary-table tr + tr {
+.summary-table tr+tr {
   border-top: 1px solid #e5e7eb;
 }
 
@@ -159,4 +167,10 @@ table.mat-table {
   display: flex;
   gap: 16px;
   margin-bottom: 16px;
+}
+
+/* Estilos de Sticky Columns (Añaden color de fondo sólido para solapar el texto subyacente durante el scroll) */
+.table-container {
+  overflow-x: auto;
+  max-width: 100%;
 }

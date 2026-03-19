@@ -268,6 +268,8 @@ const syncCodigoSistrat = async (patientId: string) => {
 };
 
 const activeSistratPatientsByCenter = async (center: string) => {
+  console.log(`activeSistratPatientsByCenter ${center}`);
+
   try {
     const logger = new ProcessLogger(`sistrat-listado-${center}`, "obtener-pacientes-activos-centro");
     const sistratPlatform = new Sistrat();
@@ -275,18 +277,13 @@ const activeSistratPatientsByCenter = async (center: string) => {
     await logger.close();
 
     // Buscar pacientes locales de ese centro para cruzarlos y obtener el _id de Mongo
-    const localPatients = await PatientModel.find({ sistratCenter: center });
-
-    const normalize = (name: string) =>
-      name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "").toLowerCase();
+    const localPatients = await PatientModel.find({ sistratCenter: center, active: true });
 
     // Mapear inyectando _id de la DB
     const matchedData = data.map((sistratP) => {
       const matchedLocal = localPatients.find(lp => {
         const matchesCode = sistratP.codigoSistrat && lp.codigoSistrat === sistratP.codigoSistrat;
-        const localName = `${lp.name.trim()} ${lp.surname.trim()} ${lp.secondSurname.trim()}`;
-        const matchesName = normalize(localName) === normalize(sistratP.name);
-        return matchesCode || matchesName;
+        return matchesCode;
       });
 
       return {

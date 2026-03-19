@@ -27,6 +27,10 @@ export class MedicalRecordService {
     return this.http.get<any>(`${this.backend}/medicalRecord/${year}/${month}`);
   }
 
+  getGroupedRecordsByPatientAndMonth(patientId: string, month: number, year: number): Observable<any> {
+    return this.http.get<any>(`${this.backend}/medicalRecord/grouped/${patientId}/${year}/${month}`);
+  }
+
   addMedicalRecord(medicalRecord: MedicalRecord): Observable<any> {
     console.log({ medicalRecord });
     return this.http.post<any>(`${this.backend}/medicalRecord`, medicalRecord).pipe(catchError((err) => throwError(() => err.error.message)));

@@ -94,6 +94,7 @@ export default class DetailComponent implements OnInit {
   patientId = signal<string | null>(null);
 
   showTable = signal(false);
+  loadingTable = signal(false);
   medicalRecordsGrouped = signal<MedicalRecordGrouped[]>([]);
   daysInMonth = Array.from({ length: 31 }); // días 1-31
   displayedColumns = ['service', ...this.daysInMonth.map((_, i) => i.toString()), 'total'];
@@ -271,45 +272,28 @@ export default class DetailComponent implements OnInit {
   }
 
   buildDataMonth(monthSelected: number = this.selectedMonth(), year: number = this.selectedYear()) {
-    // Inicializamos un objeto para agrupar
-    let grouped: Record<string, number[]> = {};
-    const records = this.state().medicalRecords ?? [];
+    const patientId = this.patientId();
+    if (!patientId) return;
 
-    console.log('records', records);
+    this.loadingTable.set(true);
+    this.showTable.set(false);
 
-    records.forEach((record) => {
-      const dateMedicalRecord = new Date(record.date);
-      const yearMedicalRecord = Number(new Date(record.date).getFullYear());
-      const monthMedicalRecord = Number(dateMedicalRecord.getMonth() + 1);
-
-
-      // Solo del mes y año que nos interesa
-      if (monthMedicalRecord !== Number(monthSelected) || yearMedicalRecord !== year) return;
-
-
-      const day = dateMedicalRecord.getDate(); // día 1-31      
-      const service = record.service.description;
-
-      // Si no existe la fila para este servicio, creamos array con 31 posiciones
-      if (!grouped[service]) {
-        grouped[service] = new Array(31).fill(0);
-      }
-
-      // Sumamos 1 a la posición correspondiente al día (day-1 porque array inicia en 0)
-      grouped[service][day - 1] += 1;
-    });
-
-    // Convertimos el objeto en un array de objetos
-    const groupedArray = Object.keys(grouped).map((serviceName) => {
-      const days = grouped[serviceName];
-      const total = days.reduce((acc, value) => acc + value, 0);
-      return { service: serviceName, days, total };
-    });
-
-    console.log('Grouped Array:', groupedArray);
-
-    this.medicalRecordsGrouped.set(groupedArray); // ahora es array
-    this.showTable.set(true);
+    this.medicalRecordService.getGroupedRecordsByPatientAndMonth(patientId, monthSelected, year)
+      .subscribe({
+        next: (response) => {
+          this.loadingTable.set(false);
+          if (response.status && response.groupedMedicalRecords) {
+            console.log('Grouped Array from Backend:', response.groupedMedicalRecords);
+            this.medicalRecordsGrouped.set(response.groupedMedicalRecords); // ahora es array
+            this.showTable.set(true);
+          }
+        },
+        error: (err) => {
+          this.loadingTable.set(false);
+          console.error('Error al obtener registros agrupados del backend', err);
+          Notiflix.Notify.failure('Error obteniendo registros agrupados');
+        }
+      });
   }
 
   private buildProfessionalDataMonth(monthSelected: number = this.selectedMonth(), year: number = this.selectedYear()) {

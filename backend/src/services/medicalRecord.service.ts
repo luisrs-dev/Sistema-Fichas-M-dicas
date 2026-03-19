@@ -63,8 +63,12 @@ const postMedicalRecordsPerMonthForAllPatients = async (month: number, year: num
     throw new Error("Año inválido");
   }
 
-  const startOfMonth = new Date(year, month - 1, 1, 0, 0, 0, 0).toISOString();
-  const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999).toISOString();
+  const nMonth = Number(month);
+  const nYear = Number(year);
+
+  // Usar Date.UTC para asegurar límites de meses estrictos globalmente sin desfase local
+  const startOfMonth = new Date(Date.UTC(nYear, nMonth - 1, 1)).toISOString();
+  const endOfMonth = new Date(Date.UTC(nYear, nMonth, 0, 23, 59, 59, 999)).toISOString();
 
   const patientIds = await MedicalRecordModel.distinct("patient", {
     date: {
@@ -326,14 +330,17 @@ const allMedicalRecordsUser = async (userId: string, startDate?: string, endDate
 const getRecordsByMonthAndYear = async (month: number, year: number) => {
 
   try {
+    const nMonth = Number(month);
+    const nYear = Number(year);
 
-    const startOfMonth = new Date(year, month - 1, 1); // Primer día del mes
-    const endOfMonth = new Date(year, month, 0); // Último día del mes
+    // Formato UTC exacto para extraer records de Mongoose salvados como strings
+    const startOfMonth = new Date(Date.UTC(nYear, nMonth - 1, 1));
+    const endOfMonth = new Date(Date.UTC(nYear, nMonth, 0, 23, 59, 59, 999));
 
     const medicalRecords = await MedicalRecordModel.find({
       date: {
-        $gte: startOfMonth.toISOString(),  // Fecha de inicio
-        $lt: endOfMonth.toISOString()      // Fecha final
+        $gte: startOfMonth.toISOString(),
+        $lte: endOfMonth.toISOString()
       }
     }).populate("service registeredBy patient"); // Puedes usar populate para traer los detalles de `service` y `registeredBy`    
 

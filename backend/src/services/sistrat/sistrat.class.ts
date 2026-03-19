@@ -523,6 +523,9 @@ class Sistrat {
 
     console.log(`[recordMonthtlySheet][Mes Año a registrar] ${month} / ${year}`);
     const medicalRecordsGrouped = await getGroupedRecordsByPatientAndMonth(String(patient._id), month, year);
+    console.log('[recordMonthtlySheet] paciente', patient.name);
+
+    console.log('[recordMonthtlySheet] medicalRecordsGrouped', medicalRecordsGrouped);
 
     if (!medicalRecordsGrouped || medicalRecordsGrouped.length === 0) {
       return "El paciente no cuenta con registros de atenciones en el mes";
@@ -690,13 +693,12 @@ class Sistrat {
       if (directRecordValue) {
         await this.scrapper.clickButton(page, "#mysubmit", 30000);
         await this.scrapper.waitForSeconds(2);
-        console.log("[Sistrat][recordMonthlySheet] submit clicked!");
       } else {
-        console.log("[Sistrat][recordMonthlySheet] Registro directo deshabilitado: se omite envío del formulario");
-        return "REGISTRO PREPARADO, ENVÍO OMITIDO POR CONFIGURACIÓN";
+        console.log("[Sistrat][recordMonthlySheet] Registro directo deshabilitado: manteniendo navegador abierto por 20 segundos para revisión manual");
+        // Espera 20 segundos dejando que el usuario interactúe
+        await this.scrapper.waitForSeconds(60);
+        return "REGISTRO PREPARADO, REVISIÓN MANUAL PERMITIDA POR 60 SEGUNDOS";
       }
-
-      return true;
     } catch (error) {
       console.log("errror", error);
       throw new Error(`Error en registrar atenciones mensuales: ${error}`);
