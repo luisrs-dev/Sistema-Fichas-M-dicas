@@ -20,7 +20,7 @@
         <mat-label>Ingreso convenio CONACE</mat-label>
         <mat-select formControlName="selconvenio_conace">
           <!-- <mat-option value="null">Seleccione una opción</mat-option> -->
-          <mat-option value="Si" seleceted>Si</mat-option>
+          <mat-option value="Si" selected>Si</mat-option>
         </mat-select>
         <span *ngIf="isValidField('selconvenio_conace')" class="text-red-500"> Debe seleccionar una opción </span>
       </mat-form-field>
@@ -45,11 +45,11 @@
         <mat-label>Tipo programa</mat-label>
         <mat-select formControlName="seltipo_programa">
           <mat-option value="null">Seleccione una opción</mat-option>
-          @if(program.toLowerCase().includes('hombre') || program.toLowerCase().includes('alameda')){
+          @if(center.toLowerCase().includes('hombre') || center.toLowerCase().includes('alameda')){
           <mat-option value="1">Programa Población General</mat-option>
           }
 
-          @if(program.toLowerCase().includes('mujer')){
+          @if(center.toLowerCase().includes('mujer')){
           <mat-option value="2">Programa Específico Mujeres</mat-option>
           }
         </mat-select>
@@ -64,16 +64,16 @@
         <mat-select formControlName="seltipo_plan">
           <mat-option value="null">Seleccione una opción</mat-option>
 
-          @if( program.toLowerCase().includes('hombre')){
+          @if(center.toLowerCase().includes('hombre')){
           <mat-option value="15">PG-PR</mat-option>
           <mat-option value="14">PG-PAI</mat-option>
           }
 
-          @if( program.toLowerCase().includes('alameda')){
+          @if(center.toLowerCase().includes('alameda')){
           <mat-option value="14">PG-PAI</mat-option>
           }
 
-          @if( program.toLowerCase().includes('mujer')){
+          @if(center.toLowerCase().includes('mujer')){
           <mat-option value="18">M-PR</mat-option>
           <mat-option value="57">M PAI (p)</mat-option>
           <mat-option value="17">M-PAI</mat-option>

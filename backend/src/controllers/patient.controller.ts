@@ -13,6 +13,7 @@ import {
   updateAF,
   saveAdmissionFormToSistrat,
   updateAlertsFromSistrat,
+  updateBulkAlertsFromSistrat,
   updateFormCie10,
   demandByPatient,
   update,
@@ -264,6 +265,22 @@ const updateAlerts = async (req: Request, res: Response) => {
   }
 }
 
+const bulkUpdateAlerts = async (req: Request, res: Response) => {
+  try {
+    const { center, patientIds } = req.body;
+    if (!center || !Array.isArray(patientIds) || patientIds.length === 0) {
+      return res.status(400).json({ success: false, message: "Parámetros center y patientIds (array) son requeridos." });
+    }
+    
+    console.log(`[bulkUpdateAlerts] Procesando ${patientIds.length} pacientes para el centro: ${center}`);
+    
+    const response = await updateBulkAlertsFromSistrat(center, patientIds);
+    res.status(200).json(response);
+  } catch (error) {
+    handleHttp(res, "ERROR_BULK_UPDATE_ALERTS", error);
+  }
+};
+
 const formCie10 = async (req: Request, res: Response) => {
   try {
     const { patientId, optionSelected } = req.body;
@@ -298,12 +315,14 @@ const fetchCodigoSistrat = async (req: Request, res: Response) => {
 const getActiveSistratPatients = async (req: Request, res: Response) => {
   try {
     const { center } = req.params;
+    const forceRefresh = req.query.forceRefresh === "true";
+    
     if (!center) {
       return res.status(400).json({ success: false, message: "El parámetro center es requerido" });
     }
 
-    const data = await activeSistratPatientsByCenter(center);
-    res.status(200).json({ success: true, message: "Pacientes recuperados desde SISTRAT con éxito", data });
+    const data = await activeSistratPatientsByCenter(center, forceRefresh);
+    res.status(200).json({ success: true, message: "Pacientes recuperados con éxito", data });
   } catch (error) {
     handleHttp(res, "ERROR_GET_SISTRAT_PATIENTS", error);
   }
@@ -323,6 +342,7 @@ export {
   postAdmissionForm,
   postAdmissionFormSistrat,
   updateAlerts,
+  bulkUpdateAlerts,
   formCie10,
   getDemand,
   getDataByRut,

@@ -15,18 +15,18 @@ export class PatientService {
   backend: string = environment.baseUrl;
 
   private patientsSubject: BehaviorSubject<Patient[]>;
-  private _patient: BehaviorSubject<{patient:Patient, medicalRecords: MedicalRecord[]} | null>;
+  private _patient: BehaviorSubject<{ patient: Patient, medicalRecords: MedicalRecord[] } | null>;
 
-  constructor(){
+  constructor() {
     this.patientsSubject = new BehaviorSubject<Patient[]>([]);
-    this._patient = new BehaviorSubject<{patient:Patient, medicalRecords: MedicalRecord[]} | null>(null);
+    this._patient = new BehaviorSubject<{ patient: Patient, medicalRecords: MedicalRecord[] } | null>(null);
   }
 
-  get patients(){
+  get patients() {
     return this.patientsSubject.asObservable();
   }
 
-  get patient(){
+  get patient() {
     return this._patient.asObservable();
   }
 
@@ -37,7 +37,7 @@ export class PatientService {
   }
 
   getPdfByProgram(startDate: string, endDate: string): Observable<any> {
-    return this.http.post<any>(`${this.backend}/generate-pdf/medical-records/`, {startDate, endDate},
+    return this.http.post<any>(`${this.backend}/generate-pdf/medical-records/`, { startDate, endDate },
       {
         responseType: 'blob' as 'json' // clave para evitar el error
       }
@@ -45,13 +45,13 @@ export class PatientService {
   }
 
   getPdfByPatientId(id: string): Observable<any> {
-  // getPdfByPatientId(id: string): Observable<{ patient: Patient; medicalRecords: MedicalRecord[] }> {
+    // getPdfByPatientId(id: string): Observable<{ patient: Patient; medicalRecords: MedicalRecord[] }> {
     return this.http.get<any>(`${this.backend}/generate-pdf/medical-records/${id}`,
       {
         responseType: 'blob' as 'json' // 👈 clave para evitar el error
       }
     );
-        // return this.http.get<{ patient: Patient; medicalRecords: MedicalRecord[] }>(`${this.backend}/medial-records/${id}`);
+    // return this.http.get<{ patient: Patient; medicalRecords: MedicalRecord[] }>(`${this.backend}/medial-records/${id}`);
   }
 
 
@@ -64,14 +64,14 @@ export class PatientService {
   }
 
   updatePatient(id: string, patient: Patient): Observable<Patient> {
-  return this.http.put<Patient>(`${this.backend}/patient/${id}`, patient)
-    .pipe(
-      catchError((err) => {
-        console.error(err);
-        return throwError(() => err);
-      })
-    );
-}
+    return this.http.put<Patient>(`${this.backend}/patient/${id}`, patient)
+      .pipe(
+        catchError((err) => {
+          console.error(err);
+          return throwError(() => err);
+        })
+      );
+  }
 
   /*
    TODO: definir interfaz para datos sistrat
@@ -145,9 +145,13 @@ export class PatientService {
     return this.http.patch<Patient>(`${this.backend}/patient/${patientId}/active`, { active });
   }
 
-  getActiveSistratPatients(center: string): Observable<{ success: boolean; data: any[]; message?: string }> {
+  bulkUpdateAlertSistrat(center: string, patientIds: string[]): Observable<any> {
+    return this.http.post<any>(`${this.backend}/patient/sistrat/bulk-alerts`, { center, patientIds });
+  }
+
+  getActiveSistratPatients(center: string, forceRefresh: boolean = false): Observable<{ success: boolean; data: any[]; message?: string }> {
     return this.http.get<{ success: boolean; data: any[]; message?: string }>(
-      `${this.backend}/patient/sistrat/patients/${center}`
+      `${this.backend}/patient/sistrat/patients/${center}?forceRefresh=${forceRefresh}`
     );
   }
 
@@ -158,8 +162,8 @@ export class PatientService {
     );
   }
 
-  setFormCie10(patientId: string, optionSelected: any){
-    console.log({optionSelected});
+  setFormCie10(patientId: string, optionSelected: any) {
+    console.log({ optionSelected });
 
     return this.http.post<any>(`${this.backend}/patient/sistrat/formCie10`, { patientId, optionSelected }).pipe(catchError((err) => throwError(() => err.error.message)));
   }

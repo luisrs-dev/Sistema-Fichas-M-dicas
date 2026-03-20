@@ -45,6 +45,9 @@
     <button mat-stroked-button color="primary" (click)="toggleSelectAllPatients()" [disabled]="bulkLoading()">
       {{ isAllSelected() ? 'Deseleccionar todos' : 'Seleccionar todos' }}
     </button>
+    <button mat-flat-button color="accent" style="margin-left: 16px;" (click)="forceLoadPatientsForCenter()" [disabled]="bulkLoading()">
+      <mat-icon>sync</mat-icon> Forzar Sincronización
+    </button>
   </div>
 
   <div class="patient-list" *ngIf="centerPatients().length > 0">

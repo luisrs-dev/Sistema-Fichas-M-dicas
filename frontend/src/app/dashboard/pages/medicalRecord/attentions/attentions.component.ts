@@ -222,7 +222,7 @@ export default class AttentionsComponent {
     }
 
     this.isUpdatingAlerts.set(true);
-    Notiflix.Notify.info('Iniciando actualización de alertas...');
+    Notiflix.Notify.info(`Sincronizando de una sola vez alertas para ${selectedIds.length} pacientes...`);
 
     const statuses: Record<string, 'queued' | 'pending' | 'success' | 'error' | 'warning'> = {
       ...this.registrationStatus(),
@@ -230,55 +230,58 @@ export default class AttentionsComponent {
     const messages = { ...this.registrationMessages() };
 
     selectedIds.forEach((id) => {
-      statuses[id] = 'queued';
-      messages[id] = 'En cola para actualizar alertas';
+      statuses[id] = 'pending';
+      messages[id] = 'Extrayendo diccionario Sistrat en Background...';
     });
     this.registrationStatus.set(statuses);
     this.registrationMessages.set(messages);
 
-    let count = 0;
-    for (const patientId of selectedIds) {
-      this.registrationStatus.set({
-        ...this.registrationStatus(),
-        [patientId]: 'pending',
+    try {
+      const response = await firstValueFrom(this.patientService.bulkUpdateAlertSistrat(center, selectedIds));
+      
+      const updatedStatuses = { ...this.registrationStatus() };
+      const updatedMessages = { ...this.registrationMessages() };
+      
+      selectedIds.forEach((id) => {
+        updatedStatuses[id] = 'success';
+        updatedMessages[id] = 'Actualizado correctamente (Proceso Masivo O[1])';
       });
-      this.registrationMessages.set({
-        ...this.registrationMessages(),
-        [patientId]: `Actualizando alertas (${++count}/${selectedIds.length})...`,
+
+      this.registrationStatus.set(updatedStatuses);
+      this.registrationMessages.set(updatedMessages);
+      
+      Notiflix.Notify.success(`Actualización masiva completada exitosamente. Total cruzados: ${response.updated}`);
+    } catch (error: any) {
+      console.error('Error enviando sincronización O(1) masiva de SISTRAT:', error);
+
+      let errorMessage = 'Error al descargar el diccionario global desde Plataforma';
+      if (typeof error === 'string') errorMessage = error;
+      else if (error?.error?.message) errorMessage = error.error.message;
+      else if (error?.message) errorMessage = error.message;
+
+      const updatedStatuses = { ...this.registrationStatus() };
+      const updatedMessages = { ...this.registrationMessages() };
+      selectedIds.forEach((id) => {
+        updatedStatuses[id] = 'error';
+        updatedMessages[id] = errorMessage;
       });
 
-      try {
-        // 1. Capturamos la respuesta exitosa
-        const response = await firstValueFrom(this.patientService.updateAlertSistrat(patientId));
-        console.log('[updateAlertSistrat ]response', response);
-
-        // Aquí puedes validar si la 'response' misma indica un error de negocio
-        // Por ejemplo: if (response.status === 'error') { throw new Error(response.message); }
-
-        this.registrationStatus.set({ ...this.registrationStatus(), [patientId]: 'success' });
-        this.registrationMessages.set({ ...this.registrationMessages(), [patientId]: 'Alertas actualizadas correctamente' });
-      } catch (error: any) {
-        console.error('Error actualizando alertas en SISTRAT:', error);
-
-        let errorMessage = 'Error al actualizar alertas';
-        if (typeof error === 'string') {
-          errorMessage = error;
-        } else if (error?.error?.message) {
-          errorMessage = error.error.message;
-        } else if (error?.message) {
-          errorMessage = error.message;
-        }
-
-        this.registrationStatus.set({ ...this.registrationStatus(), [patientId]: 'error' });
-        this.registrationMessages.set({ ...this.registrationMessages(), [patientId]: `${errorMessage}: ${error.message}` });
-      }
+      this.registrationStatus.set(updatedStatuses);
+      this.registrationMessages.set(updatedMessages);
+      Notiflix.Notify.failure(errorMessage);
+    } finally {
+      this.isUpdatingAlerts.set(false);
     }
-
-    this.isUpdatingAlerts.set(false);
-    Notiflix.Notify.success('Actualización de alertas finalizada');
   }
 
-  private async loadPatientsForCenter(center: string) {
+  forceLoadPatientsForCenter() {
+    const center = this.selectedCenter();
+    if (center) {
+      this.loadPatientsForCenter(center, true);
+    }
+  }
+
+  private async loadPatientsForCenter(center: string, forceRefresh: boolean = false) {
     if (!center) {
       this.centerPatients.set([]);
       this.selectedPatients.set({});
@@ -290,7 +293,7 @@ export default class AttentionsComponent {
     Notiflix.Loading.standard('Cargando pacientes desde SISTRAT...');
 
     try {
-      const response = await firstValueFrom(this.patientService.getActiveSistratPatients(center));
+      const response = await firstValueFrom(this.patientService.getActiveSistratPatients(center, forceRefresh));
       const patientsFromSistrat = response.data || [];
 
       const filtered = patientsFromSistrat.sort((a, b) => {

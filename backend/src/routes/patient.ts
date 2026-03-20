@@ -13,6 +13,7 @@ import {
   updateAdmissionForm,
   postAdmissionFormSistrat,
   updateAlerts,
+  bulkUpdateAlerts,
   formCie10,
   getDemand,
   getDataByRut,
@@ -35,6 +36,7 @@ router.put("/ficha-ingreso", updateAdmissionForm);
 router.post("/ficha-ingreso/sistrat", postAdmissionFormSistrat);
 router.post("/sistrat", postPatientSistrat);
 router.post("/sistrat/alerts", updateAlerts);
+router.post("/sistrat/bulk-alerts", bulkUpdateAlerts);
 router.post("/sistrat/formCie10", formCie10);
 router.get("/sistrat/patients/:center", getActiveSistratPatients);
 router.post("/:id/sistrat-code", fetchCodigoSistrat);

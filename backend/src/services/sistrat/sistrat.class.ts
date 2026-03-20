@@ -1419,6 +1419,84 @@ class Sistrat {
     }
   }
 
+  async bulkUpdateAlertsByCenter(center: string, logger: ProcessLogger): Promise<Record<string, any>> {
+    let page: Page | null = null;
+    console.group(`[Sistrat][bulkUpdateAlertsByCenter] ${center}`);
+
+    try {
+      await this.logStep(logger, "[Sistrat][bulkUpdateAlertsByCenter] Inicio de Sesión Única Múltiple");
+      page = await this.login(center, logger);
+      await this.scrapper.clickButton(page, "#flyout");
+      await this.scrapper.waitForSeconds(1);
+      await this.scrapper.clickButton(page, 'a[href="php/consultar_paciente.php"].ui-corner-all');
+      await this.scrapper.waitForSeconds(1);
+
+      console.log('[bulkUpdateAlertsByCenter] Click listado general (#filtrar)');
+      await this.scrapper.waitForSeconds(1);
+      await this.scrapper.clickButton(page, "#filtrar");
+      await this.logStep(logger, "[Sistrat][bulkUpdateAlertsByCenter] Listado cargado en pantalla");
+      
+      await page.waitForSelector("#table_pacientes", { visible: true });
+      console.log("[Sistrat][bulkUpdateAlertsByCenter] Construyendo Diccionario Hash en memoria...");
+
+      const alertsDict = await page.evaluate(() => {
+        const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
+        const result: Record<string, any> = {};
+
+        if (table) {
+          for (let i = 1; i < table.rows.length; i++) {
+            const objCells = table.rows.item(i)?.cells;
+
+            if (objCells) {
+              const codigoSistrat = objCells.item(2)?.innerText?.trim();
+              if (codigoSistrat) {
+                const alertsInfo = {
+                  cie10: false,
+                  consentimiento: false,
+                  evaluacion: false,
+                  integracionSocial: false,
+                };
+
+                const idMatch = objCells.item(8)?.querySelector("span[id^='evaluacion_']");
+                if (idMatch) {
+                  const idSistrat = idMatch.id.split("_")[1];
+
+                  const evaluacionElement = document.getElementById(`evaluacion_${idSistrat}`);
+                  if (evaluacionElement && evaluacionElement.querySelector("img")) alertsInfo.evaluacion = true;
+
+                  const cie10Element = document.getElementById(`cie10_${idSistrat}`);
+                  if (cie10Element && cie10Element.querySelector("img")) alertsInfo.cie10 = true;
+
+                  const consentimientoElement = document.getElementById(`consentimiento${idSistrat}`);
+                  if (consentimientoElement && consentimientoElement.querySelector("img")) alertsInfo.consentimiento = true;
+
+                  const integracionImg = objCells.item(8)?.querySelector("img[src*='circulo_amarillo.png']");
+                  if (integracionImg) alertsInfo.integracionSocial = true;
+                }
+                
+                result[codigoSistrat] = alertsInfo;
+              }
+            }
+          }
+        }
+        return result;
+      });
+
+      console.log(`[bulkUpdateAlertsByCenter] Diccionario construido para ${Object.keys(alertsDict).length} pacientes de ${center}`);
+      await this.logStep(logger, `[Sistrat][bulkUpdate] Diccionario con ${Object.keys(alertsDict).length} entradas`);
+      return alertsDict;
+
+    } catch (error) {
+      console.error("[bulkUpdateAlertsByCenter] Error fatal:", error);
+      await this.logStep(logger, `[Sistrat][bulkUpdate] Error: ${error}`);
+      throw error;
+    } finally {
+      if (page) {
+        await this.scrapper.closeBrowser();
+      }
+      console.groupEnd();
+    }
+  }
   async updateFormCie10(patient: Patient, optionSelected: string) {
     this.gender = patient.sex;
     const logger = new ProcessLogger(this.getPatientLabel(patient), "actualiza-cie10");

@@ -7,6 +7,7 @@ import DemandModel from "../models/demand.model";
 import Sistrat from "./sistrat/sistrat.class";
 import AdmissionFormModel from "../models/admissionForm.model";
 import UserModel from "../models/user.model";
+import SistratCacheModel from "../models/sistratCache.model";
 import { encrypt } from "../utils/bcrypt.handle";
 import ProcessLogger from "../utils/processLogger";
 
@@ -267,10 +268,29 @@ const syncCodigoSistrat = async (patientId: string) => {
   }
 };
 
-const activeSistratPatientsByCenter = async (center: string) => {
-  console.log(`activeSistratPatientsByCenter ${center}`);
+const activeSistratPatientsByCenter = async (center: string, forceRefresh: boolean = false) => {
+  console.log(`activeSistratPatientsByCenter ${center} | forceRefresh: ${forceRefresh}`);
 
   try {
+    // 1. Revisar Caché (TTL de 6 horas) si forceRefresh es false
+    if (String(forceRefresh) !== "true") {
+      const cachedData = await SistratCacheModel.findOne({ center });
+      if (cachedData) {
+        const now = new Date();
+        const diffHours = Math.abs(now.getTime() - cachedData.lastUpdated.getTime()) / 36e5;
+        if (diffHours < 6) {
+          console.log(`[activeSistratPatientsByCenter] Cache Hit para ${center}. Antigüedad: ${diffHours.toFixed(2)} horas. Evitando Puppeteer.`);
+          return cachedData.patients;
+        } else {
+          console.log(`[activeSistratPatientsByCenter] Cache para ${center} expiró (${diffHours.toFixed(2)} horas). Ejecutando Puppeteer...`);
+        }
+      } else {
+        console.log(`[activeSistratPatientsByCenter] No hay cache para ${center}. Ejecutando Puppeteer...`);
+      }
+    } else {
+      console.log(`[activeSistratPatientsByCenter] Forzando actualización manual para ${center}. Ejecutando Puppeteer...`);
+    }
+
     const logger = new ProcessLogger(`sistrat-listado-${center}`, "obtener-pacientes-activos-centro");
     const sistratPlatform = new Sistrat();
     const data = await sistratPlatform.getActivePatientsByCenter(center, logger);
@@ -291,6 +311,14 @@ const activeSistratPatientsByCenter = async (center: string) => {
         mongoId: matchedLocal ? matchedLocal._id.toString() : null
       };
     });
+
+    // Guardar/Actualizar en caché
+    await SistratCacheModel.findOneAndUpdate(
+      { center },
+      { patients: matchedData, lastUpdated: new Date() },
+      { upsert: true, new: true }
+    );
+    console.log(`[activeSistratPatientsByCenter] Caché renovada y guardada exitosamente en Mongo para ${center}.`);
 
     return matchedData;
   } catch (error) {
@@ -388,6 +416,38 @@ const updateAlertsFromSistrat = async (patientId: string) => {
   } catch (error) { }
 };
 
+const updateBulkAlertsFromSistrat = async (center: string, patientIds: string[]) => {
+  try {
+    const sistratPlatform = new Sistrat();
+    const logger = new ProcessLogger(`bulk-alerts-${center}`, "actualiza-alertas-masivas");
+    
+    // Extracción global en 1 sola sesión de Puppeteer
+    const alertsDict = await sistratPlatform.bulkUpdateAlertsByCenter(center, logger);
+    await logger.close();
+
+    // Obtener y actualizar los pacientes solicitados simultáneamente
+    const patients = await PatientModel.find({ _id: { $in: patientIds } });
+    let successCount = 0;
+
+    for (const patient of patients) {
+      if (patient.codigoSistrat && alertsDict[patient.codigoSistrat]) {
+        const sysInfo = alertsDict[patient.codigoSistrat];
+        patient.alertCie10 = sysInfo.cie10;
+        patient.alertEvaluacion = sysInfo.evaluacion;
+        patient.alertConsentimiento = sysInfo.consentimiento;
+        patient.alertIntegracionSocial = sysInfo.integracionSocial;
+        await patient.save();
+        successCount++;
+      }
+    }
+
+    return { success: true, updated: successCount, total: patientIds.length };
+  } catch (error: any) {
+    console.error("Error en sincronización masiva de alertas Sistrat:", error);
+    throw error;
+  }
+};
+
 const updateFormCie10 = async (patientId: string, optionSelected: string) => {
   try {
     const patient = await PatientModel.findOne({ _id: patientId });
@@ -420,6 +480,7 @@ export {
   saveAdmissionForm,
   saveAdmissionFormToSistrat,
   updateAlertsFromSistrat,
+  updateBulkAlertsFromSistrat,
   updateFormCie10,
   updateAF,
   getAllPatients,

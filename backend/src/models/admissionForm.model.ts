@@ -10,6 +10,12 @@ const AdmissionFormSchema = new Schema<AdmissionForm>(
     cie1: {
       type: String
     }, 
+    cie2: {
+      type: String
+    }, 
+    cie3: {
+      type: String
+    }, 
     discapacidad: {
       type: String
     }, 
@@ -103,6 +109,15 @@ const AdmissionFormSchema = new Schema<AdmissionForm>(
     selestado_ocupacional: {
       type: String
     }, 
+    laboral_ingresos: {
+      type: String
+    }, 
+    laboral_detalle: {
+      type: String
+    }, 
+    selrubro_trabajo: {
+      type: String
+    }, 
     selfecha_ult_trata: {
       type: String
     }, 
@@ -157,6 +172,9 @@ const AdmissionFormSchema = new Schema<AdmissionForm>(
     seltipo_plan: {
       type: String
     }, 
+    selprograma_tribunales: {
+      type: String
+    }, 
     seltipo_programa: {
       type: String
     }, 
@@ -185,6 +203,9 @@ const AdmissionFormSchema = new Schema<AdmissionForm>(
       type: String
     }, 
     txtfecha_ingreso_tratamiento: {
+      type: String
+    }, 
+    selconvenio_conace: {
       type: String
     }, 
     txtnacionalidad: {
