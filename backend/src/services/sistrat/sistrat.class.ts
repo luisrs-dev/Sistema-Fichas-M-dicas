@@ -1639,6 +1639,142 @@ class Sistrat {
       console.groupEnd();
     }
   }
+
+  // O(1) bulk fetch and fill month records for same center
+  async bulkRecordMonthlySheets(recordsData: {patient: Patient, records: any[]}[], center: string, month: number, year: number) {
+    if (!recordsData || recordsData.length === 0) return [];
+    
+    console.log(`[bulkRecordMonthlySheets] Iniciando registro O(1) de ${recordsData.length} pacientes para el centro: ${center}`);
+    
+    let page: Page | null = null;
+    let results: { patientId: string, status: string, message?: string }[] = [];
+
+    try {
+      page = await this.login(center);
+
+      page.on("dialog", async (dialog) => {
+        const message = dialog.message() || "";
+        console.log(`[bulkRecordMonthlySheets] Diálogo: ${message}`);
+        await dialog.accept();
+      });
+
+      for (const item of recordsData) {
+        let status = 'error';
+        let message = '';
+        try {
+          // Aseguramos recargar lista activa en caso de desvío
+          await this.openActiveUsersList(page);
+          await this.scrapper.waitForSeconds(3);
+
+          const patientName = `${item.patient.name.trim()} ${item.patient.surname.trim()} ${item.patient.secondSurname.trim()}`.toLowerCase();
+          const normalizedTarget = this.normalizeName(patientName);
+          const patientCode = item.patient.codigoSistrat?.trim() || null;
+
+          const rowPatientSistrat: any = await page.evaluate(
+            (normalizedTarget, patientCodeEval) => {
+              const normalize = (n?: string) => (n || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "").toLowerCase();
+
+              const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
+              if (table) {
+                for (let i = 1; i < table.rows.length; i++) {
+                  const objCells = table.rows.item(i)?.cells;
+                  if (objCells) {
+                    const patient = {
+                      id: objCells.item(0)?.innerText || "",
+                      name: objCells.item(1)?.innerText?.toLowerCase() || "",
+                      codigoSistrat: objCells.item(2)?.innerText?.trim() || "",
+                    };
+                    if (normalize(patient.name) === normalizedTarget || (patientCodeEval && patient.codigoSistrat === patientCodeEval)) {
+                      const btn = objCells.item(5)?.querySelector("span[name='fmensual']") as HTMLElement;
+                      if (btn) {
+                        btn.click();
+                        return patient;
+                      }
+                    }
+                  }
+                }
+              }
+              return null;
+            },
+            normalizedTarget,
+            patientCode
+          );
+
+          if (!rowPatientSistrat) {
+            throw new Error("No encontrado en listado activo SISTRAT");
+          }
+
+          await page.waitForSelector(".tabla_mensual", { timeout: 5000 });
+
+          // Rellenar tabla
+          await page.evaluate((medicalRecordsGrouped) => {
+            const table = document.getElementsByClassName("tabla_mensual")[2] as HTMLTableElement | null;
+            if (!table) return;
+
+            table.querySelectorAll("input").forEach((inputEl) => {
+              const input = inputEl as HTMLInputElement;
+              input.value = "";
+              input.dispatchEvent(new Event("input", { bubbles: true }));
+              input.dispatchEvent(new Event("change", { bubbles: true }));
+            });
+
+            medicalRecordsGrouped.forEach((recordFiclin: any) => {
+              for (let i = 1; i < table.rows.length; i++) {
+                const row = table.rows[i];
+                const serviceSistrat = row.cells[0]?.innerText.trim().toLowerCase();
+                const mappedRules: any = {
+                  "consulta de salud mental": "consulta de salud mental",
+                  "intervenci?n psicosocial de grupo": "intervención psicosocial de grupo",
+                  "visita domiciliaria": "visita domiciliaria",
+                  "consulta m?dica": "consulta médica",
+                  "consulta psicol?gica": "consulta psicológica",
+                  "consulta psiqui?trica": "consulta psiquiátrica",
+                  "psicoterapia individual": "psicoterapia individual",
+                  "psicoterapia grupal": "psicoterapia grupal",
+                  "psiocodiagn?stico": "psicodiagnóstico",
+                  "consultor?a de salud mental": "consulta de salud mental",
+                  "intervenci?n familiar": "intervención familiar",
+                };
+
+                if (mappedRules[serviceSistrat] === recordFiclin.service.trim().toLowerCase()) {
+                  recordFiclin.days.forEach((val: number, dayIndex: number) => {
+                    if (val > 0) {
+                      const inpt = row.cells[dayIndex + 1]?.querySelector("input") as HTMLInputElement;
+                      if (inpt) {
+                        inpt.value = val.toString();
+                        inpt.dispatchEvent(new Event("input", { bubbles: true }));
+                        inpt.dispatchEvent(new Event("change", { bubbles: true }));
+                      }
+                    }
+                  });
+                  break;
+                }
+              }
+            });
+          }, item.records);
+
+          await this.scrapper.clickButton(page, "#mysubmit", 15000);
+          await this.scrapper.waitForSeconds(1.5);
+          
+          status = 'success';
+          message = 'Registrado correcto en backend O(1)';
+        } catch (err: any) {
+          status = 'error';
+          message = err.message || 'Error desconocido';
+        }
+        
+        results.push({ patientId: item.patient._id!.toString(), status, message });
+      } // fin bucle pacientes
+
+    } catch (e: any) {
+      console.log(`Fallo Critico Masivo: ${e}`);
+      throw new Error(`Fallo de conexión Sistrat Masivo: ${e.message}`);
+    } finally {
+      if (page) await this.scrapper.closeBrowser();
+    }
+    
+    return results;
+  }
 }
 
 export default Sistrat;

@@ -11,6 +11,7 @@ import {
   getMonthlyLogs,
   getMonthlyLogContent,
   testBulkEmail,
+  postMedicalRecordPerMonthBulkCenter,
 } from "../controllers/medicalRecord.controller";
 // import { logMiddleware } from "../middleware/log";
 const router = Router();
@@ -20,7 +21,8 @@ router.delete("/:id", deleteMedicalRecords);
 router.get("/grouped/:patientId/:year/:month", groupedMedicalRecordsByPatient);
 router.get("/:userId", getAllMedicalRecordsByUser);
 router.post("/", postMedicalRecord);
-router.post("/monthRecords/bulk/test-email", testBulkEmail);
+router.post("/ monthRecords/bulk/test-email", testBulkEmail);
+router.post("/monthRecords/bulk-center", postMedicalRecordPerMonthBulkCenter);
 router.post("/monthRecords/bulk", postMedicalRecordPerMonthBulk);
 router.post("/monthRecords/:patientId", postMedicalRecordPerMonth);
 router.get("/monthRecords/logs", getMonthlyLogs);

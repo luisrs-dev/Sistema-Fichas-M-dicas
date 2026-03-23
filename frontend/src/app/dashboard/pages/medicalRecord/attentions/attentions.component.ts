@@ -116,12 +116,12 @@ export default class AttentionsComponent {
       .map(([id]) => id);
 
     if (!selectedIds.length) {
-      Notiflix.Notify.failure('Selecciona al menos un paciente');
+      Notiflix.Notify.failure('Selecciona al menos un paciente para enviar atenciones masivas');
       return;
     }
 
     this.bulkLoading.set(true);
-    Notiflix.Notify.info('Iniciando registro secuencial...');
+    Notiflix.Notify.info(`Enviando registro de atenciones mensuales para ${selectedIds.length} pacientes...`);
 
     const statuses: Record<string, 'queued' | 'pending' | 'success' | 'error' | 'warning'> = {
       ...this.registrationStatus(),
@@ -129,80 +129,59 @@ export default class AttentionsComponent {
     const messages = { ...this.registrationMessages() };
 
     selectedIds.forEach((id) => {
-      statuses[id] = 'queued';
-      messages[id] = '';
+      statuses[id] = 'pending';
+      messages[id] = 'Registro masivo O(1) en background...';
     });
     this.registrationStatus.set(statuses);
     this.registrationMessages.set(messages);
 
-    for (const patientId of selectedIds) {
-      this.registrationStatus.set({
-        ...this.registrationStatus(),
-        [patientId]: 'pending',
+    try {
+      const response = await firstValueFrom(
+        this.medicalRecordService.monthRecordsBulkCenter(center, month, year, selectedIds)
+      );
+
+      const bulkResults = response.results || [];
+      const updatedStatuses = { ...this.registrationStatus() };
+      const updatedMessages = { ...this.registrationMessages() };
+
+      // Si no devolvió nada extra, todos a error por defecto o validamos los results:
+      selectedIds.forEach((id) => {
+        const resItem = bulkResults.find((r: any) => String(r.patientId) === String(id));
+        if (resItem) {
+          updatedStatuses[id] = resItem.status; // success, error, warning
+          updatedMessages[id] = resItem.message || '';
+        } else {
+          updatedStatuses[id] = 'warning';
+          updatedMessages[id] = 'No procesado (Revisar logs del servidor)';
+        }
       });
 
-      try {
-        const response: any = await firstValueFrom(
-          this.medicalRecordService.monthRecords(patientId, month, year, [])
-        );
+      this.registrationStatus.set(updatedStatuses);
+      this.registrationMessages.set(updatedMessages);
 
-        let statusToSet: 'success' | 'warning' | 'error' = 'success';
-        let msgToSet = '';
+      Notiflix.Notify.success('Operación masiva de registro en SISTRAT finalizada');
+    } catch (error: any) {
+      console.error('Error registrando atenciones mensuales masivas SISTRAT:', error);
 
-        if (response?.data && typeof response.data === 'string' && response.data.toLowerCase().includes('no cuenta con registros')) {
-          statusToSet = 'warning';
-          msgToSet = response.data;
-          Notiflix.Notify.warning(msgToSet);
-        } else if (response?.data && typeof response.data === 'string') {
-          msgToSet = response.data;
-        }
+      let errorMessage = 'Ocurrió un error en el registro masivo';
+      if (typeof error === 'string') errorMessage = error;
+      else if (error?.error?.message) errorMessage = error.error.message;
+      else if (error?.message) errorMessage = error.message;
 
-        this.registrationStatus.set({
-          ...this.registrationStatus(),
-          [patientId]: statusToSet,
-        });
+      const updatedStatuses = { ...this.registrationStatus() };
+      const updatedMessages = { ...this.registrationMessages() };
 
-        if (msgToSet) {
-          this.registrationMessages.set({
-            ...this.registrationMessages(),
-            [patientId]: msgToSet,
-          });
-        }
-      } catch (error: any) {
-        console.error('Error registrando en SISTRAT:', error);
+      selectedIds.forEach((id) => {
+        updatedStatuses[id] = 'error';
+        updatedMessages[id] = errorMessage;
+      });
 
-        let errorMessage = 'Ocurrió un error en el registro';
-        if (typeof error === 'string') {
-          errorMessage = error;
-        } else if (error?.error?.message) {
-          errorMessage = error.error.message;
-        } else if (error?.message) {
-          errorMessage = error.message;
-        }
-
-        let statusToSet: 'error' | 'warning' = 'error';
-
-        if (errorMessage.toLowerCase().includes('no cuenta con registros')) {
-          statusToSet = 'warning';
-          Notiflix.Notify.warning(errorMessage);
-        } else {
-          Notiflix.Notify.failure(errorMessage);
-        }
-
-        this.registrationStatus.set({
-          ...this.registrationStatus(),
-          [patientId]: statusToSet,
-        });
-
-        this.registrationMessages.set({
-          ...this.registrationMessages(),
-          [patientId]: errorMessage,
-        });
-      }
+      this.registrationStatus.set(updatedStatuses);
+      this.registrationMessages.set(updatedMessages);
+      Notiflix.Notify.failure(errorMessage);
+    } finally {
+      this.bulkLoading.set(false);
     }
-
-    this.bulkLoading.set(false);
-    Notiflix.Notify.success('Registro masivo finalizado');
   }
 
   async onBulkUpdateAlerts() {

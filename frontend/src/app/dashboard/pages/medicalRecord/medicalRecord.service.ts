@@ -53,6 +53,11 @@ export class MedicalRecordService {
       catchError((err) => throwError(() => err.error.message)));
   }
 
+  monthRecordsBulkCenter(center: string, month: number, year: number, patientIds: string[]): Observable<any> {
+    return this.http.post<any>(`${this.backend}/medicalRecord/monthRecords/bulk-center`, { center, month, year, patientIds })
+      .pipe(catchError((err) => throwError(() => err.error.message || err)));
+  }
+
   getMonthlyLogs(): Observable<MonthlyLogListResponse> {
     return this.http.get<MonthlyLogListResponse>(`${this.backend}/medicalRecord/monthRecords/logs`);
   }

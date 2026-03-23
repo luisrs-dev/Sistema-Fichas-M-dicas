@@ -212,6 +212,29 @@ const postMedicalRecordsPerMonthForAllPatients = async (month: number, year: num
   return summaryPayload;
 };
 
+const postMedicalRecordsBulkSistrat = async (center: string, patientIds: string[], month: number, year: number) => {
+  if (!center || !Array.isArray(patientIds) || patientIds.length === 0) {
+    throw new Error("Parámetros insuficientes para el bulk por centro");
+  }
+
+  const recordsData: {patient: Patient, records: any[]}[] = [];
+  
+  for (const patientId of patientIds) {
+    const patient = await PatientModel.findById(patientId);
+    if (!patient || !patient.active) continue;
+    
+    const records = await getGroupedRecordsByPatientAndMonth(patientId, month, year);
+    if (records.length > 0) {
+      recordsData.push({ patient, records });
+    }
+  }
+
+  // Ahora levantamos Sistrat 1 vez
+  const sistratPlatform = new Sistrat();
+  const results = await sistratPlatform.bulkRecordMonthlySheets(recordsData, center, month, year);
+  return results;
+};
+
 const sendTestBulkSummaryEmail = async (options: { recipient?: string; month?: number; year?: number } = {}) => {
   return sendTestMonthlyBulkEmail(options);
 };
@@ -360,8 +383,8 @@ export {
   getRecordsByMonthAndYear,
   deleteRecord,
   postMedicalRecordsPerMonthForAllPatients,
+  postMedicalRecordsBulkSistrat,
   sendTestBulkSummaryEmail,
   listMonthlyLogFiles,
   readMonthlyLogFile,
 };
-
