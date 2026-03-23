@@ -167,4 +167,8 @@ export class PatientService {
 
     return this.http.post<any>(`${this.backend}/patient/sistrat/formCie10`, { patientId, optionSelected }).pipe(catchError((err) => throwError(() => err.error.message)));
   }
+
+  resolveAlertSistrat(patientId: string, alertType: string): Observable<any> {
+    return this.http.post<any>(`${this.backend}/patient/sistrat/resolve-alert`, { patientId, alertType }).pipe(catchError((err) => throwError(() => err.error.message)));
+  }
 }

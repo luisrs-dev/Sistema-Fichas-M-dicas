@@ -20,7 +20,8 @@ import {
   dataPatientByRut,
   updateActiveStatus,
   syncCodigoSistrat,
-  activeSistratPatientsByCenter
+  activeSistratPatientsByCenter,
+  resolveAlertFromSistrat
 } from "../services/patient.service";
 
 const getPatientsById = async ({ params }: Request, res: Response) => {
@@ -328,6 +329,20 @@ const getActiveSistratPatients = async (req: Request, res: Response) => {
   }
 };
 
+const resolveAlertSistrat = async (req: Request, res: Response) => {
+  try {
+    const { patientId, alertType } = req.body;
+    if (!patientId || !alertType) {
+      return res.status(400).json({ success: false, message: "patientId y alertType son requeridos" });
+    }
+    
+    const response = await resolveAlertFromSistrat(patientId, alertType);
+    res.status(200).json({ success: true, message: "Alerta abierta con éxito" });
+  } catch (error) {
+    handleHttp(res, "ERROR_RESOLVE_ALERT", error);
+  }
+};
+
 export {
   postPatient,
   updatePatient,
@@ -348,5 +363,6 @@ export {
   getDataByRut,
   updatePatientActiveStatus,
   fetchCodigoSistrat,
-  getActiveSistratPatients
+  getActiveSistratPatients,
+  resolveAlertSistrat
 };

@@ -463,6 +463,21 @@ const updateFormCie10 = async (patientId: string, optionSelected: string) => {
   } catch (error) { }
 };
 
+const resolveAlertFromSistrat = async (patientId: string, alertType: string) => {
+  try {
+    const patient = await PatientModel.findOne({ _id: patientId });
+    if (patient) {
+      const sistratPlatform = new Sistrat();
+      const response = await sistratPlatform.clickAlert(patient, alertType);
+      return response;
+    } else {
+      throw new Error("Paciente no registrado");
+    }
+  } catch (error) {
+    throw error;
+  }
+};
+
 ;
 
 export {
@@ -487,5 +502,6 @@ export {
   dataPatientByRut,
   updateActiveStatus,
   syncCodigoSistrat,
-  activeSistratPatientsByCenter
+  activeSistratPatientsByCenter,
+  resolveAlertFromSistrat
 };

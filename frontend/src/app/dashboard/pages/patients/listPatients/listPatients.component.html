@@ -31,8 +31,8 @@
       </button>
     </div>
   </div>
-  <div class="">
-    <mat-form-field appearance="outline">
+  <div class="flex align-items-center flex-wrap gap-4 mt-2">
+    <mat-form-field appearance="outline" class="mb-0">
       <mat-label>Filtrar por Programa</mat-label>
       <mat-select (selectionChange)="filterByProgram($event.value)">
         <mat-option value="">Todos</mat-option>
@@ -41,6 +41,10 @@
         }
       </mat-select>
     </mat-form-field>
+
+    <mat-slide-toggle color="primary" (change)="toggleAlertsFilter($event)">
+      Mostrar solo pacientes con alertas
+    </mat-slide-toggle>
   </div>
 
 
@@ -119,13 +123,19 @@
         </button>
         }
         @if(element.alertConsentimiento){
-        <mat-icon class="custom-icon-black" matTooltip="TOP">circle</mat-icon>
+        <button mat-icon-button (click)="onClickAlert(element._id, 'consentimiento')" matTooltip="TOP">
+          <mat-icon class="custom-icon-black">circle</mat-icon>
+        </button>
         }
         @if(element.alertIntegracionSocial){
-        <mat-icon class="custom-icon-yellow" matTooltip="Integración Social">circle</mat-icon>
+        <button mat-icon-button (click)="onClickAlert(element._id, 'integracionSocial')" matTooltip="Integración Social">
+          <mat-icon class="custom-icon-yellow">circle</mat-icon>
+        </button>
         }
         @if(element.alertEvaluacion){
-        <mat-icon class="custom-icon-green" matTooltip="Evaluación">circle</mat-icon>
+        <button mat-icon-button (click)="onClickAlert(element._id, 'evaluacion')" matTooltip="Evaluación">
+          <mat-icon class="custom-icon-green">circle</mat-icon>
+        </button>
         }
       </td>
     </ng-container>

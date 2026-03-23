@@ -19,7 +19,8 @@ import {
   getDataByRut,
   updatePatientActiveStatus,
   fetchCodigoSistrat,
-  getActiveSistratPatients
+  getActiveSistratPatients,
+  resolveAlertSistrat
 } from "../controllers/patient.controller";
 const router = Router();
 
@@ -39,7 +40,7 @@ router.post("/sistrat/alerts", updateAlerts);
 router.post("/sistrat/bulk-alerts", bulkUpdateAlerts);
 router.post("/sistrat/formCie10", formCie10);
 router.get("/sistrat/patients/:center", getActiveSistratPatients);
-router.post("/:id/sistrat-code", fetchCodigoSistrat);
+router.post("/sistrat/resolve-alert", resolveAlertSistrat);
 router.get("/", getPatients);
 router.get("/:id", getPatientsById);
 router.post("/", postPatient);

@@ -50,25 +50,44 @@ export default class ListPatientsComponent implements OnInit {
   public fetchingCodigo: Record<string, boolean> = {};
   public isUpdatingAlerts: boolean = false;
 
+  public filters = {
+    program: '',
+    search: '',
+    alerts: false
+  };
+
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
 
-  ngOnInit(): void {    
-    if(this.authService.isAdmin()){
-      this.displayedColumns = ['active','codigoSistrat', 'name', 'program', 'phone', 'fonasa', 'alertas', 'actions'];
+  ngOnInit(): void {
+    if (this.authService.isAdmin()) {
+      this.displayedColumns = ['active', 'codigoSistrat', 'name', 'program', 'phone', 'fonasa', 'alertas', 'actions'];
     }
     this.dataSource.filterPredicate = (data: any, filter: string) => {
-      // Convertir el filtro a minúsculas para una comparación sin distinción de mayúsculas y minúsculas
-      const lowerCaseFilter = filter.trim().toLowerCase();
+      let searchTerms: any;
+      try {
+        searchTerms = JSON.parse(filter);
+      } catch (e) {
+        searchTerms = { search: filter, program: '', alerts: false };
+      }
 
-      // Comparar los campos relevantes, incluyendo el nombre del programa
-      return (
-        data.name.toLowerCase().includes(lowerCaseFilter) ||
-        data.surname.toLowerCase().includes(lowerCaseFilter) ||
-        data.secondSurname.toLowerCase().includes(lowerCaseFilter) ||
-        data.program.name.toLowerCase().includes(lowerCaseFilter)
-      );
+      const lowerCaseSearch = searchTerms.search;
+      const matchSearch = lowerCaseSearch ? (
+        (data.name || '').toLowerCase().includes(lowerCaseSearch) ||
+        (data.surname || '').toLowerCase().includes(lowerCaseSearch) ||
+        (data.secondSurname || '').toLowerCase().includes(lowerCaseSearch) ||
+        (data.program?.name || '').toLowerCase().includes(lowerCaseSearch)
+      ) : true;
+
+      const programSearch = searchTerms.program;
+      const matchProgram = programSearch ? (data.program?.name || '').toLowerCase().includes(programSearch) : true;
+
+      const matchAlerts = searchTerms.alerts ? !!(data.alertCie10 || data.alertConsentimiento || data.alertIntegracionSocial || data.alertEvaluacion) : true;
+
+      return matchSearch && matchProgram && matchAlerts;
     };
+
+    this.dataSource.filter = JSON.stringify(this.filters);
 
     this.canCreateUser = this.authService.canCreateUser();
     this.isAdmin = this.authService.isAdmin();
@@ -87,12 +106,23 @@ export default class ListPatientsComponent implements OnInit {
   }
 
   filterByProgram(program: any) {
-    this.dataSource.filter = program.trim().toLowerCase();
+    this.filters.program = program.trim().toLowerCase();
+    this.applyCombinedFilters();
   }
 
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+    this.filters.search = filterValue.trim().toLowerCase();
+    this.applyCombinedFilters();
+  }
+
+  toggleAlertsFilter(event: any) {
+    this.filters.alerts = event.checked;
+    this.applyCombinedFilters();
+  }
+
+  applyCombinedFilters() {
+    this.dataSource.filter = JSON.stringify(this.filters);
   }
 
   onUpdateAlerts(patientId: string) {
@@ -105,6 +135,21 @@ export default class ListPatientsComponent implements OnInit {
       error: () => {
         Notiflix.Loading.remove();
         Notiflix.Notify.failure('Error actualizando alerta');
+      }
+    });
+  }
+
+  onClickAlert(patientId: string, alertType: string) {
+    Notiflix.Notify.info('Abriendo SISTRAT...');
+    this.patientService.resolveAlertSistrat(patientId, alertType).subscribe({
+      next: () => {
+        Notiflix.Loading.remove();
+        Notiflix.Notify.success('Alerta abierta en SISTRAT');
+      },
+      error: (error) => {
+        Notiflix.Loading.remove();
+        console.error(error);
+        Notiflix.Notify.failure('Error abriendo SISTRAT');
       }
     });
   }
@@ -137,9 +182,9 @@ export default class ListPatientsComponent implements OnInit {
     });
   }
 
-  onDialogAlertCie10(patientId: string){
+  onDialogAlertCie10(patientId: string) {
     console.log('onDialogAlertCie10');
-    
+
     const dialogRef = this.dialog.open(FormCie10Component, {
       width: '95%',
       height: '40%',
@@ -196,33 +241,33 @@ export default class ListPatientsComponent implements OnInit {
     this.dataSource.data = this.patients;
   }
 
-exportData(): void {
-  const ref = this.bottomSheet.open(DataExportComponent);
-  ref.afterDismissed().subscribe((result) => {
-    if (result) {
-      Notiflix.Loading.circle('Generando Documentos PDFs');
-      const { startDate, endDate } = result;
+  exportData(): void {
+    const ref = this.bottomSheet.open(DataExportComponent);
+    ref.afterDismissed().subscribe((result) => {
+      if (result) {
+        Notiflix.Loading.circle('Generando Documentos PDFs');
+        const { startDate, endDate } = result;
 
-      this.patientService.getPdfByProgram(startDate, endDate).subscribe((blob) => {
-        // Crear URL temporal para el ZIP
-        const url = window.URL.createObjectURL(blob);
+        this.patientService.getPdfByProgram(startDate, endDate).subscribe((blob) => {
+          // Crear URL temporal para el ZIP
+          const url = window.URL.createObjectURL(blob);
 
-        // Crear enlace de descarga oculto
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `historiales_${startDate}_${endDate}.zip`; // nombre sugerido
-        document.body.appendChild(a);
-        a.click();
+          // Crear enlace de descarga oculto
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `historiales_${startDate}_${endDate}.zip`; // nombre sugerido
+          document.body.appendChild(a);
+          a.click();
 
-        // Liberar recursos
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-        Notiflix.Loading.remove();
-      });
-    }
-  });
-}
+          // Liberar recursos
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+          Notiflix.Loading.remove();
+        });
+      }
+    });
+  }
 
 
-  
+
 }

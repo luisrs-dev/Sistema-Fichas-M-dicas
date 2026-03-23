@@ -1419,6 +1419,104 @@ class Sistrat {
     }
   }
 
+  async clickAlert(patient: Patient, alertType: string) {
+    this.gender = patient.sex;
+    const logger = new ProcessLogger(this.getPatientLabel(patient), "click-alerta");
+    let page: Page | null = null;
+    console.group(`[Sistrat][clickAlert] ${patient._id} - ${alertType}`);
+
+    try {
+      await this.logStep(logger, `[Sistrat][clickAlert] Iniciando apertura de alerta: ${alertType}`);
+      const patientCode = patient.codigoSistrat;
+      if (!patientCode) {
+        throw new Error("Paciente no tiene código SISTRAT");
+      }
+
+      page = await this.login(patient.sistratCenter, logger);
+      await this.scrapper.clickButton(page, "#flyout");
+      await this.scrapper.waitForSeconds(1);
+      await this.scrapper.clickButton(page, 'a[href="php/consultar_paciente.php"].ui-corner-all');
+      await this.scrapper.waitForSeconds(1);
+
+      await this.scrapper.clickButton(page, "#filtrar");
+      await this.logStep(logger, "[Sistrat][clickAlert] Tabla filtrada");
+
+      console.log(`[Sistrat][clickAlert] Buscando paciente ${patientCode}`);
+      await page.waitForSelector("#table_pacientes", { visible: true });
+
+      const patientRow: any = await page.evaluate((patientCode) => {
+        const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
+        if (table) {
+          for (let i = 1; i < table.rows.length; i++) {
+            const objCells = table.rows.item(i)?.cells;
+            if (objCells) {
+              const codigoSistrat = objCells.item(2)?.innerText || false;
+              if (codigoSistrat == patientCode) {
+                const idMatch = objCells.item(8)?.querySelector("span[id^='evaluacion_']");
+                if (idMatch) {
+                  return { idSistrat: idMatch.id.split("_")[1] };
+                }
+                break;
+              }
+            }
+          }
+        }
+        return null; // Devuelve los datos capturados
+      }, patientCode);
+
+      if (patientRow) {
+        console.log(`[Sistrat][clickAlert] Paciente encontrado. Evaluando tipo alerta: ${alertType}`);
+        await this.logStep(logger, "[Sistrat][clickAlert] Paciente encontrado, interactuando con alerta");
+
+        await page.evaluate((idSistrat, type) => {
+          let targetImg;
+          if (type === 'evaluacion') {
+            targetImg = document.querySelector(`#evaluacion_${idSistrat} img`);
+          } else if (type === 'cie10') {
+            targetImg = document.querySelector(`#cie10_${idSistrat} img`);
+          } else if (type === 'consentimiento') {
+            targetImg = document.querySelector(`#consentimiento${idSistrat} img`);
+          } else if (type === 'integracionSocial') {
+            const td = document.getElementById(`evaluacion_${idSistrat}`)?.closest('td');
+            if (td) targetImg = td.querySelector("img[src*='circulo_amarillo.png']");
+          }
+
+          if (targetImg) {
+            (targetImg as HTMLElement).click();
+          } else {
+            throw new Error("No se encontró el icono de la alerta para clickear");
+          }
+        }, patientRow.idSistrat, alertType);
+
+        console.log(`[Sistrat][clickAlert] Alerta interactuada.`);
+        await this.logStep(logger, "[Sistrat][clickAlert] Alerta activada. El navegador se quedará abierto.");
+
+        // No agregaremos esperas aquí (waitForSeconds) para que la respuesta HTTP termine rápido 
+        // y el "cargando..." del frontend desaparezca. Dependeremos de omitir el closeBrowser().
+
+      } else {
+        throw new Error("Paciente no encontrado en listado");
+      }
+
+    } catch (error) {
+      await this.logStep(logger, `[Sistrat][clickAlert] Error: ${error}`);
+      throw error;
+    } finally {
+      // 🚨 Para dejar el navegador abierto de manera indefinida
+      // SIN colgar la petición HTTP del usuario, simplemente 
+      // omitimos cerrar el navegador en el bloque finally.
+      // Así el usuario (tú) puedes usar la ventana de Chrome mientras
+      // el backend le responde al frontend de inmediato.
+      // 
+      // if (page) {
+      //   await this.scrapper.closeBrowser();
+      // }
+      
+      console.groupEnd();
+      await logger.close();
+    }
+  }
+
   async bulkUpdateAlertsByCenter(center: string, logger: ProcessLogger): Promise<Record<string, any>> {
     let page: Page | null = null;
     console.group(`[Sistrat][bulkUpdateAlertsByCenter] ${center}`);
@@ -1435,7 +1533,7 @@ class Sistrat {
       await this.scrapper.waitForSeconds(1);
       await this.scrapper.clickButton(page, "#filtrar");
       await this.logStep(logger, "[Sistrat][bulkUpdateAlertsByCenter] Listado cargado en pantalla");
-      
+
       await page.waitForSelector("#table_pacientes", { visible: true });
       console.log("[Sistrat][bulkUpdateAlertsByCenter] Construyendo Diccionario Hash en memoria...");
 
@@ -1473,7 +1571,7 @@ class Sistrat {
                   const integracionImg = objCells.item(8)?.querySelector("img[src*='circulo_amarillo.png']");
                   if (integracionImg) alertsInfo.integracionSocial = true;
                 }
-                
+
                 result[codigoSistrat] = alertsInfo;
               }
             }
@@ -1641,11 +1739,11 @@ class Sistrat {
   }
 
   // O(1) bulk fetch and fill month records for same center
-  async bulkRecordMonthlySheets(recordsData: {patient: Patient, records: any[]}[], center: string, month: number, year: number) {
+  async bulkRecordMonthlySheets(recordsData: { patient: Patient, records: any[] }[], center: string, month: number, year: number) {
     if (!recordsData || recordsData.length === 0) return [];
-    
+
     console.log(`[bulkRecordMonthlySheets] Iniciando registro O(1) de ${recordsData.length} pacientes para el centro: ${center}`);
-    
+
     let page: Page | null = null;
     let results: { patientId: string, status: string, message?: string }[] = [];
 
@@ -1755,14 +1853,14 @@ class Sistrat {
 
           await this.scrapper.clickButton(page, "#mysubmit", 15000);
           await this.scrapper.waitForSeconds(1.5);
-          
+
           status = 'success';
           message = 'Registrado correcto en backend O(1)';
         } catch (err: any) {
           status = 'error';
           message = err.message || 'Error desconocido';
         }
-        
+
         results.push({ patientId: item.patient._id!.toString(), status, message });
       } // fin bucle pacientes
 
@@ -1772,7 +1870,7 @@ class Sistrat {
     } finally {
       if (page) await this.scrapper.closeBrowser();
     }
-    
+
     return results;
   }
 }
