@@ -89,10 +89,14 @@ Para que el sistema conecte a la base de datos de la VPS automáticamente sin pe
 2. **Subir llave**: `ssh-copy-id root@31.97.9.216`
 3. **Ejecutar**: `npm run dev`
 
-### En Windows (PowerShell)
-1. **Generar llave**: `ssh-keygen -t rsa -b 4096`
-2. **Subir llave**: 
-   ```powershell
-   type $env:USERPROFILE\.ssh\id_rsa.pub | ssh root@31.97.9.216 "cat >> .ssh/authorized_keys"
+### En Windows (cmd o PowerShell)
+1. **Generar llave**: `ssh-keygen -t rsa -b 4096` (Pulsa Enter a todo, sin poner contraseña extra).
+2. **Subir llave (en 2 pasos para evitar errores de codificación)**:
+   ```cmd
+   scp ~/.ssh/id_rsa.pub root@31.97.9.216:~/temp.pub
+   ```
+   *Te pedirá clave. Luego, ejecuta esto para guardar y dar permisos:*
+   ```cmd
+   ssh root@31.97.9.216 "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat ~/temp.pub >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && rm ~/temp.pub"
    ```
 3. **Ejecutar**: `npm run dev:windows` (Esto abrirá las ventanas necesarias automáticamente).
