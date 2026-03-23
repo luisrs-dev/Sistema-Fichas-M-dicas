@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "tunnel": "ssh -fN -o StrictHostKeyChecking=no -L 127.0.0.1:27017:127.0.0.1:27017 root@31.97.9.216",
-    "start:backend": "npm run tunnel && npm run dev --prefix backend",
+    "start:backend": "npm run dev --prefix backend",
     "start:frontend": "npm run start --prefix frontend",
     "dev": "npm run start:backend & npm run start:frontend",
     "dev:windows": "start npm run tunnel && start npm run start:backend && start npm run start:frontend"
