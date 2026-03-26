@@ -44,6 +44,11 @@
     <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2"
       (click)="onProfessionalRegisters()">Atenciones por profesional</button>
 
+    <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2"
+      [routerLink]="['/dashboard/patient/top', p._id]">
+      <mat-icon class="mr-1">assignment</mat-icon> Formulario TOP
+    </button>
+    
     @if (medicalRecordsGrouped().length > 0) {
     <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2"
       (click)="onSistratRecord()">Registrar en SISTRAT</button>

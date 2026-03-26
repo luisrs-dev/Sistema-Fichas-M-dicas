@@ -123,17 +123,18 @@
         </button>
         }
         @if(element.alertConsentimiento){
-        <button mat-icon-button (click)="onClickAlert(element._id, 'consentimiento')" matTooltip="TOP">
+        <button mat-icon-button [routerLink]="['/dashboard/patient/top', element._id]" matTooltip="TOP">
           <mat-icon class="custom-icon-black">circle</mat-icon>
         </button>
         }
         @if(element.alertIntegracionSocial){
-        <button mat-icon-button (click)="onClickAlert(element._id, 'integracionSocial')" matTooltip="Integración Social">
+        <button mat-icon-button [routerLink]="['/dashboard/patient/social', element._id]"
+          matTooltip="Integración Social">
           <mat-icon class="custom-icon-yellow">circle</mat-icon>
         </button>
         }
         @if(element.alertEvaluacion){
-        <button mat-icon-button (click)="onClickAlert(element._id, 'evaluacion')" matTooltip="Evaluación">
+        <button mat-icon-button [routerLink]="['/dashboard/patient/evaluation', element._id]" matTooltip="Evaluación">
           <mat-icon class="custom-icon-green">circle</mat-icon>
         </button>
         }
@@ -171,6 +172,11 @@
           <mat-icon>apartment</mat-icon>
         </button>
         <!--}-->}
+
+        <!-- <button mat-icon-button matTooltip="Formulario TOP"
+          [routerLink]="['/dashboard/patient/top', element._id]" color="primary">
+          <mat-icon>assignment</mat-icon>
+        </button> -->
 
         <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="Alertas" color="warn text-xs">
           <mat-icon>autorenew</mat-icon>

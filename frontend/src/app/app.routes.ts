@@ -112,6 +112,27 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./dashboard/pages/patients/admisionForm/admisionForm.component'),
       },
+      {
+        path: 'patient/top/:id',
+        title: 'Formulario TOP',
+        data: { icon: 'group', child: false },
+        loadComponent: () =>
+          import('./dashboard/pages/patients/topForm/topForm.component'),
+      },
+      {
+        path: 'patient/social/:id',
+        title: 'Integración Social',
+        data: { icon: 'group', child: false },
+        loadComponent: () =>
+          import('./dashboard/pages/patients/socialForm/socialForm.component'),
+      },
+      {
+        path: 'patient/evaluation/:id',
+        title: 'Evaluación',
+        data: { icon: 'group', child: false },
+        loadComponent: () =>
+          import('./dashboard/pages/patients/evaluationForm/evaluationForm.component'),
+      },
       //{
       //  path: 'fichas-medicas',
       //  title: 'Fichas Clínicas',

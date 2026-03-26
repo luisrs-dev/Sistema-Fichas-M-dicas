@@ -297,7 +297,14 @@ const activeSistratPatientsByCenter = async (center: string, forceRefresh: boole
     await logger.close();
 
     // Buscar pacientes locales de ese centro para cruzarlos y obtener el _id de Mongo
-    const localPatients = await PatientModel.find({ sistratCenter: center, active: true });
+    const localPatients = await PatientModel.find({
+      $or: [
+        { active: true },
+        { active: { $exists: false } }
+      ],
+      codigoSistrat: { $exists: true, $ne: "" }
+    });
+
 
     // Mapear inyectando _id de la DB
     const matchedData = data.map((sistratP) => {
@@ -420,7 +427,7 @@ const updateBulkAlertsFromSistrat = async (center: string, patientIds: string[])
   try {
     const sistratPlatform = new Sistrat();
     const logger = new ProcessLogger(`bulk-alerts-${center}`, "actualiza-alertas-masivas");
-    
+
     // Extracción global en 1 sola sesión de Puppeteer
     const alertsDict = await sistratPlatform.bulkUpdateAlertsByCenter(center, logger);
     await logger.close();

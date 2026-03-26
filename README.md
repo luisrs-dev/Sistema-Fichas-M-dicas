@@ -100,3 +100,7 @@ Para que el sistema conecte a la base de datos de la VPS automáticamente sin pe
    ssh root@31.97.9.216 "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat ~/temp.pub >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && rm ~/temp.pub"
    ```
 3. **Ejecutar**: `npm run dev:windows` (Esto abrirá las ventanas necesarias automáticamente).
+
+Ejecuta tunnel
+
+ssh -fN -o StrictHostKeyChecking=no -L 127.0.0.1:27017:127.0.0.1:27017 root@31.97.9.216

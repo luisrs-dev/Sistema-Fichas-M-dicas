@@ -6,6 +6,8 @@ import { AdmissionForm } from "./../../interfaces/admissionForm.interface";
 import ProcessLogger from "../../utils/processLogger";
 import { getGroupedRecordsByPatientAndMonth } from "../medicalRecordGrouping.service";
 import { getEnvironmentConfigValue } from "../environmentConfig.service";
+import { IntegracionSocialForm } from "../../interfaces/socialForm.interface";
+import { EvaluationForm } from "../../interfaces/evaluationForm.interface";
 
 
 interface RowData {
@@ -1511,7 +1513,7 @@ class Sistrat {
       // if (page) {
       //   await this.scrapper.closeBrowser();
       // }
-      
+
       console.groupEnd();
       await logger.close();
     }
@@ -1872,6 +1874,316 @@ class Sistrat {
     }
 
     return results;
+  }
+
+  async syncTopForm(patient: any, topData: any) {
+    console.log(`[Sistrat][syncTopForm] Iniciando llenado TOP para ${patient._id}`);
+    const logger = new ProcessLogger(this.getPatientLabel(patient), "top-form");
+    let page: Page | null = null;
+
+    try {
+      page = await this.login(patient.sistratCenter, logger);
+
+      page.on("dialog", async (dialog) => { await dialog.accept(); });
+
+      await this.openActiveUsersList(page, logger);
+      await this.scrapper.waitForSeconds(3);
+
+      const patientCode = patient.codigoSistrat?.trim() || null;
+
+      const found = await page.evaluate((pCode) => {
+        const normalize = (n: string) => n ? n.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "").toLowerCase() : "";
+        const table = document.getElementById("table_pacientes") as HTMLTableElement;
+        if (!table) return false;
+        for (let i = 1; i < table.rows.length; i++) {
+          const cells = table.rows[i].cells;
+          if (!cells) continue;
+          const name = cells[1]?.innerText?.toLowerCase() || "";
+          const code = cells[2]?.innerText?.trim() || "";
+          if ((pCode && code === pCode)) {
+            const topBtn = cells[8]?.querySelector("img[title='TOP']") as HTMLElement;
+            if (topBtn) {
+              topBtn.click();
+              return true;
+            }
+          }
+        }
+        return false;
+      }, patientCode);
+
+      if (!found) throw new Error("Paciente no encontrado o no tiene botón TOP Form disponible.");
+
+      await page.waitForSelector("#frmdatos_inte", { visible: true, timeout: 15000 });
+      await this.scrapper.waitForSeconds(2); // Wait for the content load
+
+      // Inject evaluate to fill form
+      await page.evaluate((top) => {
+        const setVal = (sel: string, val: any) => {
+          const el = document.querySelector(sel) as HTMLInputElement;
+          if (el && val !== null && val !== undefined) {
+            el.value = val; el.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        };
+        const setCheck = (sel: string, val: boolean | null | undefined) => {
+          const el = document.querySelector(sel) as HTMLInputElement;
+          if (el && val === true && !el.checked) el.click();
+          if (el && val === false && el.checked) el.click();
+        };
+        const setRadioGroup = (name: string, val: any) => {
+          if (!val) return;
+          const map: any = { si: "1", no: "2", nr: "3" };
+          const radioVal = typeof val === 'string' && map[val.toLowerCase()] ? map[val.toLowerCase()] : String(val);
+          const r = document.querySelector(`input[name="${name}"][value="${radioVal}"]`) as HTMLInputElement;
+          if (r) r.click();
+        };
+        const setSubstance = (keys: string[], item: any) => {
+          if (!item) return;
+          setCheck(keys[0], item.todosLosCeros);
+          if (keys[1]) setVal(keys[1], item.promedio);
+          setVal(keys[2], item.ultimaSemana); setVal(keys[3], item.semana3);
+          setVal(keys[4], item.semana2); setVal(keys[5], item.semana1);
+          setCheck(keys[6], item.noResponde);
+        };
+
+        // Sec 1
+        setSubstance(['#alcohol', '#promedio_alcohol_dia', '#promedio_alcohol_dia2', '#promedio_alcohol_dia3', '#promedio_alcohol_dia4', '#promedio_alcohol_dia5', '#nr_alcohol_check'], top.alcohol);
+        setSubstance(['#marihuana', '#promedio_marihuana_dia', '#promedio_marihuana_dia2', '#promedio_marihuana_dia3', '#promedio_marihuana_dia4', '#promedio_marihuana_dia5', '#nr_marihuana_check'], top.marihuana);
+        setSubstance(['#pasta', '#promedio_papel_dia', '#promedio_papel_dia2', '#promedio_papel_dia3', '#promedio_papel_dia4', '#promedio_papel_dia5', '#nr_pasta_base_check'], top.pastaBase);
+        setSubstance(['#cocaina', '#promedio_gramos_dia', '#promedio_gramos_dia2', '#promedio_gramos_dia3', '#promedio_gramos_dia4', '#promedio_gramos_dia5', '#nr_cocaina_check'], top.cocaina);
+        setSubstance(['#sedantes', '#promedio_sedantes_dia', '#promedio_sedantes_dia2', '#promedio_sedantes_dia3', '#promedio_sedantes_dia4', '#promedio_sedantes_dia5', '#nr_sedantes_tranquilizantes_check'], top.sedantes);
+
+        if (top.otraSustancia) {
+          setVal('#nombre_sustancia', top.otraSustancia.nombre);
+          setVal('#umedida_sustancia', top.otraSustancia.unidadMedida);
+          setSubstance(['#otra', '#promedio_otros_dia', '#promedio_otros_dia2', '#promedio_otros_dia3', '#promedio_otros_dia4', '#promedio_otros_dia5', '#nr_otra_sustancia_check'], top.otraSustancia);
+        }
+
+        // Sec 2
+        if (top.hurto) { setRadioGroup('hurto', top.hurto.si ? '1' : top.hurto.no ? '2' : top.hurto.nr ? '3' : null); }
+        if (top.robo) { setRadioGroup('robo', top.robo.si ? '1' : top.robo.no ? '2' : top.robo.nr ? '3' : null); }
+        if (top.ventaDrogas) { setRadioGroup('venta_droga', top.ventaDrogas.si ? '1' : top.ventaDrogas.no ? '2' : top.ventaDrogas.nr ? '3' : null); }
+        if (top.rina) { setRadioGroup('rina', top.rina.si ? '1' : top.rina.no ? '2' : top.rina.nr ? '3' : null); }
+        if (top.otraAccion) { setRadioGroup('otra_accion', top.otraAccion.si ? '1' : top.otraAccion.no ? '2' : top.otraAccion.nr ? '3' : null); }
+
+        if (top.violenciaIntrafamiliar) {
+          setCheck('#intra', top.violenciaIntrafamiliar.todosLosCeros);
+          setVal('#violencia', top.violenciaIntrafamiliar.ultimaSemana);
+          setVal('#violencia2', top.violenciaIntrafamiliar.semana3);
+          setVal('#violencia3', top.violenciaIntrafamiliar.semana2);
+          setVal('#violencia4', top.violenciaIntrafamiliar.semana1);
+          setCheck('#violencia_nr_check', top.violenciaIntrafamiliar.noResponde);
+        }
+
+        // Sec 3
+        if (top.saludPsicologica !== null) setRadioGroup('rangeValue1', top.saludPsicologica);
+
+        if (top.diasTrabajados) {
+          setCheck('#lugar', top.diasTrabajados.todosLosCeros);
+          setVal('#d_remunerados', top.diasTrabajados.ultimaSemana);
+          setVal('#d_remunerados2', top.diasTrabajados.semana3);
+          setVal('#d_remunerados3', top.diasTrabajados.semana2);
+          setVal('#d_remunerados4', top.diasTrabajados.semana1);
+          setCheck('#nr_promedio_total8_check', top.diasTrabajados.noResponde);
+        }
+        if (top.diasEducacion) {
+          setCheck('#colegio', top.diasEducacion.todosLosCeros);
+          setVal('#dia_asistencia', top.diasEducacion.ultimaSemana);
+          setVal('#dia_asistencia2', top.diasEducacion.semana3);
+          setVal('#dia_asistencia3', top.diasEducacion.semana2);
+          setVal('#dia_asistencia4', top.diasEducacion.semana1);
+          setCheck('#nr_promedio_total9_check', top.diasEducacion.noResponde);
+        }
+
+        if (top.saludFisica !== null) setRadioGroup('rangeValue2', top.saludFisica);
+        if (top.tieneLugarVivir) setRadioGroup('lugar_vivir', top.tieneLugarVivir);
+        if (top.viviendasCondicionesBasicas) setRadioGroup('habita_vivienda', top.viviendasCondicionesBasicas);
+        if (top.calidadVida !== null) setRadioGroup('rangeValue3', top.calidadVida);
+
+        if (top.noDeseaCompletar) setCheck('#nocompleta', true);
+        if (top.observaciones) setVal('#txt_observacion', top.observaciones);
+        window.scrollTo(0, document.body.scrollHeight);
+      }, topData);
+
+      await this.logStep(logger, "[Sistrat][syncTopForm] Formulario auto-llenado");
+      console.log("[Sistrat][syncTopForm] Esperando 15s para validación manual sin darle al submit...");
+
+      await this.scrapper.waitForSeconds(300);
+
+    } catch (err: any) {
+      console.error(err);
+      await this.logStep(logger, `[Sistrat][syncTopForm] Error: ${err.message}`);
+      throw err;
+    } finally {
+      if (page) await this.scrapper.closeBrowser();
+      await logger.close();
+    }
+  }
+
+  async syncSocialForm(patient: any, socialData: IntegracionSocialForm) {
+    console.log(`[Sistrat][syncSocialForm] Iniciando llenado Integración Social para ${patient._id}`);
+    const logger = new ProcessLogger(this.getPatientLabel(patient), "social-form");
+    let page: Page | null = null;
+
+    try {
+      page = await this.login(patient.sistratCenter, logger);
+      page.on("dialog", async (dialog) => { await dialog.accept(); });
+
+      await this.openActiveUsersList(page, logger);
+      await this.scrapper.waitForSeconds(3);
+
+      const patientCode = patient.codigoSistrat?.trim() || null;
+
+      const found = await page.evaluate((pCode) => {
+        const table = document.getElementById("table_pacientes") as HTMLTableElement;
+        if (!table) return false;
+        for (let i = 1; i < table.rows.length; i++) {
+          const cells = table.rows[i].cells;
+          if (!cells) continue;
+          const code = cells[2]?.innerText?.trim() || "";
+          if ((pCode && code === pCode)) {
+            const socialBtn = cells[8]?.querySelector("img[src*='circulo_amarillo.png']") as HTMLElement;
+            if (socialBtn) {
+              socialBtn.click();
+              return true;
+            }
+          }
+        }
+        return false;
+      }, patientCode);
+
+      if (!found) throw new Error("Paciente no encontrado o no tiene la alerta de Integración Social (círculo amarillo) disponible.");
+
+      await page.waitForSelector("#tabs", { visible: true, timeout: 15000 });
+      await this.scrapper.waitForSeconds(2);
+
+      await page.evaluate((social) => {
+        const setVal = (sel: string, val: any) => {
+          const el = document.querySelector(sel) as HTMLInputElement;
+          if (el && val !== null && val !== undefined) {
+            el.value = val;
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        };
+
+        const fillCheckboxes = (categoryValues: string[], prefix: string) => {
+          if (!categoryValues) return;
+          categoryValues.forEach(val => {
+            const el = document.querySelector(`#${prefix}-${val}`) as HTMLInputElement;
+            if (el && !el.checked) el.click();
+          });
+        };
+
+        // Tab 1
+        setVal('#orientacion_sociolaboral', social.orientacionSociolaboral);
+        setVal('#requiere_vais', social.requiereVais);
+        setVal('#sel_nivelacion_estudios', social.nivelacionEstudios);
+        setVal('#sel_formacion', social.formacion);
+        fillCheckboxes(social.capacitacion, 'p7');
+
+        // Tab 2
+        const tab2Link = document.querySelector('a[href="#tabs2"]') as HTMLElement;
+        if (tab2Link) tab2Link.click();
+        fillCheckboxes(social.empleo, 'p8');
+        fillCheckboxes(social.habitabilidad, 'p9');
+        fillCheckboxes(social.judicial, 'p10');
+        fillCheckboxes(social.salud, 'p11');
+        fillCheckboxes(social.apoyoSocial, 'p12');
+
+        // Tab 3
+        const tab3Link = document.querySelector('a[href="#tabs3"]') as HTMLElement;
+        if (tab3Link) tab3Link.click();
+        fillCheckboxes(social.proteccionSocial, 'p13');
+        fillCheckboxes(social.usoTiempoLibre, 'p14');
+        setVal('#txt_observacion', social.observacion1);
+        setVal('#txt_observacion2', social.observacion2);
+        setVal('#txt_observacion3', social.observacion3);
+        window.scrollTo(0, document.body.scrollHeight);
+      }, socialData as any);
+
+      await this.logStep(logger, "[Sistrat][syncSocialForm] Formulario de Integración Social completado");
+      console.log("[Sistrat][syncSocialForm] Bloqueando para validación manual");
+      await this.scrapper.waitForSeconds(120);
+
+    } catch (err: any) {
+      console.error(err);
+      await this.logStep(logger, `[Sistrat][syncSocialForm] Error: ${err.message}`);
+      throw err;
+    } finally {
+      if (page) await this.scrapper.closeBrowser();
+      await logger.close();
+    }
+  }
+
+  async syncEvaluationForm(patient: any, evalData: EvaluationForm) {
+    console.log(`[Sistrat][syncEvaluationForm] Iniciando llenado Evaluación para ${patient._id}`);
+    const logger = new ProcessLogger(this.getPatientLabel(patient), "evaluation-form");
+    let page: Page | null = null;
+
+    try {
+      page = await this.login(patient.sistratCenter, logger);
+      page.on("dialog", async (dialog) => { await dialog.accept(); });
+
+      await this.openActiveUsersList(page, logger);
+      await this.scrapper.waitForSeconds(3);
+
+      const patientCode = patient.codigoSistrat?.trim() || null;
+
+      const found = await page.evaluate((pCode) => {
+        const table = document.getElementById("table_pacientes") as HTMLTableElement;
+        if (!table) return false;
+        for (let i = 1; i < table.rows.length; i++) {
+          const cells = table.rows[i].cells;
+          if (!cells) continue;
+          const code = cells[2]?.innerText?.trim() || "";
+          if ((pCode && code === pCode)) {
+            const evalBtn = cells[8]?.querySelector("span[id^='evaluacion_'] img, img[src*='circulo_verde.png']") as HTMLElement;
+            if (evalBtn) {
+              evalBtn.click();
+              return true;
+            }
+          }
+        }
+        return false;
+      }, patientCode);
+
+      if (!found) throw new Error("Paciente no encontrado o no tiene la alerta de Evaluación (círculo verde) disponible.");
+
+      await page.waitForSelector("#frmdatos", { visible: true, timeout: 15000 });
+      await this.scrapper.waitForSeconds(2);
+
+      await page.evaluate((data) => {
+        const setVal = (sel: string, val: any) => {
+          const el = document.querySelector(sel) as HTMLSelectElement;
+          if (el && val !== null && val !== undefined) {
+            el.value = val;
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        };
+
+        setVal('#selpatron_consumo', data.patronConsumo);
+        setVal('#selsituacion_familiar', data.situacionFamiliar);
+        setVal('#selrelaciones_interpersonales', data.relacionesInterpersonales);
+        setVal('#selrelacion_ocupacional', data.situacionOcupacional);
+        setVal('#seltrasgresion_social', data.trasgresionSocial);
+        setVal('#selestado_salud_mental', data.saludMental);
+        setVal('#selselestado_salud_fisica', data.saludFisica);
+
+        window.scrollTo(0, document.body.scrollHeight);
+      }, evalData as any);
+
+      await this.logStep(logger, "[Sistrat][syncEvaluationForm] Formulario de Evaluación completado");
+      console.log("[Sistrat][syncEvaluationForm] Bloqueando para validación manual");
+      await this.scrapper.waitForSeconds(120);
+
+    } catch (err: any) {
+      console.error(err);
+      await this.logStep(logger, `[Sistrat][syncEvaluationForm] Error: ${err.message}`);
+      throw err;
+    } finally {
+      if (page) await this.scrapper.closeBrowser();
+      await logger.close();
+    }
   }
 }
 

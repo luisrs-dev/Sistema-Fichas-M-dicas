@@ -112,12 +112,14 @@ class Scrapper {
         executablePath,
         //slowMo: 300, sirve para darle tiempe a cada operacion
         userDataDir: userDataDir, // Establecer la carpeta de caché,
+        defaultViewport: null, // Dejar que el navegador maneje el viewport según el tamaño de la ventana
         args: [
           "--no-sandbox",
           "--disable-setuid-sandbox",
           "--use-gl=egl",
           "--blink-settings=imagesEnabled=false,cssEnabled=false",
-          "--disable-dev-shm-usage"
+          "--disable-dev-shm-usage",
+          "--start-maximized"
         ],
         timeout: 0,
         protocolTimeout: 300000,
@@ -150,6 +152,14 @@ class Scrapper {
   async clickButton(page: Page, selector: string, timeoutValue: number = 5000): Promise<void> {
     try {
       await page.waitForSelector(selector, { visible: true, timeout: timeoutValue });
+      
+      // Asegurar que el elemento esté a la vista antes de clickear
+      await page.evaluate((sel) => {
+        const el = document.querySelector(sel);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, selector);
+      
+      await this.waitForSeconds(0.5);
       await page.click(selector);
 
     } catch (error) {
