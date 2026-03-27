@@ -194,16 +194,16 @@ const getDemand = async (req: Request, res: Response) => {
 
 const getDataByRut = async (req: Request, res: Response) => {
   try {
-    const { rut } = req.params;
-    if (!rut) {
-      return res.status(400).json({ success: false, message: "El parámetro rut es requerido" });
+    const { rut, center } = req.params;
+    if (!rut || !center) {
+      return res.status(400).json({ success: false, message: "Los parámetros rut y center son requeridos" });
     }
 
-    const data = await dataPatientByRut(rut);
+    const data = await dataPatientByRut(rut, center);
     if (!data) {
       return res
         .status(404)
-        .json({ success: false, message: "No se encontró demanda asociada al RUT proporcionado" });
+        .json({ success: false, message: "No se encontró demanda asociada al RUT y centro proporcionados" });
     }
 
     res.status(200).json({ success: true, message: "Demanda recuperada con éxito", data });

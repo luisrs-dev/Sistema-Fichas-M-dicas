@@ -11,6 +11,7 @@ import Notiflix from 'notiflix';
 import { Patient } from '../../../interfaces/patient.interface';
 import { MedicalRecordService } from '../medicalRecord.service';
 import { PatientService } from '../../patients/patient.service';
+import { SistratCenter, SistratCenterService } from '../../../services/sistratCenter.service';
 
 @Component({
   selector: 'app-attentions',
@@ -31,15 +32,12 @@ import { PatientService } from '../../patients/patient.service';
 export default class AttentionsComponent {
   private readonly patientService = inject(PatientService);
   private readonly medicalRecordService = inject(MedicalRecordService);
+  private readonly sistratCenterService = inject(SistratCenterService);
 
   private readonly currentYear = new Date().getFullYear();
   private readonly firstAvailableYear = 2023;
 
-  readonly sistratCenters = [
-    { value: 'hombres', label: 'CEADT Hombres' },
-    { value: 'mujeres', label: 'CEADT Mujeres' },
-    { value: 'alameda', label: 'CEADT PAI PG Alameda' },
-  ];
+  sistratCenters = signal<SistratCenter[]>([]);
 
   selectedCenter = signal<string>('');
   selectedMonth = signal<number>(new Date().getMonth() + 1);
@@ -79,6 +77,12 @@ export default class AttentionsComponent {
     const selections = this.selectedPatients();
     return patients.every((patient) => !patient._id || selections[patient._id]);
   });
+
+  ngOnInit() {
+    this.sistratCenterService.getActiveCenters().subscribe((centers: SistratCenter[]) => {
+      this.sistratCenters.set(centers);
+    });
+  }
 
   onCenterChange(center: string) {
     this.selectedCenter.set(center);

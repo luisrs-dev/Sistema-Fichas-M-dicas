@@ -28,6 +28,8 @@ export interface Patient {
   alertConsentimiento: Boolean;
   alertEvaluacion: Boolean;
   alertIntegracionSocial: Boolean;
+  alertEgreso: boolean;
+  alertDiagnosticoSocial: boolean;
   alertTreatment?: Boolean;
   active?: boolean;
   mainSubstance: string;

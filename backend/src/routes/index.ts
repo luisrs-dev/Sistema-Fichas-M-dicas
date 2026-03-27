@@ -17,12 +17,15 @@ const cleanFilename = (filename: string) => {
 
 readdirSync(PATH_ROUTER).filter((filename) => {
   const cleanName = cleanFilename(filename);
-  if (cleanName != "index") {
+  if (cleanName !== "index") {
     import(`./${cleanName}`).then((moduleRouter) => {
-      console.log(`Se está cargando la ruta... ${cleanName}`);
+      console.log(`Cargando ruta: /${cleanName}`);
       router.use(`/${cleanName}`, moduleRouter.router);
     });
   }
 });
+
+// Registrar manualmente si es necesario o asegurar que el cargador dinámico lo haga
+// El cargador dinámico de abajo debería manejarlo si el archivo está en la carpeta routes.
 
 export { router };

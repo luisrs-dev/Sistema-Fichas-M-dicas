@@ -82,7 +82,7 @@ export default class ListPatientsComponent implements OnInit {
       const programSearch = searchTerms.program;
       const matchProgram = programSearch ? (data.program?.name || '').toLowerCase().includes(programSearch) : true;
 
-      const matchAlerts = searchTerms.alerts ? !!(data.alertCie10 || data.alertConsentimiento || data.alertIntegracionSocial || data.alertEvaluacion) : true;
+      const matchAlerts = searchTerms.alerts ? !!(data.alertCie10 || data.alertConsentimiento || data.alertIntegracionSocial || data.alertEvaluacion || data.alertEgreso || data.alertDiagnosticoSocial) : true;
 
       return matchSearch && matchProgram && matchAlerts;
     };

@@ -52,6 +52,12 @@
 
 }
 
+.custom-icon-orange {
+  color: #fd7e14;
+  background-color: #fd7e14;
+  border-radius: 50%;
+}
+
 .mat-row,
 .mat-header-row {
   height: 32px;

@@ -15,12 +15,8 @@
   }
 </mat-toolbar>
 <mat-sidenav-container class="example-container" autosize>
-  <mat-sidenav
-    #sidenav
-    [ngStyle]="{ width: '250px', height: '100%' }"
-    [mode]="isMobile ? 'over' : 'side'"
-    [opened]="isMobile ? 'false' : 'true'"
-  >
+  <mat-sidenav #sidenav [ngStyle]="{ width: '250px', height: '100%' }" [mode]="isMobile ? 'over' : 'side'"
+    [opened]="isMobile ? 'false' : 'true'">
     <mat-toolbar>
       <span>Menú</span>
       <span class="spacer"></span>
@@ -32,43 +28,34 @@
     <mat-nav-list>
       @for (menuItem of menuItems; track $index) {
 
-        <!-- Items sólo para admins -->
-         @if(isAdmin && menuItem.forAdmin){
-            <mat-list-item
-            [routerLink]="menuItem.path"
-            (click)="isMobile ? sidenav.toggle() : false"
-          >
-            <mat-icon matListItemIcon class="mat-18">{{ menuItem.icon }}</mat-icon>
-            {{ menuItem.title }}
-          </mat-list-item>
-        }
-        @else{
-            <!-- Items para profesionales no admins -->
-            @if(!menuItem.forAdmin){
-              <mat-list-item
-              [routerLink]="menuItem.path"
-              (click)="isMobile ? sidenav.toggle() : false"
-            >
-              <mat-icon matListItemIcon class="mat-18">{{ menuItem.icon }}</mat-icon>
-              {{ menuItem.title }}
-            </mat-list-item>
-          }
+      <!-- Items sólo para admins -->
+      @if(isAdmin && menuItem.forAdmin){
+      <mat-list-item [routerLink]="menuItem.path" (click)="isMobile ? sidenav.toggle() : false">
+        <mat-icon matListItemIcon class="mat-18">{{ menuItem.icon }}</mat-icon>
+        {{ menuItem.title }}
+      </mat-list-item>
       }
-    }
-       @if(isAdmin){
+      @else{
+      <!-- Items para profesionales no admins -->
+      @if(!menuItem.forAdmin){
+      <mat-list-item [routerLink]="menuItem.path" (click)="isMobile ? sidenav.toggle() : false">
+        <mat-icon matListItemIcon class="mat-18">{{ menuItem.icon }}</mat-icon>
+        {{ menuItem.title }}
+      </mat-list-item>
+      }
+      }
+      }
+      @if(isAdmin){
       <mat-toolbar>
         <span>Parámetros</span>
         <span class="spacer"></span>
       </mat-toolbar>
 
       @for (menuParameter of menuParameters; track $index) {
-      <mat-list-item
-        [routerLink]="menuParameter.path"
-        (click)="isMobile ? sidenav.toggle() : false"
-      >
+      <mat-list-item [routerLink]="menuParameter.path" (click)="isMobile ? sidenav.toggle() : false">
         <mat-icon matListItemIcon class="mat-18">{{
           menuParameter.icon
-        }}</mat-icon>
+          }}</mat-icon>
         {{ menuParameter.title }}
       </mat-list-item>
       } }

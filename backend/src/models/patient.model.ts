@@ -97,6 +97,14 @@ const PatientSchema = new Schema<Patient>(
       type: Boolean,
       default: false
     },
+    alertEgreso: {
+      type: Boolean,
+      default: false
+    },
+    alertDiagnosticoSocial: {
+      type: Boolean,
+      default: false
+    },
     active: {
       type: Boolean,
       default: true,

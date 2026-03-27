@@ -19,6 +19,7 @@ import { ClinicalInfoDialogComponent } from './clinical-info-dialog.component';
 import NewMedicalRecord from '../../medicalRecord/new/new.component';
 import { NonEmptyPipe } from '../../../../shared/pipes/non-empty.pipe';
 import { MedicalRecordGrouped } from '../../medicalRecord/interfaces/medicalRecord-grouped.interface';
+import { AuthService } from '../../../../auth/auth.service';
 
 interface State {
   patient: Patient | null;
@@ -61,6 +62,7 @@ export default class DetailComponent implements OnInit {
   private readonly medicalRecordService = inject(MedicalRecordService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  public readonly authService = inject(AuthService);
 
   private readonly currentYear = new Date().getFullYear();
   private readonly firstAvailableYear = 2023;

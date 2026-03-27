@@ -10,6 +10,8 @@ import { IntegracionSocialForm } from "../../interfaces/socialForm.interface";
 import { EvaluationForm } from "../../interfaces/evaluationForm.interface";
 
 
+import { getCenterByName } from "../sistratCenter.service";
+
 interface RowData {
   i: number; // Índice de la fila
   id: string; // ID del paciente (celda 0)
@@ -32,28 +34,26 @@ class Sistrat {
   }
 
   // Método para hacer login en Sistrat
-  async login(center: string, logger?: ProcessLogger) {
-    console.group(`[Login] Inicio proceso de login para centro: ${center}`);
-    await this.logStep(logger, `[Login] Inicio proceso para centro ${center}`);
+  async login(centerName: string, logger?: ProcessLogger) {
+    console.group(`[Login] Inicio proceso de login para centro: ${centerName}`);
+    await this.logStep(logger, `[Login] Inicio proceso para centro ${centerName}`);
 
     try {
-      // --- Selección de credenciales ---
+      // --- Selección de credenciales desde la DB ---
       console.group("Preparando variables");
-      await this.logStep(logger, "[Login] Seleccionando credenciales");
+      await this.logStep(logger, "[Login] Seleccionando credenciales desde la base de datos");
 
-      const credentials: Record<string, { usuario: string; password: string }> = {
-        mujeres: { usuario: "rmorales", password: "Robe1010" },
-        hombres: { usuario: "rmorales", password: "Robe0011" },
-        alameda: { usuario: "rmoralesn", password: "Robe1234" },
-      };
+      const centerConfig = await getCenterByName(centerName);
 
-      const creds = credentials[center];
-
-      if (!creds) {
-        throw new Error(`Centro no válido: ${center}`);
+      if (!centerConfig) {
+        throw new Error(`Centro no encontrado en la base de datos: ${centerName}`);
       }
 
-      const { usuario, password } = creds;
+      if (!centerConfig.active) {
+        throw new Error(`El centro ${centerName} no está activo.`);
+      }
+
+      const { usuario, password } = centerConfig;
 
       console.log("Usuario:", usuario);
       console.log("Password:", password ? "[PROTECTED]" : null);
@@ -107,8 +107,8 @@ class Sistrat {
   }
 
 
-  async dataPatientFromDemand(rut: string) {
-    const center = "mujeres";
+  async dataPatientFromDemand(rut: string, centerName: string) {
+    const center = centerName;
     console.group(`[Sistrat][Datos con rut] ${rut}`);
     const logger = new ProcessLogger(rut, "datos-paciente-desde-crear-demanda");
 
@@ -1333,39 +1333,56 @@ class Sistrat {
                   id: objCells.item(0)?.innerText || "", // Captura el texto de la primera celda (ID)
                   name: objCells.item(1)?.innerText?.toLowerCase().trim().replace(/\s+/g, " ") || "", // Captura el texto de la segunda celda (nombre)
                   codigoSistrat: codigoSistrat,
+                  evaluacion: false,
+                  egreso: false,
                   cie10: false,
                   consentimiento: false,
-                  evaluacion: false,
                   integracionSocial: false,
+                  diagnosticoSocial: false,
                 };
 
-                // Obtenemos el id del paciente (desde el elemento evaluacion_XXXXX)
-                const idMatch = objCells.item(8)?.querySelector("span[id^='evaluacion_']");
-                if (idMatch) {
-                  const idSistrat = idMatch.id.split("_")[1]; // Captura el ID del paciente, ej. '251888'
+                // Intentar obtener el ID de Sistrat de cualquier imagen con onclick (todas las alertas lo tienen)
+                const anyAlertImg = objCells.item(8)?.querySelector("img[onclick]");
+                const onclickAttr = anyAlertImg?.getAttribute("onclick") || "";
+                const idMatch = onclickAttr.match(/\d+/);
 
-                  // Verificar si hay alerta en 'evaluacion_'
+                if (idMatch) {
+                  const idSistrat = idMatch[0];
+
+                  // 1. Evaluación (Verde)
                   const evaluacionElement = document.getElementById(`evaluacion_${idSistrat}`);
                   if (evaluacionElement && evaluacionElement.querySelector("img")) {
                     patient.evaluacion = true;
                   }
 
-                  // Verificar si hay alerta en 'cie10_' 
+                  // 2. Egreso (Roja)
+                  const egresoImg = objCells.item(8)?.querySelector("img[src*='circle_red.png']");
+                  if (egresoImg) {
+                    patient.egreso = true;
+                  }
+
+                  // 3. CIE10 (Azul)
                   const cie10Element = document.getElementById(`cie10_${idSistrat}`);
                   if (cie10Element && cie10Element.querySelector("img")) {
                     patient.cie10 = true;
                   }
 
-                  // Verificar si hay alerta en 'consentimiento_' (con o sin separador)
+                  // 4. Consentimiento / TOP (Negra)
                   const consentimientoElement = document.getElementById(`consentimiento${idSistrat}`);
                   if (consentimientoElement && consentimientoElement.querySelector("img")) {
                     patient.consentimiento = true;
                   }
 
-                  // Verificar si hay alerta en Integración Social (imagen amarilla)
+                  // 5. Integración Social (Amarilla)
                   const integracionImg = objCells.item(8)?.querySelector("img[src*='circulo_amarillo.png']");
                   if (integracionImg) {
                     patient.integracionSocial = true;
+                  }
+
+                  // 6. Diagnóstico Social (Naranja)
+                  const diagnosticoSocialImg = objCells.item(8)?.querySelector("img[src*='circle_orange.png']");
+                  if (diagnosticoSocialImg) {
+                    patient.diagnosticoSocial = true;
                   }
                 }
 
@@ -1387,25 +1404,14 @@ class Sistrat {
         await this.logStep(logger, "[Sistrat][updateAlerts] Paciente encontrado, actualizando flags");
         const patientEntity = await PatientModel.findOne({ _id: patient._id });
         if (!patientEntity) return null;
-        if (patientWithAlerts.cie10) {
-          patientEntity.alertCie10 = true;
-          await patientEntity.save();
-        }
+        patientEntity.alertCie10 = patientWithAlerts.cie10;
+        patientEntity.alertEvaluacion = patientWithAlerts.evaluacion;
+        patientEntity.alertConsentimiento = patientWithAlerts.consentimiento;
+        patientEntity.alertIntegracionSocial = patientWithAlerts.integracionSocial;
+        patientEntity.alertEgreso = patientWithAlerts.egreso;
+        patientEntity.alertDiagnosticoSocial = patientWithAlerts.diagnosticoSocial;
 
-        if (patientWithAlerts.evaluacion) {
-          patientEntity.alertEvaluacion = true;
-          await patientEntity.save();
-        }
-
-        if (patientWithAlerts.consentimiento) {
-          patientEntity.alertConsentimiento = true;
-          await patientEntity.save();
-        }
-
-        if (patientWithAlerts.integracionSocial) {
-          patientEntity.alertIntegracionSocial = true;
-          await patientEntity.save();
-        }
+        await patientEntity.save();
         return patientEntity;
       } else {
         console.log("[Sistrat][updateAlerts] Paciente no encontrado en listado");
@@ -1479,8 +1485,14 @@ class Sistrat {
           } else if (type === 'consentimiento') {
             targetImg = document.querySelector(`#consentimiento${idSistrat} img`);
           } else if (type === 'integracionSocial') {
-            const td = document.getElementById(`evaluacion_${idSistrat}`)?.closest('td');
+            const td = (document.getElementById(`evaluacion_${idSistrat}`) || document.getElementById(`cie10_${idSistrat}`) || document.getElementById(`consentimiento${idSistrat}`))?.closest('td');
             if (td) targetImg = td.querySelector("img[src*='circulo_amarillo.png']");
+          } else if (type === 'egreso') {
+            const td = (document.getElementById(`evaluacion_${idSistrat}`) || document.getElementById(`cie10_${idSistrat}`) || document.getElementById(`consentimiento${idSistrat}`))?.closest('td');
+            if (td) targetImg = td.querySelector("img[src*='circle_red.png']");
+          } else if (type === 'diagnosticoSocial') {
+            const td = (document.getElementById(`evaluacion_${idSistrat}`) || document.getElementById(`cie10_${idSistrat}`) || document.getElementById(`consentimiento${idSistrat}`))?.closest('td');
+            if (td) targetImg = td.querySelector("img[src*='circle_orange.png']");
           }
 
           if (targetImg) {
@@ -1551,27 +1563,57 @@ class Sistrat {
               const codigoSistrat = objCells.item(2)?.innerText?.trim();
               if (codigoSistrat) {
                 const alertsInfo = {
+                  evaluacion: false,
+                  egreso: false,
                   cie10: false,
                   consentimiento: false,
-                  evaluacion: false,
                   integracionSocial: false,
+                  diagnosticoSocial: false,
                 };
 
-                const idMatch = objCells.item(8)?.querySelector("span[id^='evaluacion_']");
+                // Intentar obtener el ID de Sistrat de cualquier imagen con onclick (todas las alertas lo tienen)
+                const anyAlertImg = objCells.item(8)?.querySelector("img[onclick]");
+                const onclickAttr = anyAlertImg?.getAttribute("onclick") || "";
+                const idMatch = onclickAttr.match(/\d+/);
+
                 if (idMatch) {
-                  const idSistrat = idMatch.id.split("_")[1];
+                  const idSistrat = idMatch[0];
 
+                  // 1. Evaluación (Verde)
                   const evaluacionElement = document.getElementById(`evaluacion_${idSistrat}`);
-                  if (evaluacionElement && evaluacionElement.querySelector("img")) alertsInfo.evaluacion = true;
+                  if (evaluacionElement && evaluacionElement.querySelector("img")) {
+                    alertsInfo.evaluacion = true;
+                  }
 
+                  // 2. Egreso (Roja)
+                  const egresoImg = objCells.item(8)?.querySelector("img[src*='circle_red.png']");
+                  if (egresoImg) {
+                    alertsInfo.egreso = true;
+                  }
+
+                  // 3. CIE10 (Azul)
                   const cie10Element = document.getElementById(`cie10_${idSistrat}`);
-                  if (cie10Element && cie10Element.querySelector("img")) alertsInfo.cie10 = true;
+                  if (cie10Element && cie10Element.querySelector("img")) {
+                    alertsInfo.cie10 = true;
+                  }
 
+                  // 4. Consentimiento / TOP (Negra)
                   const consentimientoElement = document.getElementById(`consentimiento${idSistrat}`);
-                  if (consentimientoElement && consentimientoElement.querySelector("img")) alertsInfo.consentimiento = true;
+                  if (consentimientoElement && consentimientoElement.querySelector("img")) {
+                    alertsInfo.consentimiento = true;
+                  }
 
+                  // 5. Integración Social (Amarilla)
                   const integracionImg = objCells.item(8)?.querySelector("img[src*='circulo_amarillo.png']");
-                  if (integracionImg) alertsInfo.integracionSocial = true;
+                  if (integracionImg) {
+                    alertsInfo.integracionSocial = true;
+                  }
+
+                  // 6. Diagnóstico Social (Naranja)
+                  const diagnosticoSocialImg = objCells.item(8)?.querySelector("img[src*='circle_orange.png']");
+                  if (diagnosticoSocialImg) {
+                    alertsInfo.diagnosticoSocial = true;
+                  }
                 }
 
                 result[codigoSistrat] = alertsInfo;

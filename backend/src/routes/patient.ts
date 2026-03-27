@@ -27,7 +27,7 @@ const router = Router();
 router.get("/profile/:profile", getPatientsByProfile);
 
 router.get("/demanda/:patientId", getDemand);
-router.get("/rut/:rut", getDataByRut);
+router.get("/rut/:rut/:center", getDataByRut);
 router.post("/demanda", postDemand);
 router.post("/demanda/sistrat", postDemandToSistrat);
 

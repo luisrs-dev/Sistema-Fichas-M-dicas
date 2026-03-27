@@ -11,7 +11,7 @@
       <mat-label>Centro</mat-label>
       <mat-select required [value]="selectedCenter()" (selectionChange)="onCenterChange($event.value)">
         <mat-option value="">Selecciona</mat-option>
-        <mat-option *ngFor="let center of sistratCenters" [value]="center.value">{{ center.label }}</mat-option>
+        <mat-option *ngFor="let center of sistratCenters()" [value]="center.name">{{ 'CEADT ' + (center.name | titlecase) }}</mat-option>
       </mat-select>
     </mat-form-field>
 

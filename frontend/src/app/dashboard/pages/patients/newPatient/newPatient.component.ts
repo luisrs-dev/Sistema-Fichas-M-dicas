@@ -13,6 +13,7 @@ import { AuthService } from '../../../../auth/auth.service';
 import moment from 'moment';
 import { Patient } from '../../../interfaces/patient.interface';
 import { MONDAY_FIRST_DATE_PROVIDERS } from '../../../../shared/date/monday-first-date-adapter';
+import { SistratCenter, SistratCenterService } from '../../../services/sistratCenter.service';
 
 @Component({
   selector: 'app-new-patient',
@@ -30,6 +31,7 @@ export default class NewPatientComponent {
   private route = inject(ActivatedRoute);
   private changeDetectorRef = inject(ChangeDetectorRef);
   private router = inject(Router);
+  private sistratCenterService = inject(SistratCenterService);
 
   public isEditable: boolean = false;
   public registered: boolean = false;
@@ -40,6 +42,7 @@ export default class NewPatientComponent {
   public patient: Patient;
 
   public registeredOnFiclin = signal<boolean>(false);
+  public sistratCenters = signal<SistratCenter[]>([]);
 
   public userForm: FormGroup = this.fb.group({
     //admissionDate: ['', [Validators.required]],
@@ -82,6 +85,11 @@ export default class NewPatientComponent {
 
     this.userService.getUserById(user._id).subscribe((response) => {
       this.programs = response.user.programs;
+      this.changeDetectorRef.detectChanges();
+    });
+
+    this.sistratCenterService.getActiveCenters().subscribe((centers: SistratCenter[]) => {
+      this.sistratCenters.set(centers);
       this.changeDetectorRef.detectChanges();
     });
 
@@ -271,16 +279,26 @@ export default class NewPatientComponent {
     Notiflix.Loading.circle('Recuperando datos desde SISTRAT');
 
     const rut = this.userForm.get('rut')?.value?.trim();
+    const center = this.userForm.get('sistratCenter')?.value;
+
     if (!rut) {
       Notiflix.Notify.warning('Debes ingresar un RUT antes de buscar.');
+      Notiflix.Loading.remove();
       return;
     }
 
-    this.patientService.getDataWithRut(rut).subscribe({
+    if (!center) {
+      Notiflix.Notify.warning('Debes seleccionar un centro Sistrat antes de buscar.');
+      Notiflix.Loading.remove();
+      return;
+    }
+
+    this.patientService.getDataWithRut(rut, center).subscribe({
       next: (response) => {
         const data = response?.data;
         if (!data) {
           Notiflix.Notify.failure('Respuesta inválida del servicio.');
+          Notiflix.Loading.remove();
           return;
         }
         // Rellenamos los campos disponibles sin tocar el resto del formulario.
@@ -298,7 +316,7 @@ export default class NewPatientComponent {
 
       },
       error: () =>{
-        Notiflix.Notify.failure('No se pudo obtener la información.'),
+        Notiflix.Notify.failure('No se pudo obtener la información.');
         Notiflix.Loading.remove();
       } 
 

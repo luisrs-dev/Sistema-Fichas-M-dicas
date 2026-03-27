@@ -88,8 +88,8 @@ export class PatientService {
     return this.http.post<any>(`${this.backend}/patient/demanda/sistrat`, { patientId }).pipe(catchError((err) => throwError(() => err.error.message)));
   }
 
-  getDataWithRut(rut: string): Observable<any> {
-    return this.http.get<any>(`${this.backend}/patient/rut/${rut}`).pipe(catchError((err) => throwError(() => err.error.message)));
+  getDataWithRut(rut: string, center: string): Observable<any> {
+    return this.http.get<any>(`${this.backend}/patient/rut/${rut}/${center}`).pipe(catchError((err) => throwError(() => err.error.message)));
   }
 
   addFichaIngreso(patientId: string, dataAdmissionForm: any): Observable<any> {

@@ -197,6 +197,13 @@ export const routes: Routes = [
         data: { icon: 'manage_accounts', parameter: true},
         loadComponent: () =>
           import('./dashboard/pages/parameters/services/list/service.component'),
+      },
+      {
+        path: 'sistrat-centers',
+        title: 'Centros Sistrat',
+        data: { icon: 'business', parameter: true, forAdmin: true},
+        loadComponent: () =>
+          import('./dashboard/pages/parameters/sistratCenters/list/sistratCenters.component'),
       }
     ],
   },

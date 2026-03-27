@@ -22,5 +22,12 @@ export const routesParameters: Routes = [
     data: { icon: 'manage_accounts'},
     loadComponent: () =>
       import('./profesionalRole/list/profesionalRole.component'),
+  },
+  {
+    path: 'sistrat-centers',
+    title: 'Centros Sistrat',
+    data: { icon: 'business'},
+    loadComponent: () =>
+      import('./sistratCenters/list/sistratCenters.component'),
   }
 ];

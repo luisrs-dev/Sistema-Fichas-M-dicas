@@ -26,6 +26,8 @@ export interface Patient extends Auth {
   alertConsentimiento: boolean;
   alertEvaluacion: boolean;
   alertIntegracionSocial: boolean;
+  alertEgreso: boolean;
+  alertDiagnosticoSocial: boolean;
   alertTreatment?: boolean;
   active: boolean;
   mainSubstance: string;

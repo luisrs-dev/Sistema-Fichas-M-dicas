@@ -1,0 +1,18 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+table {
+  width: 100%;
+}
+
+.mat-mdc-chip {
+  --mdc-chip-label-text-size: 0.75rem;
+}
+
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}

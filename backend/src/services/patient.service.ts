@@ -105,14 +105,14 @@ const demandByPatient = async (patientId: string) => {
   }
 };
 
-const dataPatientByRut = async (rut: string) => {
+const dataPatientByRut = async (rut: string, center: string) => {
   try {
     const sistratPlatform = new Sistrat();
-    const dataFromDemand = await sistratPlatform.dataPatientFromDemand(rut); // Esta rutina realiza login, lista demandas y carga el formulario
+    const dataFromDemand = await sistratPlatform.dataPatientFromDemand(rut, center); // Esta rutina realiza login, lista demandas y carga el formulario
 
     return dataFromDemand;
   } catch (error) {
-    console.error(`No hay registro de demanda para paciente con rut ${rut}`, error);
+    console.error(`No hay registro de demanda para paciente con rut ${rut} en centro ${center}`, error);
     throw error;
   }
 };
@@ -443,6 +443,8 @@ const updateBulkAlertsFromSistrat = async (center: string, patientIds: string[])
         patient.alertEvaluacion = sysInfo.evaluacion;
         patient.alertConsentimiento = sysInfo.consentimiento;
         patient.alertIntegracionSocial = sysInfo.integracionSocial;
+        patient.alertEgreso = sysInfo.egreso;
+        patient.alertDiagnosticoSocial = sysInfo.diagnosticoSocial;
         await patient.save();
         successCount++;
       }

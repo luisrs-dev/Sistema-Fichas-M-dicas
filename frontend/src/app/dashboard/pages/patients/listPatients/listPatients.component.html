@@ -138,6 +138,16 @@
           <mat-icon class="custom-icon-green">circle</mat-icon>
         </button>
         }
+        @if(element.alertEgreso){
+        <button mat-icon-button (click)="onClickAlert(element._id, 'egreso')" matTooltip="Alerta de Egreso / Sin prestaciones">
+          <mat-icon class="custom-icon-red">circle</mat-icon>
+        </button>
+        }
+        @if(element.alertDiagnosticoSocial){
+        <button mat-icon-button (click)="onClickAlert(element._id, 'diagnosticoSocial')" matTooltip="Actualizar estado diagnóstico de integración social">
+          <mat-icon class="custom-icon-orange">circle</mat-icon>
+        </button>
+        }
       </td>
     </ng-container>
 
