@@ -93,40 +93,40 @@ export class SocialSection2Component {
 
   habitabilidadOptions = [
     { value: '51', label: 'Sin necesidades' },
-    { value: '52', label: 'Subsidios habitacionales' },
-    { value: '53', label: 'Búsqueda lugar seguro' },
+    { value: '52', label: 'Vinculación con subsidios habitacionales para la obtención de vivienda definitiva.' },
+    { value: '53', label: 'Apoyo en la búsqueda de un lugar seguro donde residir de manera autónoma.' },
     { value: '54', label: 'Dispositivos situación calle' },
     { value: '57', label: 'Residencia protegida' },
-    { value: '101', label: 'Vivienda protegida SERNAMEG' },
-    { value: '102', label: 'Ayudas sociales para arriendo' },
+    { value: '101', label: 'Vinculación con programas de vivienda protegidas SERNAMEG' },
+    { value: '102', label: 'Vinculación con ayudas sociales para arriendo' },
     { value: '90', label: 'No Observado' },
   ];
 
   judicialOptions = [
     { value: '58', label: 'Sin necesidades' },
-    { value: '59', label: 'Derecho de familia' },
-    { value: '60', label: 'Denuncias y VIF' },
-    { value: '61', label: 'Asesoría Antecedentes' },
-    { value: '62', label: 'Derecho Laboral' },
-    { value: '63', label: 'Derecho penal' },
+    { value: '59', label: 'Orientación en Materias de Derecho de familia' },
+    { value: '60', label: 'Orientación en denuncias y procedimientos VIF' },
+    { value: '61', label: 'Asesoría para la regularización de Antecedentes' },
+    { value: '62', label: 'Asesoría en procedimientos de Derecho Laboral' },
+    { value: '63', label: 'Asesoría en materia de Derecho penal' },
     { value: '91', label: 'No Observado' },
   ];
 
   saludOptions = [
     { value: '64', label: 'Sin necesidades' },
-    { value: '65', label: 'Credencial salud' },
-    { value: '66', label: 'Inscripción APS' },
-    { value: '67', label: 'RND Discapacidad' },
-    { value: '103', label: 'Salud bucal' },
-    { value: '104', label: 'Orientación GES' },
-    { value: '105', label: 'Continuidad Salud Mental' },
+    { value: '65', label: 'Obtención de credencial de salud' },
+    { value: '66', label: 'Inscripción en Centro de Salud Primaria' },
+    { value: '67', label: 'Gestiones registro nacional de discapacidad' },
+    { value: '103', label: 'Apoyo en salud bucal' },
+    { value: '104', label: 'Apoyo y orientación patologías GES' },
+    { value: '105', label: 'Vinculación para la continuidad de cuidados en salud mental	' },
     { value: '92', label: 'No Observado' },
   ];
 
   apoyoSocialOptions = [
     { value: '68', label: 'Sin necesidades' },
-    { value: '69', label: 'Autoayuda' },
-    { value: '70', label: 'Grupos sociocomunitarios' },
+    { value: '69', label: 'Vinculación a grupos de autoayuda' },
+    { value: '70', label: 'Vinculación a otros grupos sociocomunitarios	' },
     { value: '93', label: 'No Observado' },
   ];
 

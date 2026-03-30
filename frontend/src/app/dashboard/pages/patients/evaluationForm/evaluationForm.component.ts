@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { catchError, forkJoin, of } from 'rxjs';
+import { catchError, forkJoin, of, finalize } from 'rxjs';
 import { MaterialModule } from '../../../../angular-material/material.module';
 import { PatientService } from '../patient.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -242,31 +242,49 @@ export default class EvaluationFormComponent implements OnInit {
     }
 
     this.loading = true;
-    this.patientService.saveEvaluationForm(this.patientId, this.form.value).subscribe({
-      next: () => {
-        this.loading = false;
-        this.isSaved = true;
-        this.snackBar.open('Ficha guardada correctamente en FicLin', 'Cerrar', { duration: 3000 });
-      },
-      error: () => {
-        this.loading = false;
-        this.snackBar.open('Error al guardar la ficha', 'Cerrar', { duration: 3000 });
-      }
-    });
+    this.cdr.detectChanges();
+
+    this.patientService.saveEvaluationForm(this.patientId, this.form.value)
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: () => {
+          console.log('[save] Guardado exitoso');
+          this.isSaved = true;
+          this.snackBar.open('Ficha guardada correctamente en FicLin', 'OK', { duration: 3000 });
+        },
+        error: (err) => {
+          console.error('[save] Error al guardar', err);
+          this.snackBar.open('Error al guardar la ficha: ' + (err || 'Error desconocido'), 'Cerrar', { duration: 3000 });
+        }
+      });
   }
 
   syncSistrat() {
     this.syncing = true;
-    this.patientService.syncEvaluationFormSistrat(this.patientId).subscribe({
-      next: () => {
-        this.syncing = false;
-        this.snackBar.open('Sincronización con SISTRAT iniciada', 'Cerrar', { duration: 3000 });
-      },
-      error: () => {
-        this.syncing = false;
-        this.snackBar.open('Error al sincronizar con SISTRAT', 'Cerrar', { duration: 3000 });
-      }
-    });
+    this.cdr.detectChanges();
+    this.snackBar.open('Sincronización con SISTRAT iniciada...', 'Cerrar', { duration: 2000 });
+
+    this.patientService.syncEvaluationFormSistrat(this.patientId)
+      .pipe(
+        finalize(() => {
+          this.syncing = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: () => {
+          this.snackBar.open('Sincronización completada con éxito', 'OK', { duration: 4000 });
+        },
+        error: (err) => {
+          console.error('[sync] Error al sincronizar', err);
+          this.snackBar.open('Error al sincronizar con SISTRAT', 'Cerrar', { duration: 5000 });
+        }
+      });
   }
 
   goBack() {

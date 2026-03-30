@@ -86,7 +86,7 @@ function callGeminiApi(prompt: string, userText: string): Promise<string> {
       res.on("end", () => {
         try {
           const parsed = JSON.parse(data);
-          
+
           if (parsed.error) {
             reject(new Error(`API Gemini Error: ${parsed.error.message}`));
             return;
@@ -156,13 +156,13 @@ import PatientModel from "../models/patient.model";
 export const syncTopFormToSistrat = async (patientId: string) => {
   const patient = await PatientModel.findById(patientId);
   if (!patient) throw new Error("Paciente no encontrado");
-  
+
   const { topForm } = await getTopFormByPatient(patientId);
   if (!topForm) throw new Error("Formulario TOP no encontrado para el paciente");
 
   const sistrat = new Sistrat();
   await sistrat.syncTopForm(patient, topForm);
   // Refrescar alertas automáticamente
-  await sistrat.updateAlerts(patient);
+  // await sistrat.updateAlerts(patient);
   return { success: true };
 };

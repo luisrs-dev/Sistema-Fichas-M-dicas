@@ -72,9 +72,9 @@ import Notiflix from 'notiflix';
             <mat-icon>save</mat-icon>
             {{ saving() ? 'Guardando...' : 'Guardar en FicLin' }}
           </button>
-          <button mat-raised-button class="sistrat-btn" (click)="onSendToSistrat()" *ngIf="formSaved() && authService.isAdmin()">
+          <button mat-raised-button class="sistrat-btn" (click)="onSendToSistrat()" *ngIf="formSaved() && authService.isAdmin()" [disabled]="syncing()">
             <mat-icon>upload</mat-icon>
-            Enviar a SISTRAT
+            {{ syncing() ? 'Sincronizando...' : 'Enviar a SISTRAT' }}
           </button>
         </div>
       </div>
@@ -120,6 +120,7 @@ export default class SocialFormComponent {
 
   loading = signal(true);
   saving = signal(false);
+  syncing = signal(false);
   formSaved = signal(false);
 
   patient: Patient | null = null;
@@ -176,19 +177,24 @@ export default class SocialFormComponent {
   }
 
   onSendToSistrat(): void {
+    if (this.syncing()) return;
+
     Notiflix.Confirm.show(
       '¿Enviar a SISTRAT?',
       'Se completará el formulario en SISTRAT. Esta es una automatización de prueba.',
       'Sí, enviar',
       'Cancelar',
       () => {
+        this.syncing.set(true);
         Notiflix.Notify.info('Sincronizando con SISTRAT...');
         this.patientService.syncSocialFormSistrat(this.patientId).subscribe({
           next: () => {
+            this.syncing.set(false);
             Notiflix.Report.success('¡Sincronización Terminada!', 'El bot ha llenado los campos correctamente para revisión.', 'OK');
           },
           error: (err) => {
-            Notiflix.Report.failure('Error', err || 'Error al ejecutar el bot', 'Cerrar');
+            this.syncing.set(false);
+            Notiflix.Report.failure('Error', err?.error?.message || err || 'Error al ejecutar el bot', 'Cerrar');
           }
         });
       }

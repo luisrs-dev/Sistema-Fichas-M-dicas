@@ -95,9 +95,9 @@ import Notiflix from 'notiflix';
             <mat-icon>save</mat-icon>
             {{ saving() ? 'Guardando...' : 'Guardar en FicLin' }}
           </button>
-          <button mat-raised-button class="sistrat-btn" (click)="onSendToSistrat()" *ngIf="topFormSaved() && authService.isAdmin()">
+          <button mat-raised-button class="sistrat-btn" (click)="onSendToSistrat()" *ngIf="topFormSaved() && authService.isAdmin()" [disabled]="syncing()">
             <mat-icon>upload</mat-icon>
-            Enviar a SISTRAT
+            {{ syncing() ? 'Sincronizando...' : 'Enviar a SISTRAT' }}
           </button>
         </div>
       </div>
@@ -147,6 +147,7 @@ export default class TopFormComponent {
 
   loading = signal(true);
   saving = signal(false);
+  syncing = signal(false);
   topFormSaved = signal(false);
 
   patient: Patient | null = null;
@@ -158,7 +159,7 @@ export default class TopFormComponent {
 
   metaForm: FormGroup = this.fb.group({
     fechaEntrevista: [new Date()],
-    nombreEntrevistador: [''],
+    nombreEntrevistador: [{ value: '', disabled: true }],
   });
 
   ngOnInit(): void {
@@ -213,7 +214,7 @@ export default class TopFormComponent {
   onSave(): void {
     this.saving.set(true);
 
-    const metaValues = { ...this.metaForm.value };
+    const metaValues = { ...this.metaForm.getRawValue() };
     if (metaValues.fechaEntrevista instanceof Date) {
       metaValues.fechaEntrevista = moment(metaValues.fechaEntrevista).format('DD/MM/YYYY');
     }
@@ -239,21 +240,24 @@ export default class TopFormComponent {
   }
 
   onSendToSistrat(): void {
+    if (this.syncing()) return;
+    
     Notiflix.Confirm.show(
       '¿Enviar a SISTRAT?',
       'Se completará el formulario TOP en SISTRAT con los datos guardados en FicLin. Esta es una automatización de prueba, NO se enviará el formulario definitivamente.',
       'Sí, enviar',
       'Cancelar',
       () => {
+        this.syncing.set(true);
         Notiflix.Notify.info('Sincronizando formulario TOP a SISTRAT (Prueba)...');
         this.patientService.syncTopFormSistrat(this.patientId).subscribe({
           next: (res) => {
-            // Notiflix.Loading.remove();
+            this.syncing.set(false);
             Notiflix.Report.success('¡Sincronización Terminada!', 'El bot ha llenado los campos correctamente para revisión. En esta versión de prueba no se hace click en Enviar.', 'OK');
           },
           error: (err) => {
-            Notiflix.Loading.remove();
-            Notiflix.Report.failure('Error en Sincronización', err || 'Hubo un error al ejecutar el bot SISTRAT', 'Cerrar');
+            this.syncing.set(false);
+            Notiflix.Report.failure('Error en Sincronización', err?.error?.message || err || 'Hubo un error al ejecutar el bot SISTRAT', 'Cerrar');
           }
         });
       }

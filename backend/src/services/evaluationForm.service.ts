@@ -32,7 +32,7 @@ export const syncEvaluationToSistratService = async (patientId: string) => {
 
   const sistrat = new Sistrat();
   await sistrat.syncEvaluationForm(patient, evaluationForm as any);
-  // Refrescar alertas automáticamente
-  await sistrat.updateAlerts(patient);
+  // Refrescar alertas automáticamente (Comentado para evitar que abra un segundo navegador al terminar)
+  // await sistrat.updateAlerts(patient);
   return { success: true };
 };

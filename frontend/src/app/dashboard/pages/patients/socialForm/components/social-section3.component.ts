@@ -66,21 +66,21 @@ export class SocialSection3Component {
 
   proteccionOptions = [
     { value: '71', label: 'Sin necesidades' },
-    { value: '72', label: 'RSH' },
-    { value: '73', label: 'Ingreso Ético Familiar' },
-    { value: '74', label: 'Calle' },
-    { value: '75', label: 'Chile Crece Contigo' },
-    { value: '106', label: 'Protección infancia' },
-    { value: '107', label: 'Reparación VCM' },
+    { value: '72', label: 'Registro social de hogares' },
+    { value: '73', label: 'Programa Ingreso Ético Familiar' },
+    { value: '74', label: 'Programa personas en situación de calle' },
+    { value: '75', label: 'Vinculación con Chile Crece Contigo' },
+    { value: '106', label: 'Pogramas de protección y desarrollo de la infancia' },
+    { value: '107', label: 'Programas de protección y reparación en violencia contra las mujeres' },
     { value: '94', label: 'No Observado' },
   ];
 
   tiempoLibreOptions = [
     { value: '76', label: 'Sin necesidades' },
-    { value: '77', label: 'Culturales' },
-    { value: '78', label: 'Deportivas' },
-    { value: '79', label: 'Recreativas' },
-    { value: '81', label: 'Espirituales' },
+    { value: '77', label: 'Actividades Culturales' },
+    { value: '78', label: 'Actividades Deportivas' },
+    { value: '79', label: 'Actividades Recreativas' },
+    { value: '81', label: 'Actividades Espirituales' },
     { value: '95', label: 'No Observado' },
   ];
 

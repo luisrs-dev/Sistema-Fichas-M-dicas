@@ -26,7 +26,7 @@ export const getSocialFormByPatient = async (patientId: string) => {
 export const syncSocialToSistratService = async (patientId: string) => {
   const patient = await PatientModel.findById(patientId);
   if (!patient) throw new Error("Paciente no encontrado");
-  
+
   const socialForm = await getSocialFormByPatient(patientId);
   if (!socialForm) throw new Error("Formulario de Integración Social no encontrado");
 

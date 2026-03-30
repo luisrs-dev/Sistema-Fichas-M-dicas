@@ -1289,10 +1289,11 @@ class Sistrat {
     return [patient.name, patient.surname, patient.secondSurname].filter(Boolean).join(" ").trim() || "paciente";
   }
 
-  async updateAlerts(patient: Patient) {
+  async updateAlerts(patient: Patient, existingPage?: Page) {
     this.gender = patient.sex;
     const logger = new ProcessLogger(this.getPatientLabel(patient), "actualiza-alertas");
-    let page: Page | null = null;
+    let page: Page | null = existingPage || null;
+    let shouldCloseBrowser = !existingPage;
     console.group(`[Sistrat][updateAlerts] ${patient._id}`);
 
     try {
@@ -1302,7 +1303,10 @@ class Sistrat {
       if (!patientCode) {
         return "Paciente no tiene código SISTRAT";
       }
-      page = await this.login(patient.sistratCenter, logger);
+      
+      if (!existingPage) {
+        page = await this.login(patient.sistratCenter, logger);
+      }
       await this.scrapper.clickButton(page, "#flyout");
       await this.scrapper.waitForSeconds(1);
       await this.scrapper.clickButton(page, 'a[href="php/consultar_paciente.php"].ui-corner-all');
@@ -1427,6 +1431,9 @@ class Sistrat {
     } finally {
       console.groupEnd();
       await logger.close();
+      if (shouldCloseBrowser && page) {
+        await this.scrapper.closeBrowser();
+      }
     }
   }
 
@@ -2079,6 +2086,13 @@ class Sistrat {
 
       await this.scrapper.waitForSeconds(300);
 
+      try {
+        console.log("[Sistrat][syncTopForm] Extrayendo nuevas alertas aprovechando el navegador actual antes de cerrarlo...");
+        await this.updateAlerts(patient, page);
+      } catch (alertErr) {
+        console.log("[Sistrat][syncTopForm] Error actualizando alertas silenciosamente", alertErr);
+      }
+
     } catch (err: any) {
       console.error(err);
       await this.logStep(logger, `[Sistrat][syncTopForm] Error: ${err.message}`);
@@ -2175,6 +2189,13 @@ class Sistrat {
       console.log("[Sistrat][syncSocialForm] Bloqueando para validación manual");
       await this.scrapper.waitForSeconds(120);
 
+      try {
+        console.log("[Sistrat][syncSocialForm] Extrayendo nuevas alertas aprovechando el navegador actual antes de cerrarlo...");
+        await this.updateAlerts(patient, page);
+      } catch (alertErr) {
+        console.log("[Sistrat][syncSocialForm] Error actualizando alertas silenciosamente", alertErr);
+      }
+
     } catch (err: any) {
       console.error(err);
       await this.logStep(logger, `[Sistrat][syncSocialForm] Error: ${err.message}`);
@@ -2242,6 +2263,13 @@ class Sistrat {
       await this.logStep(logger, "[Sistrat][syncSocialDiagnosisForm] Formulario de Diagnóstico Social completado");
       console.log("[Sistrat][syncSocialDiagnosisForm] Bloqueando para validación manual");
       await this.scrapper.waitForSeconds(120);
+
+      try {
+        console.log("[Sistrat][syncSocialDiagnosisForm] Extrayendo nuevas alertas aprovechando el navegador actual antes de cerrarlo...");
+        await this.updateAlerts(patient, page);
+      } catch (alertErr) {
+        console.log("[Sistrat][syncSocialDiagnosisForm] Error actualizando alertas silenciosamente", alertErr);
+      }
 
     } catch (err: any) {
       console.error(err);
@@ -2313,6 +2341,13 @@ class Sistrat {
       await this.logStep(logger, "[Sistrat][syncEvaluationForm] Formulario de Evaluación completado");
       console.log("[Sistrat][syncEvaluationForm] Bloqueando para validación manual");
       await this.scrapper.waitForSeconds(120);
+
+      try {
+        console.log("[Sistrat][syncEvaluationForm] Extrayendo nuevas alertas aprovechando el navegador actual antes de cerrarlo...");
+        await this.updateAlerts(patient, page);
+      } catch (alertErr) {
+        console.log("[Sistrat][syncEvaluationForm] Error actualizando alertas silenciosamente", alertErr);
+      }
 
     } catch (err: any) {
       console.error(err);

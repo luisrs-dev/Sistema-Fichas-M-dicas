@@ -33,8 +33,8 @@ export const syncSocialDiagnosisToSistratService = async (patientId: string) => 
   const sistrat = new Sistrat();
   await sistrat.syncSocialDiagnosisForm(patient, socialDiagnosisForm);
   
-  // Refrescar alertas automáticamente
-  await sistrat.updateAlerts(patient);
+  // Refrescar alertas automáticamente (Comentado para evitar que abra navegador redundante)
+  // await sistrat.updateAlerts(patient);
   
   return { success: true };
 };
