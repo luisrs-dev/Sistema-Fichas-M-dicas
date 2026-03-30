@@ -8,6 +8,7 @@ import { getGroupedRecordsByPatientAndMonth } from "../medicalRecordGrouping.ser
 import { getEnvironmentConfigValue } from "../environmentConfig.service";
 import { IntegracionSocialForm } from "../../interfaces/socialForm.interface";
 import { EvaluationForm } from "../../interfaces/evaluationForm.interface";
+import { SocialDiagnosisForm } from "../../interfaces/socialDiagnosisForm.interface";
 
 
 import { getCenterByName } from "../sistratCenter.service";
@@ -1142,6 +1143,7 @@ class Sistrat {
       await this.logStep(logger, "[Sistrat][completeAdmissionForm] Consumo de sustancias");
       await this.scrapper.waitForSeconds(2);
 
+      console.log("[Sistrat][completeAdmissionForm] Admission Form ------------------", admissionForm);
       await this.scrapper.setSelectValue(page, "#selsustancia_princial", admissionForm.selsustancia_princial);
       await this.scrapper.waitForSeconds(1);
       await this.scrapper.setSelectValue(page, "#selotra_sustancia_1", admissionForm.selotra_sustancia_1);
@@ -1209,7 +1211,8 @@ class Sistrat {
       await this.logStep(logger, "[Sistrat][completeAdmissionForm] Click en grabar usuario");
       await this.logStep(logger, "[Sistrat][completeAdmissionForm] Esperando antes de enviar formulario");
 
-      const directRecordValue = await getEnvironmentConfigValue(this.directRecordConfigKey);
+      const directRecordValue = false;
+      // const directRecordValue = await getEnvironmentConfigValue(this.directRecordConfigKey);
       console.log('directRecordValue', directRecordValue)
       await this.scrapper.waitForSeconds(120);
       if (directRecordValue) {
@@ -1895,8 +1898,10 @@ class Sistrat {
             });
           }, item.records);
 
+          console.log('Registrandoo atencion mensual');
+
           await this.scrapper.clickButton(page, "#mysubmit", 15000);
-          await this.scrapper.waitForSeconds(1.5);
+          await this.scrapper.waitForSeconds(60);
 
           status = 'success';
           message = 'Registrado correcto en backend O(1)';
@@ -1958,6 +1963,12 @@ class Sistrat {
       await page.waitForSelector("#frmdatos_inte", { visible: true, timeout: 15000 });
       await this.scrapper.waitForSeconds(2); // Wait for the content load
 
+      // Sanitizar fecha para asegurar formato DD/MM/YYYY en SISTRAT si viene en YYYY-MM-DD
+      if (topData.fechaEntrevista && topData.fechaEntrevista.includes('-')) {
+        const [y, m, d] = topData.fechaEntrevista.split('-');
+        if (y.length === 4) topData.fechaEntrevista = `${d}/${m}/${y}`;
+      }
+
       // Inject evaluate to fill form
       await page.evaluate((top) => {
         const setVal = (sel: string, val: any) => {
@@ -1986,6 +1997,10 @@ class Sistrat {
           setVal(keys[4], item.semana2); setVal(keys[5], item.semana1);
           setCheck(keys[6], item.noResponde);
         };
+
+        // Meta
+        setVal('#fecha_entrevista', top.fechaEntrevista);
+        setVal('#nombre_entrevistador', top.nombreEntrevistador);
 
         // Sec 1
         setSubstance(['#alcohol', '#promedio_alcohol_dia', '#promedio_alcohol_dia2', '#promedio_alcohol_dia3', '#promedio_alcohol_dia4', '#promedio_alcohol_dia5', '#nr_alcohol_check'], top.alcohol);
@@ -2150,6 +2165,74 @@ class Sistrat {
     } catch (err: any) {
       console.error(err);
       await this.logStep(logger, `[Sistrat][syncSocialForm] Error: ${err.message}`);
+      throw err;
+    } finally {
+      if (page) await this.scrapper.closeBrowser();
+      await logger.close();
+    }
+  }
+
+  async syncSocialDiagnosisForm(patient: any, socialDiagData: any) {
+    console.log(`[Sistrat][syncSocialDiagnosisForm] Iniciando llenado Diagnóstico Social para ${patient._id}`);
+    const logger = new ProcessLogger(this.getPatientLabel(patient), "social-diagnosis-form");
+    let page: any = null;
+
+    try {
+      page = await this.login(patient.sistratCenter, logger);
+      page.on("dialog", async (dialog: any) => { await dialog.accept(); });
+
+      await this.openActiveUsersList(page, logger);
+      await this.scrapper.waitForSeconds(3);
+
+      const patientCode = patient.codigoSistrat?.trim() || null;
+
+      const found = await page.evaluate((pCode: string | null) => {
+        const table = document.getElementById("table_pacientes") as HTMLTableElement;
+        if (!table) return false;
+        for (let i = 1; i < table.rows.length; i++) {
+          const cells = table.rows[i].cells;
+          if (!cells) continue;
+          const code = cells[2]?.innerText?.trim() || "";
+          if ((pCode && code === pCode)) {
+            const diagBtn = cells[8]?.querySelector("img[src*='circle_orange.png']") as HTMLElement;
+            if (diagBtn) {
+              diagBtn.click();
+              return true;
+            }
+          }
+        }
+        return false;
+      }, patientCode);
+
+      if (!found) throw new Error("Paciente no encontrado o no tiene la alerta de Diagnóstico Social (círculo naranja) disponible.");
+
+      await page.waitForSelector("#sel_diagnostico_1", { visible: true, timeout: 15000 });
+      await this.scrapper.waitForSeconds(2);
+
+      await page.evaluate((data: any) => {
+        const setVal = (sel: string, val: any) => {
+          const el = document.querySelector(sel) as HTMLSelectElement;
+          if (el && val !== null && val !== undefined) {
+            el.value = val;
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        };
+
+        setVal('#sel_diagnostico_1', data.global);
+        setVal('#sel_diagnostico_2', data.capitalHumano);
+        setVal('#sel_diagnostico_3', data.capitalFisico);
+        setVal('#sel_diagnostico_4', data.capitalSocial);
+
+        window.scrollTo(0, document.body.scrollHeight);
+      }, socialDiagData as any);
+
+      await this.logStep(logger, "[Sistrat][syncSocialDiagnosisForm] Formulario de Diagnóstico Social completado");
+      console.log("[Sistrat][syncSocialDiagnosisForm] Bloqueando para validación manual");
+      await this.scrapper.waitForSeconds(120);
+
+    } catch (err: any) {
+      console.error(err);
+      await this.logStep(logger, `[Sistrat][syncSocialDiagnosisForm] Error: ${err.message}`);
       throw err;
     } finally {
       if (page) await this.scrapper.closeBrowser();

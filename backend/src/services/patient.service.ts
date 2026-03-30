@@ -168,6 +168,8 @@ const saveAdmissionFormToSistrat = async (patientId: string) => {
 
     if (patient && admissionForm) {
       const statusAdmissionFormCreated = await sistratPlatform.registrarFichaIngreso(patient, admissionForm);
+      // Refrescar alertas automáticamente
+      await sistratPlatform.updateAlerts(patient);
       return statusAdmissionFormCreated;
     } else {
       throw new Error("Falta información del paciente para registrar su ficha de ingreso");
@@ -221,6 +223,8 @@ const recordDemandToSistrat = async (patientId: string): Promise<{ success: bool
     const sistratPlatform = new Sistrat();
     const createdDemand = await sistratPlatform.crearDemanda(patient);
     if (createdDemand) {
+      // Refrescar alertas automáticamente
+      await sistratPlatform.updateAlerts(patient);
       return { success: true }
     } else {
       throw new Error("Error al registrar demanda en SISTRAT");
@@ -464,7 +468,8 @@ const updateFormCie10 = async (patientId: string, optionSelected: string) => {
       const sistratPlatform = new Sistrat();
 
       const responseUserWithAlerts = await sistratPlatform.updateFormCie10(patient, optionSelected);
-
+      // Refrescar alertas automáticamente
+      await sistratPlatform.updateAlerts(patient);
       return responseUserWithAlerts;
     } else {
       throw new Error("Paciente no registrado");

@@ -39,10 +39,7 @@ import Notiflix from 'notiflix';
                 </label>
               </div>
             </div>
-            <div class="scale-inputs">
-              <input type="number" formControlName="saludPsicologica" min="0" max="20" class="num-input-lg" placeholder="0-20">
-              <mat-checkbox [checked]="form.get('saludPsicologica')?.value === null || form.get('saludPsicologica')?.value === ''" (change)="clearScale('saludPsicologica')">N/R</mat-checkbox>
-            </div>
+ 
           </div>
         </div>
 
@@ -100,10 +97,7 @@ import Notiflix from 'notiflix';
                 </label>
               </div>
             </div>
-            <div class="scale-inputs">
-              <input type="number" formControlName="saludFisica" min="0" max="20" class="num-input-lg" placeholder="0-20">
-              <mat-checkbox [checked]="form.get('saludFisica')?.value === null || form.get('saludFisica')?.value === ''" (change)="clearScale('saludFisica')">N/R</mat-checkbox>
-            </div>
+   
           </div>
         </div>
 
@@ -138,10 +132,6 @@ import Notiflix from 'notiflix';
                   <span>{{ v }}</span>
                 </label>
               </div>
-            </div>
-            <div class="scale-inputs">
-              <input type="number" formControlName="calidadVida" min="0" max="20" class="num-input-lg" placeholder="0-20">
-              <mat-checkbox [checked]="form.get('calidadVida')?.value === null || form.get('calidadVida')?.value === ''" (change)="clearScale('calidadVida')">N/R</mat-checkbox>
             </div>
           </div>
         </div>

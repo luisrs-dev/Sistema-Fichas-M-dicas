@@ -133,6 +133,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./dashboard/pages/patients/evaluationForm/evaluationForm.component'),
       },
+      {
+        path: 'patient/social-diagnosis/:id',
+        title: 'Diagnóstico Social',
+        data: { icon: 'group', child: false },
+        loadComponent: () =>
+          import('./dashboard/pages/patients/socialDiagnosisForm/socialDiagnosisForm.component'),
+      },
       //{
       //  path: 'fichas-medicas',
       //  title: 'Fichas Clínicas',

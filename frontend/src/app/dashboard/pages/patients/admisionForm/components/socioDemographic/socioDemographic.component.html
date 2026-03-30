@@ -477,6 +477,7 @@
       </mat-form-field>
     </div>
 
+    @if(form.get('selnumero_tratamientos_anteriores')?.value !== '0' && form.get('selnumero_tratamientos_anteriores')?.value !== '') {
     <div class="col-6">
       <mat-form-field class="w-full" appearance="outline">
         <mat-label>Fecha último tratamiento</mat-label>
@@ -492,5 +493,6 @@
         <span *ngIf="isValidField('selfecha_ult_trata')" class="text-red-500"> Debe seleccionar una opción </span>
       </mat-form-field>
     </div>
+    }
   </div>
 </form>

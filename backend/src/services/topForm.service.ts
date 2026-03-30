@@ -162,5 +162,7 @@ export const syncTopFormToSistrat = async (patientId: string) => {
 
   const sistrat = new Sistrat();
   await sistrat.syncTopForm(patient, topForm);
+  // Refrescar alertas automáticamente
+  await sistrat.updateAlerts(patient);
   return { success: true };
 };

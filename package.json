@@ -7,7 +7,7 @@
     "start:backend": "npm run dev --prefix backend",
     "start:frontend": "npm run start --prefix frontend -- --open --port 4200",    
     "dev": "npm run start:backend & npm run start:frontend",
-    "dev:windows": "start \"Tunnel\" npm run tunnel:windows & start \"Backend\" npm run start:backend & start \"Frontend\" npm run start:frontend"
+    "dev:windows": "start \"Tunnel\" npm run tunnel:windows && timeout /t 5 && start \"Backend\" npm run start:backend && start \"Frontend\" npm run start:frontend"
   },
   "dependencies": {
     "pm2": "^6.0.6"

@@ -51,7 +51,7 @@
   <span class="spacer"></span>
   <mat-form-field class="w-full">
     <mat-label>Buscar</mat-label>
-    <input matInput (keyup)="applyFilter($event)" placeholder="Buscar profesional" #input />
+    <input matInput (keyup)="applyFilter($event)" placeholder="Buscar paciente" #input />
   </mat-form-field>
 
   <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z1">
@@ -139,12 +139,14 @@
         </button>
         }
         @if(element.alertEgreso){
-        <button mat-icon-button (click)="onClickAlert(element._id, 'egreso')" matTooltip="Alerta de Egreso / Sin prestaciones">
+        <button mat-icon-button (click)="onClickAlert(element._id, 'egreso')"
+          matTooltip="Alerta de Egreso / Sin prestaciones">
           <mat-icon class="custom-icon-red">circle</mat-icon>
         </button>
         }
         @if(element.alertDiagnosticoSocial){
-        <button mat-icon-button (click)="onClickAlert(element._id, 'diagnosticoSocial')" matTooltip="Actualizar estado diagnóstico de integración social">
+        <button mat-icon-button [routerLink]="['/dashboard/patient/social-diagnosis', element._id]"
+          matTooltip="Diagnóstico de Integración Social">
           <mat-icon class="custom-icon-orange">circle</mat-icon>
         </button>
         }

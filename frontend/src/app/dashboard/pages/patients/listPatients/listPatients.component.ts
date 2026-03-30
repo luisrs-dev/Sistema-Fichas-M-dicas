@@ -71,11 +71,13 @@ export default class ListPatientsComponent implements OnInit {
         searchTerms = { search: filter, program: '', alerts: false };
       }
 
-      const lowerCaseSearch = searchTerms.search;
+      const lowerCaseSearch = (searchTerms.search || '').trim().toLowerCase();
+      
+      const fullName = `${data.name || ''} ${data.surname || ''} ${data.secondSurname || ''}`.toLowerCase().replace(/\s+/g, ' ');
+      
       const matchSearch = lowerCaseSearch ? (
-        (data.name || '').toLowerCase().includes(lowerCaseSearch) ||
-        (data.surname || '').toLowerCase().includes(lowerCaseSearch) ||
-        (data.secondSurname || '').toLowerCase().includes(lowerCaseSearch) ||
+        fullName.includes(lowerCaseSearch) ||
+        (data.codigoSistrat || '').toLowerCase().includes(lowerCaseSearch) ||
         (data.program?.name || '').toLowerCase().includes(lowerCaseSearch)
       ) : true;
 

@@ -32,6 +32,82 @@ export default class NewPatientComponent {
   private changeDetectorRef = inject(ChangeDetectorRef);
   private router = inject(Router);
   private sistratCenterService = inject(SistratCenterService);
+  
+  public comunasMaule = [
+    { value: '140', name: 'CURICO' },
+    { value: '141', name: 'ROMERAL' },
+    { value: '142', name: 'TENO' },
+    { value: '143', name: 'RAUCO' },
+    { value: '144', name: 'HUALAÑE' },
+    { value: '145', name: 'LICANTEN' },
+    { value: '146', name: 'VICHUQUEN' },
+    { value: '147', name: 'MOLINA' },
+    { value: '148', name: 'SAGRADA FAMILIA' },
+    { value: '149', name: 'RIO CLARO' },
+    { value: '150', name: 'TALCA' },
+    { value: '151', name: 'SAN CLEMENTE' },
+    { value: '152', name: 'PELARCO' },
+    { value: '153', name: 'PENCAHUE' },
+    { value: '154', name: 'MAULE' },
+    { value: '155', name: 'CUREPTO' },
+    { value: '156', name: 'SAN JAVIER' },
+    { value: '157', name: 'CONSTITUCION' },
+    { value: '158', name: 'EMPEDRADO' },
+    { value: '159', name: 'LINARES' },
+    { value: '160', name: 'YERBAS BUENAS' },
+    { value: '161', name: 'COLBUN' },
+    { value: '162', name: 'LONGAVI' },
+    { value: '163', name: 'VILLA ALEGRE' },
+    { value: '164', name: 'PARRAL' },
+    { value: '165', name: 'RETIRO' },
+    { value: '166', name: 'CAUQUENES' },
+    { value: '167', name: 'CHANCO' },
+    { value: '320', 'name': 'PELLUHUE' },
+    { value: '341', 'name': 'SAN RAFAEL' },
+  ];
+
+  public comunasBioBio = [
+    { value: "177", name: "SAN GREGORIO DE ÑIQUEN" },
+    { value: "188", name: "CONCEPCION" },
+    { value: "189", name: "TALCAHUANO" },
+    { value: "190", name: "TOME" },
+    { value: "191", name: "PENCO" },
+    { value: "192", name: "HUALQUI" },
+    { value: "193", name: "FLORIDA" },
+    { value: "194", name: "CORONEL" },
+    { value: "195", name: "LOTA" },
+    { value: "196", name: "SANTA JUANA" },
+    { value: "197", name: "CURANILAHUE" },
+    { value: "198", name: "ARAUCO" },
+    { value: "199", name: "LEBU" },
+    { value: "200", name: "LOS ALAMOS" },
+    { value: "201", name: "CAÑETE" },
+    { value: "202", name: "CONTULMO" },
+    { value: "203", name: "TIRUA" },
+    { value: "204", name: "LOS ANGELES" },
+    { value: "205", name: "SANTA BARBARA" },
+    { value: "206", name: "QUILLECO" },
+    { value: "207", name: "YUMBEL" },
+    { value: "208", name: "CABRERO" },
+    { value: "209", name: "TUCAPEL" },
+    { value: "210", name: "LAJA" },
+    { value: "211", name: "SAN ROSENDO" },
+    { value: "212", name: "NACIMIENTO" },
+    { value: "213", name: "NEGRETE" },
+    { value: "214", name: "MULCHEN" },
+    { value: "215", name: "QUILACO" },
+    { value: "303", name: "ANTUCO" },
+    { value: "343", name: "SAN PEDRO DE LA PAZ" },
+    { value: "344", name: "CHIGUAYANTE" },
+    { value: "347", name: "HUALPEN" }
+  ];
+
+  public get filteredComunas() {
+    const region = this.userForm.get('region')?.value;
+    if (region === '7') return this.comunasMaule;
+    if (region === '8') return this.comunasBioBio;
+    return [];
+  }
 
   public isEditable: boolean = false;
   public registered: boolean = false;
@@ -103,6 +179,10 @@ export default class NewPatientComponent {
     }
 
 
+  }
+
+  onRegionChange() {
+    this.userForm.get('comuna')?.setValue('');
   }
 
   formatDateStringToDate(dateString: string): Date | string {

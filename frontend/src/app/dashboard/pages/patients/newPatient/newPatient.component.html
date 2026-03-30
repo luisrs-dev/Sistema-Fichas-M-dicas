@@ -3,7 +3,7 @@
 </button> -->
 <div class="container">
   <mat-tab-group mat-stretch-tabs="false" mat-align-tabs="start" dynamicHeight>
-    
+
     <mat-tab label="{{ title}}">
       @if (patient && !patient.registeredDemand) {}
       <mat-card class="warning-card">
@@ -12,24 +12,25 @@
       <form [formGroup]="userForm" autocomplete="off" (ngSubmit)="onSubmit()">
         <div class="grid">
           <div class="col-4">
-              <mat-form-field class="w-full" appearance="outline">
-                <mat-label>RUT</mat-label>
-                <input matInput formControlName="rut" placeholder="Sin puntos o guión" (input)="onRutInput($event)" />
-                <span *ngIf="isValidField('rut')" class="form-text text-danger"> El nombre es requerido </span>
-                <mat-icon matSuffix>person</mat-icon>
-                <!-- <mat-hint>Hint</mat-hint> -->
-              </mat-form-field>
-          </div>
-          <div class="col-4">
-            <button mat-flat-button type="button" (click)="onFetchDataWithRut()" color="primary">Traer datos con RUT</button>
-          </div>
-        </div>
-          <div class="col-3">
             <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Código SISTRAT</mat-label>
-              <input matInput formControlName="codigoSistrat" placeholder="Código SISTRAT" />
+              <mat-label>RUT</mat-label>
+              <input matInput formControlName="rut" placeholder="Sin puntos o guión" (input)="onRutInput($event)" />
+              <span *ngIf="isValidField('rut')" class="form-text text-danger"> El nombre es requerido </span>
+              <mat-icon matSuffix>person</mat-icon>
+              <!-- <mat-hint>Hint</mat-hint> -->
             </mat-form-field>
           </div>
+          <div class="col-4">
+            <button mat-flat-button type="button" (click)="onFetchDataWithRut()" color="primary">Traer datos con
+              RUT</button>
+          </div>
+        </div>
+        <div class="col-3">
+          <mat-form-field class="w-full" appearance="outline">
+            <mat-label>Código SISTRAT</mat-label>
+            <input matInput formControlName="codigoSistrat" placeholder="Código SISTRAT" />
+          </mat-form-field>
+        </div>
         <div class="grid pt-4">
 
           <!-- Esta fecha corresponde al registro de la Ficha de Ingeso -->
@@ -46,11 +47,11 @@
         </div>
 
         <div class="grid">
-          
+
           <div class="col-4">
             <mat-form-field class="w-full" appearance="outline">
               <mat-label>Nombre</mat-label>
-              <input matInput formControlName="name" placeholder="Nombre"  />
+              <input matInput formControlName="name" placeholder="Nombre" />
               <span *ngIf="isValidField('name')" class="form-text text-danger"> El nombre es requerido </span>
               <mat-icon matSuffix>person</mat-icon>
               <!-- <mat-hint>Hint</mat-hint> -->
@@ -97,7 +98,7 @@
         </div>
 
         <div class="grid">
-                    <div class="col-3">
+          <div class="col-3">
             <mat-form-field class="w-full" appearance="outline">
               <mat-label>Programa</mat-label>
               <mat-select formControlName="program">
@@ -113,7 +114,7 @@
               <mat-label>Centro SISTRAT</mat-label>
               <mat-select formControlName="sistratCenter">
                 @for (center of sistratCenters(); track center._id) {
-                  <mat-option [value]="center.name">{{ 'SISTRAT ' + (center.name | titlecase) }}</mat-option>
+                <mat-option [value]="center.name">{{ 'SISTRAT ' + (center.name | titlecase) }}</mat-option>
                 }
               </mat-select>
               <span *ngIf="isValidField('program')" class="text-red-500"> Debe seleccionar un programa </span>
@@ -122,11 +123,11 @@
         </div>
 
         <div class="grid">
-          
+
           <div class="col-2">
             <mat-form-field class="w-full" appearance="outline">
               <mat-label>Region</mat-label>
-              <mat-select formControlName="region">
+              <mat-select formControlName="region" (selectionChange)="onRegionChange()">
                 <mat-option value="">Seleccione</mat-option>
                 <mat-option value="1">DE TARAPACA</mat-option>
                 <mat-option value="2">DE ANTOFAGASTA</mat-option>
@@ -149,42 +150,15 @@
             </mat-form-field>
           </div>
 
-<div class="col-2">
+          <div class="col-2">
             <mat-form-field class="w-full" appearance="outline">
               <mat-label>Comuna Residencia</mat-label>
               <mat-select formControlName="comuna">
-               <!--<select id="selcomuna" name="selcomuna" class="text ui-widget-content ui-corner-all input_form select_html3">-->
+                <!--<select id="selcomuna" name="selcomuna" class="text ui-widget-content ui-corner-all input_form select_html3">-->
 
-              <mat-option value="140">CURICO</mat-option>
-              <mat-option value="141">ROMERAL</mat-option>
-              <mat-option value="142">TENO</mat-option>
-              <mat-option value="143">RAUCO</mat-option>
-              <mat-option value="144">HUALAÑE</mat-option>
-              <mat-option value="145">LICANTEN</mat-option>
-              <mat-option value="146">VICHUQUEN</mat-option>
-              <mat-option value="147">MOLINA</mat-option>
-              <mat-option value="148">SAGRADA FAMILIA</mat-option>
-              <mat-option value="149">RIO CLARO</mat-option>
-              <mat-option value="150">TALCA</mat-option>
-              <mat-option value="151">SAN CLEMENTE</mat-option>
-              <mat-option value="152">PELARCO</mat-option>
-              <mat-option value="153">PENCAHUE</mat-option>
-              <mat-option value="154">MAULE</mat-option>
-              <mat-option value="155">CUREPTO</mat-option>
-              <mat-option value="156">SAN JAVIER</mat-option>
-              <mat-option value="157">CONSTITUCION</mat-option>
-              <mat-option value="158">EMPEDRADO</mat-option>
-              <mat-option value="159">LINARES</mat-option>
-              <mat-option value="160">YERBAS BUENAS</mat-option>
-              <mat-option value="161">COLBUN</mat-option>
-              <mat-option value="162">LONGAVI</mat-option>
-              <mat-option value="163">VILLA ALEGRE</mat-option>
-              <mat-option value="164">PARRAL</mat-option>
-              <mat-option value="165">RETIRO</mat-option>
-              <mat-option value="166">CAUQUENES</mat-option>
-              <mat-option value="167">CHANCO</mat-option>
-              <mat-option value="320">PELLUHUE</mat-option>
-              <mat-option value="341">SAN RAFAEL</mat-option>
+                @for (comuna of filteredComunas; track comuna.value) {
+                <mat-option [value]="comuna.value">{{ comuna.name }}</mat-option>
+                }
               </mat-select>
               <span *ngIf="isValidField('comuna')" class="text-red-500"> Debe seleccionar una comuna </span>
             </mat-form-field>
@@ -267,15 +241,15 @@
                 </span> -->
             </mat-form-field>
           </div>
-                <div class="col-5">
-          <mat-form-field class="w-full" appearance="outline">
-            <mat-label>Fecha Solicitud de Antención en el establecimiento</mat-label>
-            <input matInput [matDatepicker]="pickerAtentionRequestDate" formControlName="atentionRequestDate" />
-            <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
-            <mat-datepicker-toggle matIconSuffix [for]="pickerAtentionRequestDate"></mat-datepicker-toggle>
-            <mat-datepicker #pickerAtentionRequestDate></mat-datepicker>
-          </mat-form-field>
-        </div>
+          <div class="col-5">
+            <mat-form-field class="w-full" appearance="outline">
+              <mat-label>Fecha Solicitud de Antención en el establecimiento</mat-label>
+              <input matInput [matDatepicker]="pickerAtentionRequestDate" formControlName="atentionRequestDate" />
+              <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
+              <mat-datepicker-toggle matIconSuffix [for]="pickerAtentionRequestDate"></mat-datepicker-toggle>
+              <mat-datepicker #pickerAtentionRequestDate></mat-datepicker>
+            </mat-form-field>
+          </div>
           <div class="col-3">
             <mat-form-field class="w-full" appearance="outline">
               <mat-label>Centro de origen</mat-label>
@@ -414,13 +388,14 @@
         </div>
 
         <div>
-          <button mat-stroked-button color="primary"[routerLink]="['/dashboard/patients']" class="mr-1">Volver</button>
+          <button mat-stroked-button color="primary" [routerLink]="['/dashboard/patients']" class="mr-1">Volver</button>
           @if(!registeredOnFiclin()){
           <button mat-flat-button type="submit" color="primary">{{ textButtonRegister }}</button>
 
           } @if(registeredOnFiclin()){
           <button mat-flat-button type="submit" color="primary">{{ textButtonRegister }}</button>
-          <button mat-flat-button class="ml-1" type="button" color="primary" (click)="onSaveDemandOnSistrat()">Registrar en SISTRAT</button>
+          <button mat-flat-button class="ml-1" type="button" color="primary" (click)="onSaveDemandOnSistrat()">Registrar
+            en SISTRAT</button>
           }
         </div>
       </form>

@@ -46,6 +46,12 @@ export class SocioDemographicComponent extends FormBaseComponent {
     });
 
     // Método de componente base
-    this.fillFormWithAdmissionData()
+    this.fillFormWithAdmissionData();
+
+    this.form.get('selnumero_tratamientos_anteriores')?.valueChanges.subscribe(value => {
+      if (value === '0') {
+        this.form.get('selfecha_ult_trata')?.setValue('');
+      }
+    });
   }
 }

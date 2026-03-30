@@ -3,12 +3,14 @@ import { ChangeDetectorRef, Component, inject, signal, ViewChild } from '@angula
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { AuthService } from '../../../../auth/auth.service';
 import { MaterialModule } from '../../../../angular-material/material.module';
 import { PatientService } from '../patient.service';
 import { Patient } from '../../../interfaces/patient.interface';
 import { TopSection1Component } from './components/top-section1.component';
 import { TopSection2Component } from './components/top-section2.component';
 import { TopSection3Component } from './components/top-section3.component';
+import moment from 'moment';
 import Notiflix from 'notiflix';
 
 @Component({
@@ -44,16 +46,9 @@ import Notiflix from 'notiflix';
         <form [formGroup]="metaForm" class="meta-form">
           <mat-form-field appearance="outline">
             <mat-label>Fecha de Entrevista</mat-label>
-            <input matInput type="date" formControlName="fechaEntrevista">
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Etapa del Tratamiento</mat-label>
-            <mat-select formControlName="etapaTratamiento">
-              <mat-option value="ingreso">Ingreso</mat-option>
-              <mat-option value="egreso">Egreso</mat-option>
-              <mat-option value="seguimiento">Seguimiento</mat-option>
-            </mat-select>
+            <input matInput [matDatepicker]="pickerFechaEntrevista" formControlName="fechaEntrevista">
+            <mat-datepicker-toggle matIconSuffix [for]="pickerFechaEntrevista"></mat-datepicker-toggle>
+            <mat-datepicker #pickerFechaEntrevista></mat-datepicker>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
@@ -146,6 +141,7 @@ import Notiflix from 'notiflix';
 export default class TopFormComponent {
   private activatedRoute = inject(ActivatedRoute);
   private patientService = inject(PatientService);
+  private authService = inject(AuthService);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
 
@@ -161,8 +157,7 @@ export default class TopFormComponent {
   @ViewChild('section3') section3!: TopSection3Component;
 
   metaForm: FormGroup = this.fb.group({
-    fechaEntrevista: [new Date().toISOString().split('T')[0]],
-    etapaTratamiento: [null],
+    fechaEntrevista: [new Date()],
     nombreEntrevistador: [''],
   });
 
@@ -176,7 +171,11 @@ export default class TopFormComponent {
       this.patientService.getTopForm(this.patientId).subscribe((res) => {
         if (res.topForm) {
           this.topFormSaved.set(true);
-          this.metaForm.patchValue(res.topForm);
+          const dataToPatch = { ...res.topForm };
+          if (dataToPatch.fechaEntrevista) {
+             dataToPatch.fechaEntrevista = this.formatDateStringToDate(dataToPatch.fechaEntrevista);
+          }
+          this.metaForm.patchValue(dataToPatch);
           // Parchar secciones después de que el view esté inicializado
           setTimeout(() => {
             this.section1?.patchData(res.topForm);
@@ -185,16 +184,42 @@ export default class TopFormComponent {
           }, 200);
         }
         this.loading.set(false);
+        
+        // Si no hay formulario previo, pre-cargar el nombre del entrevistador logueado
+        if (!this.topFormSaved()) {
+          const user = this.authService.getUser();
+          if (user) {
+            this.metaForm.patchValue({ nombreEntrevistador: user.name });
+          }
+        }
+
         this.cdr.detectChanges();
       });
     });
   }
 
+  private formatDateStringToDate(dateString: string): Date | string {
+    if (!dateString) return '';
+    // Intentar manejar formato DD/MM/YYYY que es el estándar del proyecto
+    const parts = dateString.split("/");
+    if (parts.length === 3) {
+      const [day, month, year] = parts.map(Number);
+      return new Date(year, month - 1, day);
+    }
+    // Si viene en otro formato (como YYYY-MM-DD), intentar creación directa
+    return new Date(dateString);
+  }
+
   onSave(): void {
     this.saving.set(true);
 
+    const metaValues = { ...this.metaForm.value };
+    if (metaValues.fechaEntrevista instanceof Date) {
+      metaValues.fechaEntrevista = moment(metaValues.fechaEntrevista).format('DD/MM/YYYY');
+    }
+
     const data = {
-      ...this.metaForm.value,
+      ...metaValues,
       ...this.section1?.getFormData(),
       ...this.section2?.getFormData(),
       ...this.section3?.getFormData(),

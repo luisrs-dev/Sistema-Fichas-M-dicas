@@ -217,4 +217,18 @@ export class PatientService {
   syncEvaluationFormSistrat(patientId: string): Observable<any> {
     return this.http.post<any>(`${this.backend}/evaluationForm/sync/${patientId}`, {}).pipe(catchError((err) => throwError(() => err.error?.message)));
   }
+
+  // ─── Social Diagnosis Form (Orange Alert) ───────────────────────────────────
+
+  getSocialDiagnosisForm(patientId: string): Observable<any> {
+    return this.http.get<any>(`${this.backend}/socialDiagnosisForm/${patientId}`).pipe(catchError((err) => throwError(() => err.error?.message)));
+  }
+
+  saveSocialDiagnosisForm(patientId: string, data: any): Observable<any> {
+    return this.http.post<any>(`${this.backend}/socialDiagnosisForm/${patientId}`, data).pipe(catchError((err) => throwError(() => err.error?.message)));
+  }
+
+  syncSocialDiagnosisFormSistrat(patientId: string): Observable<any> {
+    return this.http.post<any>(`${this.backend}/socialDiagnosisForm/sync/${patientId}`, {}).pipe(catchError((err) => throwError(() => err.error?.message)));
+  }
 }

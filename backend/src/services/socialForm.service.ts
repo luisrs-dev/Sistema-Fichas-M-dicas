@@ -32,5 +32,7 @@ export const syncSocialToSistratService = async (patientId: string) => {
 
   const sistrat = new Sistrat();
   await sistrat.syncSocialForm(patient, socialForm as any);
+  // Refrescar alertas automáticamente
+  await sistrat.updateAlerts(patient);
   return { success: true };
 };
