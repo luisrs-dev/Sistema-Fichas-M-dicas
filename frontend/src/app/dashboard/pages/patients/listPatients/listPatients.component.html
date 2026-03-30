@@ -122,29 +122,29 @@
           <mat-icon class="custom-icon">circle</mat-icon>
         </button>
         }
-        @if(element.alertConsentimiento){
+        @if(element.alertConsentimiento && canViewNegra(element)){
         <button mat-icon-button [routerLink]="['/dashboard/patient/top', element._id]" matTooltip="TOP">
           <mat-icon class="custom-icon-black">circle</mat-icon>
         </button>
         }
-        @if(element.alertIntegracionSocial){
+        @if(element.alertIntegracionSocial && canViewAmarillaONaranja()){
         <button mat-icon-button [routerLink]="['/dashboard/patient/social', element._id]"
           matTooltip="Integración Social">
           <mat-icon class="custom-icon-yellow">circle</mat-icon>
         </button>
         }
-        @if(element.alertEvaluacion){
+        @if(element.alertEvaluacion && canViewVerde(element)){
         <button mat-icon-button [routerLink]="['/dashboard/patient/evaluation', element._id]" matTooltip="Evaluación">
           <mat-icon class="custom-icon-green">circle</mat-icon>
         </button>
         }
-        @if(element.alertEgreso){
+        @if(element.alertEgreso && canViewRoja()){
         <button mat-icon-button (click)="onClickAlert(element._id, 'egreso')"
           matTooltip="Alerta de Egreso / Sin prestaciones">
           <mat-icon class="custom-icon-red">circle</mat-icon>
         </button>
         }
-        @if(element.alertDiagnosticoSocial){
+        @if(element.alertDiagnosticoSocial && canViewAmarillaONaranja()){
         <button mat-icon-button [routerLink]="['/dashboard/patient/social-diagnosis', element._id]"
           matTooltip="Diagnóstico de Integración Social">
           <mat-icon class="custom-icon-orange">circle</mat-icon>

@@ -1974,20 +1974,33 @@ class Sistrat {
         const setVal = (sel: string, val: any) => {
           const el = document.querySelector(sel) as HTMLInputElement;
           if (el && val !== null && val !== undefined) {
-            el.value = val; el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.value = val; 
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+            el.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, key: 'Tab' }));
+            el.dispatchEvent(new Event('blur', { bubbles: true }));
           }
         };
         const setCheck = (sel: string, val: boolean | null | undefined) => {
           const el = document.querySelector(sel) as HTMLInputElement;
-          if (el && val === true && !el.checked) el.click();
-          if (el && val === false && el.checked) el.click();
+          if (el && val === true && !el.checked) {
+            el.click();
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          if (el && val === false && el.checked) {
+            el.click();
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+          }
         };
         const setRadioGroup = (name: string, val: any) => {
           if (!val) return;
           const map: any = { si: "1", no: "2", nr: "3" };
           const radioVal = typeof val === 'string' && map[val.toLowerCase()] ? map[val.toLowerCase()] : String(val);
           const r = document.querySelector(`input[name="${name}"][value="${radioVal}"]`) as HTMLInputElement;
-          if (r) r.click();
+          if (r) {
+            r.click();
+            r.dispatchEvent(new Event('change', { bubbles: true }));
+          }
         };
         const setSubstance = (keys: string[], item: any) => {
           if (!item) return;

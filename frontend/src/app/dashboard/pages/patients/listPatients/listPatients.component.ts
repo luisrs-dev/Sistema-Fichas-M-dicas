@@ -141,6 +141,34 @@ export default class ListPatientsComponent implements OnInit {
     });
   }
 
+  canViewNegra(element: any): boolean {
+    if (this.isAdmin) return true;
+    const profileName = this.user?.profile?.name?.toLowerCase() || '';
+    const isPsicologo = profileName.includes('psicólog') || profileName.includes('psicolog');
+    const isPAI = element.program?.name?.toUpperCase().includes('PAI');
+    return isPsicologo || isPAI;
+  }
+
+  canViewVerde(element: any): boolean {
+    if (this.isAdmin) return true;
+    const profileName = this.user?.profile?.name?.toLowerCase() || '';
+    const isPsicologo = profileName.includes('psicólog') || profileName.includes('psicolog');
+    const isPAI = element.program?.name?.toUpperCase().includes('PAI');
+    const isTerapeuta = profileName.includes('terapeuta') || profileName.includes('ocupacional');
+    const isPR = element.program?.name?.toUpperCase().includes('PR');
+    return isPsicologo || isPAI || isTerapeuta || isPR;
+  }
+
+  canViewAmarillaONaranja(): boolean {
+    if (this.isAdmin) return true;
+    const profileName = this.user?.profile?.name?.toLowerCase() || '';
+    return profileName.includes('trabajador') || profileName.includes('social');
+  }
+
+  canViewRoja(): boolean {
+    return this.isAdmin;
+  }
+
   onClickAlert(patientId: string, alertType: string) {
     Notiflix.Notify.info('Abriendo SISTRAT...');
     this.patientService.resolveAlertSistrat(patientId, alertType).subscribe({

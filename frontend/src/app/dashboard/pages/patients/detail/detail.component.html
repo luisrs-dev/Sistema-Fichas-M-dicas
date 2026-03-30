@@ -33,26 +33,29 @@
       </div>
     </div>
 
-    <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1" (click)="onNewMedicalRecord()">Nuevo
-      Registro</button>
+    <div class="flex flex-wrap gap-2 mb-4 align-items-center">
+      <button mat-flat-button color="primary" class="text-white mat-elevation-z2" (click)="onNewMedicalRecord()">
+        <mat-icon class="mr-1">post_add</mat-icon>
+        Nuevo Registro
+      </button>
 
-    <!-- <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2" (click)="generatePdf()">PDF</button> -->
+      <button mat-flat-button color="accent" class="text-white mat-elevation-z2" (click)="onMonthRegisters()">
+        <mat-icon class="mr-1">calendar_month</mat-icon>
+        Resumen Mensual
+      </button>
 
-    <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2"
-      (click)="onMonthRegisters()">Resumen Mensual</button>
+      <button mat-flat-button color="accent" class="text-white mat-elevation-z2" (click)="onProfessionalRegisters()">
+        <mat-icon class="mr-1">medical_information</mat-icon>
+        Atenciones por profesional
+      </button>
 
-    <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2"
-      (click)="onProfessionalRegisters()">Atenciones por profesional</button>
-
-    <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2"
-      [routerLink]="['/dashboard/patient/top', p._id]">
-      <mat-icon class="mr-1">assignment</mat-icon> Formulario TOP
-    </button>
-
-    @if (medicalRecordsGrouped().length > 0 && authService.isAdmin()) {
-    <button mat-flat-button color="accent" class="text-white mb-2 mat-elevation-z1 ml-2"
-      (click)="onSistratRecord()">Registrar en SISTRAT</button>
-    }
+      <!-- @if (medicalRecordsGrouped().length > 0 && authService.isAdmin()) {
+      <button mat-flat-button style="background-color: #2e7d32; color: white;" class="mat-elevation-z2" (click)="onSistratRecord()">
+        <mat-icon class="mr-1">cloud_upload</mat-icon>
+        Registrar en SISTRAT
+      </button>
+      } -->
+    </div>
 
     @if (loadingTable()) {
     <div class="flex justify-content-center my-4">

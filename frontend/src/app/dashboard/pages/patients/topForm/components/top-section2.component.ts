@@ -15,15 +15,6 @@ import Notiflix from 'notiflix';
       <div class="section-header">
         <h3>Sección 2: Transgresión a la Norma Social</h3>
         <p class="section-desc">Registrar hurtos, robos, violencia intrafamiliar y otras acciones cometidas en las últimas 4 semanas.</p>
-        <div class="voice-bar">
-          <button mat-raised-button [color]="isListening() ? 'warn' : 'primary'" (click)="toggleVoice()" type="button">
-            <mat-icon>{{ isListening() ? 'stop' : 'mic' }}</mat-icon>
-            {{ isListening() ? 'Escuchando...' : 'Dictar Sección 2' }}
-          </button>
-          <span class="voice-hint" *ngIf="lastTranscript()">
-            <mat-icon>record_voice_over</mat-icon> "{{ lastTranscript() }}"
-          </span>
-        </div>
       </div>
 
       <form [formGroup]="form">

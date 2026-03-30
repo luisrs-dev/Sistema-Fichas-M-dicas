@@ -14,15 +14,6 @@ import Notiflix from 'notiflix';
     <div class="section-container">
       <div class="section-header">
         <h3>Sección 3: Salud y Funcionamiento Social</h3>
-        <div class="voice-bar">
-          <button mat-raised-button [color]="isListening() ? 'warn' : 'primary'" (click)="toggleVoice()" type="button">
-            <mat-icon>{{ isListening() ? 'stop' : 'mic' }}</mat-icon>
-            {{ isListening() ? 'Escuchando...' : 'Dictar Sección 3' }}
-          </button>
-          <span class="voice-hint" *ngIf="lastTranscript()">
-            <mat-icon>record_voice_over</mat-icon> "{{ lastTranscript() }}"
-          </span>
-        </div>
       </div>
 
       <form [formGroup]="form">
