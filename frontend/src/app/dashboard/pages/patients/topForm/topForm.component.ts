@@ -95,7 +95,7 @@ import Notiflix from 'notiflix';
             <mat-icon>save</mat-icon>
             {{ saving() ? 'Guardando...' : 'Guardar en FicLin' }}
           </button>
-          <button mat-raised-button class="sistrat-btn" (click)="onSendToSistrat()" *ngIf="topFormSaved()">
+          <button mat-raised-button class="sistrat-btn" (click)="onSendToSistrat()" *ngIf="topFormSaved() && authService.isAdmin()">
             <mat-icon>upload</mat-icon>
             Enviar a SISTRAT
           </button>
@@ -141,7 +141,7 @@ import Notiflix from 'notiflix';
 export default class TopFormComponent {
   private activatedRoute = inject(ActivatedRoute);
   private patientService = inject(PatientService);
-  private authService = inject(AuthService);
+  public authService = inject(AuthService);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
 

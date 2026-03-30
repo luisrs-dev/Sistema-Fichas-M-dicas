@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { AuthService } from '../../../../auth/auth.service';
 import { MaterialModule } from '../../../../angular-material/material.module';
 import { PatientService } from '../patient.service';
 import { Patient } from '../../../interfaces/patient.interface';
@@ -71,7 +72,7 @@ import Notiflix from 'notiflix';
             <mat-icon>save</mat-icon>
             {{ saving() ? 'Guardando...' : 'Guardar en FicLin' }}
           </button>
-          <button mat-raised-button class="sistrat-btn" (click)="onSendToSistrat()" *ngIf="formSaved()">
+          <button mat-raised-button class="sistrat-btn" (click)="onSendToSistrat()" *ngIf="formSaved() && authService.isAdmin()">
             <mat-icon>upload</mat-icon>
             Enviar a SISTRAT
           </button>
@@ -112,6 +113,7 @@ import Notiflix from 'notiflix';
 })
 export default class SocialFormComponent {
   private activatedRoute = inject(ActivatedRoute);
+  public authService = inject(AuthService);
   private patientService = inject(PatientService);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
