@@ -28,7 +28,11 @@ enum Gender {
 class Sistrat {
   scrapper: Scrapper;
   private gender: string | null = null;
-  private readonly directRecordConfigKey = "sistrat-direct-record";
+  private readonly configKeyDemanda = 'sistrat-direct-record-demanda';
+  private readonly configKeyAdmission = 'sistrat-direct-record-admission';
+  private readonly configKeyAlerts = 'sistrat-direct-record-alerts';
+  private readonly configKeyMassive = 'sistrat-direct-record-massive';
+  private readonly configKeyWait = 'sistrat-browser-wait-minutes';
 
   constructor() {
     this.scrapper = new Scrapper(); // Composición: Usa una instancia de Scrapper
@@ -335,17 +339,20 @@ class Sistrat {
       //await this.scrapper.setSelectValue(page, "#selcomuna", "150");
       // await this.scrapper.waitForSeconds(120);
 
-      const directRecordValue = await getEnvironmentConfigValue(this.directRecordConfigKey);
-      console.log(`[Sistrat][crearDemanda] Valor de configuración para registro directo: ${directRecordValue}`);
+      const directRecordDemanda = await getEnvironmentConfigValue(this.configKeyDemanda);
+      const waitMinutesStr = await getEnvironmentConfigValue(this.configKeyWait) || "5";
+      const waitSeconds = parseInt(waitMinutesStr as string, 10) * 60;
 
-      if (directRecordValue) {
+      console.log(`[Sistrat][crearDemanda] Valor de configuración para registro directo de demanda: ${directRecordDemanda}`);
+
+      if (directRecordDemanda) {
         await this.scrapper.clickButton(page, "#mysubmit");
         console.log("[Sistrat][crearDemanda] Formulario enviado, refrescando listado para validar creación");
         await this.logStep(logger, "[Sistrat][crearDemanda] Formulario enviado");
       } else {
-        console.log("[Sistrat][crearDemanda] Registro directo deshabilitado: se omite envío del formulario");
+        console.log(`[Sistrat][crearDemanda] Registro directo deshabilitado: manteniendo navegador abierto por ${waitSeconds} segundos para revisión manual`);
         await this.logStep(logger, "[Sistrat][crearDemanda] Envío omitido por configuración");
-        await this.scrapper.waitForSeconds(50);
+        await this.scrapper.waitForSeconds(waitSeconds);
         return true;
       }
 
@@ -691,17 +698,21 @@ class Sistrat {
 
       // 3. Esperar al botón y hacer click
       // await this.scrapper.waitForSeconds(10000);
-      const directRecordValue = await getEnvironmentConfigValue(this.directRecordConfigKey);
-      console.log(`[Sistrat][recordMonthlySheet] Valor de configuración para registro directo: ${JSON.stringify(directRecordValue)}`);
-      if (directRecordValue) {
+      const directRecordMassive = await getEnvironmentConfigValue(this.configKeyMassive);
+      console.log(`[Sistrat][recordMonthlySheet] Valor de configuración para registro directo masivo: ${JSON.stringify(directRecordMassive)}`);
+
+      const waitMinutesStr = await getEnvironmentConfigValue(this.configKeyWait) || "5";
+      const waitSeconds = parseInt(waitMinutesStr as string, 10) * 60;
+
+      if (directRecordMassive) {
         await this.scrapper.clickButton(page, "#mysubmit", 30000);
         await this.scrapper.waitForSeconds(2);
       } else {
-        console.log("[Sistrat][recordMonthlySheet] Registro directo deshabilitado: manteniendo navegador abierto por 20 segundos para revisión manual");
-        // Espera 20 segundos dejando que el usuario interactúe
-        await this.scrapper.waitForSeconds(60);
-        return "REGISTRO PREPARADO, REVISIÓN MANUAL PERMITIDA POR 60 SEGUNDOS";
+        console.log(`[Sistrat][recordMonthlySheet] Registro directo deshabilitado: manteniendo navegador abierto por ${waitSeconds} segundos para revisión manual`);
+        await this.scrapper.waitForSeconds(waitSeconds);
+        return `REGISTRO PREPARADO, REVISIÓN MANUAL PERMITIDA POR ${waitSeconds} SEGUNDOS`;
       }
+
     } catch (error) {
       console.log("errror", error);
       throw new Error(`Error en registrar atenciones mensuales: ${error}`);
@@ -1211,15 +1222,18 @@ class Sistrat {
       await this.logStep(logger, "[Sistrat][completeAdmissionForm] Click en grabar usuario");
       await this.logStep(logger, "[Sistrat][completeAdmissionForm] Esperando antes de enviar formulario");
 
-      const directRecordValue = false;
-      // const directRecordValue = await getEnvironmentConfigValue(this.directRecordConfigKey);
-      console.log('directRecordValue', directRecordValue)
-      await this.scrapper.waitForSeconds(120);
-      if (directRecordValue) {
+      const directRecordAdmission = await getEnvironmentConfigValue(this.configKeyAdmission);
+      console.log('directRecordAdmission', directRecordAdmission);
+
+      const waitMinutesStr = await getEnvironmentConfigValue(this.configKeyWait) || "5";
+      const waitSeconds = parseInt(waitMinutesStr as string, 10) * 60;
+
+      await this.scrapper.waitForSeconds(2); // Wait a tiny bit for transition
+      if (directRecordAdmission) {
         await this.scrapper.clickButton(page, "#mysubmit");
       } else {
-        console.log('Simulación: no registra ficha ingreso.', directRecordValue);
-        await this.scrapper.waitForSeconds(120);
+        console.log('Simulación: no registra ficha ingreso. Esperando validación...', directRecordAdmission);
+        await this.scrapper.waitForSeconds(waitSeconds);
       }
       await this.logStep(logger, "[Sistrat][Ficha de ingreso registrada");
 
@@ -1303,7 +1317,7 @@ class Sistrat {
       if (!patientCode) {
         return "Paciente no tiene código SISTRAT";
       }
-      
+
       if (!existingPage) {
         page = await this.login(patient.sistratCenter, logger);
       }
@@ -1981,7 +1995,7 @@ class Sistrat {
         const setVal = (sel: string, val: any) => {
           const el = document.querySelector(sel) as HTMLInputElement;
           if (el && val !== null && val !== undefined) {
-            el.value = val; 
+            el.value = val;
             el.dispatchEvent(new Event('input', { bubbles: true }));
             el.dispatchEvent(new Event('change', { bubbles: true }));
             el.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, key: 'Tab' }));
@@ -2082,9 +2096,19 @@ class Sistrat {
       }, topData);
 
       await this.logStep(logger, "[Sistrat][syncTopForm] Formulario auto-llenado");
-      console.log("[Sistrat][syncTopForm] Esperando 15s para validación manual sin darle al submit...");
 
-      await this.scrapper.waitForSeconds(300);
+      const directRecordAlerts = await getEnvironmentConfigValue(this.configKeyAlerts);
+      const waitMinutesStr = await getEnvironmentConfigValue(this.configKeyWait) || "5";
+      const waitSeconds = parseInt(waitMinutesStr as string, 10) * 60;
+
+      if (directRecordAlerts) {
+        console.log("[Sistrat][syncTopForm] Enviando formulario directamente (click submit)");
+        await this.scrapper.clickButton(page, "#mysubmit");
+        await this.scrapper.waitForSeconds(5);
+      } else {
+        console.log(`[Sistrat][syncTopForm] Esperando ${waitSeconds}s para validación manual sin darle al submit...`);
+        await this.scrapper.waitForSeconds(waitSeconds);
+      }
 
       try {
         console.log("[Sistrat][syncTopForm] Extrayendo nuevas alertas aprovechando el navegador actual antes de cerrarlo...");
@@ -2185,9 +2209,20 @@ class Sistrat {
         window.scrollTo(0, document.body.scrollHeight);
       }, socialData as any);
 
-      await this.logStep(logger, "[Sistrat][syncSocialForm] Formulario de Integración Social completado");
-      console.log("[Sistrat][syncSocialForm] Bloqueando para validación manual");
-      await this.scrapper.waitForSeconds(120);
+      await this.logStep(logger, "[Sistrat][syncSocialForm] Formulario completado");
+
+      const directRecordAlerts = await getEnvironmentConfigValue(this.configKeyAlerts);
+      const waitMinutesStr = await getEnvironmentConfigValue(this.configKeyWait) || "5";
+      const waitSeconds = parseInt(waitMinutesStr as string, 10) * 60;
+
+      if (directRecordAlerts) {
+        console.log("[Sistrat][syncSocialForm] Enviando formulario directamente (click submit)");
+        await this.scrapper.clickButton(page, "#mysubmit");
+        await this.scrapper.waitForSeconds(5);
+      } else {
+        console.log(`[Sistrat][syncSocialForm] Esperando ${waitSeconds}s para validación manual sin darle al submit...`);
+        await this.scrapper.waitForSeconds(waitSeconds);
+      }
 
       try {
         console.log("[Sistrat][syncSocialForm] Extrayendo nuevas alertas aprovechando el navegador actual antes de cerrarlo...");
@@ -2260,9 +2295,20 @@ class Sistrat {
         window.scrollTo(0, document.body.scrollHeight);
       }, socialDiagData as any);
 
-      await this.logStep(logger, "[Sistrat][syncSocialDiagnosisForm] Formulario de Diagnóstico Social completado");
-      console.log("[Sistrat][syncSocialDiagnosisForm] Bloqueando para validación manual");
-      await this.scrapper.waitForSeconds(120);
+      await this.logStep(logger, "[Sistrat][syncSocialDiagnosisForm] Formulario completado");
+
+      const directRecordAlerts = await getEnvironmentConfigValue(this.configKeyAlerts);
+      const waitMinutesStr = await getEnvironmentConfigValue(this.configKeyWait) || "5";
+      const waitSeconds = parseInt(waitMinutesStr as string, 10) * 60;
+
+      if (directRecordAlerts) {
+        console.log("[Sistrat][syncSocialDiagnosisForm] Enviando formulario directamente");
+        await this.scrapper.clickButton(page, "#mysubmit");
+        await this.scrapper.waitForSeconds(5);
+      } else {
+        console.log(`[Sistrat][syncSocialDiagnosisForm] Bloqueando para validación manual por ${waitSeconds}s`);
+        await this.scrapper.waitForSeconds(waitSeconds);
+      }
 
       try {
         console.log("[Sistrat][syncSocialDiagnosisForm] Extrayendo nuevas alertas aprovechando el navegador actual antes de cerrarlo...");
@@ -2338,9 +2384,20 @@ class Sistrat {
         window.scrollTo(0, document.body.scrollHeight);
       }, evalData as any);
 
-      await this.logStep(logger, "[Sistrat][syncEvaluationForm] Formulario de Evaluación completado");
-      console.log("[Sistrat][syncEvaluationForm] Bloqueando para validación manual");
-      await this.scrapper.waitForSeconds(120);
+      await this.logStep(logger, "[Sistrat][syncEvaluationForm] Formulario completado");
+
+      const directRecordAlerts = await getEnvironmentConfigValue(this.configKeyAlerts);
+      const waitMinutesStr = await getEnvironmentConfigValue(this.configKeyWait) || "5";
+      const waitSeconds = parseInt(waitMinutesStr as string, 10) * 60;
+
+      if (directRecordAlerts) {
+        console.log("[Sistrat][syncEvaluationForm] Enviando formulario directamente");
+        await this.scrapper.clickButton(page, "#mysubmit");
+        await this.scrapper.waitForSeconds(5);
+      } else {
+        console.log(`[Sistrat][syncEvaluationForm] Bloqueando para validación manual por ${waitSeconds}s`);
+        await this.scrapper.waitForSeconds(waitSeconds);
+      }
 
       try {
         console.log("[Sistrat][syncEvaluationForm] Extrayendo nuevas alertas aprovechando el navegador actual antes de cerrarlo...");

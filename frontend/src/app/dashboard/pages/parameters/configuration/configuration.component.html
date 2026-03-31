@@ -2,9 +2,9 @@
   <div class="page-header">
     <div>
       <p class="eyebrow">Parámetros</p>
-      <h1>Configuración de ambiente</h1>
+      <h1>Configuración de Ambiente</h1>
       <p class="subtitle">
-        Define valores globales que afectan los procesos automáticos y scrappers.
+        Define valores globales que afectan los procesos automáticos y scrappers en SISTRAT.
       </p>
     </div>
   </div>
@@ -13,27 +13,80 @@
     <div class="state">Cargando configuraciones...</div>
   } @else {
     <section class="config-card">
-      <div class="card-content">
-        <div>
-          <span class="config-tag">Scrapper</span>
-          <h2>{{ directRecordLabel }}</h2>
-          <p>
-            Controla si las atenciones obtenidas por scrapping se registran directamente en SISTRAT
-            o solo ejecutan una prueba de registro.
-          </p>
+      <div class="card-content" style="display: flex; flex-direction: column; gap: 20px;">
+        
+        <!-- Toggle Demanda -->
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <span class="config-tag">Demanda</span>
+            <p style="margin: 5px 0 0 0; font-weight: 500;">Registro directo de Ficha de Demanda</p>
+            <p style="margin: 0; font-size: 0.85rem; color: #666;">Si está inactivo, solo se rellenará el formulario para prueba manual.</p>
+          </div>
+          <mat-slide-toggle color="primary" [checked]="valDemanda()" (change)="onToggleValue(keyDemanda, $event.checked)" [disabled]="saving()">
+            {{ valDemanda() ? 'Activo' : 'Inactivo' }}
+          </mat-slide-toggle>
         </div>
-        <mat-slide-toggle
-          color="primary"
-          [checked]="directRecordValue()"
-          (change)="onToggleDirectRecord($event.checked)"
-          [disabled]="saving()"
-        >
-          {{ directRecordValue() ? 'Activo' : 'Inactivo' }}
-        </mat-slide-toggle>
+
+        <mat-divider></mat-divider>
+
+        <!-- Toggle Ingreso -->
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <span class="config-tag">Ingreso</span>
+            <p style="margin: 5px 0 0 0; font-weight: 500;">Registro directo de Ficha de Ingreso</p>
+            <p style="margin: 0; font-size: 0.85rem; color: #666;">Guardado automático de la pestaña de ingreso.</p>
+          </div>
+          <mat-slide-toggle color="primary" [checked]="valAdmission()" (change)="onToggleValue(keyAdmission, $event.checked)" [disabled]="saving()">
+            {{ valAdmission() ? 'Activo' : 'Inactivo' }}
+          </mat-slide-toggle>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Toggle Alertas -->
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <span class="config-tag">Alertas</span>
+            <p style="margin: 5px 0 0 0; font-weight: 500;">Registro directo de Alertas (TOP, Social, etc)</p>
+            <p style="margin: 0; font-size: 0.85rem; color: #666;">Envío automático al rellenar formularios en SISTRAT.</p>
+          </div>
+          <mat-slide-toggle color="primary" [checked]="valAlerts()" (change)="onToggleValue(keyAlerts, $event.checked)" [disabled]="saving()">
+            {{ valAlerts() ? 'Activo' : 'Inactivo' }}
+          </mat-slide-toggle>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Toggle Masivo -->
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <span class="config-tag">Masivo</span>
+            <p style="margin: 5px 0 0 0; font-weight: 500;">Registro masivo de actividades (Sábana)</p>
+            <p style="margin: 0; font-size: 0.85rem; color: #666;">Guardar mes a mes automáticamente.</p>
+          </div>
+          <mat-slide-toggle color="primary" [checked]="valMassive()" (change)="onToggleValue(keyMassive, $event.checked)" [disabled]="saving()">
+            {{ valMassive() ? 'Activo' : 'Inactivo' }}
+          </mat-slide-toggle>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Input Minutos -->
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <span class="config-tag" style="background-color: #e3f2fd; color: #1565c0;">Navegador</span>
+            <p style="margin: 5px 0 0 0; font-weight: 500;">Tiempo de espera manual (Minutos)</p>
+            <p style="margin: 0; font-size: 0.85rem; color: #666;">Tiempo que la ventana quedará abierta si el registro no es directo.</p>
+          </div>
+          <mat-form-field appearance="outline" style="width: 100px; margin-bottom: -1.25em;">
+            <input matInput type="number" min="1" max="15" [value]="valWait()" (input)="onChangeWait($any($event.target).value)" [disabled]="saving()">
+          </mat-form-field>
+        </div>
+
       </div>
 
       <div class="card-footer">
-        <span class="hint">Al desactivar, ningún registro automático impactará el SISTRAT.</span>
+        <span class="hint">Al pulsar guardar se aplicarán estos parámetros al bot.</span>
         <button mat-flat-button color="primary" (click)="onSaveDirectRecord()" [disabled]="saving()">
           {{ saving() ? 'Guardando...' : 'Guardar' }}
         </button>

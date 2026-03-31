@@ -15,12 +15,21 @@ import { ParametersService } from '../parameters.service';
 export default class ConfigurationComponent {
   private readonly parametersService = inject(ParametersService);
 
-  readonly directRecordKey = 'sistrat-direct-record';
-  readonly directRecordLabel = 'Registro directo en SISTRAT';
+  readonly keyDemanda = 'sistrat-direct-record-demanda';
+  readonly keyAdmission = 'sistrat-direct-record-admission';
+  readonly keyAlerts = 'sistrat-direct-record-alerts';
+  readonly keyMassive = 'sistrat-direct-record-massive';
+  readonly keyWait = 'sistrat-browser-wait-minutes';
 
   loading = signal(true);
   saving = signal(false);
-  directRecordValue = signal(true);
+  
+  valDemanda = signal(false);
+  valAdmission = signal(false);
+  valAlerts = signal(false);
+  valMassive = signal(false);
+  valWait = signal(5);
+
   configs = signal<EnvironmentConfig[]>([]);
 
   ngOnInit() {
@@ -32,8 +41,23 @@ export default class ConfigurationComponent {
     this.parametersService.getEnvironmentConfigs().subscribe({
       next: (configs) => {
         this.configs.set(configs);
-        const directConfig = configs.find((config) => config.key === this.directRecordKey);
-        this.directRecordValue.set(this.normalizeBooleanValue(directConfig?.value));
+        
+        const confDemanda = configs.find(c => c.key === this.keyDemanda);
+        this.valDemanda.set(confDemanda ? this.normalizeBooleanValue(confDemanda.value) : false);
+
+        const confAdmission = configs.find(c => c.key === this.keyAdmission);
+        this.valAdmission.set(confAdmission ? this.normalizeBooleanValue(confAdmission.value) : false);
+
+        const confAlerts = configs.find(c => c.key === this.keyAlerts);
+        this.valAlerts.set(confAlerts ? this.normalizeBooleanValue(confAlerts.value) : false);
+
+        const confMassive = configs.find(c => c.key === this.keyMassive);
+        this.valMassive.set(confMassive ? this.normalizeBooleanValue(confMassive.value) : false);
+
+        const confWait = configs.find(c => c.key === this.keyWait);
+
+        this.valWait.set(confWait && !isNaN(Number(confWait.value)) ? Number(confWait.value) : 5);
+
         this.loading.set(false);
       },
       error: () => {
@@ -43,8 +67,15 @@ export default class ConfigurationComponent {
     });
   }
 
-  onToggleDirectRecord(checked: boolean) {
-    this.directRecordValue.set(checked);
+  onToggleValue(key: string, value: any) {
+    if (key === this.keyDemanda) this.valDemanda.set(value);
+    if (key === this.keyAdmission) this.valAdmission.set(value);
+    if (key === this.keyAlerts) this.valAlerts.set(value);
+    if (key === this.keyMassive) this.valMassive.set(value);
+  }
+
+  onChangeWait(value: number) {
+    this.valWait.set(value);
   }
 
   onSaveDirectRecord() {
@@ -52,26 +83,33 @@ export default class ConfigurationComponent {
       return;
     }
 
-    const payload: EnvironmentConfig = {
-      key: this.directRecordKey,
-      label: this.directRecordLabel,
-      type: 'boolean',
-      value: this.directRecordValue(),
-      description:
-        'Define si los registros masivos se envían directo a SISTRAT o solo se prueban.',
-    };
-
     this.saving.set(true);
-    this.parametersService.upsertEnvironmentConfig(payload).subscribe({
-      next: (config) => {
-        this.saving.set(false);
-        this.upsertConfigInList(config);
-        Notiflix.Notify.success('Configuración actualizada');
-      },
-      error: () => {
-        this.saving.set(false);
-        Notiflix.Notify.failure('No se pudo guardar la configuración');
-      },
+
+    const payloads: EnvironmentConfig[] = [
+      { key: this.keyDemanda, label: 'Registro Directo Demanda', type: 'boolean', value: this.valDemanda(), description: 'Enviar automáticamente sección de demanda a SISTRAT' },
+      { key: this.keyAdmission, label: 'Registro Directo Ingreso', type: 'boolean', value: this.valAdmission(), description: 'Enviar automáticamente ficha de ingreso a SISTRAT' },
+      { key: this.keyAlerts, label: 'Registro Directo Alertas', type: 'boolean', value: this.valAlerts(), description: 'Enviar automáticamente los formularios que originan alertas (TOP, Social, etc) a SISTRAT' },
+      { key: this.keyMassive, label: 'Registro Directo Masivo', type: 'boolean', value: this.valMassive(), description: 'Guardar mes a mes registros masivos (asistencia/atención) directamente en SISTRAT sin validación manual' },
+      { key: this.keyWait, label: 'Minutos de Navegador Abierto', type: 'string', value: String(this.valWait()), description: 'Minutos que el navegador estará abierto para revisión si no se activa el registro directo' }
+    ];
+
+    let savedCount = 0;
+    
+    payloads.forEach(payload => {
+      this.parametersService.upsertEnvironmentConfig(payload).subscribe({
+        next: (config) => {
+          this.upsertConfigInList(config);
+          savedCount++;
+          if (savedCount === payloads.length) {
+            this.saving.set(false);
+            Notiflix.Notify.success('Configuraciones guardadas exitosamente');
+          }
+        },
+        error: () => {
+          this.saving.set(false);
+          Notiflix.Notify.failure('Error al guardar: ' + payload.label);
+        }
+      });
     });
   }
 
