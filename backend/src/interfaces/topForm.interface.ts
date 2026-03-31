@@ -59,4 +59,7 @@ export interface TopForm {
   calidadVida: number | null;             // 0-20
   noDeseaCompletar: boolean | null;
   observaciones: string | null;
+
+  createdAt?: Date;
+  updatedAt?: Date;
 }
