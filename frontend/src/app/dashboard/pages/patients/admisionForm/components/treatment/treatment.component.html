@@ -45,7 +45,8 @@
         <mat-label>Tipo programa</mat-label>
         <mat-select formControlName="seltipo_programa">
           <mat-option value="null">Seleccione una opción</mat-option>
-          @if(center.toLowerCase().includes('hombre') || center.toLowerCase().includes('alameda')){
+          @if(center.toLowerCase().includes('hombre') || center.toLowerCase().includes('alameda') ||
+          center.toLowerCase().includes('bio')){
           <mat-option value="1">Programa Población General</mat-option>
           }
 
@@ -64,7 +65,7 @@
         <mat-select formControlName="seltipo_plan">
           <mat-option value="null">Seleccione una opción</mat-option>
 
-          @if(center.toLowerCase().includes('hombre')){
+          @if(center.toLowerCase().includes('hombre') || center.toLowerCase().includes('bio')){
           <mat-option value="15">PG-PR</mat-option>
           <mat-option value="14">PG-PAI</mat-option>
           }

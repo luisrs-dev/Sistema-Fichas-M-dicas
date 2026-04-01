@@ -2103,8 +2103,8 @@ class Sistrat {
 
       if (directRecordAlerts) {
         console.log("[Sistrat][syncTopForm] Enviando formulario directamente (click submit)");
-        await this.scrapper.clickButton(page, "#mysubmit");
-        await this.scrapper.waitForSeconds(5);
+        await this.scrapper.clickButton(page, "#btnenvio");
+        await this.scrapper.waitForSeconds(2);
       } else {
         console.log(`[Sistrat][syncTopForm] Esperando ${waitSeconds}s para validación manual sin darle al submit...`);
         await this.scrapper.waitForSeconds(waitSeconds);

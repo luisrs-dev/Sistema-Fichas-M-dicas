@@ -104,3 +104,5 @@ Para que el sistema conecte a la base de datos de la VPS automáticamente sin pe
 Ejecuta tunnel
 
 ssh -fN -o StrictHostKeyChecking=no -L 127.0.0.1:27017:127.0.0.1:27017 root@31.97.9.216
+
+lsof -i :3002

@@ -190,19 +190,10 @@
           <mat-icon>assignment</mat-icon>
         </button> -->
 
-        <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="Alertas" color="warn text-xs">
+        <button mat-icon-button matTooltip="Alertas" (click)="onUpdateAlerts(element._id)" color="warn text-xs">
           <mat-icon>autorenew</mat-icon>
         </button>
-        <mat-menu #menu="matMenu">
-          <button mat-menu-item (click)="onUpdateAlerts(element._id)">
-            <mat-icon>autorenew</mat-icon>
-            <span>Alertas</span>
-          </button>
-          <button mat-menu-item (click)="onUpdateAlerts(element._id)">
-            <mat-icon>autorenew</mat-icon>
-            <span>Alerta Citación</span>
-          </button>
-        </mat-menu>
+
 
 
 
