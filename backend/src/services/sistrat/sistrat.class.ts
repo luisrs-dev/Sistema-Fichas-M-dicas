@@ -310,8 +310,8 @@ class Sistrat {
       // Espera la respuesta del servicio PHP
       const fonasaResponse = await fonasaResponsePromise;
 
-      await this.scrapper.setSelectValue(page, "#selregion", "7");
-      await this.scrapper.waitForSeconds(3);
+      await this.scrapper.setSelectValue(page, "#selregion", patient.region);
+      await this.scrapper.waitForSeconds(2);
       await this.scrapper.setSelectValue(page, "#selcomuna", patient.comuna);
 
       await this.scrapper.waitAndType(page, "#int_telefono", patient.phone);
