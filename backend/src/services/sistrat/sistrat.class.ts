@@ -2217,7 +2217,7 @@ class Sistrat {
 
       if (directRecordAlerts) {
         console.log("[Sistrat][syncSocialForm] Enviando formulario directamente (click submit)");
-        await this.scrapper.clickButton(page, "#mysubmit");
+        await this.scrapper.clickButton(page, "#btnenvio");
         await this.scrapper.waitForSeconds(5);
       } else {
         console.log(`[Sistrat][syncSocialForm] Esperando ${waitSeconds}s para validación manual sin darle al submit...`);
@@ -2303,7 +2303,7 @@ class Sistrat {
 
       if (directRecordAlerts) {
         console.log("[Sistrat][syncSocialDiagnosisForm] Enviando formulario directamente");
-        await this.scrapper.clickButton(page, "#mysubmit");
+        await this.scrapper.clickButton(page, "#btnenvio");
         await this.scrapper.waitForSeconds(5);
       } else {
         console.log(`[Sistrat][syncSocialDiagnosisForm] Bloqueando para validación manual por ${waitSeconds}s`);
@@ -2392,7 +2392,7 @@ class Sistrat {
 
       if (directRecordAlerts) {
         console.log("[Sistrat][syncEvaluationForm] Enviando formulario directamente");
-        await this.scrapper.clickButton(page, "#mysubmit");
+        await this.scrapper.clickButton(page, "#btnenvio");
         await this.scrapper.waitForSeconds(5);
       } else {
         console.log(`[Sistrat][syncEvaluationForm] Bloqueando para validación manual por ${waitSeconds}s`);
