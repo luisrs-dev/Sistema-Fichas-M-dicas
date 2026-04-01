@@ -306,8 +306,11 @@ const activeSistratPatientsByCenter = async (center: string, forceRefresh: boole
         { active: true },
         { active: { $exists: false } }
       ],
-      codigoSistrat: { $exists: true, $ne: "" }
+      codigoSistrat: { $exists: true, $ne: "" },
+      sistratCenter: center
     });
+
+    console.log("[activeSistratPatientsByCenter] localPatients: ", localPatients);
 
 
     // Mapear inyectando _id de la DB

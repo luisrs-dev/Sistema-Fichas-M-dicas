@@ -1177,12 +1177,31 @@ class Sistrat {
       await this.scrapper.setSelectValue(page, "#seldiagn_consumo_sustancia", admissionForm.seldiagn_consumo_sustancia);
       await this.scrapper.setSelectValue(page, "#selintox_aguda", admissionForm.selintox_aguda);
       await this.scrapper.setSelectValue(page, "#selsindrome_abstinencia", admissionForm.selsindrome_abstinencia);
-      await this.scrapper.setSelectValue(page, "#seldiagn_psiquiatrico_cie", admissionForm.seldiagn_psiquiatrico_cie);
-      await this.scrapper.setSelectValue(page, "#seldiagn_psiquiatrico_cie", admissionForm.cie1);
-      await this.scrapper.setSelectValue(page, "#seldiagn_psiquiatrico_cie2", admissionForm.seldiagn_psiquiatrico_cie2);
-      await this.scrapper.setSelectValue(page, "#seldiagn_psiquiatrico_cie", admissionForm.cie2);
-      await this.scrapper.setSelectValue(page, "#seldiagn_psiquiatrico_cie3", admissionForm.seldiagn_psiquiatrico_cie3);
-      await this.scrapper.setSelectValue(page, "#seldiagn_psiquiatrico_cie", admissionForm.cie3);
+
+      if (admissionForm.seldiagn_psiquiatrico_cie) {
+        await this.scrapper.setSelectValue(page, "#seldiagn_psiquiatrico_cie", admissionForm.seldiagn_psiquiatrico_cie);
+        if (admissionForm.cie1) {
+          await this.scrapper.waitForSeconds(2);
+          await this.scrapper.setRadioValue(page, "cie1", admissionForm.cie1);
+        }
+      }
+
+      if (admissionForm.seldiagn_psiquiatrico_cie2) {
+        await this.scrapper.setSelectValue(page, "#seldiagn_psiquiatrico_cie2", admissionForm.seldiagn_psiquiatrico_cie2);
+        if (admissionForm.cie2) {
+          await this.scrapper.waitForSeconds(2);
+          await this.scrapper.setRadioValue(page, "cie2", admissionForm.cie2);
+        }
+      }
+
+      if (admissionForm.seldiagn_psiquiatrico_cie3) {
+        await this.scrapper.setSelectValue(page, "#seldiagn_psiquiatrico_cie3", admissionForm.seldiagn_psiquiatrico_cie3);
+        if (admissionForm.cie3) {
+          await this.scrapper.waitForSeconds(2);
+          await this.scrapper.setRadioValue(page, "cie3", admissionForm.cie3);
+        }
+      }
+
       await this.scrapper.setSelectValue(page, "#seldiagn_fiscico", admissionForm.seldiagn_fiscico);
       await this.scrapper.setSelectValue(page, "#selotro_problema_atencion", admissionForm.selotro_problema_atencion);
       await this.scrapper.setSelectValue(page, "#selotro_problema_atencion2", admissionForm.selotro_problema_atencion2);
@@ -1919,10 +1938,19 @@ class Sistrat {
             });
           }, item.records);
 
-          console.log('Registrandoo atencion mensual');
+          const directMassive = await getEnvironmentConfigValue(this.configKeyMassive);
+          const waitMinutesStr = await getEnvironmentConfigValue(this.configKeyWait) || "5";
+          const waitSeconds = (parseInt(waitMinutesStr as string, 10) || 5) * 60;
 
-          await this.scrapper.clickButton(page, "#mysubmit", 15000);
-          await this.scrapper.waitForSeconds(60);
+          await this.scrapper.waitForSeconds(2);
+
+          if (directMassive) {
+            await this.scrapper.clickButton(page, "#mysubmit", 15000);
+            await this.scrapper.waitForSeconds(5);
+          } else {
+            console.log(`[bulkRecordMonthlySheets] Modo simulación/revisión: esperando ${waitMinutesStr} minutos para validación manual.`);
+            await this.scrapper.waitForSeconds(waitSeconds);
+          }
 
           status = 'success';
           message = 'Registrado correcto en backend O(1)';

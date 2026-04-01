@@ -213,6 +213,18 @@ class Scrapper {
     }
   }
 
+  // Método para seleccionar un radio button por su nombre y valor
+  async setRadioValue(page: Page, name: string, value: string): Promise<void> {
+    const selector = `input[name="${name}"][value="${value}"]`;
+    try {
+      await page.waitForSelector(selector, { visible: true, timeout: 10000 });
+      await page.click(selector);
+      console.log(`[Scrapper] Radio button "${name}" con valor "${value}" seleccionado.`);
+    } catch (error) {
+      console.warn(`[Scrapper] setRadioValue omitido para ${selector}: ${error}`);
+    }
+  }
+
   // Método actualizado con Moment.js para formatear la fecha
   formatDate(date: string): string {
     return moment(date).format("YYYY-MM-DD"); // Formato requerido para el input tipo fecha
