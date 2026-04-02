@@ -7,6 +7,7 @@ import puppeteer from "puppeteer-extra";
 //import AnonymizeUAPlugin from "puppeteer-extra-plugin-anonymize-ua";
 import { promises as fs } from "fs";
 import path from "path";
+import { getSystemChromePath } from "../utils/chromePath";
 
 // Las rutas de Chrome se detectan dinámicamente según el sistema operativo en getSystemChromePath()
 
@@ -105,7 +106,7 @@ class Scrapper {
     } else {
       console.log('[LaunchBrowser] Entorno Local detectado');
 
-      const executablePath = await this.getSystemChromePath();
+      const executablePath = await getSystemChromePath();
 
       this.browser = await puppeteer.launch({
         headless: headless,
@@ -152,13 +153,13 @@ class Scrapper {
   async clickButton(page: Page, selector: string, timeoutValue: number = 5000): Promise<void> {
     try {
       await page.waitForSelector(selector, { visible: true, timeout: timeoutValue });
-      
+
       // Asegurar que el elemento esté a la vista antes de clickear
       await page.evaluate((sel) => {
         const el = document.querySelector(sel);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, selector);
-      
+
       await this.waitForSeconds(0.5);
       await page.click(selector);
 
@@ -275,54 +276,6 @@ class Scrapper {
     return userDataDir;
   }
 
-  private async getSystemChromePath(): Promise<string> {
-    const platform = process.platform;
-
-    const chromePaths: Record<string, string[]> = {
-      // macOS
-      darwin: [
-        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-        "/Applications/Chromium.app/Contents/MacOS/Chromium",
-      ],
-      // Windows
-      win32: [
-        path.join(process.env.PROGRAMFILES || "C:\\Program Files", "Google\\Chrome\\Application\\chrome.exe"),
-        path.join(process.env["PROGRAMFILES(X86)"] || "C:\\Program Files (x86)", "Google\\Chrome\\Application\\chrome.exe"),
-        path.join(process.env.LOCALAPPDATA || "", "Google\\Chrome\\Application\\chrome.exe"),
-        "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-        "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
-      ],
-      // Linux (desarrollo local, no VPS)
-      linux: [
-        "/usr/bin/google-chrome",
-        "/usr/bin/google-chrome-stable",
-        "/usr/bin/chromium-browser",
-        "/usr/bin/chromium",
-        "/snap/bin/chromium",
-      ],
-    };
-
-    const paths = chromePaths[platform] ?? [];
-
-    if (paths.length === 0) {
-      throw new Error(`[LaunchBrowser] Plataforma no soportada para detección automática: ${platform}`);
-    }
-
-    for (const chromePath of paths) {
-      try {
-        await fs.access(chromePath);
-        console.log(`[LaunchBrowser] Chrome encontrado en: ${chromePath} (${platform})`);
-        return chromePath;
-      } catch {
-        // Ruta no encontrada, se prueba la siguiente
-      }
-    }
-
-    throw new Error(
-      `[LaunchBrowser] Chrome no encontrado en el sistema (${platform}).\n` +
-      `Rutas probadas:\n${paths.map(p => `  - ${p}`).join("\n")}`
-    );
-  }
 }
 
 export default Scrapper;

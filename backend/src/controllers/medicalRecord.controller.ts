@@ -24,6 +24,7 @@ import archiver from "archiver"; // para comprimir en zip
 import { findPatient, getAllPatients } from "../services/patient.service";
 import { getBase64Image } from "../utils/base64Image";
 import { diagnosticMap } from "../constants/diagnosticMap";
+import { getSystemChromePath } from "../utils/chromePath";
 
 const getAllMedicalRecordsByUser = async ({ params }: Request, res: Response) => {
   try {
@@ -195,11 +196,10 @@ const getPdfMedicalRecordsByPatient = async ({ params }: Request, res: Response)
     console.log("data html ", path.join(__dirname, "../../templates-pdf/clinical-records-template.ejs"));
 
     // 3. Generar PDF con Puppeteer
+    const executablePath = await getSystemChromePath();
     const browser = await puppeteer.launch({
       headless: true,
-      //slowMo: 300, sirve para darle tiempe a cada operacion
-      // userDataDir: userDataDir, // Establecer la carpeta de caché
-      executablePath: "/usr/bin/google-chrome",
+      executablePath,
       args: [
         `--proxy-server=http://geo.iproyal.com:12321`,
         "--no-sandbox",
@@ -221,7 +221,7 @@ const getPdfMedicalRecordsByPatient = async ({ params }: Request, res: Response)
 
     res.send(pdfBuffer);
   } catch (error) {
-    console.error("Error al generar PDF:", error);
+    console.error("[getPdfMedicalRecordsByPatient] Error al generar PDF:", error);
     res.status(500).send("Error generando el PDF.");
   }
 };
@@ -255,9 +255,10 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
     }, {});
 
     // Lanzar navegador
+    const executablePath = await getSystemChromePath();
     const browser = await puppeteer.launch({
       headless: true,
-      executablePath: "/usr/bin/google-chrome",
+      executablePath,
       args: [
         `--proxy-server=http://geo.iproyal.com:12321`,
         "--no-sandbox",
@@ -317,7 +318,7 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
     await browser.close();
     await archive.finalize();
   } catch (error) {
-    console.error("Error al generar PDF:", error);
+    console.error("[getPdfMedicalRecords] Error al generar PDF:", error);
     res.status(500).send("Error generando el PDF.");
   }
 };
