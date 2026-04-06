@@ -1,7 +1,7 @@
 
 
 <form [formGroup]="exportForm" class="data-export">
-  <div class="data-export">
+  <div class="data-export p-4">
 
     <mat-form-field appearance="outline" class="w-full">
       <mat-label>Fecha Inicio</mat-label>
@@ -17,6 +17,19 @@
       <mat-datepicker #pickerEnd></mat-datepicker>
     </mat-form-field>
 
-    <button mat-stroked-button color="primary" (click)="exportPdf()">Exportar</button>
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Seleccionar Centro</mat-label>
+      <mat-select formControlName="centerName">
+        <mat-option value="">Todos</mat-option>
+        @for (center of centers; track center._id) {
+        <mat-option [value]="center.name">{{ center.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-flat-button color="primary" class="w-full h-12 border-round-xl" (click)="exportPdf()">
+      <mat-icon class="mr-2">download</mat-icon>
+      Exportar Datos
+    </button>
   </div>
 </form>

@@ -36,8 +36,8 @@ export class PatientService {
     );
   }
 
-  getPdfByProgram(startDate: string, endDate: string): Observable<any> {
-    return this.http.post<any>(`${this.backend}/generate-pdf/medical-records/`, { startDate, endDate },
+  getPdfByProgram(startDate: string, endDate: string, centerName?: string): Observable<any> {
+    return this.http.post<any>(`${this.backend}/generate-pdf/medical-records/`, { startDate, endDate, centerName },
       {
         responseType: 'blob' as 'json' // clave para evitar el error
       }

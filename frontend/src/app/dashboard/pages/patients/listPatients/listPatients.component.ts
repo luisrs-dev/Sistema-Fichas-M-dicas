@@ -72,9 +72,9 @@ export default class ListPatientsComponent implements OnInit {
       }
 
       const lowerCaseSearch = (searchTerms.search || '').trim().toLowerCase();
-      
+
       const fullName = `${data.name || ''} ${data.surname || ''} ${data.secondSurname || ''}`.toLowerCase().replace(/\s+/g, ' ');
-      
+
       const matchSearch = lowerCaseSearch ? (
         fullName.includes(lowerCaseSearch) ||
         (data.codigoSistrat || '').toLowerCase().includes(lowerCaseSearch) ||
@@ -276,23 +276,30 @@ export default class ListPatientsComponent implements OnInit {
     ref.afterDismissed().subscribe((result) => {
       if (result) {
         Notiflix.Loading.circle('Generando Documentos PDFs');
-        const { startDate, endDate } = result;
+        const { startDate, endDate, centerName } = result;
 
-        this.patientService.getPdfByProgram(startDate, endDate).subscribe((blob) => {
-          // Crear URL temporal para el ZIP
-          const url = window.URL.createObjectURL(blob);
+        this.patientService.getPdfByProgram(startDate, endDate, centerName).subscribe({
+          next: (blob) => {
+            // Crear URL temporal para el ZIP
+            const url = window.URL.createObjectURL(blob);
 
-          // Crear enlace de descarga oculto
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `historiales_${startDate}_${endDate}.zip`; // nombre sugerido
-          document.body.appendChild(a);
-          a.click();
+            // Crear enlace de descarga oculto
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `historiales_${startDate}_${endDate}.zip`; // nombre sugerido
+            document.body.appendChild(a);
+            a.click();
 
-          // Liberar recursos
-          document.body.removeChild(a);
-          window.URL.revokeObjectURL(url);
-          Notiflix.Loading.remove();
+            // Liberar recursos
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            Notiflix.Loading.remove();
+          },
+          error: (error) => {
+            Notiflix.Loading.remove();
+            const message = error?.error?.message || 'Error al generar los documentos';
+            Notiflix.Notify.failure(message);
+          }
         });
       }
     });

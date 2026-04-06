@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatBottomSheetRef, MatBottomSheetModule } from '@angular/material/bottom-sheet';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,6 +8,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
 import { MatSelectModule } from '@angular/material/select';
 import { MONDAY_FIRST_DATE_PROVIDERS } from '../../../../../../shared/date/monday-first-date-adapter';
+import { SistratCenter, SistratCenterService } from '../../../../../services/sistratCenter.service';
+import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-child-bottom-sheet',
@@ -15,37 +18,39 @@ import { MONDAY_FIRST_DATE_PROVIDERS } from '../../../../../../shared/date/monda
   styleUrl: './data-export.component.scss',
   standalone: true,
   providers: [...MONDAY_FIRST_DATE_PROVIDERS],
-  imports: [MatBottomSheetModule, MatButtonModule, MatListModule, MatFormFieldModule, MatSelectModule, MatInputModule, FormsModule, ReactiveFormsModule, MatDatepickerModule],
+  imports: [CommonModule, MatBottomSheetModule, MatButtonModule, MatListModule, MatFormFieldModule, MatSelectModule, MatInputModule, FormsModule, ReactiveFormsModule, MatDatepickerModule, MatIconModule],
 })
-export class DataExportComponent {
+export class DataExportComponent implements OnInit {
   private fb = inject(FormBuilder);
+  private sistratCenterService = inject(SistratCenterService);
   public exportForm: FormGroup;
+  public centers: SistratCenter[] = [];
 
   constructor(private bottomSheetRef: MatBottomSheetRef<DataExportComponent>) {
     this.exportForm = this.fb.group({
       startDate: ['', Validators.required],
       endDate: ['', Validators.required],
+      centerName: [''], // Filtrar por nombre del centro (SistratCenter)
+    });
+  }
+
+  ngOnInit(): void {
+    this.sistratCenterService.getActiveCenters().subscribe((centers: SistratCenter[]) => {
+      this.centers = centers || [];
     });
   }
 
   exportPdf(): void {
     if (this.exportForm.invalid) return;
 
-    const startDate: Date = this.exportForm.value.startDate;
-    const endDate: Date = this.exportForm.value.endDate;
+    const { startDate, endDate, centerName } = this.exportForm.value;
 
     // Convertir a formato YYYY-MM-DD
     const startStr = this.formatDate(startDate);
     const endStr = this.formatDate(endDate);
 
-    console.log('Fecha Inicio:', startStr);
-    console.log('Fecha Hasta:', endStr);
-
-    // const data = this.exportForm.value;
-    // console.log('Exportando con:', data);
-
-    const data = {startDate: startStr, endDate: endStr}
-    this.bottomSheetRef.dismiss(data); // Devuelve mes y año al padre
+    const data = { startDate: startStr, endDate: endStr, centerName };
+    this.bottomSheetRef.dismiss(data);
   }
 
   private formatDate(date: Date): string {

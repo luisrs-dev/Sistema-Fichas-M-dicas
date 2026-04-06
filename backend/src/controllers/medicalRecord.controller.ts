@@ -25,6 +25,8 @@ import { findPatient, getAllPatients } from "../services/patient.service";
 import { getBase64Image } from "../utils/base64Image";
 import { diagnosticMap } from "../constants/diagnosticMap";
 import { getSystemChromePath } from "../utils/chromePath";
+import PatientModel from "../models/patient.model";
+import MedicalRecordModel from "../models/medicalRecord.model";
 
 const getAllMedicalRecordsByUser = async ({ params }: Request, res: Response) => {
   try {
@@ -229,12 +231,34 @@ const getPdfMedicalRecordsByPatient = async ({ params }: Request, res: Response)
 
 const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
   try {
-    const { startDate, endDate } = body;
+    const { startDate, endDate, centerName } = body;
 
-    const patients = await getAllPatients();
-    if (!patients || patients.length === 0) {
-      return res.status(404).send("No hay pacientes para generar PDFs.");
+    // 1. Filtrar pacientes por centro (sistratCenter) si se proporciona
+    const patientFilters: any = {};
+    if (centerName) {
+      patientFilters.sistratCenter = centerName;
     }
+
+    // 2. Obtener IDs de pacientes que COINCIDEN con el centro
+    const candidatePatients = await PatientModel.find(patientFilters).select("_id").lean();
+    const candidatePatientIds = candidatePatients.map(p => p._id);
+
+    if (candidatePatientIds.length === 0) {
+      return res.status(404).send("No hay pacientes registrados en el centro seleccionado.");
+    }
+
+    // 3. Obtener solo los pacientes que TIENEN fichas en ese rango de fechas
+    const patientIdsWithRecords = await MedicalRecordModel.distinct("patient", {
+      patient: { $in: candidatePatientIds },
+      date: { $gte: startDate, $lte: endDate }
+    });
+
+    if (patientIdsWithRecords.length === 0) {
+      return res.status(404).send("No se encontraron fichas clínicas en el rango de fechas seleccionado.");
+    }
+
+    // 4. Obtener los datos completos de esos pacientes
+    const patients = await PatientModel.find({ _id: { $in: patientIdsWithRecords } }).populate("program");
 
     // Logo en Base64
     const logoUrl = getBase64Image("imgs/ficlin-logo.jpg", "jpeg");
@@ -246,7 +270,7 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
     const archive = archiver("zip", { zlib: { level: 9 } });
     archive.pipe(res);
 
-    // Agrupar pacientes por programa
+    // Agrupar pacientes por programa para la estructura de carpetas en el ZIP
     const patientsByProgram = patients.reduce((acc: any, patient: any) => {
       const program = patient.program?.name || "Sin Programa";
       if (!acc[program]) acc[program] = [];
@@ -254,7 +278,7 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
       return acc;
     }, {});
 
-    // Lanzar navegador
+    // Lanzar navegador once
     const executablePath = await getSystemChromePath();
     const browser = await puppeteer.launch({
       headless: true,
@@ -266,15 +290,13 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
       ],
     });
 
-    // 🔹 Crear UNA sola página
     const page = await browser.newPage();
-
-    // 🔹 Definir el path del template UNA vez
     const templatePath = path.join(__dirname, "../../templates-pdf/clinical-records-template.ejs");
 
+    // Procesar pacietes
     for (const program of Object.keys(patientsByProgram)) {
       for (const patient of patientsByProgram[program]) {
-        // Obtener fichas del paciente
+        // Obtener fichas del paciente en el rango
         const clinicalRecordsPatient = await allMedicalRecordsUser(patient._id, startDate, endDate);
 
         const clinicalRecords = (clinicalRecordsPatient || []).sort(
@@ -283,17 +305,10 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
 
         if (!clinicalRecords.length) continue;
 
-        // Convertir firmas a Base64
-        for (const record of clinicalRecords) {
-          const registeredBy = record.registeredBy as any;
-          if (registeredBy?.signature) {
-            const relativePath = registeredBy.signature.replace(/^\/uploads\//, "");
-            const signatureBase64 = getBase64Image(relativePath, "png");
-            if (signatureBase64) registeredBy.signature = signatureBase64;
-          }
-        }
+        // Convertir firmas a Base64 (esto ya se hace en allMedicalRecordsUser, pero reforzamos si es necesario)
+        // Nota: allMedicalRecordsUser ya hace el procesamiento de firmas Base64.
 
-        // Renderizar EJS con el templatePath
+        // Renderizar EJS
         const html = await ejs.renderFile(templatePath, {
           patient,
           clinicalRecords,
@@ -303,7 +318,6 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
 
         // Reusar la misma página
         await page.setContent(html, { waitUntil: "domcontentloaded" });
-
         const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
 
         const fullname = `${patient.name} ${patient.surname} ${patient.secondSurname}`.toUpperCase();
