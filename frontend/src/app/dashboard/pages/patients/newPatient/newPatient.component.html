@@ -1,404 +1,410 @@
-<!-- <button mat-raised-button (click)="isEditable = !isEditable">
-  {{!isEditable ? 'Enable edit mode' : 'Disable edit mode'}}
-</button> -->
 <div class="container">
   <mat-tab-group mat-stretch-tabs="false" mat-align-tabs="start" dynamicHeight>
+    <mat-tab label="{{ title }}">
 
-    <mat-tab label="{{ title}}">
-      @if (patient && !patient.registeredDemand) {}
+      @if (patient && !patient.registeredDemand) {
       <mat-card class="warning-card">
         ⚠️ Paciente no tiene demanda registrada. Por favor, registre la ficha de demanda antes de continuar.
       </mat-card>
+      }
+
       <form [formGroup]="userForm" autocomplete="off" (ngSubmit)="onSubmit()">
-        <div class="grid">
-          <div class="col-4">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>RUT</mat-label>
-              <input matInput formControlName="rut" placeholder="Sin puntos o guión" (input)="onRutInput($event)" />
-              <span *ngIf="isValidField('rut')" class="form-text text-danger"> El nombre es requerido </span>
-              <mat-icon matSuffix>person</mat-icon>
-              <!-- <mat-hint>Hint</mat-hint> -->
-            </mat-form-field>
-          </div>
-          <div class="col-4">
-            <button mat-flat-button type="button" (click)="onFetchDataWithRut()" color="primary">Traer datos con
-              RUT</button>
-          </div>
-        </div>
-        <div class="col-3">
-          <mat-form-field class="w-full" appearance="outline">
-            <mat-label>Código SISTRAT</mat-label>
-            <input matInput formControlName="codigoSistrat" placeholder="Código SISTRAT" />
-          </mat-form-field>
-        </div>
-        <div class="grid pt-4">
+        <mat-stepper [linear]="true" #stepper class="mt-2">
 
-          <!-- Esta fecha corresponde al registro de la Ficha de Ingeso -->
-          <!--<div class="col-2">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Fecha Ingreso</mat-label>
+          <!-- PASO 1: RECUPERAR NOMBRE CON RUT -->
+          <mat-step [completed]="fetchedFromSistrat()" [editable]="!registeredOnFiclin()">
+            <ng-template matStepLabel>Verificación RUT</ng-template>
 
-              <input matInput [matDatepicker]="pickerDateAdmission" formControlName="admissionDate" />
-              <mat-datepicker-toggle matIconSuffix [for]="pickerDateAdmission"></mat-datepicker-toggle>
-              <mat-datepicker #pickerDateAdmission></mat-datepicker>
-            </mat-form-field>
-          </div>-->
+            <div class="p-4">
+              <div class="flex flex-column align-items-center mb-4">
+                <div class="surface-100 p-4 border-round-xl w-full lg:w-6 shadow-1">
+                  <h3 class="mt-0 text-primary mb-3">Paso 1: Recuperar Nombre</h3>
+                  <p class="text-600 mb-4">Ingresa el RUT para buscar al paciente en el sistema nacional.</p>
 
-        </div>
+                  <div class="grid">
+                    <div class="col-12">
+                      <mat-form-field class="w-full" appearance="outline">
+                        <mat-label>RUT del Paciente</mat-label>
+                        <input matInput formControlName="rut" placeholder="Ej: 12345678K"
+                          (input)="onRutInput($event)" />
+                        <span *ngIf="isValidField('rut')" class="form-text text-danger"> RUT es requerido </span>
+                        <mat-icon matSuffix>badge</mat-icon>
+                      </mat-form-field>
+                    </div>
+                  </div>
 
-        <div class="grid">
+                  <div class="flex justify-content-end mt-3">
+                    <button mat-flat-button type="button" (click)="onFetchDataWithRut()" color="primary"
+                      class="h-3rem px-4" [disabled]="fetchedFromSistrat()">
+                      <mat-icon>search</mat-icon> Buscar Paciente
+                    </button>
+                    @if (fetchedFromSistrat()) {
+                    <button mat-stroked-button type="button" (click)="resetFetch()" color="warn" class="ml-2"
+                      *ngIf="!isEditable">
+                      Nueva Búsqueda
+                    </button>
+                    }
+                  </div>
+                </div>
 
-          <div class="col-4">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Nombre</mat-label>
-              <input matInput formControlName="name" placeholder="Nombre" />
-              <span *ngIf="isValidField('name')" class="form-text text-danger"> El nombre es requerido </span>
-              <mat-icon matSuffix>person</mat-icon>
-              <!-- <mat-hint>Hint</mat-hint> -->
-            </mat-form-field>
-          </div>
-          <div class="col-4">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Apellido Paterno</mat-label>
-              <input matInput formControlName="surname" />
-              <span *ngIf="isValidField('surname')" class="form-text text-danger"> Requerido </span>
-              <mat-icon matSuffix>person</mat-icon>
-              <!-- <mat-hint>Hint</mat-hint> -->
-            </mat-form-field>
-          </div>
-          <div class="col-4">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Apellido Materno</mat-label>
-              <input matInput formControlName="secondSurname" />
-              <span *ngIf="isValidField('secondSurname')" class="form-text text-danger"> Requerido </span>
-              <mat-icon matSuffix>person</mat-icon>
-              <!-- <mat-hint>Hint</mat-hint> -->
-            </mat-form-field>
-          </div>
-          <div class="col-3">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Fecha Nacimiento</mat-label>
-              <input matInput [matDatepicker]="pickerBirthday" formControlName="birthDate" />
-              <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
-              <mat-datepicker-toggle matIconSuffix [for]="pickerBirthday"></mat-datepicker-toggle>
-              <mat-datepicker #pickerBirthday></mat-datepicker>
-            </mat-form-field>
-          </div>
+                @if (fetchedFromSistrat()) {
+                <div
+                  class="w-full lg:w-6 mt-4 p-4 bg-green-50 border-round-xl border-1 border-green-200 animate__animated animate__fadeIn">
+                  <div class="flex align-items-center mb-2">
+                    <mat-icon class="text-green-500 mr-2">person</mat-icon>
+                    <span class="font-bold text-green-700">Paciente Identificado</span>
+                  </div>
+                  <div class="text-xl font-bold text-900 mb-2">
+                    {{ userForm.get('name')?.value }} {{ userForm.get('surname')?.value }} {{
+                    userForm.get('secondSurname')?.value }}
+                  </div>
+                  <div class="text-600 text-sm">Fecha Nac: {{ userForm.get('birthDate')?.value | date:'dd/MM/yyyy' }}
+                  </div>
 
-          <div class="col-3">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Sexo</mat-label>
-              <mat-select formControlName="sex">
-                <mat-option value="1">Hombre</mat-option>
-                <mat-option value="2">Mujer</mat-option>
-              </mat-select>
-              <span *ngIf="isValidField('sex')" class="text-red-500"> Debe seleccionar un programa </span>
-            </mat-form-field>
-          </div>
-        </div>
-
-        <div class="grid">
-          <div class="col-3">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Programa</mat-label>
-              <mat-select formControlName="program">
-                @for (program of programs; track $index) {
-                <mat-option value="{{ program._id }}">{{ program.name }}</mat-option>
+                  <div class="flex justify-content-center mt-3 border-top-1 border-green-100 pt-3">
+                    <button mat-button matStepperNext color="primary" type="button">Continuar a Selección de Centro
+                      <mat-icon>arrow_forward</mat-icon></button>
+                  </div>
+                </div>
                 }
-              </mat-select>
-              <span *ngIf="isValidField('program')" class="text-red-500"> Debe seleccionar un programa </span>
-            </mat-form-field>
-          </div>
-          <div class="col-3">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Centro SISTRAT</mat-label>
-              <mat-select formControlName="sistratCenter">
-                @for (center of sistratCenters(); track center._id) {
-                <mat-option [value]="center.name">{{ 'SISTRAT ' + (center.name | titlecase) }}</mat-option>
-                }
-              </mat-select>
-              <span *ngIf="isValidField('program')" class="text-red-500"> Debe seleccionar un programa </span>
-            </mat-form-field>
-          </div>
-        </div>
+              </div>
+            </div>
 
-        <div class="grid">
+            <div class="flex justify-content-start p-2">
+              <button mat-stroked-button color="primary" [routerLink]="['/dashboard/patients']" type="button">
+                <mat-icon>arrow_back</mat-icon> Volver al Listado
+              </button>
+            </div>
+          </mat-step>
 
-          <div class="col-2">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Region</mat-label>
-              <mat-select formControlName="region" (selectionChange)="onRegionChange()">
-                <mat-option value="">Seleccione</mat-option>
-                <mat-option value="1">DE TARAPACA</mat-option>
-                <mat-option value="2">DE ANTOFAGASTA</mat-option>
-                <mat-option value="3">DE ATACAMA</mat-option>
-                <mat-option value="4">DE COQUIMBO</mat-option>
-                <mat-option value="5">DE VALPARAISO</mat-option>
-                <mat-option value="6">DEL LIBERTADOR GENERAL BERNARDO OHIGGINS</mat-option>
-                <mat-option value="7">DEL MAULE</mat-option>
-                <mat-option value="8">DEL BIO-BIO</mat-option>
-                <mat-option value="9">DE LA ARAUCANIA</mat-option>
-                <mat-option value="10">DE LOS LAGOS</mat-option>
-                <mat-option value="11">DE AYSEN DEL GENERAL CARLOS IBAÑES DEL CAMPO</mat-option>
-                <mat-option value="12">DE MAGALLANES Y LA ANTARTICA CHILENA</mat-option>
-                <mat-option value="13">METROPOLITANA</mat-option>
-                <mat-option value="14">DE LOS RIOS</mat-option>
-                <mat-option value="15">DE ARICA Y PARINACOTA</mat-option>
-                <mat-option value="16">DE ÑUBLE</mat-option>
-              </mat-select>
-              <span *ngIf="isValidField('region')" class="text-red-500"> Debe seleccionar una region </span>
-            </mat-form-field>
-          </div>
+          <!-- PASO 2: SELECCIÓN DE CENTRO SISTRAT -->
+          <mat-step [editable]="true">
+            <ng-template matStepLabel>Centro SISTRAT</ng-template>
 
-          <div class="col-2">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Comuna Residencia</mat-label>
-              <mat-select formControlName="comuna">
-                <!--<select id="selcomuna" name="selcomuna" class="text ui-widget-content ui-corner-all input_form select_html3">-->
+            <div class="p-4">
+              <div class="flex flex-column align-items-center mb-4">
+                <div class="surface-100 p-4 border-round-xl w-full lg:w-6 shadow-1 border-left-4 border-primary">
+                  <h3 class="mt-0 text-primary mb-3">Paso 2: Centro de Registro</h3>
+                  <p class="text-600 mb-4">Selecciona el centro SISTRAT donde se registrará la demanda de <span
+                      class="text-900 font-bold">{{ userForm.get('name')?.value }}</span>.</p>
 
-                @for (comuna of filteredComunas; track comuna.value) {
-                <mat-option [value]="comuna.value">{{ comuna.name }}</mat-option>
-                }
-              </mat-select>
-              <span *ngIf="isValidField('comuna')" class="text-red-500"> Debe seleccionar una comuna </span>
-            </mat-form-field>
-          </div>
+                  <div class="grid">
+                    <div class="col-12">
+                      <mat-form-field class="w-full" appearance="outline">
+                        <mat-label>Selecciona un Centro SISTRAT</mat-label>
+                        <mat-select formControlName="sistratCenter" (selectionChange)="onCenterSelected()">
+                          @for (center of sistratCenters(); track center._id) {
+                          <mat-option [value]="center.name">{{ 'SISTRAT ' + (center.name | titlecase) }}</mat-option>
+                          }
+                        </mat-select>
+                        <span *ngIf="isValidField('sistratCenter')" class="text-red-500"> Debes seleccionar un centro
+                        </span>
+                      </mat-form-field>
+                    </div>
+                  </div>
 
-          <div class="col-2">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Teléfono</mat-label>
-              <input matInput formControlName="phone" placeholder="Ej: +56969691818" />
-              <span *ngIf="isValidField('phone')" class="text-red-500"> El teléfon es obligatorio </span>
+                  <div class="flex justify-content-between mt-3">
+                    <button mat-button matStepperPrevious type="button" class="text-600">
+                      <mat-icon>arrow_back</mat-icon> Atrás
+                    </button>
 
-              <mat-icon matSuffix>phone</mat-icon>
-              <!-- <mat-hint>Hint</mat-hint> -->
-            </mat-form-field>
-          </div>
-          <div class="col-2">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Teléfono Familiar</mat-label>
-              <input matInput formControlName="phoneFamily" placeholder="Ej: +56969691818" />
-              <span *ngIf="isValidField('phoneFamily')" class="text-red-500"> El teléfon es obligatorio </span>
+                    <div class="flex gap-2">
+                      @if (isEditable) {
+                      <button mat-flat-button type="submit" class="btn-success-custom"
+                        [disabled]="!userForm.get('sistratCenter')?.value">
+                        <mat-icon>save_as</mat-icon> Actualizar Centro
+                      </button>
+                      }
+                      <button mat-flat-button matStepperNext color="primary" type="button"
+                        [disabled]="!userForm.get('sistratCenter')?.value">
+                        Completar Ficha <mat-icon>arrow_forward</mat-icon>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </mat-step>
 
-              <mat-icon matSuffix>phone</mat-icon>
-              <!-- <mat-hint>Hint</mat-hint> -->
-            </mat-form-field>
-          </div>
-          <div class="col-4">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Sustancia Principal</mat-label>
-              <mat-select formControlName="mainSubstance">
-                <mat-option value="1">Alcohol</mat-option>
-                <mat-option value="2">Marihuana</mat-option>
-                <mat-option value="3">Cocaína</mat-option>
-                <mat-option value="4">Pasta Base</mat-option>
-                <mat-option value="5">Crack</mat-option>
-                <mat-option value="6">Inhalables</mat-option>
-                <mat-option value="7">Extasis</mat-option>
-                <mat-option value="8">LSD</mat-option>
-                <mat-option value="9">Fenilciclidina</mat-option>
-                <mat-option value="10">Hongos</mat-option>
-                <mat-option value="11">Otros Alucinógenos</mat-option>
-                <mat-option value="12">Heroína</mat-option>
-                <mat-option value="13">Metadona</mat-option>
-                <mat-option value="14">Otros Opioides Analgésicos</mat-option>
-                <mat-option value="15">Anfetaminas</mat-option>
-                <mat-option value="16">Metanfetaminas y otros derivados</mat-option>
-                <mat-option value="17">Otros Estimulantes</mat-option>
-                <mat-option value="18">Sedantes</mat-option>
-                <mat-option value="19">Hipnóticos</mat-option>
-                <mat-option value="20">Esteroides Anabólicos</mat-option>
-                <mat-option value="21">Otros</mat-option>
-                <mat-option value="24">Tranquilizantes</mat-option>
-                <mat-option value="25">Sin especificar</mat-option>
-                <mat-option value="26">Tussi/Ketamina</mat-option>
-                <mat-option value="27">Fentanilo</mat-option>
-              </mat-select>
-              <!-- <span *ngIf="isValidField('mainSubstance')" class="text-red-500">
-                  Debe seleccionar un programa
-                </span> -->
-            </mat-form-field>
-          </div>
-          <div class="col-3">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>N° Tratamientos Previos</mat-label>
-              <mat-select formControlName="previousTreatments">
-                <mat-option value="">Seleccione</mat-option>
-                <mat-option value="0">0</mat-option>
-                <mat-option value="1">1</mat-option>
-                <mat-option value="2">2</mat-option>
-                <mat-option value="3">3</mat-option>
-                <mat-option value="4">4</mat-option>
-                <mat-option value="5">5</mat-option>
-                <mat-option value="6">6</mat-option>
-                <mat-option value="7">7</mat-option>
-                <mat-option value="8">8</mat-option>
-                <mat-option value="9">9</mat-option>
-                <mat-option value="10">10</mat-option>
-              </mat-select>
-              <!-- <span *ngIf="isValidField('previousTreatments')" class="text-red-500">
-                  Debe seleccionar un programa
-                </span> -->
-            </mat-form-field>
-          </div>
-          <div class="col-5">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Fecha Solicitud de Antención en el establecimiento</mat-label>
-              <input matInput [matDatepicker]="pickerAtentionRequestDate" formControlName="atentionRequestDate" />
-              <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
-              <mat-datepicker-toggle matIconSuffix [for]="pickerAtentionRequestDate"></mat-datepicker-toggle>
-              <mat-datepicker #pickerAtentionRequestDate></mat-datepicker>
-            </mat-form-field>
-          </div>
-          <div class="col-3">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Centro de origen</mat-label>
-              <input matInput formControlName="centerOrigin" placeholder="Centro de origen" />
-              <span *ngIf="isValidField('centerOrigin')" class="form-text text-danger"> El centro es requerido </span>
-              <mat-icon matSuffix>person</mat-icon>
-              <!-- <mat-hint>Hint</mat-hint> -->
-            </mat-form-field>
-          </div>
+          <!-- PASO 3: REGISTRO DE DEMANDA COMPLETO -->
+          <mat-step [stepControl]="userForm">
+            <ng-template matStepLabel>Detalles Finales</ng-template>
 
-          <div class="col-5">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>¿Quién deriva?</mat-label>
-              <mat-select formControlName="whoDerives">
-                <mat-option value="">Seleccione</mat-option>
-                <mat-option value="1">Demanda Espontanea</mat-option>
-                <mat-option value="2">Derivado de otro centro de Salud</mat-option>
-                <mat-option value="3">Derivado de otro centro de Tratamiento</mat-option>
-                <mat-option value="4"> Referido desde Sector Justicia (fiscal, juzgado, c)</mat-option>
-                <mat-option value="5">Referido desde una Empresa</mat-option>
-                <mat-option value="6">Referido desde un Colegio</mat-option>
-                <mat-option value="7"> Referido desde algÃºn Servicio Social (iglesia, se )</mat-option>
-                <mat-option value="8">Referido desde el Previene</mat-option>
-                <mat-option value="9">Otro Especificar</mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
-          <div class="col-4">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>¿Quién solicita?</mat-label>
-              <mat-select formControlName="whoRequest">
-                <mat-option value="">Seleccione</mat-option>
-                <mat-option value="1">Usuario Directamente</mat-option>
-                <mat-option value="2">Familiar</mat-option>
-                <mat-option value="3"> Sector Justicia (Fiscal, Juzgado, Consejero, etc) </mat-option>
-                <mat-option value="4">Otro Centro de Salud</mat-option>
-                <mat-option value="5">Otro Centro de Tratamiento</mat-option>
-                <mat-option value="6">Previene</mat-option>
-                <mat-option value="7">Empresa</mat-option>
-                <mat-option value="8"> Servicios Sociales (Iglesias, servicios Comunitarios) </mat-option>
-                <mat-option value="9">Colegio</mat-option>
-                <mat-option value="10">Otro</mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
-          <div class="col-4">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Tipo Contacto</mat-label>
-              <mat-select formControlName="typeContact">
-                <mat-option value="">Seleccione</mat-option>
-                <mat-option value="1">Presencial</mat-option>
-                <mat-option value="2">Telefonica</mat-option>
-                <mat-option value="3">Correo Postal</mat-option>
-                <mat-option value="4">Digital</mat-option>
-                <mat-option value="5">Otra</mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
-          <div class="col-4">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Fecha atención ofrecida (citación) en el establecimiento</mat-label>
-              <input matInput [matDatepicker]="pickerCareOfferedDate" formControlName="careOfferedDate" />
-              <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
-              <mat-datepicker-toggle matIconSuffix [for]="pickerCareOfferedDate"></mat-datepicker-toggle>
-              <mat-datepicker #pickerCareOfferedDate></mat-datepicker>
-            </mat-form-field>
-          </div>
-          <div class="col-4">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Si no fue posible dar una hora de atención (mes estimado)</mat-label>
-              <input matInput [matDatepicker]="pickerEstimatedMonth" formControlName="estimatedMonth" />
-              <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
-              <mat-datepicker-toggle matIconSuffix [for]="pickerEstimatedMonth"></mat-datepicker-toggle>
-              <mat-datepicker #pickerEstimatedMonth></mat-datepicker>
-            </mat-form-field>
-          </div>
-          <div class="col-4">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>No se Acepta Demanda </mat-label>
-              <mat-select formControlName="demandIsNotAccepted">
-                <mat-option value="">Seleccione</mat-option>
-                <mat-option value="1">Por Prevision de Salud</mat-option>
-                <mat-option value="2">Jurisdiccion</mat-option>
-                <mat-option value="3">Diagnostico</mat-option>
-                <mat-option value="4">Otro</mat-option>
-              </mat-select>
-              <!-- <span *ngIf="isValidField('demandIsNotAccepted')" class="text-red-500">
-                  Debe seleccionar un programa
-                </span> -->
-            </mat-form-field>
-          </div>
+            <div class="p-3">
+              <div class="grid">
+                <!-- Seccion Identidad (ReadOnly) -->
+                <div class="col-12">
+                  <div class="flex justify-content-between align-items-center border-bottom-1 border-300 pb-2 mb-3">
+                    <h4 class="text-primary m-0">Información del Paciente</h4>
+                    <div class="flex align-items-center bg-blue-50 px-3 py-1 border-round-2xl border-1 border-blue-200">
+                      <mat-icon class="text-blue-500 text-sm mr-2"
+                        style="font-size: 18px; width: 18px; height: 18px;">business</mat-icon>
+                      <span class="text-blue-700 font-bold text-sm">Centro SISTRAT: {{
+                        userForm.get('sistratCenter')?.value | titlecase }}</span>
+                    </div>
+                  </div>
+                </div>
 
-          <div class="col-4">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>(a) Fecha 1era atención realizada</mat-label>
-              <input matInput [matDatepicker]="pickerFirstAtentionDate" formControlName="firstAtentionDate" />
-              <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
-              <mat-datepicker-toggle matIconSuffix [for]="pickerFirstAtentionDate"></mat-datepicker-toggle>
-              <mat-datepicker #pickerFirstAtentionDate></mat-datepicker>
-            </mat-form-field>
-          </div>
-          <div class="col-4">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>(b) Fecha ofrecida de atención resolutiva</mat-label>
-              <input matInput [matDatepicker]="pickerAtentionResolutiveDate" formControlName="atentionResolutiveDate" />
-              <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
-              <mat-datepicker-toggle matIconSuffix [for]="pickerAtentionResolutiveDate"></mat-datepicker-toggle>
-              <mat-datepicker #pickerAtentionResolutiveDate></mat-datepicker>
-            </mat-form-field>
-          </div>
+                <div class="col-12 md:col-3">
+                  <mat-form-field class="w-full" appearance="fill">
+                    <mat-label>Nombre</mat-label>
+                    <input matInput formControlName="name" />
+                  </mat-form-field>
+                </div>
+                <div class="col-12 md:col-3">
+                  <mat-form-field class="w-full" appearance="fill">
+                    <mat-label>Apellido Paterno</mat-label>
+                    <input matInput formControlName="surname" />
+                  </mat-form-field>
+                </div>
+                <div class="col-12 md:col-3">
+                  <mat-form-field class="w-full" appearance="fill">
+                    <mat-label>Apellido Materno</mat-label>
+                    <input matInput formControlName="secondSurname" />
+                  </mat-form-field>
+                </div>
+                <div class="col-12 md:col-3">
+                  <mat-form-field class="w-full" appearance="fill">
+                    <mat-label>Código SISTRAT</mat-label>
+                    <input matInput formControlName="codigoSistrat" placeholder="Código asignado" />
+                  </mat-form-field>
+                </div>
 
-          <div class="col-3">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label> Recibió Interveciones entre a y b</mat-label>
-              <mat-select formControlName="interventionAB">
-                <mat-option value="">Seleccione</mat-option>
-                <mat-option value="1">Si</mat-option>
-                <mat-option value="2">No</mat-option>
-              </mat-select>
-              <!-- <span *ngIf="isValidField('interventionAB')" class="text-red-500">
-                  Debe seleccionar un programa
-                </span> -->
-            </mat-form-field>
-          </div>
-          <div class="col-5">
-            <mat-form-field class="w-full" appearance="outline">
-              <mat-label>Observaciones</mat-label>
-              <textarea matInput formControlName="observations"></textarea>
-              <!-- <span *ngIf="isValidField('observations')" class="form-text text-danger">
-                  El nombre es requerido
-                </span> -->
-              <mat-icon matSuffix>person</mat-icon>
-              <!-- <mat-hint>Hint</mat-hint> -->
-            </mat-form-field>
-          </div>
-        </div>
+                <!-- Seccion Geografía y Contacto -->
+                <div class="col-12 mt-3">
+                  <h4 class="text-primary border-bottom-1 border-300 pb-2 mb-3">Contacto y Ubicación</h4>
+                </div>
+                <div class="col-12 md:col-3">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>Programa</mat-label>
+                    <mat-select formControlName="program">
+                      @for (program of programs; track $index) {
+                      <mat-option [value]="program._id">{{ program.name }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+                <div class="col-12 md:col-3">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>Región</mat-label>
+                    <mat-select formControlName="region" (selectionChange)="onRegionChange()">
+                      <!-- <mat-option value="1">DE TARAPACA</mat-option>
+                      <mat-option value="2">DE ANTOFAGASTA</mat-option>
+                      <mat-option value="3">DE ATACAMA</mat-option>
+                      <mat-option value="4">DE COQUIMBO</mat-option>
+                      <mat-option value="5">DE VALPARAISO</mat-option>
+                      <mat-option value="6">DEL LIBERTADOR GENERAL BERNARDO OHIGGINS</mat-option> -->
+                      <mat-option value="7">DEL MAULE</mat-option>
+                      <mat-option value="8">DEL BIO-BIO</mat-option>
+                      <!-- <mat-option value="9">DE LA ARAUCANIA</mat-option>
+                      <mat-option value="10">DE LOS LAGOS</mat-option>
+                      <mat-option value="11">DE AYSEN DEL GENERAL CARLOS IBAÑES DEL CAMPO</mat-option>
+                      <mat-option value="12">DE MAGALLANES Y LA ANTARTICA CHILENA</mat-option>
+                      <mat-option value="13">METROPOLITANA</mat-option>
+                      <mat-option value="14">DE LOS RIOS</mat-option>
+                      <mat-option value="15">DE ARICA Y PARINACOTA</mat-option>
+                      <mat-option value="16">DE ÑUBLE</mat-option> -->
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+                <div class="col-12 md:col-3">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>Comuna Residencia</mat-label>
+                    <mat-select formControlName="comuna">
+                      @for (comuna of filteredComunas; track comuna.value) {
+                      <mat-option [value]="comuna.value">{{ comuna.name }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+                <div class="col-12 md:col-3">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>Sexo</mat-label>
+                    <mat-select formControlName="sex">
+                      <mat-option value="1">Hombre</mat-option>
+                      <mat-option value="2">Mujer</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+                <div class="col-12 md:col-6">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>Teléfono Paciente</mat-label>
+                    <input matInput formControlName="phone" placeholder="Ej: +569..." />
+                    <mat-icon matSuffix>phone</mat-icon>
+                  </mat-form-field>
+                </div>
+                <div class="col-12 md:col-6">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>Teléfono Familiar</mat-label>
+                    <input matInput formControlName="phoneFamily" placeholder="Ej: +569..." />
+                    <mat-icon matSuffix>contacts</mat-icon>
+                  </mat-form-field>
+                </div>
 
-        <div>
-          <button mat-stroked-button color="primary" [routerLink]="['/dashboard/patients']" class="mr-1">Volver</button>
-          @if(!registeredOnFiclin()){
-          <button mat-flat-button type="submit" color="primary">{{ textButtonRegister }}</button>
+                <div class="col-12 mt-3">
+                  <h4 class="text-primary border-bottom-1 border-300 pb-2 mb-3">Información del Tratamiento</h4>
+                </div>
+                <div class="col-12 md:col-4">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>Sustancia Principal</mat-label>
+                    <mat-select formControlName="mainSubstance">
+                      <mat-option value="1">Alcohol</mat-option>
+                      <mat-option value="2">Marihuana</mat-option>
+                      <mat-option value="3">Cocaína</mat-option>
+                      <mat-option value="4">Pasta Base</mat-option>
+                      <mat-option value="5">Crack</mat-option>
+                      <mat-option value="21">Otros</mat-option>
+                      <mat-option value="26">Tussi/Ketamina</mat-option>
+                      <mat-option value="27">Fentanilo</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+                <div class="col-12 md:col-4">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>N° Tratamientos Previos</mat-label>
+                    <mat-select formControlName="previousTreatments">
+                      @for (i of [0,1,2,3,4,5,6,7,8,9,10]; track i) {
+                      <mat-option [value]="i.toString()">{{ i }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+                <div class="col-12 md:col-4">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>Centro de Origen</mat-label>
+                    <input matInput formControlName="centerOrigin" />
+                  </mat-form-field>
+                </div>
 
-          } @if(registeredOnFiclin()){
-          <button mat-flat-button type="submit" color="primary">{{ textButtonRegister }}</button>
-          <button mat-flat-button class="ml-1" type="button" color="primary" (click)="onSaveDemandOnSistrat()">Registrar
-            en SISTRAT</button>
-          }
-        </div>
+                <div class="col-12 md:col-4">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>¿Quién Deriva?</mat-label>
+                    <mat-select formControlName="whoDerives">
+                      <mat-option value="1">Demanda Espontanea</mat-option>
+                      <mat-option value="2">Derivado de otro centro de Salud</mat-option>
+                      <mat-option value="4">Sector Justicia</mat-option>
+                      <mat-option value="6">Colegio</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+                <div class="col-12 md:col-4">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>¿Quién solicita?</mat-label>
+                    <mat-select formControlName="whoRequest">
+                      <mat-option value="1">Usuario Directamente</mat-option>
+                      <mat-option value="2">Familiar</mat-option>
+                      <mat-option value="3">Sector Justicia</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+                <div class="col-12 md:col-4">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>Tipo Contacto</mat-label>
+                    <mat-select formControlName="typeContact">
+                      <mat-option value="1">Presencial</mat-option>
+                      <mat-option value="2">Telefonica</mat-option>
+                      <mat-option value="4">Digital</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+
+                <div class="col-12 mt-3">
+                  <h4 class="text-primary border-bottom-1 border-300 pb-2 mb-3">Fechas y Gestión</h4>
+                </div>
+                <div class="col-12 md:col-4">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>Fecha Solicitud Atención</mat-label>
+                    <input matInput [matDatepicker]="pickReq" formControlName="atentionRequestDate" />
+                    <mat-datepicker-toggle matSuffix [for]="pickReq"></mat-datepicker-toggle>
+                    <mat-datepicker #pickReq></mat-datepicker>
+                  </mat-form-field>
+                </div>
+                <div class="col-12 md:col-4">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>Fecha Atención Ofrecida</mat-label>
+                    <input matInput [matDatepicker]="pickOffered" formControlName="careOfferedDate" />
+                    <mat-datepicker-toggle matSuffix [for]="pickOffered"></mat-datepicker-toggle>
+                    <mat-datepicker #pickOffered></mat-datepicker>
+                  </mat-form-field>
+                </div>
+                <div class="col-12 md:col-4">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>Fecha 1era Atención Realizada</mat-label>
+                    <input matInput [matDatepicker]="pickFirst" formControlName="firstAtentionDate" />
+                    <mat-datepicker-toggle matSuffix [for]="pickFirst"></mat-datepicker-toggle>
+                    <mat-datepicker #pickFirst></mat-datepicker>
+                  </mat-form-field>
+                </div>
+
+                <div class="col-12 md:col-4">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>Fecha Atención Resolutiva</mat-label>
+                    <input matInput [matDatepicker]="pickRes" formControlName="atentionResolutiveDate" />
+                    <mat-datepicker-toggle matSuffix [for]="pickRes"></mat-datepicker-toggle>
+                    <mat-datepicker #pickRes></mat-datepicker>
+                  </mat-form-field>
+                </div>
+                <div class="col-12 md:col-4">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>Intervención entre A y B</mat-label>
+                    <mat-select formControlName="interventionAB">
+                      <mat-option value="1">Si</mat-option>
+                      <mat-option value="2">No</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+                <div class="col-12 md:col-4">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>Mes Estimado (si no hubo atención)</mat-label>
+                    <input matInput [matDatepicker]="pickEst" formControlName="estimatedMonth" />
+                    <mat-datepicker-toggle matSuffix [for]="pickEst"></mat-datepicker-toggle>
+                    <mat-datepicker #pickEst></mat-datepicker>
+                  </mat-form-field>
+                </div>
+
+                <div class="col-12 md:col-12">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>No se Acepta Demanda</mat-label>
+                    <mat-select formControlName="demandIsNotAccepted">
+                      <mat-option value="1">Por Prevision de Salud</mat-option>
+                      <mat-option value="2">Jurisdiccion</mat-option>
+                      <mat-option value="3">Diagnostico</mat-option>
+                      <mat-option value="4">Otro</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+
+                <div class="col-12">
+                  <mat-form-field class="w-full" appearance="outline">
+                    <mat-label>Observaciones</mat-label>
+                    <textarea matInput formControlName="observations" rows="3"
+                      placeholder="Detalles adicionales..."></textarea>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="flex justify-content-between mt-4">
+                <button mat-button matStepperPrevious type="button" class="text-600">
+                  <mat-icon>arrow_back</mat-icon> Atrás
+                </button>
+
+                <div class="flex gap-2">
+                  <button mat-flat-button type="submit" color="primary" [disabled]="userForm.invalid">
+                    <mat-icon>save</mat-icon> {{ textButtonRegister }}
+                  </button>
+
+                  @if(registeredOnFiclin()){
+                  <button mat-flat-button type="button" color="accent" (click)="onSaveDemandOnSistrat()">
+                    <mat-icon>cloud_upload</mat-icon> Sincronizar SISTRAT
+                  </button>
+                  }
+                </div>
+              </div>
+            </div>
+          </mat-step>
+        </mat-stepper>
       </form>
+
     </mat-tab>
   </mat-tab-group>
 </div>

@@ -14,6 +14,8 @@ import moment from 'moment';
 import { Patient } from '../../../interfaces/patient.interface';
 import { MONDAY_FIRST_DATE_PROVIDERS } from '../../../../shared/date/monday-first-date-adapter';
 import { SistratCenter, SistratCenterService } from '../../../services/sistratCenter.service';
+import { MatStepper } from '@angular/material/stepper';
+import { ViewChild } from '@angular/core';
 
 @Component({
   selector: 'app-new-patient',
@@ -24,6 +26,8 @@ import { SistratCenter, SistratCenterService } from '../../../services/sistratCe
   styleUrl: './newPatient.component.css',
 })
 export default class NewPatientComponent {
+  @ViewChild('stepper') private stepper: MatStepper;
+
   private patientService = inject(PatientService);
   private authService = inject(AuthService);
   private userService = inject(UserService);
@@ -113,6 +117,7 @@ export default class NewPatientComponent {
   public registered: boolean = false;
   public registroSistrat: boolean = true;
   public demandRegistered: boolean = false;
+  public fetchedFromSistrat = signal<boolean>(false);
   public searchResults$: Observable<any>;
   public programs: Parameter[];
   public patient: Patient;
@@ -151,6 +156,10 @@ export default class NewPatientComponent {
     observations: ['', []],
   });
 
+  get isFetched(): boolean {
+    return this.fetchedFromSistrat() || this.isEditable;
+  }
+
   ngOnInit() {
     const user = this.authService.getUser();
     if (!user) {
@@ -169,6 +178,9 @@ export default class NewPatientComponent {
       this.changeDetectorRef.detectChanges();
     });
 
+    // Solo deshabilitar campos que vienen de SISTRAT, mantener RUT y Centro habilitados para la búsqueda
+    this.disableNamesFields();
+
   
     // Leer id desde la URL (si existe)
     const id = this.route.snapshot.paramMap.get('id');
@@ -176,6 +188,8 @@ export default class NewPatientComponent {
     if (id) {
       this.loadPatient(id); // Función para cargar datos en modo edición
       this.isEditable = true; // Puedes usar esta flag para controlar lógica de edición si es necesario
+      this.fetchedFromSistrat.set(true);
+      this.enableIdentityFields(); // Permitir carga de datos en edición
     }
 
 
@@ -233,6 +247,16 @@ export default class NewPatientComponent {
           interventionAB: this.patient.interventionAB,
           observations: this.patient.observations,
         });
+
+        this.fetchedFromSistrat.set(true);
+        this.disableIdentityFields();
+        
+        // Si estamos editando, saltamos directo al paso 3 (formulario completo)
+        setTimeout(() => {
+          if (this.stepper) {
+            this.stepper.selectedIndex = 2;
+          }
+        }, 500);
 
         this.changeDetectorRef.detectChanges();
       },
@@ -356,50 +380,94 @@ export default class NewPatientComponent {
   }
 
   onFetchDataWithRut(): void {
-    Notiflix.Loading.circle('Recuperando datos desde SISTRAT');
-
     const rut = this.userForm.get('rut')?.value?.trim();
-    const center = this.userForm.get('sistratCenter')?.value;
+    // Para recuperar el nombre basta con loguearnos en cualquier centro activo
+    const centers = this.sistratCenters();
+    const center = centers.length > 0 ? centers[0].name : null;
 
     if (!rut) {
       Notiflix.Notify.warning('Debes ingresar un RUT antes de buscar.');
-      Notiflix.Loading.remove();
       return;
     }
 
     if (!center) {
-      Notiflix.Notify.warning('Debes seleccionar un centro Sistrat antes de buscar.');
-      Notiflix.Loading.remove();
+      Notiflix.Notify.warning('No hay centros SISTRAT activos para realizar la búsqueda.');
       return;
     }
+
+    Notiflix.Loading.circle('Recuperando nombre desde SISTRAT...');
 
     this.patientService.getDataWithRut(rut, center).subscribe({
       next: (response) => {
         const data = response?.data;
-        if (!data) {
-          Notiflix.Notify.failure('Respuesta inválida del servicio.');
+        if (!data || (!data.name && !data.surname)) {
+          Notiflix.Notify.failure('No se encontró información para este RUT en SISTRAT.');
           Notiflix.Loading.remove();
           return;
         }
-        // Rellenamos los campos disponibles sin tocar el resto del formulario.
+
+        // Rellenamos los campos de identidad
         this.userForm.patchValue({
-          name: data.name ?? this.userForm.get('name')?.value,
-          surname: data.surname ?? this.userForm.get('surname')?.value,
-          secondSurname: data.secondSurname ?? this.userForm.get('secondSurname')?.value,
-          birthDate: this.formatDateStringToDate(data.birthDate) || this.userForm.get('birthDate')?.value,
-          sex: data.sex ?? this.userForm.get('sex')?.value,
-        });        
+          name: data.name,
+          surname: data.surname,
+          secondSurname: data.secondSurname,
+          birthDate: this.formatDateStringToDate(data.birthDate),
+          sex: data.sex,
+        });
+
+        this.fetchedFromSistrat.set(true);
+        this.disableNamesFields();
+        this.userForm.get('rut')?.disable();
 
         this.changeDetectorRef.detectChanges();
-        Notiflix.Notify.success('Datos recuperados con éxito.');
-        Notiflix.Loading.remove();
+        
+        // Avanzar al paso 2 (Selección de Centro)
+        setTimeout(() => {
+          if (this.stepper) this.stepper.next();
+        }, 600);
 
+        Notiflix.Notify.success('Nombre recuperado con éxito.');
+        Notiflix.Loading.remove();
       },
-      error: () =>{
-        Notiflix.Notify.failure('No se pudo obtener la información.');
+      error: (err) => {
+        console.error('Error al recuperar datos:', err);
+        Notiflix.Notify.failure('No se pudo establecer conexión con SISTRAT.');
         Notiflix.Loading.remove();
-      } 
+      }
+    });
+  }
 
+  onCenterSelected(): void {
+    // Ya no avanzamos automáticamente para permitir al usuario decidir 
+    // si quiere usar el botón de "Actualizar solo Centro" o "Completar Ficha"
+  }
+
+  private disableNamesFields(): void {
+    const fields = ['name', 'surname', 'secondSurname', 'birthDate', 'sex'];
+    fields.forEach(field => this.userForm.get(field)?.disable());
+  }
+
+  private disableIdentityFields(): void {
+    const fields = ['name', 'surname', 'secondSurname', 'birthDate', 'sex', 'rut'];
+    fields.forEach(field => this.userForm.get(field)?.disable());
+  }
+
+  private enableIdentityFields(): void {
+    const fields = ['name', 'surname', 'secondSurname', 'birthDate', 'sex', 'sistratCenter', 'rut'];
+    fields.forEach(field => this.userForm.get(field)?.enable());
+  }
+
+  resetFetch(): void {
+    if (this.isEditable) return;
+    this.fetchedFromSistrat.set(false);
+    this.enableIdentityFields();
+    this.userForm.patchValue({
+      rut: '',
+      name: '',
+      surname: '',
+      secondSurname: '',
+      birthDate: '',
+      sex: '',
     });
   }
 }
