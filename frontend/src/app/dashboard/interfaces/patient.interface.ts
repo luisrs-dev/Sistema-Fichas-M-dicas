@@ -46,6 +46,10 @@ export interface Patient {
   interventionAB: string;
   observations: string;
   opcion_discapacidad?: string;
+  hasTopForm?: boolean;
+  hasSocialForm?: boolean;
+  hasEvaluationForm?: boolean;
+  hasSocialDiagnosisForm?: boolean;
 }
 
 interface Program {

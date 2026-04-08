@@ -169,6 +169,15 @@ export default class ListPatientsComponent implements OnInit {
     return this.isAdmin;
   }
 
+  hasRegisteredForm(element: Patient): boolean {
+    return !!(
+      element.hasTopForm ||
+      element.hasSocialForm ||
+      element.hasEvaluationForm ||
+      element.hasSocialDiagnosisForm
+    );
+  }
+
   onClickAlert(patientId: string, alertType: string) {
     Notiflix.Notify.info('Abriendo SISTRAT...');
     this.patientService.resolveAlertSistrat(patientId, alertType).subscribe({

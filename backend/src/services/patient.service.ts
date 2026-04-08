@@ -10,6 +10,10 @@ import UserModel from "../models/user.model";
 import SistratCacheModel from "../models/sistratCache.model";
 import { encrypt } from "../utils/bcrypt.handle";
 import ProcessLogger from "../utils/processLogger";
+import TopFormModel from "../models/topForm.model";
+import SocialFormModel from "../models/socialForm.model";
+import EvaluationFormModel from "../models/evaluationForm.model";
+import SocialDiagnosisFormModel from "../models/socialDiagnosisForm.model";
 
 
 const inerPatient = async (Patient: Patient) => {
@@ -367,7 +371,33 @@ const allPatients = async (programs: string[], active?: string) => {
     }
   }
 
-  const responsePatients = await PatientModel.find(filters).populate("program");
+  const patients = await PatientModel.find(filters).populate("program").lean();
+
+  // Obtener todos los IDs de pacientes para buscar sus formularios de una vez
+  const patientIds = patients.map(p => p._id);
+
+  // Buscar qué pacientes tienen formularios de alertas registrados en FicLin
+  const [topForms, socialForms, evaluationForms, socialDiagnosisForms] = await Promise.all([
+    TopFormModel.find({ patientId: { $in: patientIds } }).select('patientId').lean(),
+    SocialFormModel.find({ patientId: { $in: patientIds } }).select('patientId').lean(),
+    EvaluationFormModel.find({ patientId: { $in: patientIds } }).select('patientId').lean(),
+    SocialDiagnosisFormModel.find({ patientId: { $in: patientIds } }).select('patientId').lean(),
+  ]);
+
+  // Convertir a sets para búsqueda rápida O(1)
+  const topSet = new Set(topForms.map(f => f.patientId.toString()));
+  const socialSet = new Set(socialForms.map(f => f.patientId.toString()));
+  const evalSet = new Set(evaluationForms.map(f => f.patientId.toString()));
+  const diagSet = new Set(socialDiagnosisForms.map(f => f.patientId.toString()));
+
+  const responsePatients = patients.map(patient => ({
+    ...patient,
+    hasTopForm: topSet.has(patient._id.toString()),
+    hasSocialForm: socialSet.has(patient._id.toString()),
+    hasEvaluationForm: evalSet.has(patient._id.toString()),
+    hasSocialDiagnosisForm: diagSet.has(patient._id.toString()),
+  }));
+
   return responsePatients;
 };
 
