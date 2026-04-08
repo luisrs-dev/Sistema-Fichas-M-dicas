@@ -9,7 +9,7 @@ class ProcessLogger {
     const timestamp = this.buildTimestamp();
     const normalizedName = this.normalize(patientName || "sin-nombre");
     const normalizedProcess = this.normalize(processName || "proceso");
-    const logsDir = path.resolve(__dirname, "..", "..", "logs");
+    const logsDir = path.resolve(process.cwd(), "logs");
     this.filePath = path.join(logsDir, `${normalizedName}_${normalizedProcess}_${timestamp}.log`);
     console.log('filepath', this.filePath);
     

@@ -189,13 +189,13 @@ const getPdfMedicalRecordsByPatient = async ({ params }: Request, res: Response)
       return res.status(404).send("No hay fichas para este paciente.");
     }
 
-    const logoPath = path.join(__dirname, "../../uploads/imgs/ficlin-logo.jpg");
+    const logoPath = path.join(process.cwd(), "uploads/imgs/ficlin-logo.jpg");
     const logoBase64 = fs.readFileSync(logoPath, { encoding: "base64" });
     const logoUrl = `data:image/jpeg;base64,${logoBase64}`;
 
     // 2. Renderizar HTML con EJS
-    const html = await ejs.renderFile(path.join(__dirname, "../../templates-pdf/clinical-records-template.ejs"), { patient, clinicalRecords, logoUrl });
-    console.log("data html ", path.join(__dirname, "../../templates-pdf/clinical-records-template.ejs"));
+    const html = await ejs.renderFile(path.join(process.cwd(), "templates-pdf/clinical-records-template.ejs"), { patient, clinicalRecords, logoUrl });
+    console.log("data html ", path.join(process.cwd(), "templates-pdf/clinical-records-template.ejs"));
 
     // 3. Generar PDF con Puppeteer
     const executablePath = await getSystemChromePath();
@@ -291,7 +291,7 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
     });
 
     const page = await browser.newPage();
-    const templatePath = path.join(__dirname, "../../templates-pdf/clinical-records-template.ejs");
+    const templatePath = path.join(process.cwd(), "templates-pdf/clinical-records-template.ejs");
 
     // Procesar pacietes
     for (const program of Object.keys(patientsByProgram)) {

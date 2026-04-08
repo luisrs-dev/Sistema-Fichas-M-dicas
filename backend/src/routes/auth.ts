@@ -4,7 +4,7 @@ import {loginController, registerController, updateController, updatePasswordCon
 import path from 'path';
 import fs from 'fs';
 
-const uploadsDir = path.resolve(__dirname, '../../uploads');
+const uploadsDir = path.resolve(process.cwd(), 'uploads');
 
 if (!fs.existsSync(uploadsDir)) {
   console.log(`No existe directorio ${uploadsDir}, creando directorio.`);

@@ -239,7 +239,7 @@ const sendTestBulkSummaryEmail = async (options: { recipient?: string; month?: n
   return sendTestMonthlyBulkEmail(options);
 };
 
-const logsDirectory = path.resolve(__dirname, "..", "..", "logs");
+const logsDirectory = path.resolve(process.cwd(), "logs");
 
 const listMonthlyLogFiles = async () => {
   try {
