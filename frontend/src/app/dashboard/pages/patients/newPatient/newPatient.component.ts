@@ -443,11 +443,15 @@ export default class NewPatientComponent {
   }
 
   private disableNamesFields(): void {
+    if (this.authService.isAdmin()) return; // Los admins pueden editar todo
+    
     const fields = ['name', 'surname', 'secondSurname', 'birthDate', 'sex'];
     fields.forEach(field => this.userForm.get(field)?.disable());
   }
 
   private disableIdentityFields(): void {
+    if (this.authService.isAdmin()) return; // Los admins pueden editar todo
+    
     const fields = ['name', 'surname', 'secondSurname', 'birthDate', 'sex', 'rut'];
     fields.forEach(field => this.userForm.get(field)?.disable());
   }
