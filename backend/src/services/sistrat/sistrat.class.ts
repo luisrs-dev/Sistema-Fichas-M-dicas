@@ -386,7 +386,7 @@ class Sistrat {
       console.log("[Sistrat][setCodeAlertSistrat] Esperando tabla de pacientes");
       await page.waitForSelector("#table_pacientes", { visible: true });
 
-      const patientName = `${patient.name.trim()} ${patient.surname.trim()} ${patient.secondSurname.trim()}`.toLowerCase();
+      const patientName = `${patient.name.trim()} ${patient.surname.trim()}`.toLowerCase();
       const normalizedTarget = this.normalizeName(patientName);
       await this.logStep(logger, `[Sistrat][setCodeAlertSistrat] Nombre paciente ${patientName}`);
 

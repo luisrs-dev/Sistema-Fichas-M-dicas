@@ -38,7 +38,12 @@ import Notiflix from 'notiflix';
               <tr *ngFor="let s of sustancias" [formGroupName]="s.key">
                 <td class="sustancia-label">{{ s.label }}</td>
                 <td><mat-checkbox formControlName="todosLosCeros" (change)="onTodosCerosChange(s.key, $any($event).checked)"></mat-checkbox></td>
-                <td><input type="number" formControlName="promedio" min="0" max="7" class="num-input"></td>
+                <td>
+                  <div class="flex align-items-center justify-content-center gap-1">
+                    <input type="number" formControlName="promedio" min="0" max="7" class="num-input">
+                    <span class="unit-label">{{ s.unit }}</span>
+                  </div>
+                </td>
                 <td><input type="number" formControlName="ultimaSemana" min="0" max="7" class="num-input"></td>
                 <td><input type="number" formControlName="semana3" min="0" max="7" class="num-input"></td>
                 <td><input type="number" formControlName="semana2" min="0" max="7" class="num-input"></td>
@@ -46,21 +51,30 @@ import Notiflix from 'notiflix';
                 <td><input type="number" formControlName="total" min="0" max="28" class="num-input"></td>
                 <td><mat-checkbox formControlName="noResponde" (change)="onNoRespondeChange(s.key, $any($event).checked)"></mat-checkbox></td>
               </tr>
-              <tr formGroupName="otraSustancia">
-                <td>
-                  <input type="text" formControlName="nombre" placeholder="Otra sustancia..." class="text-input">
-                </td>
-                <td><mat-checkbox formControlName="todosLosCeros" (change)="onTodosCerosChange('otraSustancia', $any($event).checked)"></mat-checkbox></td>
-                <td><input type="number" formControlName="promedio" min="0" max="7" class="num-input"></td>
-                <td><input type="number" formControlName="ultimaSemana" min="0" max="7" class="num-input"></td>
-                <td><input type="number" formControlName="semana3" min="0" max="7" class="num-input"></td>
-                <td><input type="number" formControlName="semana2" min="0" max="7" class="num-input"></td>
-                <td><input type="number" formControlName="semana1" min="0" max="7" class="num-input"></td>
-                <td><input type="number" formControlName="total" min="0" max="28" class="num-input"></td>
-                <td><mat-checkbox formControlName="noResponde" (change)="onNoRespondeChange('otraSustancia', $any($event).checked)"></mat-checkbox></td>
-              </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Campos de detalle para la otra sustancia -->
+        <div class="detail-section p-3 mt-3 border-round border-1 border-200 bg-gray-50" formGroupName="otraSustancia">
+          <div class="flex align-items-center mb-3">
+            <mat-icon class="text-primary mr-2">info</mat-icon>
+            <span class="font-bold">Detalle de "Otra Sustancia Problema"</span>
+          </div>
+          <div class="grid">
+            <div class="col-6">
+              <mat-form-field class="w-full" appearance="outline">
+                <mat-label>¿Cuál es el nombre de esta sustancia?</mat-label>
+                <input matInput formControlName="nombre" placeholder="Ej: Benzodiacepina, Inhalantes...">
+              </mat-form-field>
+            </div>
+            <div class="col-6">
+              <mat-form-field class="w-full" appearance="outline">
+                <mat-label>¿Cual es la unidad de medida?</mat-label>
+                <input matInput formControlName="unidadMedida" placeholder="Ej: Miligramos, Dosis, Gotas...">
+              </mat-form-field>
+            </div>
+          </div>
         </div>
       </form>
     </div>
@@ -78,7 +92,7 @@ import Notiflix from 'notiflix';
     .top-table tr:nth-child(even) td { background: #f5f8ff; }
     .sustancia-label { text-align: left; font-weight: 500; white-space: nowrap; }
     .num-input { width: 50px; border: 1px solid #ccc; border-radius: 4px; padding: 4px; text-align: center; font-size: 0.85rem; }
-    .text-input { width: 120px; border: 1px solid #ccc; border-radius: 4px; padding: 4px; font-size: 0.85rem; }
+    .unit-label { font-size: 0.75rem; color: #888; font-style: italic; white-space: nowrap; }
   `]
 })
 export class TopSection1Component implements OnInit {
@@ -90,11 +104,12 @@ export class TopSection1Component implements OnInit {
   lastTranscript = signal('');
 
   sustancias = [
-    { key: 'alcohol', label: 'a. Alcohol' },
-    { key: 'marihuana', label: 'b. Marihuana' },
-    { key: 'pastaBase', label: 'c. Pasta Base' },
-    { key: 'cocaina', label: 'd. Cocaína' },
-    { key: 'sedantes', label: 'e. Sedantes / Tranquilizantes' },
+    { key: 'alcohol', label: 'a. Alcohol', unit: 'Tragos' },
+    { key: 'marihuana', label: 'b. Marihuana', unit: 'Pitos' },
+    { key: 'pastaBase', label: 'c. Pasta Base', unit: 'Papelillos' },
+    { key: 'cocaina', label: 'd. Cocaína', unit: 'Gramos' },
+    { key: 'sedantes', label: 'e. Sedantes / Tranquilizantes', unit: 'Comp.' },
+    { key: 'otraSustancia', label: 'f. Otra sustancia problema', unit: 'Medida/día' },
   ];
 
   private sustanciaGroup = () => this.fb.group({
