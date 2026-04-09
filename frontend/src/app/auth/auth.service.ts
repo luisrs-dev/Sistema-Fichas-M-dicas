@@ -39,7 +39,7 @@ export class AuthService {
 
         const now = new Date();
         const expirationDate = new Date(now.getTime() + expiresIn * 1000);
-        
+
         this.saveAuthData(token, expirationDate, user);
       }),
       map(() => true),
@@ -76,11 +76,11 @@ export class AuthService {
     if (!authInformation) return;
     const now = new Date();
     const expiresIn = authInformation.expirationDate.getTime() - now.getTime();
-    
+
     if (expiresIn > 0) {
       this.isAuthenticated = true;
       // this._currentUser.set({email: authInformation.user!});
-    }else{
+    } else {
       this.logout();
     }
   }
@@ -100,7 +100,7 @@ export class AuthService {
     return this.user;
   }
 
-  setUser(user: User){
+  setUser(user: User) {
     localStorage.setItem('user', JSON.stringify(user));
   }
 
@@ -109,9 +109,13 @@ export class AuthService {
     return user.permissions.some((permission: Permission) => permission.value === 'admin');
   }
 
-  canCreateUser(): boolean{
+  canCreateUser(): boolean {
     const user = this.getUser();
     return user && user.permissions && user.permissions.some((permission: Permission) => permission.value === 'crear-editar-usuario');
+  }
 
+  hasPermission(permissionValue: string): boolean {
+    const user = this.getUser();
+    return user && user.permissions && user.permissions.some((permission: Permission) => permission.value === permissionValue);
   }
 }

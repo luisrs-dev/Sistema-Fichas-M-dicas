@@ -2,11 +2,11 @@
   <mat-tab-group mat-stretch-tabs="false" mat-align-tabs="start" dynamicHeight>
     <mat-tab label="{{ title }}">
 
-      @if (patient && !patient.registeredDemand) {
+      <!-- @if (patient && !patient.registeredDemand) {
       <mat-card class="warning-card">
         ⚠️ Paciente no tiene demanda registrada. Por favor, registre la ficha de demanda antes de continuar.
       </mat-card>
-      }
+      } -->
 
       <form [formGroup]="userForm" autocomplete="off" (ngSubmit)="onSubmit()">
         <mat-stepper [linear]="true" #stepper class="mt-2">

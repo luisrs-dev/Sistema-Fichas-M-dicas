@@ -36,7 +36,7 @@ export default class NewPatientComponent {
   private changeDetectorRef = inject(ChangeDetectorRef);
   private router = inject(Router);
   private sistratCenterService = inject(SistratCenterService);
-  
+
   public comunasMaule = [
     { value: '140', name: 'CURICO' },
     { value: '141', name: 'ROMERAL' },
@@ -181,7 +181,7 @@ export default class NewPatientComponent {
     // Solo deshabilitar campos que vienen de SISTRAT, mantener RUT y Centro habilitados para la búsqueda
     this.disableNamesFields();
 
-  
+
     // Leer id desde la URL (si existe)
     const id = this.route.snapshot.paramMap.get('id');
 
@@ -200,9 +200,9 @@ export default class NewPatientComponent {
   }
 
   formatDateStringToDate(dateString: string): Date | string {
-    if(!dateString) return '';
+    if (!dateString) return '';
     console.log('formatDateStringToDate dateString', dateString);
-    
+
     const [day, month, year] = dateString.split("/").map(Number);
     // Ojo: en JS los meses empiezan en 0
     const fechaDate = new Date(year, month - 1, day);
@@ -213,7 +213,7 @@ export default class NewPatientComponent {
     this.patientService.getPatientById(id).subscribe({
       next: (response) => {
         console.log('Cargando paciente:', response);
-        
+
         this.patient = response.patient;
         this.registeredOnFiclin.set(this.patient.registeredOnFiclin!);
         // Patch para evitar borrar las fechas y mantener formato
@@ -250,7 +250,7 @@ export default class NewPatientComponent {
 
         this.fetchedFromSistrat.set(true);
         this.disableIdentityFields();
-        
+
         // Si estamos editando, saltamos directo al paso 3 (formulario completo)
         setTimeout(() => {
           if (this.stepper) {
@@ -420,7 +420,7 @@ export default class NewPatientComponent {
         this.userForm.get('rut')?.disable();
 
         this.changeDetectorRef.detectChanges();
-        
+
         // Avanzar al paso 2 (Selección de Centro)
         setTimeout(() => {
           if (this.stepper) this.stepper.next();
@@ -443,15 +443,17 @@ export default class NewPatientComponent {
   }
 
   private disableNamesFields(): void {
-    if (this.authService.isAdmin()) return; // Los admins pueden editar todo
-    
+    const canEdit = this.authService.hasPermission('editar-nombre');
+    if (canEdit) return; // Si tiene permiso, no se bloquean
+
     const fields = ['name', 'surname', 'secondSurname', 'birthDate', 'sex'];
     fields.forEach(field => this.userForm.get(field)?.disable());
   }
 
   private disableIdentityFields(): void {
-    if (this.authService.isAdmin()) return; // Los admins pueden editar todo
-    
+    const canEdit = this.authService.hasPermission('editar-nombre');
+    if (canEdit) return; // Si tiene permiso, no se bloquean
+
     const fields = ['name', 'surname', 'secondSurname', 'birthDate', 'sex', 'rut'];
     fields.forEach(field => this.userForm.get(field)?.disable());
   }

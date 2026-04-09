@@ -1,6 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
-import {loginController, registerController, updateController, updatePasswordController} from "../controllers/auth.controller";
+import { loginController, registerController, updateController, updatePasswordController } from "../controllers/auth.controller";
 import path from 'path';
 import fs from 'fs';
 
@@ -14,14 +14,14 @@ if (!fs.existsSync(uploadsDir)) {
 const router = Router();
 // Configuración de Multer para guardar archivos
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, uploadsDir); // Directorio donde se guardarán las imágenes
-    },
-    filename: function (req, file, cb) {
-      cb(null, Date.now() + '-' + file.originalname); // Renombrar el archivo para evitar duplicados
-    }
-  });
-  
+  destination: function (req, file, cb) {
+    cb(null, uploadsDir); // Directorio donde se guardarán las imágenes
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname); // Renombrar el archivo para evitar duplicados
+  }
+});
+
 const upload = multer({ storage: storage });
 
 router.post("/update-password", updatePasswordController);
