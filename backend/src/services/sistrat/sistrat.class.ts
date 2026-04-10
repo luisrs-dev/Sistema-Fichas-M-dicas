@@ -565,65 +565,51 @@ class Sistrat {
       const normalizedTarget = this.normalizeName(patientName);
       const patientCode = patient.codigoSistrat?.trim() || null;
 
-      const rowPatientSistrat: any = await page.evaluate(
+      const result = await page.evaluate(
         (normalizedTarget, patientCodeEval) => {
-          // función de normalización DENTRO del contexto de la página
           const normalize = (name?: string) => {
             if (!name) return "";
             return name
-              .normalize("NFD") // separar diacríticos
-              .replace(/[\u0300-\u036f]/g, "") // quitar tildes
-              .replace(/\s+/g, "") // quitar espacios
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+              .replace(/\s+/g, "")
               .toLowerCase();
           };
 
           const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
+          if (!table) return 'NOT_FOUND';
 
-          if (table) {
-            // console.log("table");
+          let foundPatient = false;
+          for (let i = 1; i < table.rows.length; i++) {
+            const objCells = table.rows.item(i)?.cells;
+            if (objCells) {
+              const patientInSistrat = {
+                id: objCells.item(0)?.innerText || "",
+                name: objCells.item(1)?.innerText?.toLowerCase() || "",
+                codigoSistrat: objCells.item(2)?.innerText?.trim() || "",
+              };
 
-            // Iteramos sobre las filas de la tabla, comenzando desde la segunda fila (i = 1)
-            for (let i = 1; i < table.rows.length; i++) {
-              const objCells = table.rows.item(i)?.cells;
+              const matchesName = normalize(patientInSistrat.name) === normalizedTarget;
+              const matchesCode = patientCodeEval ? patientInSistrat.codigoSistrat === patientCodeEval : false;
 
-              if (objCells) {
-                // Obtenemos el texto de cada celda relevante
-                const patient = {
-                  id: objCells.item(0)?.innerText || "", // Captura el texto de la primera celda (ID)
-                  name: objCells.item(1)?.innerText?.toLowerCase() || "", // Captura el texto de la segunda celda (nombre)
-                  codigoSistrat: objCells.item(2)?.innerText?.trim() || "", // Captura el texto de la tercera celda (código Sistrat)
-                };
-
-                // Comparamos con el nombre que estamos buscando
-                const matchesName = normalize(patient.name) === normalizedTarget;
-                const matchesCode = patientCodeEval ? patient.codigoSistrat === patientCodeEval : false;
-
-                if (matchesCode || matchesName) {
-
-                  // Si el nombre coincide se da click en boton Crear Ficha Ingreso
-                  const button = objCells.item(5)?.querySelector("span[name='fmensual']") as HTMLElement;
-
-                  if (button) {
-                    // Realizamos el clic en el botón
-                    button.click();
-                    return patient;
-                  }
-                  break; // Salimos del bucle cuando encontramos y hacemos clic en el botón
+              if (matchesCode || matchesName) {
+                foundPatient = true;
+                const button = objCells.item(5)?.querySelector("span[name='fmensual']") as HTMLElement;
+                if (button) {
+                  button.click();
+                  return 'SUCCESS';
                 }
               }
             }
-          } else {
-            return null; // Tabla no encontrada
           }
-          //return data; // Devuelve los datos capturados
+          return foundPatient ? 'BUTTON_NOT_FOUND' : 'NOT_FOUND';
         },
         normalizedTarget,
         patientCode
       );
 
-      if (!rowPatientSistrat) {
-        throw new Error("Paciente no encontrado en listado de SISTRAT");
-      }
+      if (result === 'NOT_FOUND') throw new Error("Paciente no encontrado en SISTRAT (Pacientes Activos).");
+      if (result === 'BUTTON_NOT_FOUND') throw new Error("Paciente encontrado en SISTRAT, pero no tiene el botón de Ficha Mensual disponible.");
       await page.waitForSelector(".tabla_mensual", { timeout: 5000 });
 
       await page.evaluate((medicalRecordsGrouped) => {
@@ -727,7 +713,6 @@ class Sistrat {
 
   async registrarMedicalRecordsByMonth(patient: Patient, month: number, year: number) {
     const data: RowData[] = []; // Cambiar aquí el tipo a RowData[]
-    console.log("patient for loooogiiiiiin", patient);
     console.group(`[Sistrat][registrarMedicalRecordsByMonth] ${patient._id}`);
     console.log(`[Sistrat][registrarMedicalRecordsByMonth] Iniciando registro para ${month}/${year}`);
     const logger = new ProcessLogger(this.getPatientLabel(patient), "registros-mensuales");
@@ -754,75 +739,55 @@ class Sistrat {
       const normalizedTarget = this.normalizeName(patientName);
       const patientCode = patient.codigoSistrat?.trim() || null;
 
-      const rowPatientSistrat: any = await page.evaluate(
+      const result = await page.evaluate(
         (normalizedTarget, patientCodeEval) => {
-          console.log("rowPatientSistrat");
-          // función de normalización DENTRO del contexto de la página
           const normalize = (name?: string) => {
             if (!name) return "";
             return name
-              .normalize("NFD") // separar diacríticos
-              .replace(/[\u0300-\u036f]/g, "") // quitar tildes
-              .replace(/\s+/g, "") // quitar espacios
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+              .replace(/\s+/g, "")
               .toLowerCase();
           };
 
           const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
-          console.log("table getElementById", table);
+          if (!table) return 'NOT_FOUND';
 
-          if (table) {
-            console.log("table");
+          let foundPatient = false;
+          for (let i = 1; i < table.rows.length; i++) {
+            const objCells = table.rows.item(i)?.cells;
+            if (objCells) {
+              const patientInSistrat = {
+                id: objCells.item(0)?.innerText || "",
+                name: objCells.item(1)?.innerText?.toLowerCase() || "",
+                codigoSistrat: objCells.item(2)?.innerText?.trim() || "",
+              };
 
-            // Iteramos sobre las filas de la tabla, comenzando desde la segunda fila (i = 1)
-            for (let i = 1; i < table.rows.length; i++) {
-              const objCells = table.rows.item(i)?.cells;
-              console.log("tabla paciente encontrada", objCells);
+              const matchesName = normalize(patientInSistrat.name) === normalizedTarget;
+              const matchesCode = patientCodeEval ? patientInSistrat.codigoSistrat === patientCodeEval : false;
 
-              if (objCells) {
-                // Obtenemos el texto de cada celda relevante
-                const patient = {
-                  id: objCells.item(0)?.innerText || "", // Captura el texto de la primera celda (ID)
-                  name: objCells.item(1)?.innerText?.toLowerCase() || "", // Captura el texto de la segunda celda (nombre)
-                  codigoSistrat: objCells.item(2)?.innerText?.trim() || "", // Captura el texto de la tercera celda (código Sistrat)
-                };
+              if (matchesCode || matchesName) {
+                foundPatient = true;
+                const button = objCells.item(5)?.querySelector("span[name='fmensual']") as HTMLElement;
 
-                // console.log("patient evaluado", patient);
-
-                // console.log("patient.name", normalize(patient.name));
-                // console.log("normalizedTarget", normalizedTarget);
-
-                // Comparamos con el nombre o código que estamos buscando
-                const matchesName = normalize(patient.name) === normalizedTarget;
-                const matchesCode = patientCodeEval ? patient.codigoSistrat === patientCodeEval : false;
-                if (matchesCode || matchesName) {
-                  console.log("patient encontrado", patient);
-
-                  // Si el nombre coincide se da click en boton Crear Ficha Ingreso
-                  const button = objCells.item(5)?.querySelector("span[name='fmensual']") as HTMLElement;
-
-                  if (button) {
-                    // Realizamos el clic en el botón
-                    button.click();
-                    console.log(`Se hizo clic en el botón de crear ficha mensual para ${patient.name}`);
-                    return patient;
-                  }
-                  break; // Salimos del bucle cuando encontramos y hacemos clic en el botón
+                if (button) {
+                  button.click();
+                  return 'SUCCESS';
                 }
               }
             }
-          } else {
-            return null; // Tabla no encontrada
           }
-          //return data; // Devuelve los datos capturados
+          return foundPatient ? 'BUTTON_NOT_FOUND' : 'NOT_FOUND';
         },
         normalizedTarget,
         patientCode
       );
 
-      console.log(`rowPatientSistrat resultado: ${rowPatientSistrat}`);
-      await this.logStep(logger, `[Sistrat][registrarMedicalRecordsByMonth] Paciente en tabla: ${rowPatientSistrat ? "sí" : "no"}`);
-      if (!rowPatientSistrat) {
-        throw new Error("Paciente no encontrado en listado de SISTRAT");
+      if (result === 'NOT_FOUND') {
+        throw new Error("Paciente no encontrado en SISTRAT (Pacientes Activos).");
+      }
+      if (result === 'BUTTON_NOT_FOUND') {
+        throw new Error("Paciente encontrado en SISTRAT, pero no tiene el botón de Ficha Mensual disponible.");
       }
       await page.waitForSelector(".tabla_mensual", { timeout: 5000 });
       console.log("[Sistrat][registrarMedicalRecordsByMonth] Tabla mensual disponible, aplicando registros");
@@ -939,16 +904,23 @@ class Sistrat {
         await this.logStep(logger, "[Sistrat][registrarFichaIngreso] Sin código SISTRAT, buscando por nombre");
       }
 
-      console.log("[Sistrat][registrarFichaIngreso] Buscando fila del paciente en tabla");
-      const rowPatientSistrat = await this.openAdmissionFormFromList(page, patient);
-      console.log("rowPatientSistrat", rowPatientSistrat);
-      await this.logStep(logger, `[Sistrat][registrarFichaIngreso] Paciente encontrado: ${!!rowPatientSistrat}`);
+      const result = await this.openAdmissionFormFromList(page, patient);
+      console.log("result de openAdmissionFormFromList", result);
+      await this.logStep(logger, `[Sistrat][registrarFichaIngreso] Paciente encontrado: ${result.success}`);
 
-      if (!rowPatientSistrat) {
-        console.log(`[Ficha de Ingreso] Paciente No encontrado para código: ${codigoSistrat}`);
-        await this.logStep(logger, "[Sistrat][registrarFichaIngreso] Paciente no encontrado en listado");
-        throw new Error("Paciente no encontrado en listado de SISTRAT");
+      if (!result.success) {
+        if (result.errorType === 'NOT_FOUND') {
+          console.log(`[Ficha de Ingreso] Paciente No encontrado en demandas para código: ${codigoSistrat}`);
+          await this.logStep(logger, "[Sistrat][registrarFichaIngreso] Paciente no encontrado en listado");
+          throw new Error("Paciente no encontrado en SISTRAT (Demandas Activas).");
+        } else {
+          console.log(`[Ficha de Ingreso] Paciente encontrado pero sin botón de ingreso para código: ${codigoSistrat}`);
+          await this.logStep(logger, "[Sistrat][registrarFichaIngreso] Botón de ficha de ingreso no disponible");
+          throw new Error("Paciente encontrado en SISTRAT, pero no tiene el botón de Ficha de Ingreso disponible.");
+        }
       }
+
+      const rowPatientSistrat = result.data;
 
       console.log(`[Ficha de Ingreso] Paciente encontrado: ${rowPatientSistrat.codigoSistrat}`);
       console.log("[Sistrat][registrarFichaIngreso] Abriendo formulario y completando secciones");
@@ -968,7 +940,7 @@ class Sistrat {
     }
   }
 
-  private async openAdmissionFormFromList(page: Page, patient: Patient): Promise<RowData | null> {
+  private async openAdmissionFormFromList(page: Page, patient: Patient): Promise<{ success: boolean; data?: any; errorType?: string }> {
     const codigoSistrat = patient.codigoSistrat?.trim() || "";
     const firstName = (patient.name || "").trim().split(" ").filter(Boolean)[0] || "";
     const firstSurname = (patient.surname || "").trim().split(" ").filter(Boolean)[0] || "";
@@ -998,15 +970,12 @@ class Sistrat {
       };
 
       const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
-      if (!table) {
-        return null;
-      }
+      if (!table) return { success: false, errorType: 'NOT_FOUND' };
 
+      let foundPatient = false;
       for (let i = 1; i < table.rows.length; i++) {
         const objCells = table.rows.item(i)?.cells;
-        if (!objCells) {
-          continue;
-        }
+        if (!objCells) continue;
 
         const patientSistrat = {
           i,
@@ -1015,23 +984,20 @@ class Sistrat {
           codigoSistrat: objCells.item(2)?.innerText?.trim() || "",
         };
 
-        // Primero buscar por código SISTRAT si existe
         const matchesByCode = codigo && patientSistrat.codigoSistrat === codigo;
-        // Si no hay código, buscar por nombre normalizado usando includes
         const matchesByName = !codigo && normalize(patientSistrat.name).includes(targetName);
 
         if (matchesByCode || matchesByName) {
+          foundPatient = true;
           const button = objCells.item(4)?.querySelector("span[name='crear_ficha_ingreso']") as HTMLElement | null;
           if (button) {
             button.click();
-            console.log(`[Ficha de ingreso] Click en crear ficha ingreso para ${patientSistrat.name} (búsqueda por ${matchesByCode ? 'código' : 'nombre'})`);
-            return patientSistrat;
+            return { success: true, data: patientSistrat };
           }
-          break;
         }
       }
 
-      return null;
+      return { success: false, errorType: foundPatient ? 'BUTTON_NOT_FOUND' : 'NOT_FOUND' };
     }, codigoSistrat, normalizedTargetName);
   }
 
@@ -1987,27 +1953,28 @@ class Sistrat {
 
       const patientCode = patient.codigoSistrat?.trim() || null;
 
-      const found = await page.evaluate((pCode) => {
-        const normalize = (n: string) => n ? n.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "").toLowerCase() : "";
+      const result = await page.evaluate((pCode) => {
         const table = document.getElementById("table_pacientes") as HTMLTableElement;
-        if (!table) return false;
+        if (!table) return 'NOT_FOUND';
+        let foundPatient = false;
         for (let i = 1; i < table.rows.length; i++) {
           const cells = table.rows[i].cells;
           if (!cells) continue;
-          const name = cells[1]?.innerText?.toLowerCase() || "";
           const code = cells[2]?.innerText?.trim() || "";
           if ((pCode && code === pCode)) {
+            foundPatient = true;
             const topBtn = cells[8]?.querySelector("img[title='TOP']") as HTMLElement;
             if (topBtn) {
               topBtn.click();
-              return true;
+              return 'SUCCESS';
             }
           }
         }
-        return false;
+        return foundPatient ? 'BUTTON_NOT_FOUND' : 'NOT_FOUND';
       }, patientCode);
 
-      if (!found) throw new Error("Paciente no encontrado o no tiene botón TOP Form disponible.");
+      if (result === 'NOT_FOUND') throw new Error("Paciente no encontrado en SISTRAT. ");
+      if (result === 'BUTTON_NOT_FOUND') throw new Error("Paciente no tiene el botón de TOP en SISTRAT.");
 
       await page.waitForSelector("#frmdatos_inte", { visible: true, timeout: 15000 });
       await this.scrapper.waitForSeconds(2); // Wait for the content load
@@ -2169,25 +2136,28 @@ class Sistrat {
 
       const patientCode = patient.codigoSistrat?.trim() || null;
 
-      const found = await page.evaluate((pCode) => {
+      const result = await page.evaluate((pCode) => {
         const table = document.getElementById("table_pacientes") as HTMLTableElement;
-        if (!table) return false;
+        if (!table) return 'NOT_FOUND';
+        let foundPatient = false;
         for (let i = 1; i < table.rows.length; i++) {
           const cells = table.rows[i].cells;
           if (!cells) continue;
           const code = cells[2]?.innerText?.trim() || "";
           if ((pCode && code === pCode)) {
+            foundPatient = true;
             const socialBtn = cells[8]?.querySelector("img[src*='circulo_amarillo.png']") as HTMLElement;
             if (socialBtn) {
               socialBtn.click();
-              return true;
+              return 'SUCCESS';
             }
           }
         }
-        return false;
+        return foundPatient ? 'BUTTON_NOT_FOUND' : 'NOT_FOUND';
       }, patientCode);
 
-      if (!found) throw new Error("Paciente no encontrado o no tiene la alerta de Integración Social (círculo amarillo) disponible.");
+      if (result === 'NOT_FOUND') throw new Error("Paciente no encontrado en SISTRAT. ");
+      if (result === 'BUTTON_NOT_FOUND') throw new Error("Paciente no tiene la alerta de Integración Social (círculo amarillo) en SISTRAT.");
 
       await page.waitForSelector("#tabs", { visible: true, timeout: 15000 });
       await this.scrapper.waitForSeconds(2);
@@ -2283,25 +2253,28 @@ class Sistrat {
 
       const patientCode = patient.codigoSistrat?.trim() || null;
 
-      const found = await page.evaluate((pCode: string | null) => {
+      const result = await page.evaluate((pCode: string | null) => {
         const table = document.getElementById("table_pacientes") as HTMLTableElement;
-        if (!table) return false;
+        if (!table) return 'NOT_FOUND';
+        let foundPatient = false;
         for (let i = 1; i < table.rows.length; i++) {
           const cells = table.rows[i].cells;
           if (!cells) continue;
           const code = cells[2]?.innerText?.trim() || "";
           if ((pCode && code === pCode)) {
+            foundPatient = true;
             const diagBtn = cells[8]?.querySelector("img[src*='circle_orange.png']") as HTMLElement;
             if (diagBtn) {
               diagBtn.click();
-              return true;
+              return 'SUCCESS';
             }
           }
         }
-        return false;
+        return foundPatient ? 'BUTTON_NOT_FOUND' : 'NOT_FOUND';
       }, patientCode);
 
-      if (!found) throw new Error("Paciente no encontrado o no tiene la alerta de Diagnóstico Social (círculo naranja) disponible.");
+      if (result === 'NOT_FOUND') throw new Error("Paciente no encontrado en SISTRAT. ");
+      if (result === 'BUTTON_NOT_FOUND') throw new Error("Paciente no tiene la alerta de Diagnóstico Social (círculo naranja) en SISTRAT.");
 
       await page.waitForSelector("#sel_diagnostico_1", { visible: true, timeout: 15000 });
       await this.scrapper.waitForSeconds(2);
@@ -2369,25 +2342,28 @@ class Sistrat {
 
       const patientCode = patient.codigoSistrat?.trim() || null;
 
-      const found = await page.evaluate((pCode) => {
+      const result = await page.evaluate((pCode) => {
         const table = document.getElementById("table_pacientes") as HTMLTableElement;
-        if (!table) return false;
+        if (!table) return 'NOT_FOUND';
+        let foundPatient = false;
         for (let i = 1; i < table.rows.length; i++) {
           const cells = table.rows[i].cells;
           if (!cells) continue;
           const code = cells[2]?.innerText?.trim() || "";
           if ((pCode && code === pCode)) {
+            foundPatient = true;
             const evalBtn = cells[8]?.querySelector("span[id^='evaluacion_'] img, img[src*='circulo_verde.png']") as HTMLElement;
             if (evalBtn) {
               evalBtn.click();
-              return true;
+              return 'SUCCESS';
             }
           }
         }
-        return false;
+        return foundPatient ? 'BUTTON_NOT_FOUND' : 'NOT_FOUND';
       }, patientCode);
 
-      if (!found) throw new Error("Paciente no encontrado o no tiene la alerta de Evaluación (círculo verde) disponible.");
+      if (result === 'NOT_FOUND') throw new Error("Paciente no encontrado en SISTRAT. ");
+      if (result === 'BUTTON_NOT_FOUND') throw new Error("Paciente no tiene la alerta de Evaluación (círculo verde) en SISTRAT.");
 
       await page.waitForSelector("#frmdatos", { visible: true, timeout: 15000 });
       await this.scrapper.waitForSeconds(2);

@@ -281,8 +281,8 @@ export default class EvaluationFormComponent implements OnInit {
           this.snackBar.open('Sincronización completada con éxito', 'OK', { duration: 4000 });
         },
         error: (err) => {
-          console.error('[sync] Error al sincronizar', err);
-          this.snackBar.open('Error al sincronizar con SISTRAT', 'Cerrar', { duration: 5000 });
+          console.error('[syncSistrat][error]', err);
+          this.snackBar.open('Error al sincronizar: ' + (err || 'Compruebe su conexión'), 'Cerrar', { duration: 5000 });
         }
       });
   }

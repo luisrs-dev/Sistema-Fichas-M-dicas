@@ -222,6 +222,27 @@ export class TopSection2Component implements OnInit {
     });
   }
 
+  validate(): string[] {
+    const emptyFields: string[] = [];
+    const val = this.form.value;
+
+    this.items.forEach(item => {
+      const g = val[item.key];
+      if (!g.si && !g.no && !g.nr) {
+        emptyFields.push(item.label);
+      }
+    });
+
+    const vi = val.violenciaIntrafamiliar;
+    if (!vi.noResponde && !vi.todosLosCeros) {
+      if (vi.ultimaSemana === null || vi.semana3 === null || vi.semana2 === null || vi.semana1 === null) {
+        emptyFields.push('Violencia Intrafamiliar (alguna semana vacía)');
+      }
+    }
+
+    return emptyFields;
+  }
+
   getFormData() { return this.form.value; }
   patchData(data: any) { if (data) this.form.patchValue(data); }
 }

@@ -61,9 +61,10 @@
         <div>
           @if(permissions$ | async; as permissions){ @for (permission of permissions; track $index) {
           <p>
-            <mat-slide-toggle (change)="onToggleChange(permission, $event, checkedPermissions)" [checked]="isParameterSelected(permission._id, permissionUser)">{{
+            <mat-slide-toggle (change)="onToggleChange(permission, $event, checkedPermissions)"
+              [checked]="isParameterSelected(permission._id, permissionUser)">{{
               permission.name
-            }}</mat-slide-toggle>
+              }}</mat-slide-toggle>
           </p>
           } } @else{ Cargando... }
         </div>
@@ -73,9 +74,10 @@
         <div>
           @if(programs$ | async; as programs){ @for (program of programs; track $index) {
           <p>
-            <mat-slide-toggle (change)="onToggleChange(program, $event, checkedPrograms)" [checked]="isParameterSelected(program._id, programsUser)">{{
+            <mat-slide-toggle (change)="onToggleChange(program, $event, checkedPrograms)"
+              [checked]="isParameterSelected(program._id, programsUser)">{{
               program.name
-            }}</mat-slide-toggle>
+              }}</mat-slide-toggle>
           </p>
           } } @else{ Cargando... }
         </div>
@@ -101,8 +103,8 @@
   </form>
 
   @if(edit){
-    <mat-divider class="mt-4 ">
-    </mat-divider>
+  <mat-divider class="mt-4 ">
+  </mat-divider>
   <form (ngSubmit)="updatePassword(password.value)" class="example-form">
     <div class="flex flex-column mt-4 w-full">
       <mat-form-field appearance="outline" class="example-full-width">

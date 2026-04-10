@@ -241,6 +241,31 @@ export class TopSection1Component implements OnInit {
     });
   }
 
+  validate(): string[] {
+    const emptyFields: string[] = [];
+    const val = this.form.value;
+
+    this.sustancias.forEach(s => {
+      const g = val[s.key];
+      if (!g.noResponde && !g.todosLosCeros) {
+        if (g.ultimaSemana === null || g.semana3 === null || g.semana2 === null || g.semana1 === null) {
+          emptyFields.push(`${s.label} (alguna semana vacía)`);
+        }
+      }
+    });
+
+    const og = val.otraSustancia;
+    if (!og.noResponde && !og.todosLosCeros) {
+      if (og.ultimaSemana === null || og.semana3 === null || og.semana2 === null || og.semana1 === null) {
+        emptyFields.push(`Otra sustancia (alguna semana vacía)`);
+      }
+      if (!og.nombre) emptyFields.push('Nombre de "Otra sustancia"');
+      if (!og.unidadMedida) emptyFields.push('Unidad de medida de "Otra sustancia"');
+    }
+
+    return emptyFields;
+  }
+
   getFormData() {
     return this.form.value;
   }

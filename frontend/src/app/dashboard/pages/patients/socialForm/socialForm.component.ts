@@ -192,9 +192,10 @@ export default class SocialFormComponent {
             this.syncing.set(false);
             Notiflix.Report.success('¡Sincronización Terminada!', 'El bot ha llenado los campos correctamente para revisión.', 'OK');
           },
-          error: (err) => {
+          error: (error) => {
             this.syncing.set(false);
-            Notiflix.Report.failure('Error', err?.error?.message || err || 'Error al ejecutar el bot', 'Cerrar');
+            console.error('Error en sincronización SISTRAT:', error);
+            Notiflix.Report.failure('Error', error || 'Error al ejecutar el bot', 'Cerrar');
           }
         });
       }

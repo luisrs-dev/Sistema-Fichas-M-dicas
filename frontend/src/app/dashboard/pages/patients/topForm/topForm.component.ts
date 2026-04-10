@@ -91,11 +91,11 @@ import Notiflix from 'notiflix';
       <div class="actions-bar" *ngIf="!loading()">
         <button mat-stroked-button (click)="goBack()">Volver</button>
         <div class="actions-right">
-          <button mat-raised-button color="primary" (click)="onSave()" [disabled]="saving()">
+          <button mat-raised-button color="primary" (click)="onSave()" [disabled]="saving() || isFormInvalid">
             <mat-icon>save</mat-icon>
             {{ saving() ? 'Guardando...' : 'Guardar en FicLin' }}
           </button>
-          <button mat-raised-button class="sistrat-btn" (click)="onSendToSistrat()" *ngIf="topFormSaved() && authService.isAdmin()" [disabled]="syncing()">
+          <button mat-raised-button class="sistrat-btn" (click)="onSendToSistrat()" *ngIf="topFormSaved() && authService.isAdmin()" [disabled]="syncing() || isFormInvalid">
             <mat-icon>upload</mat-icon>
             {{ syncing() ? 'Sincronizando...' : 'Enviar a SISTRAT' }}
           </button>
@@ -159,8 +159,15 @@ export default class TopFormComponent {
 
   metaForm: FormGroup = this.fb.group({
     fechaEntrevista: [new Date()],
-    nombreEntrevistador: [{ value: '', disabled: true }],
+    nombreEntrevistador: [{ value: '' }],
   });
+
+  get isFormInvalid(): boolean {
+    return this.metaForm.invalid || 
+           (this.section1?.form.invalid ?? false) || 
+           (this.section2?.form.invalid ?? false) || 
+           (this.section3?.form.invalid ?? false);
+  }
 
   ngOnInit(): void {
     this.patientId = this.activatedRoute.snapshot.paramMap.get('id') || '';
@@ -174,7 +181,7 @@ export default class TopFormComponent {
           this.topFormSaved.set(true);
           const dataToPatch = { ...res.topForm };
           if (dataToPatch.fechaEntrevista) {
-             dataToPatch.fechaEntrevista = this.formatDateStringToDate(dataToPatch.fechaEntrevista);
+            dataToPatch.fechaEntrevista = this.formatDateStringToDate(dataToPatch.fechaEntrevista);
           }
           this.metaForm.patchValue(dataToPatch);
           // Parchar secciones después de que el view esté inicializado
@@ -185,7 +192,7 @@ export default class TopFormComponent {
           }, 200);
         }
         this.loading.set(false);
-        
+
         // Si no hay formulario previo, pre-cargar el nombre del entrevistador logueado
         if (!this.topFormSaved()) {
           const user = this.authService.getUser();
@@ -211,9 +218,32 @@ export default class TopFormComponent {
     return new Date(dateString);
   }
 
-  onSave(): void {
-    this.saving.set(true);
+  private getValidationErrors(): string[] {
+    const errors: string[] = [];
 
+    // Validar campos vacíos (lógica personalizada)
+    const emptyS1 = this.section1?.validate() || [];
+    const emptyS2 = this.section2?.validate() || [];
+    const emptyS3 = this.section3?.validate() || [];
+    errors.push(...emptyS1, ...emptyS2, ...emptyS3);
+
+    // Validar errores nativos de Angular (ej: maxLength)
+    if (this.metaForm.invalid) errors.push('Formulario principal inválido');
+    if (this.section1?.form.invalid) errors.push('Sección 1: Revise errores en los campos');
+    if (this.section2?.form.invalid) errors.push('Sección 2: Revise errores en los campos');
+    if (this.section3?.form.invalid) errors.push('Sección 3: ' + (this.section3.form.get('observaciones')?.hasError('maxlength') ? 'Observaciones exceden 150 caracteres' : 'Revise errores en los campos'));
+
+    return errors;
+  }
+
+  onSave(): void {
+    const errors = this.getValidationErrors();
+    if (errors.length > 0 && errors.some(e => e.includes('exceden') || e.includes('inválido'))) {
+      Notiflix.Notify.failure('Corrija los errores antes de guardar');
+      return;
+    }
+
+    this.saving.set(true);
     const metaValues = { ...this.metaForm.getRawValue() };
     if (metaValues.fechaEntrevista instanceof Date) {
       metaValues.fechaEntrevista = moment(metaValues.fechaEntrevista).format('DD/MM/YYYY');
@@ -241,15 +271,26 @@ export default class TopFormComponent {
 
   onSendToSistrat(): void {
     if (this.syncing()) return;
-    
+
+    const validationErrors = this.getValidationErrors();
+    if (validationErrors.length > 0) {
+      const list = validationErrors.map(f => `<li>${f}</li>`).join('');
+      Notiflix.Report.warning(
+        'Validación pendiente',
+        `Para una correcta sincronización, revise lo siguiente:<br/><br/><ul style="text-align: left; max-height: 200px; overflow-y: auto;">${list}</ul>`,
+        'Entendido'
+      );
+      return;
+    }
+
     Notiflix.Confirm.show(
       '¿Enviar a SISTRAT?',
-      'Se completará el formulario TOP en SISTRAT con los datos guardados en FicLin. Esta es una automatización de prueba, NO se enviará el formulario definitivamente.',
+      'Se completará el formulario TOP en SISTRAT con los datos guardados en FicLin. El bot llenará los campos para su revisión final.',
       'Sí, enviar',
       'Cancelar',
       () => {
         this.syncing.set(true);
-        Notiflix.Notify.info('Sincronizando formulario TOP a SISTRAT (Prueba)...');
+        Notiflix.Notify.info('Sincronizando formulario TOP a SISTRAT...');
         this.patientService.syncTopFormSistrat(this.patientId).subscribe({
           next: (res) => {
             this.syncing.set(false);
@@ -257,7 +298,8 @@ export default class TopFormComponent {
           },
           error: (err) => {
             this.syncing.set(false);
-            Notiflix.Report.failure('Error en Sincronización', err?.error?.message || err || 'Hubo un error al ejecutar el bot SISTRAT', 'Cerrar');
+            console.error('Error en sincronización SISTRAT:', err);
+            Notiflix.Report.failure('Error en Sincronización', err || 'Hubo un error al ejecutar el bot SISTRAT', 'Cerrar');
           }
         });
       }

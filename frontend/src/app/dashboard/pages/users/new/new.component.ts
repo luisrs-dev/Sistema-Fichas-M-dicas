@@ -184,7 +184,7 @@ export default class NewComponent {
       password,
     };
     this.userService.updatePassword(body).subscribe({
-      next: (response) =>{
+      next: (response) => {
         console.log(response);
         Notiflix.Notify.success('Contraseña actualizada con éxito');
       },

@@ -77,46 +77,46 @@ export class PatientService {
    TODO: definir interfaz para datos sistrat
   */
   addFichaDemanda(patientId: string, dataSistrat: any): Observable<any> {
-    return this.http.post<any>(`${this.backend}/patient/demanda`, { patientId, dataSistrat }).pipe(catchError((err) => throwError(() => err.error.message)));
+    return this.http.post<any>(`${this.backend}/patient/demanda`, { patientId, dataSistrat }).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al agregar ficha demanda')));
   }
 
   getDemandaByPatientId(patientId: string): Observable<DemandResponse> {
-    return this.http.get<DemandResponse>(`${this.backend}/patient/demanda/${patientId}`).pipe(catchError((err) => throwError(() => err.error.message)));
+    return this.http.get<DemandResponse>(`${this.backend}/patient/demanda/${patientId}`).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al obtener ficha demanda')));
   }
 
   addFichaDemandaToSistrat(patientId: string): Observable<any> {
-    return this.http.post<any>(`${this.backend}/patient/demanda/sistrat`, { patientId }).pipe(catchError((err) => throwError(() => err.error.message)));
+    return this.http.post<any>(`${this.backend}/patient/demanda/sistrat`, { patientId }).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al agregar ficha demanda a SISTRAT')));
   }
 
   getDataWithRut(rut: string, center: string): Observable<any> {
-    return this.http.get<any>(`${this.backend}/patient/rut/${rut}/${center}`).pipe(catchError((err) => throwError(() => err.error.message)));
+    return this.http.get<any>(`${this.backend}/patient/rut/${rut}/${center}`).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al obtener datos con RUT')));
   }
 
   addFichaIngreso(patientId: string, dataAdmissionForm: any): Observable<any> {
-    return this.http.post<any>(`${this.backend}/patient/ficha-ingreso`, { patientId, dataAdmissionForm }).pipe(catchError((err) => throwError(() => err.error.message)));
+    return this.http.post<any>(`${this.backend}/patient/ficha-ingreso`, { patientId, dataAdmissionForm }).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al agregar ficha ingreso')));
   }
 
   getFichaIngreso(patientId: string): Observable<any> {
-    return this.http.get<any>(`${this.backend}/patient/ficha-ingreso/${patientId}`).pipe(catchError((err) => throwError(() => err.error.message)));
+    return this.http.get<any>(`${this.backend}/patient/ficha-ingreso/${patientId}`).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al obtener ficha ingreso')));
   }
 
 
   updateFichaIngreso(patientId: string, dataAdmissionForm: any): Observable<any> {
-    return this.http.put<any>(`${this.backend}/patient/ficha-ingreso`, { patientId, dataAdmissionForm }).pipe(catchError((err) => throwError(() => err.error.message)));
+    return this.http.put<any>(`${this.backend}/patient/ficha-ingreso`, { patientId, dataAdmissionForm }).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al actualizar ficha ingreso')));
   }
 
 
 
   addFichaIngresoToSistrat(patientId: string): Observable<any> {
-    return this.http.post<any>(`${this.backend}/patient/ficha-ingreso/sistrat`, { patientId }).pipe(catchError((err) => throwError(() => err.error.message)));
+    return this.http.post<any>(`${this.backend}/patient/ficha-ingreso/sistrat`, { patientId }).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al agregar ficha ingreso a SISTRAT')));
   }
 
   saveToSistrat(userId: string): Observable<any> {
-    return this.http.post<any>(`${this.backend}/patient/sistrat/record`, { userId }).pipe(catchError((err) => throwError(() => err.error.message)));
+    return this.http.post<any>(`${this.backend}/patient/sistrat/record`, { userId }).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al guardar en SISTRAT')));
   }
 
   updateAlertSistrat(patientId: string): Observable<any> {
-    return this.http.post<any>(`${this.backend}/patient/sistrat/alerts`, { patientId }).pipe(catchError((err) => throwError(() => err.error.message)));
+    return this.http.post<any>(`${this.backend}/patient/sistrat/alerts`, { patientId }).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al actualizar alertas de SISTRAT')));
   }
 
   getPatients(programsIds: string[], options?: { active?: boolean }): Observable<Patient[]> {
@@ -165,70 +165,70 @@ export class PatientService {
   setFormCie10(patientId: string, optionSelected: any) {
     console.log({ optionSelected });
 
-    return this.http.post<any>(`${this.backend}/patient/sistrat/formCie10`, { patientId, optionSelected }).pipe(catchError((err) => throwError(() => err.error.message)));
+    return this.http.post<any>(`${this.backend}/patient/sistrat/formCie10`, { patientId, optionSelected }).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al setear form CIE10')));
   }
 
   resolveAlertSistrat(patientId: string, alertType: string): Observable<any> {
-    return this.http.post<any>(`${this.backend}/patient/sistrat/resolve-alert`, { patientId, alertType }).pipe(catchError((err) => throwError(() => err.error.message)));
+    return this.http.post<any>(`${this.backend}/patient/sistrat/resolve-alert`, { patientId, alertType }).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al resolver alerta')));
   }
 
   // ─── TOP Form ────────────────────────────────────────────────────────────────
 
   getTopForm(patientId: string): Observable<any> {
-    return this.http.get<any>(`${this.backend}/topForm/${patientId}`).pipe(catchError((err) => throwError(() => err.error?.message)));
+    return this.http.get<any>(`${this.backend}/topForm/${patientId}`).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al obtener TOP Form')));
   }
 
   saveTopForm(patientId: string, data: any): Observable<any> {
-    return this.http.post<any>(`${this.backend}/topForm/${patientId}`, data).pipe(catchError((err) => throwError(() => err.error?.message)));
+    return this.http.post<any>(`${this.backend}/topForm/${patientId}`, data).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al guardar TOP Form')));
   }
 
   syncTopFormSistrat(patientId: string): Observable<any> {
-    return this.http.post<any>(`${this.backend}/topForm/${patientId}/sistrat`, {}).pipe(catchError((err) => throwError(() => err.error?.message)));
+    return this.http.post<any>(`${this.backend}/topForm/${patientId}/sistrat`, {}).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al sincronizar TOP con SISTRAT')));
   }
 
   parseVoiceForTop(text: string, section: 'section1' | 'section2' | 'section3'): Observable<any> {
-    return this.http.post<any>(`${this.backend}/topForm/parse-voice`, { text, section }).pipe(catchError((err) => throwError(() => err.error?.message)));
+    return this.http.post<any>(`${this.backend}/topForm/parse-voice`, { text, section }).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al procesar voz')));
   }
 
   // ─── Social Form ────────────────────────────────────────────────────────────────
 
   getSocialForm(patientId: string): Observable<any> {
-    return this.http.get<any>(`${this.backend}/socialForm/${patientId}`).pipe(catchError((err) => throwError(() => err.error?.message)));
+    return this.http.get<any>(`${this.backend}/socialForm/${patientId}`).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al obtener Social Form')));
   }
 
   saveSocialForm(patientId: string, data: any): Observable<any> {
-    return this.http.post<any>(`${this.backend}/socialForm/${patientId}`, data).pipe(catchError((err) => throwError(() => err.error?.message)));
+    return this.http.post<any>(`${this.backend}/socialForm/${patientId}`, data).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al guardar Social Form')));
   }
 
   syncSocialFormSistrat(patientId: string): Observable<any> {
-    return this.http.post<any>(`${this.backend}/socialForm/sync/${patientId}`, {}).pipe(catchError((err) => throwError(() => err.error?.message)));
+    return this.http.post<any>(`${this.backend}/socialForm/sync/${patientId}`, {}).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al sincronizar con SISTRAT')));
   }
 
   // ─── Evaluation Form ──────────────────────────────────────────────────────────
 
   getEvaluationForm(patientId: string): Observable<any> {
-    return this.http.get<any>(`${this.backend}/evaluationForm/${patientId}`).pipe(catchError((err) => throwError(() => err.error?.message)));
+    return this.http.get<any>(`${this.backend}/evaluationForm/${patientId}`).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al obtener Evaluation Form')));
   }
 
   saveEvaluationForm(patientId: string, data: any): Observable<any> {
-    return this.http.post<any>(`${this.backend}/evaluationForm/${patientId}`, data).pipe(catchError((err) => throwError(() => err.error?.message)));
+    return this.http.post<any>(`${this.backend}/evaluationForm/${patientId}`, data).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al guardar Evaluation Form')));
   }
 
   syncEvaluationFormSistrat(patientId: string): Observable<any> {
-    return this.http.post<any>(`${this.backend}/evaluationForm/sync/${patientId}`, {}).pipe(catchError((err) => throwError(() => err.error?.message)));
+    return this.http.post<any>(`${this.backend}/evaluationForm/sync/${patientId}`, {}).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al sincronizar evaluación con SISTRAT')));
   }
 
   // ─── Social Diagnosis Form (Orange Alert) ───────────────────────────────────
 
   getSocialDiagnosisForm(patientId: string): Observable<any> {
-    return this.http.get<any>(`${this.backend}/socialDiagnosisForm/${patientId}`).pipe(catchError((err) => throwError(() => err.error?.message)));
+    return this.http.get<any>(`${this.backend}/socialDiagnosisForm/${patientId}`).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al obtener Social Diagnosis Form')));
   }
 
   saveSocialDiagnosisForm(patientId: string, data: any): Observable<any> {
-    return this.http.post<any>(`${this.backend}/socialDiagnosisForm/${patientId}`, data).pipe(catchError((err) => throwError(() => err.error?.message)));
+    return this.http.post<any>(`${this.backend}/socialDiagnosisForm/${patientId}`, data).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al guardar Social Diagnosis Form')));
   }
 
   syncSocialDiagnosisFormSistrat(patientId: string): Observable<any> {
-    return this.http.post<any>(`${this.backend}/socialDiagnosisForm/sync/${patientId}`, {}).pipe(catchError((err) => throwError(() => err.error?.message)));
+    return this.http.post<any>(`${this.backend}/socialDiagnosisForm/sync/${patientId}`, {}).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al sincronizar diagnóstico social con SISTRAT')));
   }
 }

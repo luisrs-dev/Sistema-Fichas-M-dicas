@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MaterialModule } from '../../../../../angular-material/material.module';
 import { VoiceService } from '../../../../../shared/services/voice.service';
 import { PatientService } from '../../patient.service';
@@ -135,6 +135,10 @@ import Notiflix from 'notiflix';
         <mat-form-field class="obs-field" appearance="outline">
           <mat-label>Observaciones</mat-label>
           <textarea matInput formControlName="observaciones" rows="3"></textarea>
+          <mat-hint align="end">{{ form.get('observaciones')?.value?.length || 0 }}/150</mat-hint>
+          <mat-error *ngIf="form.get('observaciones')?.hasError('maxlength')">
+            Límite excedido (máximo 150 caracteres)
+          </mat-error>
         </mat-form-field>
       </form>
     </div>
@@ -197,7 +201,7 @@ export class TopSection3Component implements OnInit {
     viviendasCondicionesBasicas: [null],
     calidadVida: [null],
     noDeseaCompletar: [null],
-    observaciones: [null],
+    observaciones: [null, [Validators.maxLength(150)]],
   });
 
   ngOnInit() {
@@ -309,6 +313,32 @@ export class TopSection3Component implements OnInit {
         Notiflix.Notify.failure('Error al procesar el dictado con IA');
       }
     });
+  }
+
+  validate(): string[] {
+    if (this.form.get('noDeseaCompletar')?.value) return [];
+
+    const emptyFields: string[] = [];
+    const val = this.form.value;
+
+    if (val.saludPsicologica === null) emptyFields.push('Salud Psicológica');
+    if (val.saludFisica === null) emptyFields.push('Salud Física');
+    if (!val.tieneLugarVivir) emptyFields.push('¿Tiene un lugar para vivir?');
+    if (!val.viviendasCondicionesBasicas) emptyFields.push('¿Habita en vivienda con condiciones básicas?');
+    if (val.calidadVida === null) emptyFields.push('Calidad de Vida');
+
+    const checkDays = (groupKey: string, label: string) => {
+      const g = val[groupKey];
+      if (!g.noResponde && !g.todosLosCeros) {
+        if (g.ultimaSemana === null || g.semana3 === null || g.semana2 === null || g.semana1 === null) {
+          emptyFields.push(`${label} (alguna semana vacía)`);
+        }
+      }
+    };
+    checkDays('diasTrabajados', 'Días trabajados');
+    checkDays('diasEducacion', 'Días asistidos a educación');
+
+    return emptyFields;
   }
 
   getFormData() { return this.form.value; }
