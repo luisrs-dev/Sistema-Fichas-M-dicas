@@ -4,12 +4,13 @@
   "scripts": {
     "tunnel": "ssh -N -o StrictHostKeyChecking=no -L 127.0.0.1:27018:127.0.0.1:27017 root@31.97.9.216",
     "tunnel-old": "ssh -fN -o StrictHostKeyChecking=no -L 127.0.0.1:27017:127.0.0.1:27017 root@31.97.9.216",
-    "tunnel:windows": "ssh -N -o StrictHostKeyChecking=no -L 127.0.0.1:27018:127.0.0.1:27017 root@31.97.9.216",
-    "tunnel:windows-old": "ssh -N -o StrictHostKeyChecking=no -L 127.0.0.1:27017:127.0.0.1:27017 root@31.97.9.216",
+    "tunnel:windows": "ssh -N -o StrictHostKeyChecking=no -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -L 127.0.0.1:27018:127.0.0.1:27017 root@31.97.9.216",
+    "tunnel:windows-old": "ssh -N -o StrictHostKeyChecking=no -o ExitOnForwardFailure=yes -L 127.0.0.1:27017:127.0.0.1:27017 root@31.97.9.216",
     "start:backend": "npm run dev --prefix backend",
     "start:frontend": "npm run start --prefix frontend -- --open --port 4200",
     "dev": "npm run start:backend & npm run start:frontend",
-    "dev:windows": "start \"Tunnel\" npm run tunnel:windows && timeout /t 5 && start \"Backend\" npm run start:backend && start \"Frontend\" npm run start:frontend"
+    "dev:windows": "npm run clean:windows && start \"Tunnel-DB\" npm run tunnel:windows && timeout /t 5 && start \"Backend\" npm run start:backend && start \"Frontend\" npm run start:frontend",
+    "clean:windows": "taskkill /F /IM node.exe /T /FI \"STATUS eq RUNNING\" 2>nul & taskkill /F /IM ssh.exe /T /FI \"STATUS eq RUNNING\" 2>nul & exit /b 0"
   },
   "dependencies": {
     "pm2": "^6.0.6"
