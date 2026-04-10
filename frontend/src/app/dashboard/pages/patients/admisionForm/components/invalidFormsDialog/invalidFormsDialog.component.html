@@ -1,12 +1,16 @@
-<h1 mat-dialog-title>Secciones Inválidas</h1>
-    <div mat-dialog-content>
-      <p>Las siguientes secciones contienen errores:</p>
-      <ul>
-        <li *ngFor="let form of data.invalidForms">{{ form }}</li>
-      </ul>
-    </div>
-    <div mat-dialog-actions>
-      <button mat-button mat-dialog-close>Entendido</button>
-    </div>
-
-    
+<h2 mat-dialog-title class="text-red-600 font-bold">Formularios Incompletos</h2>
+<mat-dialog-content>
+  <p class="mb-4">Por favor, revisa las siguientes secciones que contienen campos obligatorios vacíos o inválidos:</p>
+  
+  <div *ngFor="let form of data.invalidForms" class="mb-4 p-3 border-left-3 border-red-500 bg-red-50">
+    <h3 class="text-red-700 font-semibold m-0 mb-2 uppercase text-sm">{{ form.title }}</h3>
+    <ul class="m-0 pl-4">
+      <li *ngFor="let field of form.fields" class="text-red-600 text-sm py-1">
+        {{ field }}
+      </li>
+    </ul>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-flat-button color="warn" mat-dialog-close>Cerrar</button>
+</mat-dialog-actions>

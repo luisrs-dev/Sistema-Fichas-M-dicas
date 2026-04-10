@@ -29,6 +29,28 @@ export abstract class FormBaseComponent {
     );
   }
 
+  getInvalidFields(): string[] {
+    const invalidFields: string[] = [];
+    Object.keys(this.form.controls).forEach(key => {
+      const control = this.form.get(key);
+      if (control?.invalid) {
+        invalidFields.push(key);
+      }
+    });
+    return invalidFields;
+  }
+
+  getInvalidFieldsWithLabels(labels: { [key: string]: string }): string[] {
+    const invalidFields: string[] = [];
+    Object.keys(this.form.controls).forEach(key => {
+      const control = this.form.get(key);
+      if (control?.invalid) {
+        invalidFields.push(labels[key] || key);
+      }
+    });
+    return invalidFields;
+  }
+
   fillFormWithAdmissionData() {
     if (!this.admissionForm || !this.form) return;
 

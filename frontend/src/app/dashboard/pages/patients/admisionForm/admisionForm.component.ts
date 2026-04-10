@@ -53,7 +53,7 @@ export default class AdmisionFormComponent {
   @ViewChild(UserIdentificationComponent) userIdentificationComponent!: UserIdentificationComponent;
   @ViewChild(SocioDemographicComponent) socioDemographicComponent!: SocioDemographicComponent;
   @ViewChild(ConsumerPatternComponent) consumerPatternComponent!: ConsumerPatternComponent;
-  @ViewChild(ClinicalDiagnosisComponent) clinicalDiagnosisComponent!: SocialDiagnosisComponent;
+  @ViewChild(ClinicalDiagnosisComponent) clinicalDiagnosisComponent!: ClinicalDiagnosisComponent;
   @ViewChild(TreatmentComponent) treatmentComponent!: TreatmentComponent;
   @ViewChild(SocialDiagnosisComponent) socialDiagnosisComponent!: SocialDiagnosisComponent;
 
@@ -82,41 +82,57 @@ export default class AdmisionFormComponent {
   }
 
   onSave() {
-    // Inicializamos un array para guardar los nombres de los formularios inválidos
-    const invalidForms: string[] = [];
+    const invalidForms: any[] = [];
 
-    // Validación de cada formulario y si no es válido, se agrega a la lista
+    // Validación de cada formulario y si no es válido, se agrega a la lista con sus campos
     if (!this.userIdentificationComponent.isValidForm()) {
-      invalidForms.push('Identificación del Usuario');
+      invalidForms.push({
+        title: 'Identificación del Usuario',
+        fields: this.userIdentificationComponent.getInvalidFieldsWithLabels(this.userIdentificationComponent.fieldLabels)
+      });
     }
     if (!this.socioDemographicComponent.isValidForm()) {
-      invalidForms.push('Caracterización Sociodemográfica');
+      invalidForms.push({
+        title: 'Caracterización Sociodemográfica',
+        fields: this.socioDemographicComponent.getInvalidFieldsWithLabels(this.socioDemographicComponent.fieldLabels)
+      });
     }
     if (!this.consumerPatternComponent.isValidForm()) {
-      invalidForms.push('Patrón de Consumo');
+      invalidForms.push({
+        title: 'Patrón de Consumo',
+        fields: this.consumerPatternComponent.getInvalidFieldsWithLabels(this.consumerPatternComponent.fieldLabels)
+      });
     }
     if (!this.clinicalDiagnosisComponent.isValidForm()) {
-      invalidForms.push('Diagnóstico Clínico');
+      invalidForms.push({
+        title: 'Diagnóstico Clínico',
+        fields: this.clinicalDiagnosisComponent.getInvalidFieldsWithLabels(this.clinicalDiagnosisComponent.fieldLabels)
+      });
     }
     if (!this.treatmentComponent.isValidForm()) {
-      invalidForms.push('Tratamiento');
+      invalidForms.push({
+        title: 'Tratamiento',
+        fields: this.treatmentComponent.getInvalidFieldsWithLabels(this.treatmentComponent.fieldLabels)
+      });
     }
     if (!this.socialDiagnosisComponent.isValidForm()) {
-      invalidForms.push('Diagnóstico Social');
+      invalidForms.push({
+        title: 'Diagnóstico Social',
+        fields: this.socialDiagnosisComponent.getInvalidFieldsWithLabels(this.socialDiagnosisComponent.fieldLabels)
+      });
     }
 
     // Si la lista tiene formularios inválidos, los mostramos
     if (invalidForms.length > 0) {
       console.log('Los siguientes formularios son inválidos:', invalidForms);
-      // Aquí puedes mostrar un mat-dialog con la lista de formularios inválidos
-      //this.openInvalidFormsDialog(invalidForms);
 
       this.dialog.open(InvalidFormsDialogComponent, {
-        data: { invalidForms }, // Pasar la lista de formularios inválidos al diálogo
+        data: { invalidForms }, // Pasar la lista detallada al diálogo
+        width: '500px'
       });
+      return; // Detenemos la ejecución si hay errores
     } else {
       console.log('Todos los formularios son válidos');
-      // Puedes proceder con la acción si todos los formularios son válidos
     }
 
     const userIdentificacionForm = this.userIdentificationComponent.getFormData();
@@ -186,12 +202,30 @@ export default class AdmisionFormComponent {
           error: (err) => {
             console.error('Error al agregar ficha de ingreso a Sistrat:', err);
             Notiflix.Loading.remove();
-            const errorMessage = typeof err === 'string' ? err : 'Ocurrió un error al registrar en SISTRAT. Por favor, intenta nuevamente.';
-            Notiflix.Report.failure(
-              'Error',
-              errorMessage,
-              'Cerrar'
-            );
+            
+            const errorMessage = typeof err === 'string' ? err : (err.error?.message || err.message || 'Ocurrió un error al registrar en SISTRAT. Por favor, intenta nuevamente.');
+
+            // Si el error indica que faltan campos (detectado por el backend)
+            if (errorMessage.includes('SISTRAT_VALIDATION_ERROR:')) {
+              const fieldsString = errorMessage.split('SISTRAT_VALIDATION_ERROR:')[1];
+              const fields = fieldsString.split(',').map((f: string) => f.trim()).filter((f: string) => f.length > 0);
+
+              this.dialog.open(InvalidFormsDialogComponent, {
+                data: {
+                  invalidForms: [{
+                    title: 'Validación SISTRAT (Campos requeridos)',
+                    fields: fields
+                  }]
+                },
+                width: '500px'
+              });
+            } else {
+              Notiflix.Report.failure(
+                'Error',
+                errorMessage,
+                'Cerrar'
+              );
+            }
           }
         });
         console.log('Registrar en SISTRAT');
@@ -204,4 +238,6 @@ export default class AdmisionFormComponent {
 
     return;
   }
+
+  // Eliminado: el backend ahora se encarga de parsear el popup de SISTRAT
 }

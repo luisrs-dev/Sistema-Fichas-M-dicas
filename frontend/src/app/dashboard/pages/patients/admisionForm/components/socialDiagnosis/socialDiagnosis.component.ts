@@ -14,6 +14,12 @@ import { FormBaseComponent } from '../form-base.component';
 })
 export class SocialDiagnosisComponent extends FormBaseComponent {
   private fb = inject(FormBuilder);
+  public fieldLabels: { [key: string]: string } = {
+    sel_diagnostico_1: 'Necesidades integración social (Global)',
+    sel_diagnostico_2: 'Necesidades integración social (Cap. Humano)',
+    sel_diagnostico_3: 'Necesidades integración social (Cap. Físico)',
+    sel_diagnostico_4: 'Necesidades integración social (Cap. Social)'
+  };
   public formComplete: boolean = false;
 
   ngOnInit() {

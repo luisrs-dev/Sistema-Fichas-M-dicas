@@ -15,6 +15,19 @@ import { FormBaseComponent } from '../form-base.component';
 export class UserIdentificationComponent extends FormBaseComponent {
   @Input() patient: Patient;
   private fb = inject(FormBuilder);
+  public fieldLabels: { [key: string]: string } = {
+    name: 'Nombres',
+    surname: 'Apellido Paterno',
+    secondSurname: 'Apellido Materno',
+    sex: 'Sexo',
+    birthDate: 'Fecha de nacimiento',
+    selorigen_ingreso: 'Origen de ingreso',
+    identidad_genero: 'Identidad de Género',
+    orientacion_sexual: 'Orientación sexual',
+    discapacidad: 'Discapacidad',
+    opcion_discapacidad: 'Opciones Discapacidad',
+    centerOrigin: 'Centro de Origen'
+  };
 
   constructor() {
     super(); // Llamada al constructor de la clase base

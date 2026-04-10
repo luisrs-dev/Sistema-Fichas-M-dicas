@@ -347,6 +347,7 @@ class Sistrat {
 
       if (directRecordDemanda) {
         await this.scrapper.clickButton(page, "#mysubmit");
+        await this.checkForValidationError(page);
         console.log("[Sistrat][crearDemanda] Formulario enviado, refrescando listado para validar creación");
         await this.logStep(logger, "[Sistrat][crearDemanda] Formulario enviado");
       } else {
@@ -692,6 +693,7 @@ class Sistrat {
 
       if (directRecordMassive) {
         await this.scrapper.clickButton(page, "#mysubmit", 30000);
+        await this.checkForValidationError(page);
         await this.scrapper.waitForSeconds(2);
       } else {
         console.log(`[Sistrat][recordMonthlySheet] Registro directo deshabilitado: manteniendo navegador abierto por ${waitSeconds} segundos para revisión manual`);
@@ -1216,6 +1218,7 @@ class Sistrat {
       await this.scrapper.waitForSeconds(2); // Wait a tiny bit for transition
       if (directRecordAdmission) {
         await this.scrapper.clickButton(page, "#mysubmit");
+        await this.checkForValidationError(page);
       } else {
         console.log('Simulación: no registra ficha ingreso. Esperando validación...', directRecordAdmission);
         await this.scrapper.waitForSeconds(waitSeconds);
@@ -1235,6 +1238,42 @@ class Sistrat {
   private async logStep(logger: ProcessLogger | undefined, message: string) {
     if (logger) {
       await logger.log(message);
+    }
+  }
+
+  private async checkForValidationError(page: Page): Promise<void> {
+    try {
+      await this.scrapper.waitForSeconds(2); // Esperar un momento para que el popup aparezca
+      
+      const popupError = await page.evaluate(() => {
+        const popup = document.getElementById('popup_container');
+        if (popup && window.getComputedStyle(popup).display !== 'none') {
+          const message = document.getElementById('popup_message')?.innerHTML || '';
+          return message;
+        }
+        return null;
+      });
+
+      if (popupError) {
+        // Parsear los campos faltantes
+        let content = popupError.replace(/<br\s*\/?>/gi, '\n') // Br a saltos de línea
+          .replace(/<[^>]+>/g, '')       // Quitar etiquetas
+          .trim();
+        
+        const fields = content.split('\n')
+          .map(line => line.trim())
+          .map(line => line.replace(/^-/, '').trim())    // Quitar guiones iniciales
+          .filter(line => line.length > 0 && !line.includes('Complete los siguientes campos'));
+          
+        if (fields.length > 0) {
+          throw new Error(`SISTRAT_VALIDATION_ERROR: ${fields.join(', ')}`);
+        }
+      }
+    } catch (e: any) {
+      if (e.message.includes('SISTRAT_VALIDATION_ERROR')) {
+        throw e;
+      }
+      console.log("[Sistrat] No se pudo verificar validación o no hubo error");
     }
   }
 

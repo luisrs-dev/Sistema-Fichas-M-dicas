@@ -16,6 +16,16 @@ import { MONDAY_FIRST_DATE_PROVIDERS } from '../../../../../../shared/date/monda
 })
 export class TreatmentComponent extends FormBaseComponent {
   private fb = inject(FormBuilder);
+  public fieldLabels: { [key: string]: string } = {
+    txtfecha_ingreso_tratamiento: 'Fecha ingreso tratamiento',
+    selconvenio_conace: 'Ingreso convenio CONACE',
+    txtfecha_ingreso_conace: 'Fecha ingreso convenio SENDA',
+    seltipo_programa: 'Tipo programa',
+    seltipo_plan: 'Tipo plan',
+    selprograma_tribunales: 'Usuario tribunales drogas',
+    txtrut: 'RUT paciente',
+    selconcentimiento_informado: 'Consentimiento informado'
+  };
 
   @Input() rut: string;
   @Input() center: string;
@@ -32,7 +42,7 @@ export class TreatmentComponent extends FormBaseComponent {
       txtfecha_ingreso_conace: [new Date()],
       seltipo_programa: ['', []],
       seltipo_plan: ['', []],
-      selprograma_tribunales: ['', []],
+      selprograma_tribunales: ['', [Validators.required]],
       txtrut: ['', []],
       selconcentimiento_informado: ['', []],
     });

@@ -14,6 +14,17 @@ import { AdmissionForm } from '../../../../../interfaces/admissionForm.interface
 })
 export class ConsumerPatternComponent extends FormBaseComponent {
   private fb = inject(FormBuilder);
+  public fieldLabels: { [key: string]: string } = {
+    selsustancia_princial: 'Sustancia Principal',
+    selotra_sustancia_1: 'Otra Sustancia 1',
+    selotra_sustancia_2: 'Otra Sustancia 2',
+    selotra_sustancia_3: 'Otra Sustancia 3',
+    selfrecuencia_consumo: 'Frecuencia de Consumo',
+    txtedad_inicio_consumo: 'Edad Inicio Consumo',
+    selvia_administracion: 'Vía de Administración',
+    selsustancia_inicio: 'Sustancia de Inicio',
+    txtedad_inicio_consumo_inicial: 'Edad Inicio Consumo Inicial'
+  };
 
   ngOnInit() {
     this.form = this.fb.group({

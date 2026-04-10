@@ -16,6 +16,21 @@ import { optionsListCie } from './optionsLists.constant';
 })
 export class ClinicalDiagnosisComponent extends FormBaseComponent {
   private fb = inject(FormBuilder);
+  public fieldLabels: { [key: string]: string } = {
+    seldiagn_consumo_sustancia: 'Diagnóstico Consumo Sustancia',
+    selintox_aguda: 'Intoxicación Aguda',
+    selsindrome_abstinencia: 'Síndrome de Abstinencia',
+    seldiagn_psiquiatrico_cie: 'Diagnóstico Psiquiátrico CIE 10 (cat 1)',
+    cie1: 'Subcategoría CIE 1 (cat 1)',
+    cie2: 'Subcategoría CIE 2 (cat 2)',
+    cie3: 'Subcategoría CIE 3 (cat 3)',
+    seldiagn_psiquiatrico_cie2: 'Diagnóstico Psiquiátrico CIE 10 (cat 2)',
+    seldiagn_psiquiatrico_cie3: 'Diagnóstico Psiquiátrico CIE 10 (cat 3)',
+    seldiagn_fiscico: 'Diagnóstico Físico',
+    selotro_problema_atencion: 'Otros problemas salud mental (cat 1)',
+    selotro_problema_atencion2: 'Otros problemas salud mental (cat 2)',
+    selcompromiso_biopsicosocial: 'Compromiso Biopsicosocial'
+  };
   public selectedDiagnostico_1: number | null = null;
   public selectedDiagnostico_2: number | null = null;
   public selectedDiagnostico_3: number | null = null;
@@ -34,7 +49,7 @@ export class ClinicalDiagnosisComponent extends FormBaseComponent {
       seldiagn_fiscico: ['', []],
       selotro_problema_atencion: ['', []],
       selotro_problema_atencion2: ['', []],
-      selcompromiso_biopsicosocial: ['', []],
+      selcompromiso_biopsicosocial: ['', [Validators.required]],
     });
     // Método de componente base
     // Si existe una ficha de ingreso registrada, este método rellena los campos con esa información
