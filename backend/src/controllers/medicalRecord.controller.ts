@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { handleHttp } from "../utils/error.handle";
+import { normalizeDateRange } from "../utils/utilities";
 import {
   allMedicalRecords,
   insertMedicalRecord,
@@ -232,6 +233,12 @@ const getPdfMedicalRecordsByPatient = async ({ params }: Request, res: Response)
 const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
   try {
     const { startDate, endDate, centerName } = body;
+    const { start, end } = normalizeDateRange(startDate, endDate);
+
+    console.log("[getPdfMedicalRecords] startDate (normalized)", start);
+    console.log("[getPdfMedicalRecords] endDate (normalized)", end);
+    console.log("[getPdfMedicalRecords] centerName", centerName);
+
 
     // 1. Filtrar pacientes por centro (sistratCenter) si se proporciona
     const patientFilters: any = {};
@@ -243,6 +250,9 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
     const candidatePatients = await PatientModel.find(patientFilters).select("_id").lean();
     const candidatePatientIds = candidatePatients.map(p => p._id);
 
+    console.log('[getPdfMedicalRecords] candidatePatientIds.length', candidatePatientIds.length);
+
+
     if (candidatePatientIds.length === 0) {
       return res.status(404).send("No hay pacientes registrados en el centro seleccionado.");
     }
@@ -250,7 +260,7 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
     // 3. Obtener solo los pacientes que TIENEN fichas en ese rango de fechas
     const patientIdsWithRecords = await MedicalRecordModel.distinct("patient", {
       patient: { $in: candidatePatientIds },
-      date: { $gte: startDate, $lte: endDate }
+      date: { $gte: start, $lte: end }
     });
 
     if (patientIdsWithRecords.length === 0) {
@@ -297,7 +307,7 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
     for (const program of Object.keys(patientsByProgram)) {
       for (const patient of patientsByProgram[program]) {
         // Obtener fichas del paciente en el rango
-        const clinicalRecordsPatient = await allMedicalRecordsUser(patient._id, startDate, endDate);
+        const clinicalRecordsPatient = await allMedicalRecordsUser(patient._id, start, end);
 
         const clinicalRecords = (clinicalRecordsPatient || []).sort(
           (a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()

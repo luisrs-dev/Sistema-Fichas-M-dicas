@@ -8,6 +8,7 @@ import { getBase64Image } from "../utils/base64Image";
 import { getGroupedRecordsByPatientAndMonth } from "./medicalRecordGrouping.service";
 import ProcessLogger from "../utils/processLogger";
 import { promises as fs } from "fs";
+import { normalizeDateRange } from "../utils/utilities";
 import path from "path";
 import { BulkMonthlyProcessSummary, BulkMonthlyRecordResult } from "../interfaces/bulkMonthlyRecord.interface";
 import { Patient } from "../interfaces/patient.interface";
@@ -315,9 +316,10 @@ const allMedicalRecordsUser = async (userId: string, startDate?: string, endDate
   let medicalRecords = [];
 
   if (startDate && endDate) {
+    const { start, end } = normalizeDateRange(startDate, endDate);
     medicalRecords = await MedicalRecordModel.find({
       patient: userId,
-      date: { $gte: startDate, $lte: endDate },
+      date: { $gte: start, $lte: end },
     })
       .populate('service')
       .populate('patient')
