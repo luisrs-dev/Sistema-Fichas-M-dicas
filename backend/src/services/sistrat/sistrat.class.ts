@@ -1894,7 +1894,11 @@ class Sistrat {
             throw new Error("No encontrado en listado activo SISTRAT");
           }
 
-          await page.waitForSelector(".tabla_mensual", { timeout: 5000 });
+          console.log('----------------------------2 Esperando Tabla Mensual----------------------------');
+
+          this.scrapper.waitForSeconds(2);
+          // Esperando tabla con calendario para registrar atenciones mensuales
+          await page.waitForSelector(".tabla_mensual", { timeout: 10000 });
 
           // Rellenar tabla
           await page.evaluate((medicalRecordsGrouped) => {
