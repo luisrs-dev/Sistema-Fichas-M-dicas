@@ -340,10 +340,14 @@ const allMedicalRecordsUser = async (userId: string, startDate?: string, endDate
     const registeredBy = record.registeredBy;
 
     if (registeredBy?.signature) {
-      // Quitar "/uploads/" si está en la ruta
-      let relativePath = registeredBy.signature.replace(/^\/uploads\//, "");
+      // Normalizar la ruta: quitar '/uploads/' o 'uploads/' si están al inicio
+      // para que getBase64Image pueda resolverlo correctamente
+      let relativePath = registeredBy.signature.replace(/^(\/)?uploads\//, "");
+      
       const signatureBase64 = getBase64Image(relativePath, "png");
-      if (signatureBase64) registeredBy.signature = signatureBase64;
+      if (signatureBase64) {
+        registeredBy.signature = signatureBase64;
+      }
     }
   }
 

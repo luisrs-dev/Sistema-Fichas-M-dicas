@@ -190,9 +190,7 @@ const getPdfMedicalRecordsByPatient = async ({ params }: Request, res: Response)
       return res.status(404).send("No hay fichas para este paciente.");
     }
 
-    const logoPath = path.join(process.cwd(), "uploads/imgs/ficlin-logo.jpg");
-    const logoBase64 = fs.readFileSync(logoPath, { encoding: "base64" });
-    const logoUrl = `data:image/jpeg;base64,${logoBase64}`;
+    const logoUrl = getBase64Image("imgs/ficlin-logo.jpg", "jpeg");
 
     // 2. Renderizar HTML con EJS
     const html = await ejs.renderFile(path.join(process.cwd(), "templates-pdf/clinical-records-template.ejs"), { patient, clinicalRecords, logoUrl });
