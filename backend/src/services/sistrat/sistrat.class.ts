@@ -130,7 +130,8 @@ class Sistrat {
 
       await this.listActiveDemands(page, logger);
       await this.scrapper.clickButton(page, "#crea_demanda", 15000);
-      await this.scrapper.waitAndType(page, "#txtrut", rut);
+      const cleanedRut = this.cleanPatientRut(rut);
+      await this.scrapper.waitAndType(page, "#txtrut", cleanedRut);
 
       // Espera explícitamente la respuesta del endpoint que trae los datos de Fonasa
       const fonasaResponsePromise = page.waitForResponse((response) => {
@@ -263,7 +264,7 @@ class Sistrat {
       return '';
     }
 
-    return rut.replace(/\D+/g, '');
+    return rut.replace(/[^0-9kK]/g, '');
   }
 
 
