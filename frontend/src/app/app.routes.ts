@@ -99,6 +99,13 @@ export const routes: Routes = [
           import('./dashboard/pages/patients/detail/detail.component'),
       },
       {
+        path: 'patient/:id/historial-alertas',
+        title: 'Historial de Alertas',
+        data: { icon: 'notifications', child: true },
+        loadComponent: () =>
+          import('./dashboard/pages/patients/alertHistory/alertHistory.component'),
+      },
+      {
         path: 'patient/demand/:id',
         title: 'Ficha Demanda',
         data: { icon: 'group', child: false },

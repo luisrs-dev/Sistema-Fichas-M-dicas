@@ -1,0 +1,75 @@
+<div class="alert-history-container">
+
+  <!-- Header -->
+  <div class="header">
+    <button mat-icon-button color="primary" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1>
+      Historial de Alertas —
+      <span class="patient-name">
+        @if (patient()) {
+          {{ patient()!.name }} {{ patient()!.surname }} {{ patient()!.secondSurname }}
+        }
+      </span>
+    </h1>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <span>Cargando historial de alertas...</span>
+    </div>
+  }
+
+  <!-- Alert Grid -->
+  @if (!loading()) {
+    <div class="alert-grid">
+
+      @for (group of alertGroups(); track group.tipo) {
+        <mat-card class="alert-card {{ getCardClass(group.tipo) }}">
+          <!-- Card Header -->
+          <div class="card-header {{ getCardClass(group.tipo) }}">
+            <div class="card-header-left">
+              <mat-icon>{{ getGroupIcon(group.tipo) }}</mat-icon>
+              <span>{{ group.tipo }}</span>
+            </div>
+            <div class="badge-count">{{ group.registros.length }}</div>
+          </div>
+
+          <!-- Records -->
+          @if (group.registros.length > 0) {
+            <div class="record-list">
+              @for (record of group.registros; track $index) {
+                <div class="record-item">
+                  @if (record.fecha) {
+                    <div class="record-date">
+                      <mat-icon>schedule</mat-icon>
+                      {{ formatDate(record.fecha) }}
+                    </div>
+                  }
+                  <div class="record-observacion">{{ record.observacion }}</div>
+                  @if (record.profesional && record.profesional !== '—') {
+                    <div class="record-profesional">
+                      <mat-icon>person</mat-icon>
+                      {{ record.profesional }}
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-state">
+              <mat-icon>info_outline</mat-icon>
+              <span>Sin registros</span>
+            </div>
+          }
+
+        </mat-card>
+      }
+
+    </div>
+  }
+
+</div>

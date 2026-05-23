@@ -231,4 +231,10 @@ export class PatientService {
   syncSocialDiagnosisFormSistrat(patientId: string): Observable<any> {
     return this.http.post<any>(`${this.backend}/socialDiagnosisForm/sync/${patientId}`, {}).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al sincronizar diagnóstico social con SISTRAT')));
   }
+
+  // ─── Alert History ──────────────────────────────────────────────────────────
+
+  getAlertHistory(patientId: string): Observable<any> {
+    return this.http.get<any>(`${this.backend}/alertHistory/${patientId}`).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al obtener historial de alertas')));
+  }
 }

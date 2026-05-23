@@ -1,0 +1,270 @@
+:host {
+  display: block;
+}
+
+.alert-history-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* ─── Header ─────────────────────────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.header .patient-name {
+  color: #1e8ecd;
+  font-weight: 700;
+}
+
+/* ─── Grid de Cards ──────────────────────────────────────────────────────── */
+
+.alert-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .alert-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Alert Card ─────────────────────────────────────────────────────────── */
+
+.alert-card {
+  border-radius: 12px !important;
+  overflow: hidden;
+  animation: fadeInUp 0.4s ease-out both;
+}
+
+.alert-card:nth-child(1) { animation-delay: 0.05s; }
+.alert-card:nth-child(2) { animation-delay: 0.10s; }
+.alert-card:nth-child(3) { animation-delay: 0.15s; }
+.alert-card:nth-child(4) { animation-delay: 0.20s; }
+.alert-card:nth-child(5) { animation-delay: 0.25s; }
+.alert-card:nth-child(6) { animation-delay: 0.30s; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Card Header ────────────────────────────────────────────────────────── */
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  color: #fff;
+}
+
+.card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-header-left mat-icon {
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+}
+
+.card-header-left span {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.badge-count {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  border-radius: 20px;
+  padding: 2px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  min-width: 28px;
+  text-align: center;
+}
+
+/* ─── Colores por tipo ───────────────────────────────────────────────────── */
+
+.card-header.cie10 {
+  background: linear-gradient(135deg, #1e8ecd, #1565c0);
+}
+.alert-card.cie10 {
+  border-left: 4px solid #1e8ecd;
+}
+
+.card-header.top {
+  background: linear-gradient(135deg, #333, #000);
+}
+.alert-card.top {
+  border-left: 4px solid #000;
+}
+
+.card-header.evaluacion {
+  background: linear-gradient(135deg, #28a745, #1b7a33);
+}
+.alert-card.evaluacion {
+  border-left: 4px solid #28a745;
+}
+
+.card-header.integracion {
+  background: linear-gradient(135deg, #FFD700, #e6c200);
+  color: #333;
+}
+.alert-card.integracion {
+  border-left: 4px solid #FFD700;
+}
+.card-header.integracion .badge-count {
+  background: rgba(0, 0, 0, 0.15);
+  color: #333;
+}
+
+.card-header.diagnostico {
+  background: linear-gradient(135deg, #fd7e14, #e06600);
+}
+.alert-card.diagnostico {
+  border-left: 4px solid #fd7e14;
+}
+
+.card-header.mensual {
+  background: linear-gradient(135deg, #6f42c1, #5a32a3);
+}
+.alert-card.mensual {
+  border-left: 4px solid #6f42c1;
+}
+
+/* ─── Record List ────────────────────────────────────────────────────────── */
+
+.record-list {
+  padding: 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.record-item {
+  padding: 12px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.15s ease;
+}
+
+.record-item:last-child {
+  border-bottom: none;
+}
+
+.record-item:hover {
+  background-color: #fafafa;
+}
+
+.record-date {
+  font-size: 0.75rem;
+  color: #888;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.record-date mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  color: #aaa;
+}
+
+.record-observacion {
+  font-size: 0.875rem;
+  color: #444;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.record-profesional {
+  font-size: 0.75rem;
+  color: #1e8ecd;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.record-profesional mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
+
+/* ─── Empty State ────────────────────────────────────────────────────────── */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  color: #bbb;
+}
+
+.empty-state mat-icon {
+  font-size: 40px;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 8px;
+  color: #ddd;
+}
+
+.empty-state span {
+  font-size: 0.875rem;
+}
+
+/* ─── Loading ────────────────────────────────────────────────────────────── */
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+  gap: 16px;
+  color: #888;
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+
+.record-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.record-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.record-list::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 3px;
+}
+
+.record-list::-webkit-scrollbar-thumb:hover {
+  background: #ccc;
+}
