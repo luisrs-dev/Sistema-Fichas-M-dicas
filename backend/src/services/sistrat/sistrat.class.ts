@@ -2438,10 +2438,11 @@ class Sistrat {
       const waitMinutesStr = await getEnvironmentConfigValue(this.configKeyWait) || "5";
       const waitSeconds = parseInt(waitMinutesStr as string, 10) * 60;
 
+      console.log('directRecordAlerts: ', directRecordAlerts)
       if (directRecordAlerts) {
         console.log("[Sistrat][syncEvaluationForm] Enviando formulario directamente");
-        await this.scrapper.clickButton(page, "#btnenvio");
-        await this.scrapper.waitForSeconds(5);
+        await this.scrapper.clickButton(page, "#mysubmit");
+        await this.scrapper.waitForSeconds(1);
       } else {
         console.log(`[Sistrat][syncEvaluationForm] Bloqueando para validación manual por ${waitSeconds}s`);
         await this.scrapper.waitForSeconds(waitSeconds);
