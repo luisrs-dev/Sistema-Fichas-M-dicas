@@ -1012,6 +1012,14 @@ class Sistrat {
     console.group(`[Sistrat][completeAdmissionForm] ${patient._id}`);
     await this.logStep(logger, "[Sistrat][completeAdmissionForm] Inicio de formulario");
 
+    let dialogMessage: string | null = null;
+    const dialogListener = async (dialog: any) => {
+      dialogMessage = dialog.message();
+      console.log(`[Sistrat][completeAdmissionForm] Alerta de diálogo detectada: ${dialogMessage}`);
+      await dialog.dismiss();
+    };
+    page.on("dialog", dialogListener);
+
     page.on("response", async (response) => {
       try {
         if (response.url().includes(urlToCapture)) {
@@ -1219,6 +1227,10 @@ class Sistrat {
       await this.scrapper.waitForSeconds(2); // Wait a tiny bit for transition
       if (directRecordAdmission) {
         await this.scrapper.clickButton(page, "#mysubmit");
+        await this.scrapper.waitForSeconds(2); // Esperar que se procese el diálogo o popup
+        if (dialogMessage) {
+          throw new Error(`SISTRAT_ALERT_ERROR: ${dialogMessage}`);
+        }
         await this.checkForValidationError(page);
       } else {
         console.log('Simulación: no registra ficha ingreso. Esperando validación...', directRecordAdmission);
@@ -1232,6 +1244,7 @@ class Sistrat {
       await this.logStep(logger, `[Sistrat][completeAdmissionForm] Error: ${error}`);
       throw new Error(`Error al registrar ficha de ingreso: ${error}`);
     } finally {
+      page.off("dialog", dialogListener);
       console.groupEnd();
     }
   }
