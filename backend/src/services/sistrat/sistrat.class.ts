@@ -1229,7 +1229,13 @@ class Sistrat {
         await this.scrapper.clickButton(page, "#mysubmit");
         await this.scrapper.waitForSeconds(2); // Esperar que se procese el diálogo o popup
         if (dialogMessage) {
-          throw new Error(`SISTRAT_ALERT_ERROR: ${dialogMessage}`);
+          const msgLower = dialogMessage.toLowerCase();
+          const isSuccessDialog = msgLower.includes('éxito') || msgLower.includes('exito') || msgLower.includes('exitoso') || msgLower.includes('correcto') || msgLower.includes('registrado') || msgLower.includes('realizado con');
+          if (isSuccessDialog) {
+            console.log(`[Sistrat][completeAdmissionForm] Diálogo de éxito de SISTRAT ignorado: ${dialogMessage}`);
+          } else {
+            throw new Error(`SISTRAT_ALERT_ERROR: ${dialogMessage}`);
+          }
         }
         await this.checkForValidationError(page);
       } else {
