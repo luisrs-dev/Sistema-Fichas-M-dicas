@@ -237,6 +237,14 @@ export default class TopFormComponent {
   }
 
   onSave(): void {
+    // Validar que se ingrese una observación si no desea completar
+    const noDeseaCompletar = this.section3?.form.get('noDeseaCompletar')?.value;
+    const observaciones = this.section3?.form.get('observaciones')?.value;
+    if (noDeseaCompletar && (!observaciones || observaciones.trim() === '')) {
+      Notiflix.Notify.failure('Debe ingresar una observación si marca "No desea completar formulario"');
+      return;
+    }
+
     const errors = this.getValidationErrors();
     if (errors.length > 0 && errors.some(e => e.includes('exceden') || e.includes('inválido'))) {
       Notiflix.Notify.failure('Corrija los errores antes de guardar');
@@ -271,6 +279,18 @@ export default class TopFormComponent {
 
   onSendToSistrat(): void {
     if (this.syncing()) return;
+
+    // Validar que se ingrese una observación si no desea completar
+    const noDeseaCompletar = this.section3?.form.get('noDeseaCompletar')?.value;
+    const observaciones = this.section3?.form.get('observaciones')?.value;
+    if (noDeseaCompletar && (!observaciones || observaciones.trim() === '')) {
+      Notiflix.Report.warning(
+        'Validación pendiente',
+        'Debe ingresar una observación si marca "No desea completar formulario"',
+        'Entendido'
+      );
+      return;
+    }
 
     const validationErrors = this.getValidationErrors();
     if (validationErrors.length > 0) {

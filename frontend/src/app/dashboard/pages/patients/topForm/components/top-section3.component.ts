@@ -316,10 +316,15 @@ export class TopSection3Component implements OnInit {
   }
 
   validate(): string[] {
-    if (this.form.get('noDeseaCompletar')?.value) return [];
-
     const emptyFields: string[] = [];
     const val = this.form.value;
+
+    if (val.noDeseaCompletar) {
+      if (!val.observaciones || val.observaciones.trim() === '') {
+        emptyFields.push('Observaciones (obligatorio al no completar formulario)');
+      }
+      return emptyFields;
+    }
 
     if (val.saludPsicologica === null) emptyFields.push('Salud Psicológica');
     if (val.saludFisica === null) emptyFields.push('Salud Física');
