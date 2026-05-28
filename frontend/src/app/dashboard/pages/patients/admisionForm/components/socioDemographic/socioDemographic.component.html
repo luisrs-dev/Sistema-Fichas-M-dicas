@@ -270,10 +270,10 @@
     14 -> Otra razón 
     -->
 
-    @if (form.get('selestado_ocupacional')?.value && !['2', '11', '4', '5', '6', '7', '9', '12', '16', '14',
-    '20'].includes(form.get('selestado_ocupacional')?.value!)) {
+    <!-- @if (form.get('selestado_ocupacional')?.value && !['2', '11', '4', '5', '6', '7', '9', '12', '16', '14',
+    '20'].includes(form.get('selestado_ocupacional')?.value!)) { -->
 
-    @if(['17', '18'].includes(form.get('selestado_ocupacional')?.value!)) {
+    @if(['17', '18'].includes(estadoOcupacional) || (estadoOcupacional === '19' && laboralDetalle && laboralDetalle !== '4')) {
     <div class="col-6">
       <mat-form-field class="w-full" appearance="outline">
         <mat-label>OCUPACIÓN INGRESOS</mat-label>
@@ -296,7 +296,7 @@
     </div>
     }
 
-    @if(['19'].includes(form.get('selestado_ocupacional')?.value!)) {
+    @if(['19'].includes(estadoOcupacional)) {
     <div class="col-6">
       <mat-form-field class="w-full" appearance="outline">
         <mat-label>OCUPACIÓN DETALLE</mat-label>
@@ -312,7 +312,7 @@
     </div>
     }
 
-    @if(['22'].includes(form.get('selestado_ocupacional')?.value!)) {
+    @if(['22'].includes(estadoOcupacional)) {
     <div class="col-6">
       <mat-form-field class="w-full" appearance="outline">
         <mat-label>OCUPACIÓN DETALLE</mat-label>
@@ -326,7 +326,7 @@
     </div>
     }
 
-    @if(['21', '22'].includes(form.get('selestado_ocupacional')?.value!)) {
+    @if(['21', '22'].includes(estadoOcupacional)) {
     <div class="col-6">
       <mat-form-field class="w-full" appearance="outline">
         <mat-label>EN QUE RUBRO TRABAJA </mat-label>
@@ -350,7 +350,7 @@
     </div>
     }
 
-    }
+    <!-- } -->
 
     <div class="col-6">
       <mat-form-field class="w-full" appearance="outline">

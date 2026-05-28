@@ -38,6 +38,19 @@ import Notiflix from 'notiflix';
         <div class="header-badge">Integración Social</div>
       </div>
 
+      <div class="actions-bar" *ngIf="!loading()">
+        <button mat-stroked-button (click)="goBack()">
+          <mat-icon class="mr-1">arrow_back</mat-icon>
+          Volver
+        </button>
+        <div class="actions-right">
+          <button mat-raised-button color="primary" (click)="onSave()" [disabled]="saving()">
+            <mat-icon class="mr-1">save</mat-icon>
+            {{ saving() ? 'Guardando y Sincronizando...' : 'Guardar en FicLin y Sincronizar SISTRAT' }}
+          </button>
+        </div>
+      </div>
+
       <mat-card class="sections-card" *ngIf="!loading()">
         <mat-tab-group animationDuration="200ms" class="sections-tabs">
           <mat-tab label="Parte 1 — Educación y Formación">
@@ -63,20 +76,6 @@ import Notiflix from 'notiflix';
       <div class="loading-container" *ngIf="loading()">
         <mat-spinner diameter="48"></mat-spinner>
         <p>Cargando información social...</p>
-      </div>
-
-      <div class="actions-bar" *ngIf="!loading()">
-        <button mat-stroked-button (click)="goBack()">Volver</button>
-        <div class="actions-right">
-          <button mat-raised-button color="primary" (click)="onSave()" [disabled]="saving()">
-            <mat-icon>save</mat-icon>
-            {{ saving() ? 'Guardando...' : 'Guardar en FicLin' }}
-          </button>
-          <button mat-raised-button class="sistrat-btn" (click)="onSendToSistrat()" *ngIf="formSaved() && authService.isAdmin()" [disabled]="syncing()">
-            <mat-icon>upload</mat-icon>
-            {{ syncing() ? 'Sincronizando...' : 'Enviar a SISTRAT' }}
-          </button>
-        </div>
       </div>
     </div>
   `,
@@ -105,7 +104,8 @@ import Notiflix from 'notiflix';
 
     .actions-bar {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 16px 0; border-top: 1px solid #e0e0e0; gap: 12px;
+      padding-bottom: 16px; border-bottom: 1px solid #e0e0e0; gap: 12px;
+      margin-bottom: 20px;
     }
     .actions-right { display: flex; gap: 12px; }
     .sistrat-btn { background: #2e7d32; color: white; }
@@ -162,44 +162,65 @@ export default class SocialFormComponent {
   }
 
   onSave(): void {
+    const val = this.socialForm.get('orientacionSociolaboral')?.value;
+    if (!val || val.trim() === '') {
+      Notiflix.Report.warning(
+        'Campo Obligatorio Faltante',
+        'El campo "Orientación Sociolaboral" es obligatorio para poder guardar y sincronizar con SISTRAT.',
+        'Entendido'
+      );
+      return;
+    }
+
     this.saving.set(true);
+    Notiflix.Loading.circle('Guardando en FicLin...');
+
     this.patientService.saveSocialForm(this.patientId, this.socialForm.value).subscribe({
       next: () => {
-        this.saving.set(false);
-        this.formSaved.set(true);
-        Notiflix.Notify.success('Formulario de Integración Social guardado');
+        Notiflix.Loading.remove();
+        Notiflix.Notify.success('Guardado en FicLin');
+        
+        // Iniciar de inmediato la sincronización SISTRAT
+        this.syncWithSistrat();
       },
       error: () => {
+        Notiflix.Loading.remove();
         this.saving.set(false);
-        Notiflix.Notify.failure('Error al guardar el formulario');
+        Notiflix.Notify.failure('Error al guardar el formulario en FicLin');
       }
     });
   }
 
-  onSendToSistrat(): void {
-    if (this.syncing()) return;
+  private syncWithSistrat(): void {
+    this.syncing.set(true);
+    Notiflix.Loading.circle('Sincronizando con SISTRAT...');
 
-    Notiflix.Confirm.show(
-      '¿Enviar a SISTRAT?',
-      'Se completará el formulario en SISTRAT. Esta es una automatización de prueba.',
-      'Sí, enviar',
-      'Cancelar',
-      () => {
-        this.syncing.set(true);
-        Notiflix.Notify.info('Sincronizando con SISTRAT...');
-        this.patientService.syncSocialFormSistrat(this.patientId).subscribe({
-          next: () => {
-            this.syncing.set(false);
-            Notiflix.Report.success('¡Sincronización Terminada!', 'El bot ha llenado los campos correctamente para revisión.', 'OK');
-          },
-          error: (error) => {
-            this.syncing.set(false);
-            console.error('Error en sincronización SISTRAT:', error);
-            Notiflix.Report.failure('Error', error || 'Error al ejecutar el bot', 'Cerrar');
-          }
-        });
+    this.patientService.syncSocialFormSistrat(this.patientId).subscribe({
+      next: () => {
+        Notiflix.Loading.remove();
+        this.saving.set(false);
+        this.syncing.set(false);
+        this.formSaved.set(true);
+        Notiflix.Report.success(
+          '¡Guardado y Sincronizado!',
+          'El formulario se ha guardado en FicLin y se ha sincronizado correctamente con SISTRAT.',
+          'Entendido'
+        );
+      },
+      error: (error) => {
+        Notiflix.Loading.remove();
+        this.saving.set(false);
+        this.syncing.set(false);
+        console.error('Error en sincronización SISTRAT:', error);
+        
+        const errorMessage = typeof error === 'string' ? error : (error?.error?.message || error?.message || 'Error al ejecutar el bot');
+        Notiflix.Report.warning(
+          'Sincronización Incompleta',
+          `El formulario se guardó en FicLin, pero ocurrió un problema al sincronizar con SISTRAT: ${errorMessage}`,
+          'Cerrar'
+        );
       }
-    );
+    });
   }
 
   goBack(): void {

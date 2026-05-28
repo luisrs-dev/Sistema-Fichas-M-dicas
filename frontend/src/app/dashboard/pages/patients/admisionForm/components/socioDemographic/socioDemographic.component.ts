@@ -43,6 +43,14 @@ export class SocioDemographicComponent extends FormBaseComponent {
 
   public optionsNacionality: { name: string; value: string }[] = optionsNacionality;
 
+  get estadoOcupacional(): string {
+    return this.form?.get('selestado_ocupacional')?.value;
+  }
+
+  get laboralDetalle(): string {
+    return this.form?.get('laboral_detalle')?.value;
+  }
+
   ngOnInit() {
     this.form = this.fb.group({
       txtnacionalidad: ['', []],

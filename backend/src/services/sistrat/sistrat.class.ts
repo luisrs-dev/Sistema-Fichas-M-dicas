@@ -926,9 +926,36 @@ class Sistrat {
       const rowPatientSistrat = result.data;
 
       console.log(`[Ficha de Ingreso] Paciente encontrado: ${rowPatientSistrat.codigoSistrat}`);
+
+      // Si el paciente no tiene codigoSistrat en la DB local, lo actualizamos con el obtenido desde SISTRAT
+      if (!patient.codigoSistrat && rowPatientSistrat?.codigoSistrat) {
+        const patientEntity = await PatientModel.findOne({ _id: patient._id });
+        if (patientEntity) {
+          patientEntity.codigoSistrat = rowPatientSistrat.codigoSistrat;
+          await patientEntity.save();
+          patient.codigoSistrat = rowPatientSistrat.codigoSistrat;
+          console.log(`[registrarFichaIngreso] Guardado código SISTRAT obtenido: ${rowPatientSistrat.codigoSistrat}`);
+          await this.logStep(logger, `[Sistrat][registrarFichaIngreso] Guardado código SISTRAT obtenido: ${rowPatientSistrat.codigoSistrat}`);
+        }
+      }
+
       console.log("[Sistrat][registrarFichaIngreso] Abriendo formulario y completando secciones");
       const formCompleted = await this.completeAdmissionForm(page, patient, admissionForm, logger);
       await this.logStep(logger, "[Sistrat][registrarFichaIngreso] Proceso completado");
+
+      // Si se completó el formulario con éxito y queremos actualizar alertas usando la misma página:
+      if (formCompleted && page) {
+        console.log("[Sistrat][registrarFichaIngreso] Procediendo a actualizar alertas en la misma sesión...");
+        await this.logStep(logger, "[Sistrat][registrarFichaIngreso] Iniciando actualización de alertas en la misma sesión");
+        try {
+          await this.updateAlerts(patient, page);
+          await this.logStep(logger, "[Sistrat][registrarFichaIngreso] Alertas actualizadas con éxito en la misma sesión");
+        } catch (alertError) {
+          console.error("[Sistrat][registrarFichaIngreso] Error al actualizar alertas en la misma sesión:", alertError);
+          await this.logStep(logger, `[Sistrat][registrarFichaIngreso] Error al actualizar alertas en la misma sesión: ${alertError}`);
+        }
+      }
+
       return formCompleted;
     } catch (error: any) {
       await this.logStep(logger, `[Sistrat][registrarFichaIngreso] Error: ${error}`);
@@ -1012,6 +1039,22 @@ class Sistrat {
     console.group(`[Sistrat][completeAdmissionForm] ${patient._id}`);
     await this.logStep(logger, "[Sistrat][completeAdmissionForm] Inicio de formulario");
 
+    let isSubmitting = false;
+    let submissionDialogMessage: string | null = null;
+    const dialogListener = async (dialog: any) => {
+      const message = dialog.message();
+      console.log(`[Sistrat][completeAdmissionForm] Alerta de diálogo detectada: ${message}`);
+      if (isSubmitting) {
+        submissionDialogMessage = message;
+      }
+      await dialog.dismiss();
+    };
+    page.on("dialog", dialogListener);
+
+    // Promesa para coordinar el cierre del popup de Fonasa con el flujo principal
+    let resolveFonasa: () => void;
+    const fonasaHandled = new Promise<void>((resolve) => { resolveFonasa = resolve; });
+
     page.on("response", async (response) => {
       try {
         if (response.url().includes(urlToCapture)) {
@@ -1043,9 +1086,12 @@ class Sistrat {
 
             console.log("Popup Fonasa cerrado correctamente");
           }
+          // Señalizar al flujo principal que la respuesta de Fonasa fue procesada
+          resolveFonasa();
         }
       } catch (err) {
         console.error("Error procesando respuesta Fonasa:", err);
+        resolveFonasa(); // Resolver igualmente para no bloquear el flujo principal
       }
     });
 
@@ -1096,11 +1142,29 @@ class Sistrat {
       await this.scrapper.setSelectValue(page, "#tiene_menores_a_cargo", admissionForm.tiene_menores_a_cargo);
       await this.scrapper.setSelectValue(page, "#selestado_ocupacional", admissionForm.selestado_ocupacional);
       await this.scrapper.waitForSeconds(2);
-      if (["17", "18"].includes(admissionForm.selestado_ocupacional)) {
-        await this.scrapper.setSelectValue(page, "#laboral_ingresos", admissionForm.laboral_ingresos);
-      }
+      // 1. Si es "19" o "22", primero seleccionamos #laboral_detalle para que el DOM de SISTRAT muestre #laboral_ingresos
       if (["19", "22"].includes(admissionForm.selestado_ocupacional)) {
-        await this.scrapper.setSelectValue(page, "#laboral_ingresos", admissionForm.laboral_detalle);
+        console.log('Seleccionando #laboral_detalle');
+        console.log("admissionForm.laboral_detalle", admissionForm.laboral_detalle);
+        await this.scrapper.waitForSeconds(2);
+        await this.scrapper.setSelectValue(page, "#laboral_detalle", admissionForm.laboral_detalle);
+      }
+
+      // 2. Esperamos a que los cambios dinámicos del DOM se terminen de procesarse
+      await this.scrapper.waitForSeconds(2);
+
+      // 3. Seleccionamos #laboral_ingresos si corresponde y tiene un valor definido
+      if (
+        ["17", "18"].includes(admissionForm.selestado_ocupacional) ||
+        (admissionForm.selestado_ocupacional === "19" && admissionForm.laboral_detalle && admissionForm.laboral_detalle !== "4")
+      ) {
+        if (admissionForm.laboral_ingresos) {
+          console.log('Seleccionando #laboral_ingresos');
+          console.log('admisionForm.laboral_ingresos', admissionForm.laboral_ingresos);
+          await this.scrapper.setSelectValue(page, "#laboral_ingresos", admissionForm.laboral_ingresos);
+        } else {
+          console.log('Omitiendo #laboral_ingresos porque no tiene un valor definido');
+        }
       }
 
       await this.scrapper.setSelectValue(page, "#selcon_quien_vive", admissionForm.selcon_quien_vive);
@@ -1195,6 +1259,15 @@ class Sistrat {
 
       await this.scrapper.clickButton(page, "#consulta_fonasa");
 
+      // Esperar a que la respuesta de Fonasa sea procesada y el popup cerrado antes de continuar
+      console.log("[Sistrat][completeAdmissionForm] Esperando respuesta de Fonasa...");
+      await Promise.race([
+        fonasaHandled,
+        this.scrapper.waitForSeconds(15) // Timeout de seguridad de 15 segundos
+      ]);
+      console.log("[Sistrat][completeAdmissionForm] Fonasa procesado, continuando con el formulario");
+      await this.scrapper.waitForSeconds(1); // Pequeña pausa para asegurar que la UI se estabilice
+
       await this.scrapper.setSelectValue(page, "#selconcentimiento_informado", admissionForm.selconcentimiento_informado);
 
       await this.scrapper.clickButton(page, 'a[href="#tabs6"]');
@@ -1218,7 +1291,18 @@ class Sistrat {
 
       await this.scrapper.waitForSeconds(2); // Wait a tiny bit for transition
       if (directRecordAdmission) {
+        isSubmitting = true;
         await this.scrapper.clickButton(page, "#mysubmit");
+        await this.scrapper.waitForSeconds(2); // Esperar que se procese el diálogo o popup
+        if (submissionDialogMessage) {
+          const msgLower = submissionDialogMessage.toLowerCase();
+          const isSuccessDialog = msgLower.includes('éxito') || msgLower.includes('exito') || msgLower.includes('exitoso') || msgLower.includes('correcto') || msgLower.includes('registrado') || msgLower.includes('realizado con');
+          if (isSuccessDialog) {
+            console.log(`[Sistrat][completeAdmissionForm] Diálogo de éxito de SISTRAT ignorado: ${submissionDialogMessage}`);
+          } else {
+            throw new Error(`SISTRAT_ALERT_ERROR: ${submissionDialogMessage}`);
+          }
+        }
         await this.checkForValidationError(page);
       } else {
         console.log('Simulación: no registra ficha ingreso. Esperando validación...', directRecordAdmission);
@@ -1232,6 +1316,7 @@ class Sistrat {
       await this.logStep(logger, `[Sistrat][completeAdmissionForm] Error: ${error}`);
       throw new Error(`Error al registrar ficha de ingreso: ${error}`);
     } finally {
+      page.off("dialog", dialogListener);
       console.groupEnd();
     }
   }
@@ -2438,10 +2523,11 @@ class Sistrat {
       const waitMinutesStr = await getEnvironmentConfigValue(this.configKeyWait) || "5";
       const waitSeconds = parseInt(waitMinutesStr as string, 10) * 60;
 
+      console.log('directRecordAlerts: ', directRecordAlerts)
       if (directRecordAlerts) {
         console.log("[Sistrat][syncEvaluationForm] Enviando formulario directamente");
-        await this.scrapper.clickButton(page, "#btnenvio");
-        await this.scrapper.waitForSeconds(5);
+        await this.scrapper.clickButton(page, "#mysubmit");
+        await this.scrapper.waitForSeconds(1);
       } else {
         console.log(`[Sistrat][syncEvaluationForm] Bloqueando para validación manual por ${waitSeconds}s`);
         await this.scrapper.waitForSeconds(waitSeconds);

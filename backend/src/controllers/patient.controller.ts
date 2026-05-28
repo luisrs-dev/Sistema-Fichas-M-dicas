@@ -237,6 +237,10 @@ const postAdmissionFormSistrat = async ({ body }: Request, res: Response) => {
       errorMessage = match[1];
     }
     
+    if (errorMessage.includes("SISTRAT_ALERT_ERROR:")) {
+      errorMessage = errorMessage.split("SISTRAT_ALERT_ERROR:")[1].trim();
+    }
+    
     res.status(500).json({ success: false, message: errorMessage });
   }
 };

@@ -172,8 +172,6 @@ const saveAdmissionFormToSistrat = async (patientId: string) => {
 
     if (patient && admissionForm) {
       const statusAdmissionFormCreated = await sistratPlatform.registrarFichaIngreso(patient, admissionForm);
-      // Refrescar alertas automáticamente
-      await sistratPlatform.updateAlerts(patient);
       return statusAdmissionFormCreated;
     } else {
       throw new Error("Falta información del paciente para registrar su ficha de ingreso");

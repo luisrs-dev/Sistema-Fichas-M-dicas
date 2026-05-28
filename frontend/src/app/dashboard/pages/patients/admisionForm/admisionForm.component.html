@@ -9,7 +9,7 @@
       </h4>
     </div>
     <div>
-      <div class="flex align-items-center justify-content-end border-round pb-2">
+      <div class="flex gap-2 align-items-center justify-content-end border-round pb-2">
         <button class="my-2" mat-raised-button color="primary" (click)="onSave()">
           @if(editMode){ Actualizar }@else { Guardar }
           <mat-icon>save</mat-icon>
@@ -17,7 +17,7 @@
 
         @if(patient){
         @if(admissionFormRegistered || patient.registeredAdmissionForm){
-        <button class="ml-1 my-2" mat-raised-button color="primary"
+        <button class="text-white" mat-flat-button type="button" color="accent" 
           (click)="onSaveSistrat()">Subir a SISTRAT<mat-icon>save</mat-icon></button>
         }
         }
