@@ -326,22 +326,26 @@ export class TopSection3Component implements OnInit {
       return emptyFields;
     }
 
-    if (val.saludPsicologica === null) emptyFields.push('Salud Psicológica');
-    if (val.saludFisica === null) emptyFields.push('Salud Física');
-    if (!val.tieneLugarVivir) emptyFields.push('¿Tiene un lugar para vivir?');
-    if (!val.viviendasCondicionesBasicas) emptyFields.push('¿Habita en vivienda con condiciones básicas?');
-    if (val.calidadVida === null) emptyFields.push('Calidad de Vida');
+    if (val.saludPsicologica === null) emptyFields.push('Estado de Salud Psicológica');
+    if (val.saludFisica === null) emptyFields.push('Estado de Salud Física');
+    if (!val.tieneLugarVivir) emptyFields.push('Lugar para Vivir');
+    if (!val.viviendasCondicionesBasicas) emptyFields.push('Si habita una vivienda con condiciones básicas');
+    if (val.calidadVida === null) emptyFields.push('Estado de Calidad de Vida');
 
     const checkDays = (groupKey: string, label: string) => {
       const g = val[groupKey];
       if (!g.noResponde && !g.todosLosCeros) {
-        if (g.ultimaSemana === null || g.semana3 === null || g.semana2 === null || g.semana1 === null) {
-          emptyFields.push(`${label} (alguna semana vacía)`);
+        if (g.promedio === null || g.promedio === '' ||
+            g.ultimaSemana === null || g.ultimaSemana === '' ||
+            g.semana3 === null || g.semana3 === '' ||
+            g.semana2 === null || g.semana2 === '' ||
+            g.semana1 === null || g.semana1 === '') {
+          emptyFields.push(`Opciones de Días de ${label}`);
         }
       }
     };
-    checkDays('diasTrabajados', 'Días trabajados');
-    checkDays('diasEducacion', 'Días asistidos a educación');
+    checkDays('diasTrabajados', 'Trabajo Remunerado');
+    checkDays('diasEducacion', 'Estudios (Colegio/Instituto/Universidad)');
 
     return emptyFields;
   }

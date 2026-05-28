@@ -226,17 +226,28 @@ export class TopSection2Component implements OnInit {
     const emptyFields: string[] = [];
     const val = this.form.value;
 
+    const sistratLabels: Record<string, string> = {
+      hurto: 'Infracción por Hurto',
+      robo: 'Infracción por Robo',
+      ventaDrogas: 'Infracción por Venta de Droga',
+      rina: 'Infracción por Riña',
+      otraAccion: 'Otra Acción'
+    };
+
     this.items.forEach(item => {
       const g = val[item.key];
       if (!g.si && !g.no && !g.nr) {
-        emptyFields.push(item.label);
+        emptyFields.push(sistratLabels[item.key] || item.label);
       }
     });
 
     const vi = val.violenciaIntrafamiliar;
     if (!vi.noResponde && !vi.todosLosCeros) {
-      if (vi.ultimaSemana === null || vi.semana3 === null || vi.semana2 === null || vi.semana1 === null) {
-        emptyFields.push('Violencia Intrafamiliar (alguna semana vacía)');
+      if (vi.ultimaSemana === null || vi.ultimaSemana === '' ||
+          vi.semana3 === null || vi.semana3 === '' ||
+          vi.semana2 === null || vi.semana2 === '' ||
+          vi.semana1 === null || vi.semana1 === '') {
+        emptyFields.push('Opciones de Violencia Intrafamiliar');
       }
     }
 

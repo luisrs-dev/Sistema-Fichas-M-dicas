@@ -248,19 +248,31 @@ export class TopSection1Component implements OnInit {
     this.sustancias.forEach(s => {
       const g = val[s.key];
       if (!g.noResponde && !g.todosLosCeros) {
-        if (g.ultimaSemana === null || g.semana3 === null || g.semana2 === null || g.semana1 === null) {
-          emptyFields.push(`${s.label} (alguna semana vacía)`);
+        if (g.promedio === null || g.promedio === '' ||
+            g.ultimaSemana === null || g.ultimaSemana === '' ||
+            g.semana3 === null || g.semana3 === '' ||
+            g.semana2 === null || g.semana2 === '' ||
+            g.semana1 === null || g.semana1 === '') {
+          const substanceName = s.label.split('. ')[1] || s.label;
+          emptyFields.push(`Opciones de promedios de ${substanceName}`);
         }
       }
     });
 
     const og = val.otraSustancia;
     if (!og.noResponde && !og.todosLosCeros) {
-      if (og.ultimaSemana === null || og.semana3 === null || og.semana2 === null || og.semana1 === null) {
-        emptyFields.push(`Otra sustancia (alguna semana vacía)`);
+      // Si se comenzó a ingresar datos de otra sustancia, validar obligatoriedad
+      if (og.nombre || og.unidadMedida || og.promedio !== null || og.ultimaSemana !== null) {
+        if (!og.nombre) emptyFields.push('Nombre de "Otra sustancia"');
+        if (!og.unidadMedida) emptyFields.push('Unidad de medida de "Otra sustancia"');
+        if (og.promedio === null || og.promedio === '' ||
+            og.ultimaSemana === null || og.ultimaSemana === '' ||
+            og.semana3 === null || og.semana3 === '' ||
+            og.semana2 === null || og.semana2 === '' ||
+            og.semana1 === null || og.semana1 === '') {
+          emptyFields.push('Opciones de promedios de Otras Sustancias');
+        }
       }
-      if (!og.nombre) emptyFields.push('Nombre de "Otra sustancia"');
-      if (!og.unidadMedida) emptyFields.push('Unidad de medida de "Otra sustancia"');
     }
 
     return emptyFields;

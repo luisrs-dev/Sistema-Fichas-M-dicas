@@ -221,17 +221,41 @@ export default class TopFormComponent {
   private getValidationErrors(): string[] {
     const errors: string[] = [];
 
-    // Validar campos vacíos (lógica personalizada)
-    const emptyS1 = this.section1?.validate() || [];
-    const emptyS2 = this.section2?.validate() || [];
-    const emptyS3 = this.section3?.validate() || [];
-    errors.push(...emptyS1, ...emptyS2, ...emptyS3);
+    // Validar metadatos obligatorios
+    if (!this.metaForm.get('nombreEntrevistador')?.value) {
+      errors.push('Nombre del Entrevistador');
+    }
+    if (!this.metaForm.get('fechaEntrevista')?.value) {
+      errors.push('Fecha de Entrevista');
+    }
+
+    const noDeseaCompletar = this.section3?.form.get('noDeseaCompletar')?.value;
+
+    if (noDeseaCompletar) {
+      // Si no desea completar, solo validamos la Sección 3 (observaciones)
+      const emptyS3 = this.section3?.validate() || [];
+      errors.push(...emptyS3);
+    } else {
+      // Validar todos los campos vacíos de las 3 secciones
+      const emptyS1 = this.section1?.validate() || [];
+      const emptyS2 = this.section2?.validate() || [];
+      const emptyS3 = this.section3?.validate() || [];
+      errors.push(...emptyS1, ...emptyS2, ...emptyS3);
+    }
 
     // Validar errores nativos de Angular (ej: maxLength)
-    if (this.metaForm.invalid) errors.push('Formulario principal inválido');
-    if (this.section1?.form.invalid) errors.push('Sección 1: Revise errores en los campos');
-    if (this.section2?.form.invalid) errors.push('Sección 2: Revise errores en los campos');
-    if (this.section3?.form.invalid) errors.push('Sección 3: ' + (this.section3.form.get('observaciones')?.hasError('maxlength') ? 'Observaciones exceden 150 caracteres' : 'Revise errores en los campos'));
+    if (this.metaForm.invalid) errors.push('Formulario principal: Revise errores');
+    if (!noDeseaCompletar) {
+      if (this.section1?.form.invalid) errors.push('Sección 1: Revise errores en los campos');
+      if (this.section2?.form.invalid) errors.push('Sección 2: Revise errores en los campos');
+    }
+    if (this.section3?.form.invalid) {
+      if (this.section3.form.get('observaciones')?.hasError('maxlength')) {
+        errors.push('Observaciones (excede el límite de 150 caracteres)');
+      } else {
+        errors.push('Sección 3: Revise errores en los campos');
+      }
+    }
 
     return errors;
   }
@@ -246,8 +270,13 @@ export default class TopFormComponent {
     }
 
     const errors = this.getValidationErrors();
-    if (errors.length > 0 && errors.some(e => e.includes('exceden') || e.includes('inválido'))) {
-      Notiflix.Notify.failure('Corrija los errores antes de guardar');
+    if (errors.length > 0) {
+      const list = errors.map(f => `<li>${f}</li>`).join('');
+      Notiflix.Report.warning(
+        'Campos Obligatorios Pendientes',
+        `Para llevar un registro exitoso, complete los siguientes campos obligatorios antes de guardar:<br/><br/><ul style="text-align: left; max-height: 200px; overflow-y: auto;">${list}</ul>`,
+        'Entendido'
+      );
       return;
     }
 
