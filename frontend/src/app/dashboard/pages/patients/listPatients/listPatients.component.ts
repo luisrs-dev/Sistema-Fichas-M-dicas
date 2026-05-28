@@ -178,6 +178,56 @@ export default class ListPatientsComponent implements OnInit {
     );
   }
 
+  hasBlockingAlert(element: Patient): boolean {
+    console.log('user',this.user);
+    
+    // if (this.isAdmin) return false;
+    const profileName = this.user?.profile?.name?.toLowerCase() || '';
+
+    // Rule 1: VERDE (alertEvaluacion) -> Terapia ocupacional
+    const isTerapeuta = profileName.includes('terapeuta') || profileName.includes('ocupacional');
+    if (element.alertEvaluacion && isTerapeuta) {
+      return true;
+    }
+
+    // Rule 2: AMARILLA (alertIntegracionSocial) -> Trabajador social
+    const isTrabajadorSocial = profileName.includes('trabajador') || profileName.includes('social');
+    if (element.alertIntegracionSocial && isTrabajadorSocial) {
+      return true;
+    }
+
+    // Rule 3: NEGRA (alertConsentimiento) -> Psicólogo
+    const isPsicologo = profileName.includes('psicólog') || profileName.includes('psicolog');
+    if (element.alertConsentimiento && isPsicologo) {
+      return true;
+    }
+
+    return false;
+  }
+
+  getBlockingAlertMessage(element: Patient): string {
+    if (element.alertEvaluacion) {
+      return 'Debe ingresar la alerta de Evaluación (Verde) para poder registrar atenciones';
+    }
+    if (element.alertIntegracionSocial) {
+      return 'Debe ingresar la alerta de Integración Social (Amarilla) para poder registrar atenciones';
+    }
+    if (element.alertConsentimiento) {
+      return 'Debe ingresar la alerta de TOP (Negra) para poder registrar atenciones';
+    }
+    return '';
+  }
+
+  showBlockingAlertMessage(element: Patient): void {
+    const message = this.getBlockingAlertMessage(element);
+    Notiflix.Report.warning(
+      'Atenciones Bloqueadas',
+      `${message}. Por favor ingrese el formulario correspondiente antes de registrar nuevas atenciones.`,
+      'Entendido'
+    );
+  }
+
+
   onClickAlert(patientId: string, alertType: string) {
     Notiflix.Notify.info('Abriendo SISTRAT...');
     this.patientService.resolveAlertSistrat(patientId, alertType).subscribe({

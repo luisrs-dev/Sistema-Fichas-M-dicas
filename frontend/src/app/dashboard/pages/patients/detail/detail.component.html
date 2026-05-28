@@ -34,10 +34,17 @@
     </div>
 
     <div class="flex flex-wrap gap-2 mb-4 align-items-center">
-      <button mat-flat-button color="primary" class="text-white mat-elevation-z2" (click)="onNewMedicalRecord()">
-        <mat-icon class="mr-1">post_add</mat-icon>
-        Nuevo Registro
-      </button>
+      @if (hasBlockingAlert(p)) {
+        <button mat-flat-button color="warn" class="text-white mat-elevation-z2" (click)="showBlockingAlertMessage(p)">
+          <mat-icon class="mr-1">block</mat-icon>
+          Nuevo Registro (Bloqueado)
+        </button>
+      } @else {
+        <button mat-flat-button color="primary" class="text-white mat-elevation-z2" (click)="onNewMedicalRecord()">
+          <mat-icon class="mr-1">post_add</mat-icon>
+          Nuevo Registro
+        </button>
+      }
 
       <button mat-flat-button color="accent" class="text-white mat-elevation-z2" (click)="onMonthRegisters()">
         <mat-icon class="mr-1">calendar_month</mat-icon>

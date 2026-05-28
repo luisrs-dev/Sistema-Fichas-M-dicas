@@ -91,6 +91,12 @@
             style="font-size: 18px; width: 24px; height: 18px; color: #2196f3 !important;">info</mat-icon>
           }
           {{ element.name }} {{ element.surname }} {{ element.secondSurname }}
+          @if (hasBlockingAlert(element)) {
+            <span class="blocking-badge ml-2" [matTooltip]="getBlockingAlertMessage(element)">
+              <mat-icon class="mr-1" style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle;">warning</mat-icon>
+              Bloqueado
+            </span>
+          }
         </div>
       </td>
     </ng-container>
@@ -179,10 +185,17 @@
           <mat-icon>edit</mat-icon>
         </button>
         }
-        <button mat-icon-button matTooltip="Fichas Clínicas" [routerLink]="['/dashboard/patient', element._id]"
-          color="primary" style="font-size: 12px !important">
-          <mat-icon>medical_information</mat-icon>
-        </button>
+        @if (hasBlockingAlert(element)) {
+          <button mat-icon-button [matTooltip]="getBlockingAlertMessage(element)" (click)="showBlockingAlertMessage(element)"
+            color="warn" style="font-size: 12px !important">
+            <mat-icon class="pulse-icon">block</mat-icon>
+          </button>
+        } @else {
+          <button mat-icon-button matTooltip="Fichas Clínicas" [routerLink]="['/dashboard/patient', element._id]"
+            color="primary" style="font-size: 12px !important">
+            <mat-icon>medical_information</mat-icon>
+          </button>
+        }
 
         @if (authService.isAdmin()) {
         <!--@if(element.registeredDemand){-->
