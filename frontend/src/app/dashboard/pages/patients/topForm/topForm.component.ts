@@ -175,9 +175,9 @@ export default class TopFormComponent {
     this.patientService.getPatientById(this.patientId).subscribe((response) => {
       this.patient = response.patient;
 
-      // Cargar formulario TOP existente si ya fue guardado
+      // Cargar formulario TOP existente si ya fue guardado y está pendiente
       this.patientService.getTopForm(this.patientId).subscribe((res) => {
-        if (res.topForm) {
+        if (res.topForm && res.topForm.syncStatus === 'pendiente') {
           this.topFormSaved.set(true);
           const dataToPatch = { ...res.topForm };
           if (dataToPatch.fechaEntrevista) {
@@ -190,17 +190,15 @@ export default class TopFormComponent {
             this.section2?.patchData(res.topForm);
             this.section3?.patchData(res.topForm);
           }, 200);
-        }
-        this.loading.set(false);
-
-        // Si no hay formulario previo, pre-cargar el nombre del entrevistador logueado
-        if (!this.topFormSaved()) {
+        } else {
+          this.topFormSaved.set(false);
+          // Pre-cargar el nombre del entrevistador logueado para nuevo formulario
           const user = this.authService.getUser();
           if (user) {
             this.metaForm.patchValue({ nombreEntrevistador: user.name });
           }
         }
-
+        this.loading.set(false);
         this.cdr.detectChanges();
       });
     });

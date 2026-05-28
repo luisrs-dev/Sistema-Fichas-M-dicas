@@ -6,20 +6,28 @@ import PatientModel from "../models/patient.model";
 
 export const createOrUpdateSocialForm = async (patientId: string, data: Partial<IntegracionSocialForm>) => {
   const patientObjectId = new Types.ObjectId(patientId);
-  const existing = await SocialFormModel.findOne({ patientId: patientObjectId });
+  const existingPending = await SocialFormModel.findOne({ 
+    patientId: patientObjectId, 
+    syncStatus: "pendiente" 
+  }).sort({ createdAt: -1 });
 
-  if (existing) {
-    const updated = await SocialFormModel.findByIdAndUpdate(existing._id, data, { new: true });
+  if (existingPending) {
+    const updated = await SocialFormModel.findByIdAndUpdate(existingPending._id, data, { new: true });
     return { socialForm: updated, updated: true };
   }
 
-  const socialForm = new SocialFormModel({ ...data, patientId: patientObjectId });
+  const socialForm = new SocialFormModel({ 
+    ...data, 
+    patientId: patientObjectId, 
+    syncStatus: "pendiente" 
+  });
   await socialForm.save();
   return { socialForm, updated: false };
 };
 
 export const getSocialFormByPatient = async (patientId: string) => {
-  const socialForm = await SocialFormModel.findOne({ patientId: new Types.ObjectId(patientId) });
+  const socialForm = await SocialFormModel.findOne({ patientId: new Types.ObjectId(patientId) })
+    .sort({ createdAt: -1 });
   return socialForm;
 };
 
@@ -32,6 +40,10 @@ export const syncSocialToSistratService = async (patientId: string) => {
 
   const sistrat = new Sistrat();
   await sistrat.syncSocialForm(patient, socialForm as any);
+  
+  // Actualizar syncStatus a "sincronizado" tras sincronización exitosa
+  await SocialFormModel.findByIdAndUpdate(socialForm._id, { syncStatus: "sincronizado" });
+  
   // Refrescar alertas automáticamente
   await sistrat.updateAlerts(patient);
   return { success: true };

@@ -11,4 +11,5 @@ export interface EvaluationForm {
   saludFisica: string;
   createdAt?: Date;
   updatedAt?: Date;
+  syncStatus?: "pendiente" | "sincronizado";
 }

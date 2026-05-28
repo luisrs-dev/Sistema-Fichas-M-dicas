@@ -178,9 +178,11 @@ export default class SocialDiagnosisFormComponent implements OnInit {
           this.patient = patientRes.patient;
         }
         
-        if (diagData && diagData.socialDiagnosisForm) {
+        if (diagData && diagData.socialDiagnosisForm && diagData.socialDiagnosisForm.syncStatus === 'pendiente') {
           this.form.patchValue(diagData.socialDiagnosisForm);
           this.isSaved = true;
+        } else {
+          this.isSaved = false;
         }
         
         this.loading = false;

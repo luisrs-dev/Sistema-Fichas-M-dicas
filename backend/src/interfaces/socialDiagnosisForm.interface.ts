@@ -8,4 +8,5 @@ export interface SocialDiagnosisForm {
   capitalSocial: string; // "10", "11", "12"
   createdAt?: Date;
   updatedAt?: Date;
+  syncStatus?: "pendiente" | "sincronizado";
 }

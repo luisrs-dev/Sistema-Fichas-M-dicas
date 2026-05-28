@@ -34,11 +34,11 @@ export const getAlertHistoryByPatient = async (patientId: string) => {
   }
 
   // Queries en paralelo a las 4 colecciones de formularios + fichas clínicas
-  const [topForm, evaluationForm, socialForm, socialDiagnosisForm, medicalRecords] = await Promise.all([
-    TopFormModel.findOne({ patientId: patientObjectId }).lean(),
-    EvaluationFormModel.findOne({ patientId: patientObjectId }).lean(),
-    SocialFormModel.findOne({ patientId: patientObjectId }).lean(),
-    SocialDiagnosisFormModel.findOne({ patientId: patientObjectId }).lean(),
+  const [topForms, evaluationForms, socialForms, socialDiagnosisForms, medicalRecords] = await Promise.all([
+    TopFormModel.find({ patientId: patientObjectId, syncStatus: "sincronizado" }).sort({ createdAt: -1 }).lean(),
+    EvaluationFormModel.find({ patientId: patientObjectId, syncStatus: "sincronizado" }).sort({ createdAt: -1 }).lean(),
+    SocialFormModel.find({ patientId: patientObjectId, syncStatus: "sincronizado" }).sort({ createdAt: -1 }).lean(),
+    SocialDiagnosisFormModel.find({ patientId: patientObjectId, syncStatus: "sincronizado" }).sort({ createdAt: -1 }).lean(),
     MedicalRecordModel.find({ patient: patientObjectId })
       .populate({
         path: "registeredBy",
@@ -65,25 +65,25 @@ export const getAlertHistoryByPatient = async (patientId: string) => {
       tipo: "TOP",
       color: "#000000",
       icon: "circle",
-      registros: buildTopRecords(topForm),
+      registros: buildTopRecords(topForms),
     },
     {
       tipo: "Evaluación",
       color: "#28a745",
       icon: "circle",
-      registros: buildEvaluationRecords(evaluationForm),
+      registros: buildEvaluationRecords(evaluationForms),
     },
     {
       tipo: "Integración Social",
       color: "#FFD700",
       icon: "circle",
-      registros: buildSocialRecords(socialForm),
+      registros: buildSocialRecords(socialForms),
     },
     {
       tipo: "Diagnóstico Social",
       color: "#fd7e14",
       icon: "circle",
-      registros: buildSocialDiagnosisRecords(socialDiagnosisForm),
+      registros: buildSocialDiagnosisRecords(socialDiagnosisForms),
     },
     {
       tipo: "Ficha Mensual",
@@ -112,70 +112,68 @@ function buildCie10Records(patient: any): AlertRecord[] {
   ];
 }
 
-function buildTopRecords(topForm: any): AlertRecord[] {
-  if (!topForm) return [];
+function buildTopRecords(topForms: any[]): AlertRecord[] {
+  if (!topForms || topForms.length === 0) return [];
 
-  return [
-    {
-      tipo: "TOP",
-      fecha: topForm.fechaEntrevista || topForm.createdAt,
-      observacion: topForm.observaciones || "Formulario TOP registrado",
-      profesional: topForm.nombreEntrevistador || "—",
-    },
-  ];
+  return topForms.map(topForm => ({
+    tipo: "TOP",
+    fecha: topForm.fechaEntrevista || topForm.createdAt,
+    observacion: topForm.observaciones || "Formulario TOP registrado",
+    profesional: topForm.nombreEntrevistador || "—",
+  }));
 }
 
-function buildEvaluationRecords(evaluationForm: any): AlertRecord[] {
-  if (!evaluationForm) return [];
+function buildEvaluationRecords(evaluationForms: any[]): AlertRecord[] {
+  if (!evaluationForms || evaluationForms.length === 0) return [];
 
-  const resumen: string[] = [];
-  if (evaluationForm.patronConsumo) resumen.push(`Patrón de consumo: ${evaluationForm.patronConsumo}`);
-  if (evaluationForm.situacionFamiliar) resumen.push(`Situación familiar: ${evaluationForm.situacionFamiliar}`);
-  if (evaluationForm.saludMental) resumen.push(`Salud mental: ${evaluationForm.saludMental}`);
-  if (evaluationForm.saludFisica) resumen.push(`Salud física: ${evaluationForm.saludFisica}`);
+  return evaluationForms.map(evaluationForm => {
+    const resumen: string[] = [];
+    if (evaluationForm.patronConsumo) resumen.push(`Patrón de consumo: ${evaluationForm.patronConsumo}`);
+    if (evaluationForm.situacionFamiliar) resumen.push(`Situación familiar: ${evaluationForm.situacionFamiliar}`);
+    if (evaluationForm.saludMental) resumen.push(`Salud mental: ${evaluationForm.saludMental}`);
+    if (evaluationForm.saludFisica) resumen.push(`Salud física: ${evaluationForm.saludFisica}`);
 
-  return [
-    {
+    return {
       tipo: "Evaluación",
       fecha: evaluationForm.createdAt,
       observacion: resumen.length > 0 ? resumen.join(" | ") : "Ficha de evaluación registrada",
       profesional: "—",
-    },
-  ];
+    };
+  });
 }
 
-function buildSocialRecords(socialForm: any): AlertRecord[] {
-  if (!socialForm) return [];
+function buildSocialRecords(socialForms: any[]): AlertRecord[] {
+  if (!socialForms || socialForms.length === 0) return [];
 
-  const observaciones: string[] = [];
-  if (socialForm.observacion1) observaciones.push(socialForm.observacion1);
-  if (socialForm.observacion2) observaciones.push(socialForm.observacion2);
-  if (socialForm.observacion3) observaciones.push(socialForm.observacion3);
+  return socialForms.map(socialForm => {
+    const observaciones: string[] = [];
+    if (socialForm.observacion1) observaciones.push(socialForm.observacion1);
+    if (socialForm.observacion2) observaciones.push(socialForm.observacion2);
+    if (socialForm.observacion3) observaciones.push(socialForm.observacion3);
 
-  return [
-    {
+    return {
       tipo: "Integración Social",
       fecha: socialForm.createdAt,
       observacion: observaciones.length > 0 ? observaciones.join(" | ") : "Ficha de integración social registrada",
       profesional: "—",
-    },
-  ];
+    };
+  });
 }
 
-function buildSocialDiagnosisRecords(socialDiagnosisForm: any): AlertRecord[] {
-  if (!socialDiagnosisForm) return [];
+function buildSocialDiagnosisRecords(socialDiagnosisForms: any[]): AlertRecord[] {
+  if (!socialDiagnosisForms || socialDiagnosisForms.length === 0) return [];
 
   const globalLabels: Record<string, string> = { "1": "Alta", "2": "Media", "3": "Baja" };
-  const globalLabel = globalLabels[socialDiagnosisForm.global] || socialDiagnosisForm.global;
 
-  return [
-    {
+  return socialDiagnosisForms.map(socialDiagnosisForm => {
+    const globalLabel = globalLabels[socialDiagnosisForm.global] || socialDiagnosisForm.global;
+    return {
       tipo: "Diagnóstico Social",
       fecha: socialDiagnosisForm.createdAt,
       observacion: `Vulnerabilidad global: ${globalLabel}`,
       profesional: "—",
-    },
-  ];
+    };
+  });
 }
 
 function buildMedicalRecords(medicalRecords: any[]): AlertRecord[] {

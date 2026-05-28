@@ -62,4 +62,6 @@ export interface TopForm {
 
   createdAt?: Date;
   updatedAt?: Date;
+  syncStatus?: "pendiente" | "sincronizado";
 }
+

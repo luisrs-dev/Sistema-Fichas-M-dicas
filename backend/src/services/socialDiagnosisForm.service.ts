@@ -6,20 +6,28 @@ import PatientModel from "../models/patient.model";
 
 export const createOrUpdateSocialDiagnosisForm = async (patientId: string, data: Partial<SocialDiagnosisForm>) => {
   const patientObjectId = new Types.ObjectId(patientId);
-  const existing = await SocialDiagnosisFormModel.findOne({ patientId: patientObjectId });
+  const existingPending = await SocialDiagnosisFormModel.findOne({ 
+    patientId: patientObjectId, 
+    syncStatus: "pendiente" 
+  }).sort({ createdAt: -1 });
 
-  if (existing) {
-    const updated = await SocialDiagnosisFormModel.findByIdAndUpdate(existing._id, data, { new: true });
+  if (existingPending) {
+    const updated = await SocialDiagnosisFormModel.findByIdAndUpdate(existingPending._id, data, { new: true });
     return { socialDiagnosisForm: updated, updated: true };
   }
 
-  const socialDiagnosisForm = new SocialDiagnosisFormModel({ ...data, patientId: patientObjectId });
+  const socialDiagnosisForm = new SocialDiagnosisFormModel({ 
+    ...data, 
+    patientId: patientObjectId, 
+    syncStatus: "pendiente" 
+  });
   await socialDiagnosisForm.save();
   return { socialDiagnosisForm, updated: false };
 };
 
 export const getSocialDiagnosisFormByPatient = async (patientId: string) => {
-  const socialDiagnosisForm = await SocialDiagnosisFormModel.findOne({ patientId: new Types.ObjectId(patientId) });
+  const socialDiagnosisForm = await SocialDiagnosisFormModel.findOne({ patientId: new Types.ObjectId(patientId) })
+    .sort({ createdAt: -1 });
   return socialDiagnosisForm;
 };
 
@@ -32,6 +40,9 @@ export const syncSocialDiagnosisToSistratService = async (patientId: string) => 
 
   const sistrat = new Sistrat();
   await sistrat.syncSocialDiagnosisForm(patient, socialDiagnosisForm);
+  
+  // Actualizar syncStatus a "sincronizado" tras sincronización exitosa
+  await SocialDiagnosisFormModel.findByIdAndUpdate(socialDiagnosisForm._id, { syncStatus: "sincronizado" });
   
   // Refrescar alertas automáticamente (Comentado para evitar que abra navegador redundante)
   // await sistrat.updateAlerts(patient);

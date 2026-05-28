@@ -19,4 +19,5 @@ export interface IntegracionSocialForm {
   observacion3: string;
   createdAt?: Date;
   updatedAt?: Date;
+  syncStatus?: "pendiente" | "sincronizado";
 }

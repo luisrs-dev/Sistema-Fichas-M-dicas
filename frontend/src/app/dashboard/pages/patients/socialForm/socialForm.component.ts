@@ -151,9 +151,11 @@ export default class SocialFormComponent {
       this.patient = response.patient;
 
       this.patientService.getSocialForm(this.patientId).subscribe((form) => {
-        if (form) {
+        if (form && form.syncStatus === 'pendiente') {
           this.formSaved.set(true);
           this.socialForm.patchValue(form);
+        } else {
+          this.formSaved.set(false);
         }
         this.loading.set(false);
         this.cdr.detectChanges();

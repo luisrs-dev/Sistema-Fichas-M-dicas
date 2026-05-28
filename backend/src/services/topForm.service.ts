@@ -107,24 +107,32 @@ function callGeminiApi(prompt: string, userText: string): Promise<string> {
     req.end();
   });
 }
-
 // ─── Métodos del servicio ────────────────────────────────────────────────────
 
 export const createTopForm = async (patientId: string, data: Partial<TopForm>) => {
-  const existing = await TopFormModel.findOne({ patientId: new Types.ObjectId(patientId) });
+  const patientObjectId = new Types.ObjectId(patientId);
+  const existingPending = await TopFormModel.findOne({ 
+    patientId: patientObjectId, 
+    syncStatus: "pendiente" 
+  }).sort({ createdAt: -1 });
 
-  if (existing) {
-    const updated = await TopFormModel.findByIdAndUpdate(existing._id, data, { new: true });
+  if (existingPending) {
+    const updated = await TopFormModel.findByIdAndUpdate(existingPending._id, data, { new: true });
     return { topForm: updated, updated: true };
   }
 
-  const topForm = new TopFormModel({ patientId: new Types.ObjectId(patientId), ...data });
+  const topForm = new TopFormModel({ 
+    patientId: patientObjectId, 
+    ...data, 
+    syncStatus: "pendiente" 
+  });
   await topForm.save();
   return { topForm, updated: false };
 };
 
 export const getTopFormByPatient = async (patientId: string) => {
-  const topForm = await TopFormModel.findOne({ patientId: new Types.ObjectId(patientId) });
+  const topForm = await TopFormModel.findOne({ patientId: new Types.ObjectId(patientId) })
+    .sort({ createdAt: -1 });
   return { topForm };
 };
 
@@ -162,6 +170,10 @@ export const syncTopFormToSistrat = async (patientId: string) => {
 
   const sistrat = new Sistrat();
   await sistrat.syncTopForm(patient, topForm);
+  
+  // Actualizar syncStatus a "sincronizado" tras sincronización exitosa
+  await TopFormModel.findByIdAndUpdate(topForm._id, { syncStatus: "sincronizado" });
+  
   // Refrescar alertas automáticamente
   // await sistrat.updateAlerts(patient);
   return { success: true };

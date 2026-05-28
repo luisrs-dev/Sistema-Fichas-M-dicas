@@ -11,6 +11,7 @@ const EvaluationFormSchema = new Schema<EvaluationForm>(
     trasgresionSocial: { type: String, default: "" },
     saludMental: { type: String, default: "" },
     saludFisica: { type: String, default: "" },
+    syncStatus: { type: String, enum: ["pendiente", "sincronizado"], default: "pendiente" },
   },
   { timestamps: true, versionKey: false }
 );

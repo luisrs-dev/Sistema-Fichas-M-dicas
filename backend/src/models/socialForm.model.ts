@@ -19,6 +19,7 @@ const SocialFormSchema = new Schema<IntegracionSocialForm>(
     observacion1: { type: String, default: "" },
     observacion2: { type: String, default: "" },
     observacion3: { type: String, default: "" },
+    syncStatus: { type: String, enum: ["pendiente", "sincronizado"], default: "pendiente" },
   },
   { timestamps: true, versionKey: false }
 );

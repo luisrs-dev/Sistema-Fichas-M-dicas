@@ -214,12 +214,13 @@ export default class EvaluationFormComponent implements OnInit {
           this.snackBar.open('No se pudo cargar la información del paciente', 'Cerrar', { duration: 5000 });
         }
         
-        if (evaluationData) {
+        if (evaluationData && evaluationData.syncStatus === 'pendiente') {
           console.log('[loadData][patchingForm]', evaluationData);
           this.form.patchValue(evaluationData);
           this.isSaved = true;
         } else {
-          console.log('[loadData][no-eval-data]');
+          console.log('[loadData][no-eval-data] or not pending');
+          this.isSaved = false;
         }
         
         this.loading = false;
