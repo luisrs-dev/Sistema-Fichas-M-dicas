@@ -175,6 +175,87 @@ export default class AdmisionFormComponent {
   }
 
   onSaveSistrat() {
+    const userIdentificacionForm = this.userIdentificationComponent?.getFormData() || {};
+    const sociodemographicForm = this.socioDemographicComponent?.getFormData() || {};
+    const consumerPatternForm = this.consumerPatternComponent?.getFormData() || {};
+    const clinicalDiagnosisForm = this.clinicalDiagnosisComponent?.getFormData() || {};
+    const treatmentForm = this.treatmentComponent?.getFormData() || {};
+    const socialDiagnosisForm = this.socialDiagnosisComponent?.getFormData() || {};
+
+    const data = {
+      ...this.admissionForm,
+      ...userIdentificacionForm,
+      ...sociodemographicForm,
+      ...consumerPatternForm,
+      ...clinicalDiagnosisForm,
+      ...treatmentForm,
+      ...socialDiagnosisForm,
+    };
+
+    const missingFields: string[] = [];
+
+    // 1. Diagnóstico de sustancia principal
+    if (!data.seldiagn_consumo_sustancia || data.seldiagn_consumo_sustancia === '') {
+      missingFields.push('Diagnóstico de sustancia principal');
+    }
+
+    // 2. Condición ocupacional
+    if (!data.selestado_ocupacional || data.selestado_ocupacional === '') {
+      missingFields.push('Condición ocupacional');
+    }
+
+    // 3. Ocupación de ingresos (condicional)
+    const estadoOcupacional = data.selestado_ocupacional;
+    const laboralDetalle = data.laboral_detalle;
+    const needsIngresos = ['17', '18'].includes(estadoOcupacional) || (estadoOcupacional === '19' && laboralDetalle && laboralDetalle !== '4');
+    if (needsIngresos && (!data.laboral_ingresos || data.laboral_ingresos === '')) {
+      missingFields.push('Ocupación de ingresos (Ingresos laborales)');
+    }
+
+    // 4. Ocupación detalle (condicional)
+    const needsDetalle = ['19', '22'].includes(estadoOcupacional);
+    if (needsDetalle && (!data.laboral_detalle || data.laboral_detalle === '')) {
+      missingFields.push('Ocupación detalle (Detalle laboral)');
+    }
+
+    // 5. Intoxicación aguda
+    if (!data.selintox_aguda || data.selintox_aguda === '') {
+      missingFields.push('Intoxicación aguda');
+    }
+
+    // 6. Síndrome de abstinencia
+    if (!data.selsindrome_abstinencia || data.selsindrome_abstinencia === '') {
+      missingFields.push('Síndrome de abstinencia');
+    }
+
+    // 7. Tenencia de vivienda
+    if (!data.seltenencia_vivienda || data.seltenencia_vivienda === '') {
+      missingFields.push('Tenencia de vivienda');
+    }
+
+    // 8. Frecuencia de consumo
+    if (!data.selfrecuencia_consumo || data.selfrecuencia_consumo === '') {
+      missingFields.push('Frecuencia de consumo');
+    }
+
+    // 9. Edad inicio consumo
+    if (!data.txtedad_inicio_consumo || data.txtedad_inicio_consumo === '') {
+      missingFields.push('Edad inicio consumo');
+    }
+
+    if (missingFields.length > 0) {
+      this.dialog.open(InvalidFormsDialogComponent, {
+        data: {
+          invalidForms: [{
+            title: 'Campos obligatorios requeridos para SISTRAT',
+            fields: missingFields
+          }]
+        },
+        width: '500px'
+      });
+      return;
+    }
+
     Notiflix.Confirm.show(
       '¿Está seguro?',
       'Esta acción es irreversible y no podrá modificar la información.',
