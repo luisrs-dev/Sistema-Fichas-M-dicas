@@ -335,8 +335,7 @@ export class TopSection3Component implements OnInit {
     const checkDays = (groupKey: string, label: string) => {
       const g = val[groupKey];
       if (!g.noResponde && !g.todosLosCeros) {
-        if (g.promedio === null || g.promedio === '' ||
-            g.ultimaSemana === null || g.ultimaSemana === '' ||
+        if (g.ultimaSemana === null || g.ultimaSemana === '' ||
             g.semana3 === null || g.semana3 === '' ||
             g.semana2 === null || g.semana2 === '' ||
             g.semana1 === null || g.semana1 === '') {

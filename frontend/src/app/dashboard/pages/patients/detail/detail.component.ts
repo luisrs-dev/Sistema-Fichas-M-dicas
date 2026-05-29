@@ -380,11 +380,14 @@ export default class DetailComponent implements OnInit {
         // Success
         if (patientId === undefined) return;
         this.medicalRecordService.monthRecords(patientId, this.selectedMonth(), this.selectedYear(), this.medicalRecordsGrouped()).subscribe({
-          next: () => {
-            Notiflix.Notify.success('Registrado en SISTRAT');
-            this.registeredRecordsPerMonth.set(true);
-            this.screenshotPath.set(`http://ficlin.cl/uploads/screenshots/septiembre2025/${this.patient()?.name.replaceAll(/\s+/g, '_').toLowerCase()}_mes_septiembre.png`);
-
+          next: (res: any) => {
+            if (res && res.data && String(res.data).includes('No procesado')) {
+              Notiflix.Notify.warning(res.data);
+            } else {
+              Notiflix.Notify.success('Registrado en SISTRAT');
+              this.registeredRecordsPerMonth.set(true);
+              this.screenshotPath.set(`http://ficlin.cl/uploads/screenshots/septiembre2025/${this.patient()?.name.replaceAll(/\s+/g, '_').toLowerCase()}_mes_septiembre.png`);
+            }
           },
           error: (err: any) => {
             console.error('Error al eliminar la ficha médica:', err);

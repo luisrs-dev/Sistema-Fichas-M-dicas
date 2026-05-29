@@ -152,7 +152,7 @@ const postMedicalRecordsPerMonthForAllPatients = async (month: number, year: num
           patientName,
           programName,
           status: "skipped",
-          reason: "Sin fichas en el mes solicitado",
+          reason: "No procesado (El paciente no tiene fichas médicas registradas en el mes)",
         });
         await sistratPlatform.scrapper.closeBrowser();
         await bulkLogger.log(`SKIPPED | pacienteId=${patient._id} | ${patient.name} ${patient.surname} | Sin fichas en el mes`);
@@ -219,21 +219,43 @@ const postMedicalRecordsBulkSistrat = async (center: string, patientIds: string[
   }
 
   const recordsData: { patient: Patient, records: any[] }[] = [];
+  const skippedResults: { patientId: string, status: string, message: string }[] = [];
 
   for (const patientId of patientIds) {
     const patient = await PatientModel.findById(patientId);
-    if (!patient || !patient.active) continue;
+    if (!patient) {
+      skippedResults.push({
+        patientId,
+        status: "warning",
+        message: "No procesado (Paciente no encontrado)"
+      });
+      continue;
+    }
+    if (!patient.active) {
+      skippedResults.push({
+        patientId,
+        status: "warning",
+        message: "No procesado (Paciente inactivo)"
+      });
+      continue;
+    }
 
     const records = await getGroupedRecordsByPatientAndMonth(patientId, month, year);
     if (records.length > 0) {
       recordsData.push({ patient, records });
+    } else {
+      skippedResults.push({
+        patientId,
+        status: "warning",
+        message: "No procesado (El paciente no tiene fichas médicas registradas en el mes)"
+      });
     }
   }
 
   // Ahora levantamos Sistrat 1 vez
   const sistratPlatform = new Sistrat();
   const results = await sistratPlatform.bulkRecordMonthlySheets(recordsData, center, month, year);
-  return results;
+  return [...results, ...skippedResults];
 };
 
 const sendTestBulkSummaryEmail = async (options: { recipient?: string; month?: number; year?: number } = {}) => {

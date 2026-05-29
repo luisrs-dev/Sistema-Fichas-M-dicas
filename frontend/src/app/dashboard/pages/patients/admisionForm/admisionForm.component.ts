@@ -175,6 +175,15 @@ export default class AdmisionFormComponent {
   }
 
   onSaveSistrat() {
+    if (!this.patient?.codigoSistrat || this.patient.codigoSistrat.trim() === '') {
+      Notiflix.Report.warning(
+        'Código SISTRAT Faltante',
+        'El paciente no tiene un código SISTRAT registrado. Debe ingresar su código para poder subir los datos a SISTRAT.',
+        'Entendido'
+      );
+      return;
+    }
+
     const userIdentificacionForm = this.userIdentificationComponent?.getFormData() || {};
     const sociodemographicForm = this.socioDemographicComponent?.getFormData() || {};
     const consumerPatternForm = this.consumerPatternComponent?.getFormData() || {};

@@ -156,7 +156,7 @@ export default class AttentionsComponent {
           updatedMessages[id] = resItem.message || '';
         } else {
           updatedStatuses[id] = 'warning';
-          updatedMessages[id] = 'No procesado (Revisar logs del servidor)';
+          updatedMessages[id] = 'No procesado (El paciente no tiene fichas médicas registradas en el mes)';
         }
       });
 
