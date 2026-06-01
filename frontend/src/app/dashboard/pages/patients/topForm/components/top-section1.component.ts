@@ -40,15 +40,15 @@ import Notiflix from 'notiflix';
                 <td><mat-checkbox formControlName="todosLosCeros" (change)="onTodosCerosChange(s.key, $any($event).checked)"></mat-checkbox></td>
                 <td>
                   <div class="flex align-items-center justify-content-center gap-1">
-                    <input type="number" formControlName="promedio" min="0" max="7" class="num-input">
+                    <input type="number" formControlName="promedio" min="0" max="100" class="num-input">
                     <span class="unit-label">{{ s.unit }}</span>
                   </div>
                 </td>
-                <td><input type="number" formControlName="ultimaSemana" min="0" max="7" class="num-input"></td>
-                <td><input type="number" formControlName="semana3" min="0" max="7" class="num-input"></td>
-                <td><input type="number" formControlName="semana2" min="0" max="7" class="num-input"></td>
-                <td><input type="number" formControlName="semana1" min="0" max="7" class="num-input"></td>
-                <td><input type="number" formControlName="total" min="0" max="28" class="num-input"></td>
+                <td><input type="number" formControlName="ultimaSemana" min="0" max="100" class="num-input"></td>
+                <td><input type="number" formControlName="semana3" min="0" max="100" class="num-input"></td>
+                <td><input type="number" formControlName="semana2" min="0" max="100" class="num-input"></td>
+                <td><input type="number" formControlName="semana1" min="0" max="100" class="num-input"></td>
+                <td><input type="number" formControlName="total" min="0" max="100" class="num-input"></td>
                 <td><mat-checkbox formControlName="noResponde" (change)="onNoRespondeChange(s.key, $any($event).checked)"></mat-checkbox></td>
               </tr>
             </tbody>
