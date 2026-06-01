@@ -1058,8 +1058,13 @@ class Sistrat {
     page.on("response", async (response) => {
       try {
         if (response.url().includes(urlToCapture)) {
-          const responseFonasa = await response.json();
-          console.log("Respuesta capturada:", responseFonasa);
+          let responseFonasa: any;
+          try {
+            responseFonasa = await response.json();
+            console.log("Respuesta capturada:", responseFonasa);
+          } catch (jsonErr: any) {
+            console.error("Error al parsear JSON de respuesta Fonasa:", jsonErr.message);
+          }
 
           if (responseFonasa === 0) {
             console.log("Fonasa OK: cerrando popup...");
@@ -1077,20 +1082,25 @@ class Sistrat {
             } else {
               console.log("Paciente No encontrado para registrar fonasa");
             }
-
-            // 🔥 Esperar que el popup exista en el DOM
-            await page.waitForSelector("#popup_ok", { visible: true, timeout: 5000 });
-
-            // 🔥 Cerrar el popup HTML
-            await page.click("#popup_ok");
-
-            console.log("Popup Fonasa cerrado correctamente");
+          } else {
+            console.log(`Fonasa con código/error: ${responseFonasa}. Procediendo a cerrar popup de error...`);
+            await this.logStep(logger, `[Sistrat][completeAdmissionForm] Validación Fonasa fallida/error: ${JSON.stringify(responseFonasa)}`);
           }
+
+          // En cualquier caso (éxito o error), si el popup aparece en el DOM, lo cerramos
+          try {
+            await page.waitForSelector("#popup_ok", { visible: true, timeout: 5000 });
+            await page.click("#popup_ok");
+            console.log("Popup Fonasa (éxito o error) cerrado correctamente");
+          } catch (popupErr: any) {
+            console.log("No se detectó o no se pudo hacer click en el popup de Fonasa:", popupErr.message);
+          }
+
           // Señalizar al flujo principal que la respuesta de Fonasa fue procesada
           resolveFonasa();
         }
       } catch (err) {
-        console.error("Error procesando respuesta Fonasa:", err);
+        console.error("Error general procesando respuesta Fonasa:", err);
         resolveFonasa(); // Resolver igualmente para no bloquear el flujo principal
       }
     });
@@ -1265,7 +1275,28 @@ class Sistrat {
         fonasaHandled,
         this.scrapper.waitForSeconds(15) // Timeout de seguridad de 15 segundos
       ]);
-      console.log("[Sistrat][completeAdmissionForm] Fonasa procesado, continuando con el formulario");
+      console.log("[Sistrat][completeAdmissionForm] Fonasa procesado. Verificando si hay popup de Fonasa visible...");
+
+      // Por seguridad adicional, si hay un popup visible (sea de éxito o error), lo cerramos para no bloquear el flujo
+      try {
+        const popupOkButton = await page.$("#popup_ok");
+        if (popupOkButton) {
+          const isVisible = await page.evaluate((el) => {
+            if (!el) return false;
+            const style = window.getComputedStyle(el);
+            return style.display !== 'none' && style.visibility !== 'hidden' && el.getBoundingClientRect().width > 0;
+          }, popupOkButton);
+          
+          if (isVisible) {
+            console.log("[Sistrat][completeAdmissionForm] Se detectó popup de Fonasa aún visible. Cerrándolo...");
+            await page.click("#popup_ok");
+            await this.scrapper.waitForSeconds(1);
+          }
+        }
+      } catch (popupErr: any) {
+        console.warn("[Sistrat][completeAdmissionForm] Error al intentar cerrar popup residual de Fonasa:", popupErr.message);
+      }
+
       await this.scrapper.waitForSeconds(1); // Pequeña pausa para asegurar que la UI se estabilice
 
       await this.scrapper.setSelectValue(page, "#selconcentimiento_informado", admissionForm.selconcentimiento_informado);
