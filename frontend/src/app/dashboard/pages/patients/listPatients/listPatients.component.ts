@@ -290,19 +290,16 @@ export default class ListPatientsComponent implements OnInit {
     const previousValue = patient.active !== false;
     this.togglingActive[patient._id] = true;
     patient.active = isActive;
-    this.refreshSortedDataSource();
     this.cdr.markForCheck();
 
     this.patientService.updateActiveStatus(patient._id, isActive).subscribe({
       next: () => {
         this.togglingActive[patient._id!] = false;
-        this.refreshSortedDataSource();
         this.cdr.markForCheck();
       },
       error: () => {
         patient.active = previousValue;
         this.togglingActive[patient._id!] = false;
-        this.refreshSortedDataSource();
         this.cdr.markForCheck();
         Notiflix.Report.failure('Error', 'No se pudo actualizar el estado del paciente', 'Entendido');
       },

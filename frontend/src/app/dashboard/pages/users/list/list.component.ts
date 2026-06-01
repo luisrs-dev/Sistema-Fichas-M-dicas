@@ -67,19 +67,16 @@ export default class ListComponent implements OnInit {
     const previousValue = user.active !== false;
     this.togglingActive[user._id] = true;
     user.active = isActive;
-    this.refreshSortedDataSource();
     this.cdr.markForCheck();
 
     this.userService.updateActiveStatus(user._id, isActive).subscribe({
       next: () => {
         this.togglingActive[user._id!] = false;
-        this.refreshSortedDataSource();
         this.cdr.markForCheck();
       },
       error: () => {
         user.active = previousValue;
         this.togglingActive[user._id!] = false;
-        this.refreshSortedDataSource();
         this.cdr.markForCheck();
         Notiflix.Report.failure('Error', 'No se pudo actualizar el estado del usuario', 'Entendido');
       },
