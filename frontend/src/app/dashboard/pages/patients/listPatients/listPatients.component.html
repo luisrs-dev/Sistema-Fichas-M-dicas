@@ -129,7 +129,7 @@
     <ng-container matColumnDef="alertas">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Alertas</th>
       <td class="text-center" mat-cell *matCellDef="let element">
-        @if(element.alertCie10){
+        @if(element.alertCie10 && canViewAzul(element)){
         <button mat-icon-button (click)="onDialogAlertCie10(element._id)"
           matTooltip="Han trascurrido 2 meses, corresponde confirmar si existe Diagnóstico de Trastorno Psiquiátrico CIE10">
           <mat-icon class="custom-icon">circle</mat-icon>

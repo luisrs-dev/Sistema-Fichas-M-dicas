@@ -84,7 +84,14 @@ export default class ListPatientsComponent implements OnInit {
       const programSearch = searchTerms.program;
       const matchProgram = programSearch ? (data.program?.name || '').toLowerCase().includes(programSearch) : true;
 
-      const matchAlerts = searchTerms.alerts ? !!(data.alertCie10 || data.alertConsentimiento || data.alertIntegracionSocial || data.alertEvaluacion || data.alertEgreso || data.alertDiagnosticoSocial) : true;
+      const matchAlerts = searchTerms.alerts ? !!(
+        (data.alertCie10 && this.canViewAzul(data)) ||
+        (data.alertConsentimiento && this.canViewNegra(data)) ||
+        (data.alertIntegracionSocial && this.canViewAmarillaONaranja()) ||
+        (data.alertEvaluacion && this.canViewVerde(data)) ||
+        (data.alertEgreso && this.canViewRoja()) ||
+        (data.alertDiagnosticoSocial && this.canViewAmarillaONaranja())
+      ) : true;
 
       return matchSearch && matchProgram && matchAlerts;
     };
@@ -169,6 +176,12 @@ export default class ListPatientsComponent implements OnInit {
     return this.isAdmin;
   }
 
+  canViewAzul(element: any): boolean {
+    if (this.isAdmin) return true;
+    const profileName = this.user?.profile?.name?.toLowerCase() || '';
+    return profileName.includes('médico') || profileName.includes('medico');
+  }
+
   hasRegisteredForm(element: Patient): boolean {
     return !!(
       element.hasTopForm ||
@@ -181,7 +194,7 @@ export default class ListPatientsComponent implements OnInit {
   hasBlockingAlert(element: Patient): boolean {
     console.log('user',this.user);
     
-    // if (this.isAdmin) return false;
+    if (this.isAdmin) return false;
     const profileName = this.user?.profile?.name?.toLowerCase() || '';
 
     // Rule 1: VERDE (alertEvaluacion) -> Terapia ocupacional
@@ -202,19 +215,38 @@ export default class ListPatientsComponent implements OnInit {
       return true;
     }
 
+    // Rule 4: AZUL (alertCie10) -> Médico
+    const isMedico = profileName.includes('médico') || profileName.includes('medico');
+    if (element.alertCie10 && isMedico) {
+      return true;
+    }
+
     return false;
   }
 
   getBlockingAlertMessage(element: Patient): string {
-    if (element.alertEvaluacion) {
+    const profileName = this.user?.profile?.name?.toLowerCase() || '';
+
+    const isTerapeuta = profileName.includes('terapeuta') || profileName.includes('ocupacional');
+    if (element.alertEvaluacion && isTerapeuta) {
       return 'Debe ingresar la alerta de Evaluación (Verde) para poder registrar atenciones';
     }
-    if (element.alertIntegracionSocial) {
+
+    const isTrabajadorSocial = profileName.includes('trabajador') || profileName.includes('social');
+    if (element.alertIntegracionSocial && isTrabajadorSocial) {
       return 'Debe ingresar la alerta de Integración Social (Amarilla) para poder registrar atenciones';
     }
-    if (element.alertConsentimiento) {
+
+    const isPsicologo = profileName.includes('psicólog') || profileName.includes('psicolog');
+    if (element.alertConsentimiento && isPsicologo) {
       return 'Debe ingresar la alerta de TOP (Negra) para poder registrar atenciones';
     }
+
+    const isMedico = profileName.includes('médico') || profileName.includes('medico');
+    if (element.alertCie10 && isMedico) {
+      return 'Debe confirmar si existe Diagnóstico de Trastorno Psiquiátrico CIE10 (Azul) para poder registrar atenciones';
+    }
+
     return '';
   }
 

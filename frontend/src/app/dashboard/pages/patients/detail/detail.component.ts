@@ -525,20 +525,39 @@ export default class DetailComponent implements OnInit {
       return true;
     }
 
+    // Rule 4: AZUL (alertCie10) -> Médico
+    const isMedico = profileName.includes('médico') || profileName.includes('medico');
+    if (element.alertCie10 && isMedico) {
+      return true;
+    }
+
     return false;
   }
 
   getBlockingAlertMessage(element: Patient | null): string {
     if (!element) return '';
-    if (element.alertEvaluacion) {
+    const profileName = this.authService.getUser()?.profile?.name?.toLowerCase() || '';
+
+    const isTerapeuta = profileName.includes('terapeuta') || profileName.includes('ocupacional');
+    if (element.alertEvaluacion && isTerapeuta) {
       return 'Debe ingresar la alerta de Evaluación (Verde) para poder registrar atenciones';
     }
-    if (element.alertIntegracionSocial) {
+
+    const isTrabajadorSocial = profileName.includes('trabajador') || profileName.includes('social');
+    if (element.alertIntegracionSocial && isTrabajadorSocial) {
       return 'Debe ingresar la alerta de Integración Social (Amarilla) para poder registrar atenciones';
     }
-    if (element.alertConsentimiento) {
+
+    const isPsicologo = profileName.includes('psicólog') || profileName.includes('psicolog');
+    if (element.alertConsentimiento && isPsicologo) {
       return 'Debe ingresar la alerta de TOP (Negra) para poder registrar atenciones';
     }
+
+    const isMedico = profileName.includes('médico') || profileName.includes('medico');
+    if (element.alertCie10 && isMedico) {
+      return 'Debe confirmar si existe Diagnóstico de Trastorno Psiquiátrico CIE10 (Azul) para poder registrar atenciones';
+    }
+
     return '';
   }
 
