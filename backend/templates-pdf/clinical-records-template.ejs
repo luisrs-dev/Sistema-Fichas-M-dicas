@@ -3,231 +3,112 @@
 <head>
   <meta charset="UTF-8" />
   <style>
-    @page { size: A4; margin: 0; }
-    body { font-family: "Arial", sans-serif; margin:0; padding:0; }
-
-    .page {
-      height: 297mm;
-      width: 210mm;
-      box-sizing: border-box;
+    @page {
+      size: A4;
+      margin: 15mm 20mm;
+    }
+    body {
+      font-family: "Arial", sans-serif;
+      margin: 0;
       padding: 0;
-      page-break-after: always;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+      color: #333;
+      background-color: #fff;
     }
 
-    .half {
-      min-height: 50%;
-      box-sizing: border-box;
+    .record-container {
       border-bottom: 1px dashed #ccc;
-      padding: 20px;
+      padding-bottom: 15px;
+      margin-bottom: 15px;
       page-break-inside: avoid;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
     }
 
-    .full-page {
-      min-height: 100%;
+    .record-container:last-child {
       border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
     }
 
     header { text-align: center; }
-    .header { display: flex; flex-direction: row; justify-content: space-between; }
+    .header { display: flex; flex-direction: row; justify-content: space-between; align-items: center; }
+    .header p { margin: 0; font-size: 11px; }
     .record { border-radius: 5px; }
-    .signature { margin-top: 10px; }
-    .signature img { width: 180px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; font-size: 12px; }
-    th { background-color: #f0f0f0; }
-    .observacion { max-width: 300px; }
-    .complete-row { font-weight: bold; text-align: center; background-color: #f0f0f0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+    th, td { border: 1px solid #ccc; padding: 4px 6px; text-align: left; font-size: 10.5px; line-height: 1.3; }
+    th { background-color: #f0f0f0; font-weight: bold; }
+    .complete-row { font-weight: bold; text-align: center; background-color: #f5f5f5; padding: 3px 6px; }
+    .signature-container { min-height: 60px; display: flex; align-items: center; justify-content: center; }
+    .signature-container img { width: 140px; height: auto; max-height: 55px; object-fit: contain; }
   </style>
 </head>
 <body>
-<% for (let i = 0; i < clinicalRecords.length; i++) { 
-     const record = clinicalRecords[i]; 
-     const isFullPage = record.relevantElements && record.relevantElements.length > 900;
+<%
+  // Helper function to render a single record
+  function renderRecord(record) {
+%>
+    <header class="header">
+      <div style="text-align: left">
+        <p>
+          <span style="font-weight: bold; color: #2196f3">EVOLUCIÓN</span>
+          <strong> <%= patient.name %> <%= patient.surname %><span style="font-weight: bold; color: #2196f3"> / PROGRAMA</span> <%= patient.program.name %></strong> / <%= patient.codigoSistrat %>
+        </p>
+      </div>
+    </header>
+    <div class="record">
+      <table>
+        <thead>
+          <tr>
+            <th colspan="2">Fecha</th>
+            <th colspan="3">Intervención</th>
+            <th colspan="3">Profesional</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="2"><%= new Date(record.date).toLocaleDateString('es-CL', { day:'2-digit', month:'2-digit', year:'numeric' }) %></td>
+            <td colspan="3"><%= record.service.description %> (<%= record.service.code %>)</td>
+            <td colspan="3"><%= record.registeredBy.name %></td>
+          </tr>
+          <tr><td colspan="8" class="complete-row">Elementos relevantes</td></tr>
+          <tr><td colspan="8"><%= record.relevantElements %></td></tr>
+
+          <% if (record.diagnostic) { %>
+          <tr><td colspan="8" class="complete-row">Diagnóstico</td></tr>
+          <tr><td colspan="8"><%= (typeof diagnosticMap !== 'undefined' && diagnosticMap[record.diagnostic]) || record.diagnostic || 'Sin Registro' %></td></tr>
+          <% } %>
+
+          <% if (record.diagnosticMedic) { %>
+          <tr><td colspan="8" class="complete-row">Diagnóstico del profesional</td></tr>
+          <tr><td colspan="8"><%= record.diagnosticMedic || 'Sin Registro' %></td></tr>
+          <% } %>
+
+          <tr><td colspan="5" class="complete-row">Esquema farmacológico</td>
+              <td colspan="3" class="complete-row">Firma Profesional</td></tr>
+          <tr>
+            <td colspan="5"><%= record.pharmacologicalScheme || 'Sin Registro' %></td>
+            <td colspan="3">
+              <% if (record.registeredBy.signature) { %>
+                <div class="signature-container">
+                  <img src="<%= record.registeredBy.signature %>" />
+                </div>
+              <% } %>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+<%
+  }
 %>
 
-<% if (isFullPage) { %>
-  <!-- Página completa para registro largo -->
-  <div class="page">
-    <div class="half full-page">
-      <header class="header">
-        <div style="text-align: left">
-          <p>
-            <span style="font-weight: bold; color: #2196f3">EVOLUCIÓN</span>
-            <strong> <%= patient.name %> <%= patient.surname %><span style="font-weight: bold; color: #2196f3"> / PROGRAMA</span> <%= patient.program.name %></strong> / <%= patient.codigoSistrat %>
-          </p>
-        </div>
-      </header>
-      <div class="record">
-        <table>
-          <thead>
-            <tr>
-              <th colspan="2">Fecha</th>
-              <th colspan="3">Intervención</th>
-              <th colspan="3">Profesional</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colspan="2"><%= new Date(record.date).toLocaleDateString('es-CL', { day:'2-digit', month:'2-digit', year:'numeric' }) %></td>
-              <td colspan="3"><%= record.service.description %> (<%= record.service.code %>)</td>
-              <td colspan="3"><%= record.registeredBy.name %></td>
-            </tr>
-            <tr><td colspan="8" class="complete-row">Elementos relevantes</td></tr>
-            <tr><td colspan="8"><%= record.relevantElements %></td></tr>
-
-            <% if (record.diagnostic) { %>
-            <tr><td colspan="8" class="complete-row">Diagnóstico</td></tr>
-            <tr><td colspan="8"><%= diagnosticMap[record.diagnostic] || 'Sin Registro' %></td></tr>
-            <% } %>
-
-            <% if (record.diagnosticMedic) { %>
-            <tr><td colspan="8" class="complete-row">Diagnóstico del profesional</td></tr>
-            <tr><td colspan="8"><%= record.diagnosticMedic || 'Sin Registro' %></td></tr>
-            <% } %>
-
-            <tr><td colspan="5" class="complete-row">Esquema farmacológico</td>
-                <td colspan="3" class="complete-row">Firma Profesional</td></tr>
-            <tr>
-              <td colspan="5"><%= record.pharmacologicalScheme || 'Sin Registro' %></td>
-              <td colspan="3">
-                <% if (record.registeredBy.signature) { %>
-                  <div class="signature-container" style="min-height:100px">
-                    <img src="<%= record.registeredBy.signature %>" style="width:200px; height:auto; display:block; text-align:center;" />
-                  </div>
-                <% } %>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+<%
+  for (let i = 0; i < clinicalRecords.length; i++) {
+    const record = clinicalRecords[i];
+%>
+    <div class="record-container">
+      <% renderRecord(record); %>
     </div>
-  </div>
-<% } else { %>
-  <!-- Registros normales: dos por página -->
-  <% if (i % 2 === 0) { %>
-    <div class="page">
-      <!-- Mitad superior -->
-      <div class="half">
-        <header class="header">
-          <div style="text-align: left">
-            <p>
-              <span style="font-weight: bold; color: #2196f3">EVOLUCIÓN</span>
-              <strong> <%= patient.name %> <%= patient.surname %><span style="font-weight: bold; color: #2196f3"> / PROGRAMA</span> <%= patient.program.name %></strong> / <%= patient.codigoSistrat %>
-            </p>
-          </div>
-        </header>
-        <div class="record">
-          <table>
-            <thead>
-              <tr>
-                <th colspan="2">Fecha</th>
-                <th colspan="3">Intervención</th>
-                <th colspan="3">Profesional</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colspan="2"><%= new Date(record.date).toLocaleDateString('es-CL', { day:'2-digit', month:'2-digit', year:'numeric' }) %></td>
-                <td colspan="3"><%= record.service.description %> (<%= record.service.code %>)</td>
-                <td colspan="3"><%= record.registeredBy.name %></td>
-              </tr>
-              <tr><td colspan="8" class="complete-row">Elementos relevantes</td></tr>
-              <tr><td colspan="8"><%= record.relevantElements %></td></tr>
-
-              <% if (record.diagnostic) { %>
-              <tr><td colspan="8" class="complete-row">Diagnóstico</td></tr>
-              <tr><td colspan="8"><%= diagnosticMap[record.diagnostic] || 'Sin Registro' %></td></tr>
-              <% } %>
-
-              <% if (record.diagnosticMedic) { %>
-              <tr><td colspan="8" class="complete-row">Diagnóstico del profesional</td></tr>
-              <tr><td colspan="8"><%= record.diagnosticMedic || 'Sin Registro' %></td></tr>
-              <% } %>
-
-              <tr><td colspan="5" class="complete-row">Esquema farmacológico</td>
-                  <td colspan="3" class="complete-row">Firma Profesional</td></tr>
-              <tr>
-                <td colspan="5"><%= record.pharmacologicalScheme || 'Sin Registro' %></td>
-                <td colspan="3">
-                  <% if (record.registeredBy.signature) { %>
-                    <div class="signature-container" style="min-height:100px">
-                      <img src="<%= record.registeredBy.signature %>" style="width:200px; height:auto; display:block; text-align:center;" />
-                    </div>
-                  <% } %>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Mitad inferior -->
-      <% if (clinicalRecords[i+1] && !(clinicalRecords[i+1].relevantElements && clinicalRecords[i+1].relevantElements.length > 900)) { %>
-      <% const recordNext = clinicalRecords[i+1]; %>
-      <div class="half">
-        <header class="header">
-          <div style="text-align: left">
-            <p>
-              <span style="font-weight: bold; color: #2196f3">EVOLUCIÓN</span>
-              <strong> <%= patient.name %> <%= patient.surname %><span style="font-weight: bold; color: #2196f3"> / PROGRAMA</span> <%= patient.program.name %></strong> / <%= patient.codigoSistrat %>
-            </p>
-          </div>
-        </header>
-        <div class="record">
-          <table>
-            <thead>
-              <tr>
-                <th colspan="2">Fecha</th>
-                <th colspan="3">Intervención</th>
-                <th colspan="3">Profesional</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colspan="2"><%= new Date(recordNext.date).toLocaleDateString('es-CL', { day:'2-digit', month:'2-digit', year:'numeric' }) %></td>
-                <td colspan="3"><%= recordNext.service.description %> (<%= recordNext.service.code %>)</td>
-                <td colspan="3"><%= recordNext.registeredBy.name %></td>
-              </tr>
-              <tr><td colspan="8" class="complete-row">Elementos relevantes</td></tr>
-              <tr><td colspan="8"><%= recordNext.relevantElements %></td></tr>
-
-              <% if (recordNext.diagnostic) { %>
-              <tr><td colspan="8" class="complete-row">Diagnóstico</td></tr>
-              <tr><td colspan="8"><%= diagnosticMap[recordNext.diagnostic] || 'Sin Registro' %></td></tr>
-              <% } %>
-
-              <% if (recordNext.diagnosticMedic) { %>
-              <tr><td colspan="8" class="complete-row">Diagnóstico del profesional</td></tr>
-              <tr><td colspan="8"><%= recordNext.diagnosticMedic || 'Sin Registro' %></td></tr>
-              <% } %>
-
-              <tr><td colspan="5" class="complete-row">Esquema farmacológico</td>
-                  <td colspan="3" class="complete-row">Firma Profesional</td></tr>
-              <tr>
-                <td colspan="5"><%= recordNext.pharmacologicalScheme || 'Sin Registro' %></td>
-                <td colspan="3">
-                  <% if (recordNext.registeredBy.signature) { %>
-                    <div class="signature-container" style="min-height:100px">
-                      <img src="<%= recordNext.registeredBy.signature %>" style="width:200px; height:auto; display:block; text-align:center;" />
-                    </div>
-                  <% } %>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <% } %>
-    </div>
-  <% } %>
-<% } %>
-
-<% } %>
+<%
+  }
+%>
 </body>
 </html>

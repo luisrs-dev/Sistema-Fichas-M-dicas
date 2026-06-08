@@ -193,7 +193,7 @@ const getPdfMedicalRecordsByPatient = async ({ params }: Request, res: Response)
     const logoUrl = getBase64Image("imgs/ficlin-logo.jpg", "jpeg");
 
     // 2. Renderizar HTML con EJS
-    const html = await ejs.renderFile(path.join(process.cwd(), "templates-pdf/clinical-records-template.ejs"), { patient, clinicalRecords, logoUrl });
+    const html = await ejs.renderFile(path.join(process.cwd(), "templates-pdf/clinical-records-template.ejs"), { patient, clinicalRecords, logoUrl, diagnosticMap });
     console.log("data html ", path.join(process.cwd(), "templates-pdf/clinical-records-template.ejs"));
 
     // 3. Generar PDF con Puppeteer
