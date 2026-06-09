@@ -2,6 +2,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
+import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -20,6 +21,7 @@ import NewMedicalRecord from '../../medicalRecord/new/new.component';
 import { NonEmptyPipe } from '../../../../shared/pipes/non-empty.pipe';
 import { MedicalRecordGrouped } from '../../medicalRecord/interfaces/medicalRecord-grouped.interface';
 import { AuthService } from '../../../../auth/auth.service';
+import { DataExportComponent } from '../listPatients/components/data-export/data-export.component';
 
 interface State {
   patient: Patient | null;
@@ -58,6 +60,7 @@ export interface MedicalRecordProfessionalRow {
 })
 export default class DetailComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
+  private readonly bottomSheet = inject(MatBottomSheet);
   private readonly patientService = inject(PatientService);
   private readonly medicalRecordService = inject(MedicalRecordService);
   private readonly router = inject(Router);
@@ -227,6 +230,37 @@ export default class DetailComponent implements OnInit {
       a.download = `historial-${this.patientId()!}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
+    });
+  }
+
+  exportData(): void {
+    const ref = this.bottomSheet.open(DataExportComponent, {
+      data: { hideCenter: true },
+    });
+    ref.afterDismissed().subscribe((result) => {
+      if (result) {
+        Notiflix.Loading.circle('Generando PDF...');
+        const { startDate, endDate } = result;
+
+        this.patientService.getPdfByPatientId(this.patientId()!, startDate, endDate).subscribe({
+          next: (blob) => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `historial_${this.patient()?.name ?? 'paciente'}_${startDate}_${endDate}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            Notiflix.Loading.remove();
+          },
+          error: (error) => {
+            Notiflix.Loading.remove();
+            const message = error?.error?.message || 'Error al generar el PDF';
+            Notiflix.Notify.failure(message);
+          }
+        });
+      }
     });
   }
 

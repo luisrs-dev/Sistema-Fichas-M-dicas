@@ -56,6 +56,11 @@
         Atenciones por profesional
       </button>
 
+      <button mat-flat-button style="background-color: #ff9800; color: white;" class="mat-elevation-z2" (click)="exportData()">
+        <mat-icon class="mr-1">download</mat-icon>
+        Exportar datos
+      </button>
+
       <!-- @if (medicalRecordsGrouped().length > 0 && authService.isAdmin()) {
       <button mat-flat-button style="background-color: #2e7d32; color: white;" class="mat-elevation-z2" (click)="onSistratRecord()">
         <mat-icon class="mr-1">cloud_upload</mat-icon>

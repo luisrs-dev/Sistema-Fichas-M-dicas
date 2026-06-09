@@ -17,6 +17,7 @@
       <mat-datepicker #pickerEnd></mat-datepicker>
     </mat-form-field>
 
+    @if (!hideCenter) {
     <mat-form-field appearance="outline" class="w-full">
       <mat-label>Seleccionar Centro</mat-label>
       <mat-select formControlName="centerName">
@@ -26,6 +27,7 @@
         }
       </mat-select>
     </mat-form-field>
+    }
 
     <button mat-flat-button color="primary" class="w-full h-12 border-round-xl" (click)="exportPdf()">
       <mat-icon class="mr-2">download</mat-icon>

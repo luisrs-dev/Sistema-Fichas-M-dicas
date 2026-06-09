@@ -44,14 +44,17 @@ export class PatientService {
     );
   }
 
-  getPdfByPatientId(id: string): Observable<any> {
-    // getPdfByPatientId(id: string): Observable<{ patient: Patient; medicalRecords: MedicalRecord[] }> {
+  getPdfByPatientId(id: string, startDate?: string, endDate?: string): Observable<any> {
+    let params = new HttpParams();
+    if (startDate) params = params.set('startDate', startDate);
+    if (endDate) params = params.set('endDate', endDate);
+
     return this.http.get<any>(`${this.backend}/generate-pdf/medical-records/${id}`,
       {
+        params,
         responseType: 'blob' as 'json' // 👈 clave para evitar el error
       }
     );
-    // return this.http.get<{ patient: Patient; medicalRecords: MedicalRecord[] }>(`${this.backend}/medial-records/${id}`);
   }
 
 

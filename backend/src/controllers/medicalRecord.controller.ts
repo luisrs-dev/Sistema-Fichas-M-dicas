@@ -175,16 +175,18 @@ const groupedMedicalRecordsByPatient = async ({ params }: Request, res: Response
   }
 };
 
-const getPdfMedicalRecordsByPatient = async ({ params }: Request, res: Response) => {
+const getPdfMedicalRecordsByPatient = async ({ params, query }: Request, res: Response) => {
   console.log("ENTRAAANDOOOOOO");
 
   try {
     const { patientId } = params;
+    const startDate = query.startDate as string | undefined;
+    const endDate = query.endDate as string | undefined;
 
     const { patient } = await findPatient(patientId);
     console.log("patient", patient);
 
-    const clinicalRecords = await allMedicalRecordsUser(patientId);
+    const clinicalRecords = await allMedicalRecordsUser(patientId, startDate, endDate);
 
     if (!clinicalRecords || clinicalRecords.length === 0) {
       return res.status(404).send("No hay fichas para este paciente.");

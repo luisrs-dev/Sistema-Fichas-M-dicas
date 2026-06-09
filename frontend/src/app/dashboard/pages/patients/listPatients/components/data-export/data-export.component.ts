@@ -1,6 +1,6 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, Inject, OnInit, Optional } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatBottomSheetRef, MatBottomSheetModule } from '@angular/material/bottom-sheet';
+import { MatBottomSheetRef, MatBottomSheetModule, MAT_BOTTOM_SHEET_DATA } from '@angular/material/bottom-sheet';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -25,8 +25,13 @@ export class DataExportComponent implements OnInit {
   private sistratCenterService = inject(SistratCenterService);
   public exportForm: FormGroup;
   public centers: SistratCenter[] = [];
+  public hideCenter: boolean = false;
 
-  constructor(private bottomSheetRef: MatBottomSheetRef<DataExportComponent>) {
+  constructor(
+    private bottomSheetRef: MatBottomSheetRef<DataExportComponent>,
+    @Optional() @Inject(MAT_BOTTOM_SHEET_DATA) private data?: { hideCenter?: boolean }
+  ) {
+    this.hideCenter = !!data?.hideCenter;
     this.exportForm = this.fb.group({
       startDate: ['', Validators.required],
       endDate: ['', Validators.required],
@@ -35,9 +40,11 @@ export class DataExportComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.sistratCenterService.getActiveCenters().subscribe((centers: SistratCenter[]) => {
-      this.centers = centers || [];
-    });
+    if (!this.hideCenter) {
+      this.sistratCenterService.getActiveCenters().subscribe((centers: SistratCenter[]) => {
+        this.centers = centers || [];
+      });
+    }
   }
 
   exportPdf(): void {
