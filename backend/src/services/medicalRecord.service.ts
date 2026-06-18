@@ -373,6 +373,13 @@ const allMedicalRecordsUser = async (userId: string, startDate?: string, endDate
     }
   }
 
+  // Ordenar por fecha de la más antigua a la más reciente (ascendente)
+  medicalRecords.sort((a: any, b: any) => {
+    const ta = Date.parse(a.date) || 0;
+    const tb = Date.parse(b.date) || 0;
+    return ta - tb;
+  });
+
   return medicalRecords;
 };
 
