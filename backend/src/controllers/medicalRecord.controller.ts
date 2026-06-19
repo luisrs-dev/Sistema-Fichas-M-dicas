@@ -192,7 +192,7 @@ const getPdfMedicalRecordsByPatient = async ({ params, query }: Request, res: Re
       return res.status(404).send("No hay fichas para este paciente.");
     }
 
-    const logoUrl = getBase64Image("imgs/ficlin-logo.jpg", "jpeg");
+    const logoUrl = await getBase64Image("imgs/ficlin-logo.jpg", "jpeg");
 
     // 2. Renderizar HTML con EJS
     const html = await ejs.renderFile(path.join(process.cwd(), "templates-pdf/clinical-records-template.ejs"), { patient, clinicalRecords, logoUrl, diagnosticMap });
@@ -271,7 +271,7 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
     const patients = await PatientModel.find({ _id: { $in: patientIdsWithRecords } }).populate("program");
 
     // Logo en Base64
-    const logoUrl = getBase64Image("imgs/ficlin-logo.jpg", "jpeg");
+    const logoUrl = await getBase64Image("imgs/ficlin-logo.jpg", "jpeg");
 
     // Preparar ZIP
     res.setHeader("Content-Type", "application/zip");

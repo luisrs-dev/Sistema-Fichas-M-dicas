@@ -366,7 +366,7 @@ const allMedicalRecordsUser = async (userId: string, startDate?: string, endDate
       // para que getBase64Image pueda resolverlo correctamente
       let relativePath = registeredBy.signature.replace(/^(\/)?uploads\//, "");
       
-      const signatureBase64 = getBase64Image(relativePath, "png");
+      const signatureBase64 = await getBase64Image(relativePath, "png");
       if (signatureBase64) {
         registeredBy.signature = signatureBase64;
       }
