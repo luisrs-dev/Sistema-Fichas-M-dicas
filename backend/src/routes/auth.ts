@@ -18,7 +18,13 @@ const storage = multer.diskStorage({
     cb(null, uploadsDir); // Directorio donde se guardarán las imágenes
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname); // Renombrar el archivo para evitar duplicados
+    // Si viene el header 'x-original-filename', conservar el nombre original enviado por la sincronización
+    const originalFilename = req.headers['x-original-filename'];
+    if (originalFilename && typeof originalFilename === 'string') {
+      cb(null, originalFilename);
+    } else {
+      cb(null, Date.now() + '-' + file.originalname); // Renombrar el archivo para evitar duplicados
+    }
   }
 });
 
@@ -29,6 +35,9 @@ router.post("/login", loginController);
 router.post("/register", upload.single('image'), registerController);
 router.put("/update-password", updatePasswordController);
 router.put("/update", upload.single('image'), updateController);
+router.post("/sync-signature", upload.single('image'), (req, res) => {
+  res.status(200).json({ status: "ok", filename: req.file?.filename });
+});
 
 
 export { router };
