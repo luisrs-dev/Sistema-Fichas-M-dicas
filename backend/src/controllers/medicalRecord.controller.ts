@@ -204,13 +204,12 @@ const getPdfMedicalRecordsByPatient = async ({ params, query }: Request, res: Re
       headless: true,
       executablePath,
       args: [
-        `--proxy-server=http://geo.iproyal.com:12321`,
         "--no-sandbox",
         "--disable-setuid-sandbox",
       ],
     });
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
+    await page.setContent(html, { waitUntil: "domcontentloaded" });
 
     const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
 
@@ -294,7 +293,6 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
       headless: true,
       executablePath,
       args: [
-        `--proxy-server=http://geo.iproyal.com:12321`,
         "--no-sandbox",
         "--disable-setuid-sandbox",
       ],
