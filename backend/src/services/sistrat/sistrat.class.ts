@@ -405,6 +405,13 @@ class Sistrat {
       console.log("[Sistrat][crearDemanda] Datos sincronizados correctamente");
       await this.logStep(logger, "[Sistrat][crearDemanda] Datos sincronizados");
 
+      try {
+        console.log("[Sistrat][crearDemanda] Extrayendo nuevas alertas aprovechando el navegador actual antes de cerrarlo...");
+        await this.updateAlerts(patient, page);
+      } catch (alertErr) {
+        console.log("[Sistrat][crearDemanda] Error actualizando alertas silenciosamente", alertErr);
+      }
+
       return true;
     } catch (error) {
       console.error("Error en crearDemanda", error);
@@ -1920,6 +1927,13 @@ class Sistrat {
         await page.waitForSelector(`#cie10_${patientRow.idSistrat} img.button`, { visible: true });
         await this.scrapper.clickButton(page, `#cie10_${patientRow.idSistrat} img.button`);
         await this.scrapper.setSelectValue(page, "#seldiagn_psiquiatrico_cie", optionSelected);
+
+        try {
+          console.log("[Sistrat][updateFormCie10] Extrayendo nuevas alertas aprovechando el navegador actual antes de cerrarlo...");
+          await this.updateAlerts(patient, page);
+        } catch (alertErr) {
+          console.log("[Sistrat][updateFormCie10] Error actualizando alertas silenciosamente", alertErr);
+        }
       } else {
         console.log("[Sistrat][updateFormCie10] No se encontró paciente o no tiene CIE10 disponible");
         await this.logStep(logger, "[Sistrat][updateFormCie10] Paciente no disponible para edición");
@@ -1929,6 +1943,9 @@ class Sistrat {
       await this.logStep(logger, `[Sistrat][updateFormCie10] Error: ${error}`);
       throw error;
     } finally {
+      if (page) {
+        await this.scrapper.closeBrowser();
+      }
       console.groupEnd();
       await logger.close();
     }

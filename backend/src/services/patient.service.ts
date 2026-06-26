@@ -225,8 +225,8 @@ const recordDemandToSistrat = async (patientId: string): Promise<{ success: bool
     const sistratPlatform = new Sistrat();
     const createdDemand = await sistratPlatform.crearDemanda(patient);
     if (createdDemand) {
-      // Refrescar alertas automáticamente
-      await sistratPlatform.updateAlerts(patient);
+      // Refrescar alertas automáticamente - Ya se realiza dentro de crearDemanda reutilizando la sesión del navegador
+      // await sistratPlatform.updateAlerts(patient);
       return { success: true }
     } else {
       throw new Error("Error al registrar demanda en SISTRAT");
@@ -499,8 +499,8 @@ const updateFormCie10 = async (patientId: string, optionSelected: string) => {
       const sistratPlatform = new Sistrat();
 
       const responseUserWithAlerts = await sistratPlatform.updateFormCie10(patient, optionSelected);
-      // Refrescar alertas automáticamente
-      await sistratPlatform.updateAlerts(patient);
+      // Refrescar alertas automáticamente - Ya se realiza dentro de updateFormCie10 reutilizando la sesión del navegador
+      // await sistratPlatform.updateAlerts(patient);
       return responseUserWithAlerts;
     } else {
       throw new Error("Paciente no registrado");
