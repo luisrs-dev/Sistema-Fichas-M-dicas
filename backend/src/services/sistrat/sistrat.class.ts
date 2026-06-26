@@ -114,10 +114,11 @@ class Sistrat {
       console.log(`Navegación completada — URL: ${postLoginUrl}, Título: ${postLoginTitle}`);
 
       // --- Verificar que el login fue exitoso ---
-      const isLoginPage = postLoginUrl.includes('/sistrat/') && !postLoginUrl.includes('php/');
+      // La página de login es /sistrat/ y el home post-login es /sistrat/publico/
+      // Solo verificamos con la presencia del campo de login, que es la prueba definitiva
       const hasLoginField = await page.$('#txr_usuario');
       
-      if (isLoginPage || hasLoginField) {
+      if (hasLoginField) {
         // Aún estamos en la página de login → credenciales rechazadas o error
         const errorMsg = await page.evaluate(() => {
           // Buscar mensajes de error en la página
