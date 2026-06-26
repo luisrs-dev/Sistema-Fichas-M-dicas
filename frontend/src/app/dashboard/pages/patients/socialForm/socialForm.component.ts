@@ -177,10 +177,8 @@ export default class SocialFormComponent {
 
     this.patientService.saveSocialForm(this.patientId, this.socialForm.value).subscribe({
       next: () => {
-        Notiflix.Loading.remove();
         Notiflix.Notify.success('Guardado en FicLin');
-        
-        // Iniciar de inmediato la sincronización SISTRAT
+        // Iniciar de inmediato la sincronización SISTRAT sin parpadear el overlay
         this.syncWithSistrat();
       },
       error: () => {
@@ -193,7 +191,7 @@ export default class SocialFormComponent {
 
   private syncWithSistrat(): void {
     this.syncing.set(true);
-    Notiflix.Loading.circle('Sincronizando con SISTRAT...');
+    Notiflix.Loading.change('Sincronizando con SISTRAT...');
 
     this.patientService.syncSocialFormSistrat(this.patientId).subscribe({
       next: () => {
@@ -213,7 +211,13 @@ export default class SocialFormComponent {
         this.syncing.set(false);
         console.error('Error en sincronización SISTRAT:', error);
         
-        const errorMessage = typeof error === 'string' ? error : (error?.error?.message || error?.message || 'Error al ejecutar el bot');
+        let errorMessage = 'Error al ejecutar el bot';
+        if (error && (error.status === 0 || error.status === 504 || error.status === 502)) {
+          errorMessage = 'La sincronización sigue procesándose en el servidor de fondo (SISTRAT es lento), pero el navegador cerró la conexión por límite de tiempo (timeout). Por favor verifique en SISTRAT en unos minutos.';
+        } else {
+          errorMessage = typeof error === 'string' ? error : (error?.error?.message || error?.message || errorMessage);
+        }
+
         Notiflix.Report.warning(
           'Sincronización Incompleta',
           `El formulario se guardó en FicLin, pero ocurrió un problema al sincronizar con SISTRAT: ${errorMessage}`,
