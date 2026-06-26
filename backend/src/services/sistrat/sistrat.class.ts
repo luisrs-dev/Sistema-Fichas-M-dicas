@@ -73,8 +73,21 @@ class Sistrat {
       console.log("Página obtenida");
 
       await this.scrapper.navigateToPage(page, loginUrl);
-      console.log("Página cargada");
+      const loadedUrl = page.url();
+      const loadedTitle = await page.title();
+      console.log(`Página cargada — URL: ${loadedUrl}, Título: ${loadedTitle}`);
+      await this.logStep(logger, `[Login] Página de login cargada — URL: ${loadedUrl}`);
       console.groupEnd();
+
+      // --- Verificar que la página de login cargó correctamente ---
+      const loginFieldExists = await page.$('#txr_usuario');
+      if (!loginFieldExists) {
+        const bodySnippet = await page.evaluate(() => document.body?.innerText?.substring(0, 500) || '(vacío)');
+        console.error(`[Login] La página no contiene el campo de login. URL actual: ${loadedUrl}`);
+        console.error(`[Login] Contenido de la página: ${bodySnippet}`);
+        await this.logStep(logger, `[Login] BLOQUEADO — Página no tiene campo de login. URL: ${loadedUrl}. Contenido: ${bodySnippet.substring(0, 200)}`);
+        throw new Error(`SISTRAT no muestra la página de login. Posible bloqueo por IP o proxy. URL: ${loadedUrl}`);
+      }
 
       // --- Escribir credenciales ---
       console.group("Escribiendo credenciales");
@@ -96,16 +109,43 @@ class Sistrat {
       console.log("Botón clickeado");
 
       await page.waitForNavigation({ waitUntil: "networkidle2" });
-      console.log("Navegación completada");
-      await this.logStep(logger, "[Login] Sesión iniciada correctamente");
+      const postLoginUrl = page.url();
+      const postLoginTitle = await page.title();
+      console.log(`Navegación completada — URL: ${postLoginUrl}, Título: ${postLoginTitle}`);
 
+      // --- Verificar que el login fue exitoso ---
+      const isLoginPage = postLoginUrl.includes('/sistrat/') && !postLoginUrl.includes('php/');
+      const hasLoginField = await page.$('#txr_usuario');
+      
+      if (isLoginPage || hasLoginField) {
+        // Aún estamos en la página de login → credenciales rechazadas o error
+        const errorMsg = await page.evaluate(() => {
+          // Buscar mensajes de error en la página
+          const alertEl = document.querySelector('.alert, .error, #error_msg, .mensaje_error');
+          if (alertEl) return alertEl.textContent?.trim() || '';
+          // Intentar detectar un popup de error
+          const popup = document.getElementById('popup_message');
+          if (popup) return popup.textContent?.trim() || '';
+          return '';
+        });
+        const diagMessage = errorMsg 
+          ? `Credenciales rechazadas por SISTRAT: ${errorMsg}` 
+          : `Login no exitoso — la página sigue siendo la de login. URL: ${postLoginUrl}`;
+        console.error(`[Login] ${diagMessage}`);
+        await this.logStep(logger, `[Login] FALLO — ${diagMessage}`);
+        throw new Error(diagMessage);
+      }
+
+      await this.logStep(logger, `[Login] Sesión iniciada correctamente — URL: ${postLoginUrl}`);
       console.groupEnd();
 
       return page;
-    } catch (error) {
-      console.error("Error en login SISTRAT", error);
-      await this.logStep(logger, `[Login] Error: ${error}`);
-      throw new Error("Error en autenticación con SISTRAT");
+    } catch (error: any) {
+      const errorMsg = error?.message || String(error);
+      console.error("Error en login SISTRAT:", errorMsg);
+      await this.logStep(logger, `[Login] Error: ${errorMsg}`);
+      // Propagar el mensaje descriptivo en vez de uno genérico
+      throw new Error(`Error en autenticación con SISTRAT: ${errorMsg}`);
     } finally {
       console.groupEnd();
     }

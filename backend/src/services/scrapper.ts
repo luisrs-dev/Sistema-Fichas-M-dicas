@@ -1,18 +1,23 @@
 import { Browser, Page } from "puppeteer";
-//import puppeteer from "puppeteer-extra";
 import moment from "moment";
 import puppeteer from "puppeteer-extra";
-
-//import StealthPlugin from "puppeteer-extra-plugin-stealth";
-//import AnonymizeUAPlugin from "puppeteer-extra-plugin-anonymize-ua";
+import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { promises as fs } from "fs";
 import path from "path";
 import { getSystemChromePath } from "../utils/chromePath";
+
+// Activar plugin Stealth para evadir detección anti-bot
+puppeteer.use(StealthPlugin());
 
 // Las rutas de Chrome se detectan dinámicamente según el sistema operativo en getSystemChromePath()
 
 class Scrapper {
   protected browser: Browser | null = null;
+  private isProduction: boolean;
+
+  constructor() {
+    this.isProduction = process.platform === 'linux' || process.env.NODE_ENV === 'production';
+  }
 
   async getPage(): Promise<Page> {
     const browser: Browser = await this.launchBrowser();
@@ -32,11 +37,15 @@ class Scrapper {
       console.error("[Browser::pageerror]", error);
     });
 
-    await page.authenticate({
-      username: "4y0YVHAHmRvZMtOx",
-      password: "ZuVPtBuURBDDI6C9_country-cl_city-talca",
-    });
-    // await page.setDefaultNavigationTimeout(300000); // 5 minutos
+    // Autenticar proxy solo en producción (donde se usa iProyal)
+    if (this.isProduction) {
+      const proxyUser = process.env.PROXY_USER || "4y0YVHAHmRvZMtOx";
+      const proxyPass = process.env.PROXY_PASS || "ZuVPtBuURBDDI6C9_country-cl_city-talca";
+      await page.authenticate({
+        username: proxyUser,
+        password: proxyPass,
+      });
+    }
 
     // Ajustar el viewport para usar la pantalla completa del entorno disponible
     try {
@@ -54,16 +63,31 @@ class Scrapper {
       await page.setViewport({ width: 1920, height: 1080 });
     }
 
-    // User agent realista
-    await page.setUserAgent(
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-      "(KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
-    );
+    // User agent dinámico basado en la versión real de Chrome
+    const browserVersion = await browser.version();
+    const chromeVersionMatch = browserVersion.match(/Chrome\/(\d+\.\d+\.\d+\.\d+)/i)
+      || browserVersion.match(/(\d+\.\d+\.\d+\.\d+)/);
+    const chromeVersion = chromeVersionMatch ? chromeVersionMatch[1] : "131.0.6778.85";
+    const userAgent = `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chromeVersion} Safari/537.36`;
+    console.log(`[Scrapper] User-Agent dinámico: ${userAgent}`);
+    await page.setUserAgent(userAgent);
 
-
-    // Bypass básico antibot
+    // Bypass adicional antibot (complementa Stealth Plugin)
     await page.evaluateOnNewDocument(() => {
       Object.defineProperty(navigator, "webdriver", { get: () => false });
+      // Ocultar que es headless Chrome
+      Object.defineProperty(navigator, "plugins", {
+        get: () => [1, 2, 3, 4, 5],
+      });
+      Object.defineProperty(navigator, "languages", {
+        get: () => ["es-CL", "es", "en-US", "en"],
+      });
+      // Simular permisos de notificación normales
+      const originalQuery = window.navigator.permissions.query;
+      (window.navigator.permissions as any).query = (parameters: any) =>
+        parameters.name === "notifications"
+          ? Promise.resolve({ state: Notification.permission } as PermissionStatus)
+          : originalQuery(parameters);
     });
 
     return page;
@@ -80,27 +104,35 @@ class Scrapper {
     const userDataDir = await this.createCacheDirectory(sessionHash);
 
     console.log('[LaunchBrowser] Obteniendo browser...');
-
-    // Detectamos si estamos en el VPS porque el sistema operativo es Linux (o si la variable NODE_ENV es production)
-    const isProduction = process.platform === 'linux' || process.env.NODE_ENV === 'production';
-
-    console.log('isProduction', isProduction);
+    console.log('isProduction', this.isProduction);
     console.log('process.platform', process.platform);
     console.log('process.env.NODE_ENV', process.env.NODE_ENV);
 
 
-    if (isProduction) {
+    if (this.isProduction) {
       console.log('[LaunchBrowser] Entorno Producción detectado (VPS)');
 
+      const proxyHost = process.env.PROXY_HOST || "geo.iproyal.com:12321";
+
       this.browser = await puppeteer.launch({
-        headless: true, // Se recomienda true para VPS
+        headless: true,
         userDataDir: userDataDir,
         executablePath: '/usr/bin/google-chrome',
         args: [
-          `--proxy-server=http://${"geo.iproyal.com:12321"}`,
+          `--proxy-server=http://${proxyHost}`,
           "--no-sandbox",
           "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-gpu",
+          "--use-gl=egl",
+          "--disable-blink-features=AutomationControlled",
+          "--disable-features=IsolateOrigins,site-per-process",
+          "--window-size=1920,1080",
+          "--lang=es-CL,es",
         ],
+        defaultViewport: { width: 1920, height: 1080 },
+        timeout: 0,
+        protocolTimeout: 300000,
       });
 
     } else {
@@ -118,9 +150,10 @@ class Scrapper {
           "--no-sandbox",
           "--disable-setuid-sandbox",
           "--use-gl=egl",
-          "--blink-settings=imagesEnabled=false,cssEnabled=false",
+          "--disable-blink-features=AutomationControlled",
           "--disable-dev-shm-usage",
-          "--start-maximized"
+          "--start-maximized",
+          "--lang=es-CL,es",
         ],
         timeout: 0,
         protocolTimeout: 300000,
