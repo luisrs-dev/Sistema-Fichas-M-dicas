@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getTopForm, postTopForm, postParseVoice, syncSistratTop } from "../controllers/topForm.controller";
+import { getTopForm, postTopForm, postParseVoice, syncSistratTop, saveAndSyncSistratTop } from "../controllers/topForm.controller";
 
 const router = Router();
 
@@ -14,5 +14,8 @@ router.post("/:patientId", postTopForm);
 
 // POST /api/topForm/:patientId/sistrat → envia el form TOP a SISTRAT usando puppeteer
 router.post("/:patientId/sistrat", syncSistratTop);
+
+// POST /api/topForm/:patientId/save-and-sync → guarda en FicLin Y envía a SISTRAT en una sola llamada
+router.post("/:patientId/save-and-sync", saveAndSyncSistratTop);
 
 export { router };

@@ -45,7 +45,7 @@ const postParseVoice = async ({ body }: Request, res: Response) => {
   }
 };
 
-import { syncTopFormToSistrat } from "../services/topForm.service";
+import { syncTopFormToSistrat, saveAndSyncTopForm } from "../services/topForm.service";
 
 const syncSistratTop = async ({ params }: Request, res: Response) => {
   const { patientId } = params;
@@ -57,4 +57,18 @@ const syncSistratTop = async ({ params }: Request, res: Response) => {
   }
 };
 
-export { getTopForm, postTopForm, postParseVoice, syncSistratTop };
+const saveAndSyncSistratTop = async ({ params, body }: Request, res: Response) => {
+  const { patientId } = params;
+  try {
+    const result = await saveAndSyncTopForm(patientId, body);
+    res.status(200).json({
+      status: true,
+      message: "Formulario TOP guardado en FicLin y sincronizado con SISTRAT.",
+    });
+  } catch (error) {
+    handleHttp(res, "ERROR_SAVE_AND_SYNC_TOP", error);
+  }
+};
+
+export { getTopForm, postTopForm, postParseVoice, syncSistratTop, saveAndSyncSistratTop };
+

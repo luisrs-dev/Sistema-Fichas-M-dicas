@@ -189,6 +189,10 @@ export class PatientService {
     return this.http.post<any>(`${this.backend}/topForm/${patientId}/sistrat`, {}).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al sincronizar TOP con SISTRAT')));
   }
 
+  saveAndSyncTopForm(patientId: string, data: any): Observable<any> {
+    return this.http.post<any>(`${this.backend}/topForm/${patientId}/save-and-sync`, data).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al guardar y sincronizar TOP con SISTRAT')));
+  }
+
   parseVoiceForTop(text: string, section: 'section1' | 'section2' | 'section3'): Observable<any> {
     return this.http.post<any>(`${this.backend}/topForm/parse-voice`, { text, section }).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al procesar voz')));
   }

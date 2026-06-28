@@ -166,3 +166,16 @@ export const syncTopFormToSistrat = async (patientId: string) => {
   // await sistrat.updateAlerts(patient);
   return { success: true };
 };
+
+export const saveAndSyncTopForm = async (patientId: string, data: Partial<TopForm>) => {
+  // 1. Guardar/actualizar en FicLin
+  const saveResult = await createTopForm(patientId, data);
+
+  // 2. Sincronizar con SISTRAT
+  const patient = await PatientModel.findById(patientId);
+  if (!patient) throw new Error("Paciente no encontrado");
+
+  const sistrat = new Sistrat();
+  await sistrat.syncTopForm(patient, saveResult.topForm);
+  return { success: true, updated: saveResult.updated };
+};

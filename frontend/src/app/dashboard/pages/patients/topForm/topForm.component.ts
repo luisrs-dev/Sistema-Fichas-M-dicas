@@ -91,13 +91,9 @@ import Notiflix from 'notiflix';
       <div class="actions-bar" *ngIf="!loading()">
         <button mat-stroked-button (click)="goBack()">Volver</button>
         <div class="actions-right">
-          <button mat-raised-button color="primary" (click)="onSave()" [disabled]="saving() || isFormInvalid">
-            <mat-icon>save</mat-icon>
-            {{ saving() ? 'Guardando...' : 'Guardar en FicLin' }}
-          </button>
-          <button mat-raised-button class="sistrat-btn" (click)="onSendToSistrat()" *ngIf="topFormSaved() && authService.isAdmin()" [disabled]="syncing() || isFormInvalid">
-            <mat-icon>upload</mat-icon>
-            {{ syncing() ? 'Sincronizando...' : 'Enviar a SISTRAT' }}
+          <button mat-raised-button class="sistrat-btn" (click)="onSaveAndSync()" [disabled]="saving()">
+            <mat-icon>cloud_upload</mat-icon>
+            {{ saving() ? 'Procesando...' : 'Guardar y Enviar a SISTRAT' }}
           </button>
         </div>
       </div>
@@ -147,7 +143,6 @@ export default class TopFormComponent {
 
   loading = signal(true);
   saving = signal(false);
-  syncing = signal(false);
   topFormSaved = signal(false);
 
   patient: Patient | null = null;
@@ -281,17 +276,7 @@ export default class TopFormComponent {
     }
 
     this.saving.set(true);
-    const metaValues = { ...this.metaForm.getRawValue() };
-    if (metaValues.fechaEntrevista instanceof Date) {
-      metaValues.fechaEntrevista = moment(metaValues.fechaEntrevista).format('DD/MM/YYYY');
-    }
-
-    const data = {
-      ...metaValues,
-      ...this.section1?.getFormData(),
-      ...this.section2?.getFormData(),
-      ...this.section3?.getFormData(),
-    };
+    const data = this.buildFormData();
 
     this.patientService.saveTopForm(this.patientId, data).subscribe({
       next: (res) => {
@@ -306,53 +291,84 @@ export default class TopFormComponent {
     });
   }
 
-  onSendToSistrat(): void {
-    if (this.syncing()) return;
+  onSaveAndSync(): void {
+    if (this.saving()) return;
 
-    // Validar que se ingrese una observación si no desea completar
+    // Validar observación obligatoria si no desea completar
     const noDeseaCompletar = this.section3?.form.get('noDeseaCompletar')?.value;
     const observaciones = this.section3?.form.get('observaciones')?.value;
     if (noDeseaCompletar && (!observaciones || observaciones.trim() === '')) {
-      Notiflix.Report.warning(
-        'Validación pendiente',
-        'Debe ingresar una observación si marca "No desea completar formulario"',
-        'Entendido'
-      );
+      Notiflix.Notify.failure('Debe ingresar una observación si marca "No desea completar formulario"');
       return;
     }
 
-    const validationErrors = this.getValidationErrors();
-    if (validationErrors.length > 0) {
-      const list = validationErrors.map(f => `<li>${f}</li>`).join('');
+    const errors = this.getValidationErrors();
+    if (errors.length > 0) {
+      const list = errors.map(f => `<li>${f}</li>`).join('');
       Notiflix.Report.warning(
-        'Validación pendiente',
-        `Para una correcta sincronización, revise lo siguiente:<br/><br/><ul style="text-align: left; max-height: 200px; overflow-y: auto;">${list}</ul>`,
+        'Campos Obligatorios Pendientes',
+        `Complete los siguientes campos antes de guardar y sincronizar:<br/><br/><ul style="text-align: left; max-height: 200px; overflow-y: auto;">${list}</ul>`,
         'Entendido'
       );
       return;
     }
 
     Notiflix.Confirm.show(
-      '¿Enviar a SISTRAT?',
-      'Se completará el formulario TOP en SISTRAT con los datos guardados en FicLin. El bot llenará los campos para su revisión final.',
-      'Sí, enviar',
+      '¿Guardar y Enviar a SISTRAT?',
+      'Se guardará el formulario TOP en FicLin y luego se sincronizará automáticamente con SISTRAT.',
+      'Sí, guardar y enviar',
       'Cancelar',
       () => {
-        this.syncing.set(true);
-        Notiflix.Notify.info('Sincronizando formulario TOP a SISTRAT...');
-        this.patientService.syncTopFormSistrat(this.patientId).subscribe({
-          next: (res) => {
-            this.syncing.set(false);
-            Notiflix.Report.success('¡Sincronización Terminada!', 'El bot ha llenado los campos correctamente para revisión. En esta versión de prueba no se hace click en Enviar.', 'OK');
+        this.saving.set(true);
+        Notiflix.Loading.circle('Guardando en FicLin...');
+
+        const data = this.buildFormData();
+
+        this.patientService.saveAndSyncTopForm(this.patientId, data).subscribe({
+          next: () => {
+            Notiflix.Loading.remove();
+            this.saving.set(false);
+            this.topFormSaved.set(true);
+            Notiflix.Report.success(
+              '¡Guardado y Sincronizado!',
+              'El formulario TOP se ha guardado en FicLin y se ha sincronizado correctamente con SISTRAT.',
+              'Entendido'
+            );
           },
-          error: (err) => {
-            this.syncing.set(false);
-            console.error('Error en sincronización SISTRAT:', err);
-            Notiflix.Report.failure('Error en Sincronización', err || 'Hubo un error al ejecutar el bot SISTRAT', 'Cerrar');
+          error: (error) => {
+            Notiflix.Loading.remove();
+            this.saving.set(false);
+            console.error('Error en guardado y sincronización SISTRAT:', error);
+
+            let errorMessage = 'Error al ejecutar el bot';
+            if (error && (error.status === 0 || error.status === 504 || error.status === 502)) {
+              errorMessage = 'La sincronización sigue procesándose en el servidor (SISTRAT es lento), pero el navegador cerró la conexión por límite de tiempo. El formulario ya fue guardado en FicLin. Verifique en SISTRAT en unos minutos.';
+            } else {
+              errorMessage = typeof error === 'string' ? error : (error?.error?.message || error?.message || errorMessage);
+            }
+
+            Notiflix.Report.warning(
+              'Sincronización Incompleta',
+              `El formulario se guardó en FicLin, pero ocurrió un problema al sincronizar con SISTRAT: ${errorMessage}`,
+              'Cerrar'
+            );
           }
         });
       }
     );
+  }
+
+  private buildFormData(): any {
+    const metaValues = { ...this.metaForm.getRawValue() };
+    if (metaValues.fechaEntrevista instanceof Date) {
+      metaValues.fechaEntrevista = moment(metaValues.fechaEntrevista).format('DD/MM/YYYY');
+    }
+    return {
+      ...metaValues,
+      ...this.section1?.getFormData(),
+      ...this.section2?.getFormData(),
+      ...this.section3?.getFormData(),
+    };
   }
 
   goBack(): void {
