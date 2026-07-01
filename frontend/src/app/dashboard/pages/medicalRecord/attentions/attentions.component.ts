@@ -172,17 +172,32 @@ export default class AttentionsComponent {
       else if (error?.error?.message) errorMessage = error.error.message;
       else if (error?.message) errorMessage = error.message;
 
+      // Detectar timeout del navegador o proxy
+      const isTimeout = error && (error.status === 0 || error.status === 504 || error.status === 502);
+      if (isTimeout) {
+        errorMessage = 'El proceso de registro masivo toma varios minutos debido a la cantidad de pacientes. El navegador cerró la conexión por límite de tiempo (timeout), pero la sincronización continúa ejecutándose en segundo plano en el servidor. Puedes verificar el avance de cada paciente en la sección de Logs o actualizar la lista en unos minutos.';
+      }
+
       const updatedStatuses = { ...this.registrationStatus() };
       const updatedMessages = { ...this.registrationMessages() };
 
       selectedIds.forEach((id) => {
-        updatedStatuses[id] = 'error';
+        updatedStatuses[id] = isTimeout ? 'pending' : 'error';
         updatedMessages[id] = errorMessage;
       });
 
       this.registrationStatus.set(updatedStatuses);
       this.registrationMessages.set(updatedMessages);
-      Notiflix.Notify.failure(errorMessage);
+
+      if (isTimeout) {
+        Notiflix.Report.info(
+          'Sincronización en Segundo Plano',
+          errorMessage,
+          'Entendido'
+        );
+      } else {
+        Notiflix.Notify.failure(errorMessage);
+      }
     } finally {
       this.bulkLoading.set(false);
     }

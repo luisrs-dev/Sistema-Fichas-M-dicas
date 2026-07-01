@@ -1463,6 +1463,20 @@ class Sistrat {
   }
 
   private async openActiveUsersList(page: Page, logger?: ProcessLogger) {
+    const currentUrl = page.url();
+    if (currentUrl.includes("php/consultar_paciente.php")) {
+      console.log("[Sistrat] Ya estamos en el listado de pacientes. Reutilizando página...");
+      try {
+        await page.waitForSelector("#filtrar", { visible: true, timeout: 3000 });
+        await this.scrapper.clickButton(page, "#filtrar");
+        await this.scrapper.waitForSeconds(2);
+        await this.logStep(logger, "[Sistrat] Filtro aplicado en listado de pacientes (reutilizado)");
+        return;
+      } catch (e) {
+        console.log("[Sistrat] No se pudo encontrar el botón de filtro en la página actual, realizando navegación completa");
+      }
+    }
+
     console.log("[Sistrat] Preparando navegación hacia listado de pacientes activos");
     try {
       await page.hover("#flyout");
