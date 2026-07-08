@@ -431,7 +431,12 @@ export default class NewPatientComponent {
       },
       error: (err) => {
         console.error('Error al recuperar datos:', err);
-        Notiflix.Notify.failure('No se pudo establecer conexión con SISTRAT.');
+        const errorMsg = typeof err === 'string' ? err : err?.error?.message || err?.message || '';
+        if (errorMsg.includes('SISTRAT_CONNECTION_ERROR') || errorMsg.includes('proxy')) {
+          Notiflix.Notify.failure('Error de conexión con SISTRAT. El servicio de proxy podría estar inactivo o saturado. Reintenta en unos instantes.');
+        } else {
+          Notiflix.Notify.failure('No se pudo establecer conexión con SISTRAT.');
+        }
         Notiflix.Loading.remove();
       }
     });

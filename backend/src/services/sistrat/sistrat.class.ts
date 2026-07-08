@@ -246,9 +246,24 @@ class Sistrat {
         sex: normalizedSex,
       };
 
-    } catch (error) {
-      console.error("[Sistrat][Datos con rut] ERROR:", error);
-      await this.logStep(logger, "[Sistrat][Datos con rut] Error: " + error);
+    } catch (error: any) {
+      const errorMsg = error?.message || String(error);
+      console.error("[Sistrat][Datos con rut] ERROR:", errorMsg);
+      await this.logStep(logger, "[Sistrat][Datos con rut] Error: " + errorMsg);
+
+      // Detectar errores de conexión/proxy para propagarlos al frontend con un mensaje claro
+      const isConnectionError = errorMsg.includes('ERR_TUNNEL_CONNECTION_FAILED')
+        || errorMsg.includes('ERR_PROXY_CONNECTION_FAILED')
+        || errorMsg.includes('ERR_CONNECTION_RESET')
+        || errorMsg.includes('ERR_CONNECTION_TIMED_OUT')
+        || errorMsg.includes('ERR_CONNECTION_REFUSED')
+        || errorMsg.includes('net::ERR_');
+
+      if (isConnectionError) {
+        await this.logStep(logger, "[Sistrat][Datos con rut] Error de conexión/proxy detectado. No es un bloqueo anti-bot.");
+        throw new Error('SISTRAT_CONNECTION_ERROR: No fue posible conectar con SISTRAT. El servicio de proxy podría estar temporalmente inactivo.');
+      }
+
       return {};
 
     } finally {

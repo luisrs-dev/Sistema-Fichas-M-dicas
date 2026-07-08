@@ -200,14 +200,18 @@ const getDataByRut = async (req: Request, res: Response) => {
     }
 
     const data = await dataPatientByRut(rut, center);
-    if (!data) {
+    if (!data || (!data.name && !data.surname)) {
       return res
         .status(404)
         .json({ success: false, message: "No se encontró demanda asociada al RUT y centro proporcionados" });
     }
 
     res.status(200).json({ success: true, message: "Demanda recuperada con éxito", data });
-  } catch (error) {
+  } catch (error: any) {
+    const errorMsg = error?.message || String(error);
+    if (errorMsg.includes("SISTRAT_CONNECTION_ERROR")) {
+      return res.status(503).json({ success: false, message: errorMsg });
+    }
     handleHttp(res, "ERROR_GET_ITEMS", error);
   }
 };

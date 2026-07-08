@@ -38,9 +38,13 @@ class Scrapper {
     });
 
     // Autenticar proxy solo en producción (donde se usa iProyal)
+    // Se agrega _session dinámica para forzar rotación de IP residencial en cada sesión
     if (this.isProduction) {
       const proxyUser = process.env.PROXY_USER || "4y0YVHAHmRvZMtOx";
-      const proxyPass = process.env.PROXY_PASS || "ZuVPtBuURBDDI6C9_country-cl_city-talca";
+      const baseProxyPass = process.env.PROXY_PASS || "ZuVPtBuURBDDI6C9_country-cl_city-talca";
+      const sessionId = `sess${Date.now()}`;
+      const proxyPass = `${baseProxyPass}_session-${sessionId}_lifetime-10m`;
+      console.log(`[Scrapper] Proxy session ID: ${sessionId}`);
       await page.authenticate({
         username: proxyUser,
         password: proxyPass,
@@ -173,9 +177,40 @@ class Scrapper {
     }
   }
 
-  // Método para manejar la navegación y selección de elementos comunes
-  async navigateToPage(page: Page, url: string): Promise<void> {
-    await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
+  // Método para manejar la navegación con reintentos automáticos ante fallos de proxy
+  async navigateToPage(page: Page, url: string, retries: number = 3): Promise<void> {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
+        return; // Navegación exitosa
+      } catch (error: any) {
+        const msg = error?.message || '';
+        const isProxyError = msg.includes('ERR_TUNNEL_CONNECTION_FAILED')
+          || msg.includes('ERR_PROXY_CONNECTION_FAILED')
+          || msg.includes('ERR_CONNECTION_RESET')
+          || msg.includes('ERR_CONNECTION_TIMED_OUT')
+          || msg.includes('ERR_CONNECTION_REFUSED');
+
+        if (isProxyError && attempt < retries) {
+          console.warn(`[Scrapper] Proxy falló en navegación (intento ${attempt}/${retries}): ${msg}. Reintentando en ${attempt * 5}s...`);
+          await this.waitForSeconds(attempt * 5); // Backoff incremental: 5s, 10s
+
+          // Rotar sesión de proxy para obtener nueva IP
+          if (this.isProduction) {
+            const proxyUser = process.env.PROXY_USER || "4y0YVHAHmRvZMtOx";
+            const baseProxyPass = process.env.PROXY_PASS || "ZuVPtBuURBDDI6C9_country-cl_city-talca";
+            const newSessionId = `retry${Date.now()}`;
+            const proxyPass = `${baseProxyPass}_session-${newSessionId}_lifetime-10m`;
+            console.log(`[Scrapper] Rotando proxy con nueva sesión: ${newSessionId}`);
+            await page.authenticate({ username: proxyUser, password: proxyPass });
+          }
+          continue;
+        }
+
+        // Si no es error de proxy, o ya se agotaron los reintentos, propagar
+        throw error;
+      }
+    }
   }
 
   async waitAndType(page: Page, selector: string, text: string): Promise<void> {
