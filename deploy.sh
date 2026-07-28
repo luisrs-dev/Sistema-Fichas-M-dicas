@@ -22,10 +22,6 @@ npx tsc
 
 # 4. Reiniciar ÚNICAMENTE app-ficlin en PM2 sin afectar otros proyectos
 echo "🔄 Recargando app-ficlin en PM2..."
-if pm2 id app-ficlin > /dev/null 2>&1; then
-  pm2 reload app-ficlin --env production
-else
-  pm2 start ecosystem.config.js --env production
-fi
+pm2 startOrReload ecosystem.config.js --env production
 
 echo "✅ Despliegue de app-ficlin completado con éxito."
