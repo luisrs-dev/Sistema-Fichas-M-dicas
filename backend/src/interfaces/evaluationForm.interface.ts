@@ -9,6 +9,12 @@ export interface EvaluationForm {
   trasgresionSocial: string;
   saludMental: string;
   saludFisica: string;
+  _id?: string | Types.ObjectId;
+  status?: "borrador" | "enviado_sistrat";
+  fechaRegistro?: Date | string;
+  syncedAt?: Date | string;
+
   createdAt?: Date;
   updatedAt?: Date;
 }
+

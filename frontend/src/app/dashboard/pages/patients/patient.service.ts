@@ -221,12 +221,20 @@ export class PatientService {
     return this.http.get<any>(`${this.backend}/evaluationForm/${patientId}`).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al obtener Evaluation Form')));
   }
 
+  getEvaluationFormHistory(patientId: string): Observable<any> {
+    return this.http.get<any>(`${this.backend}/evaluationForm/${patientId}/history`).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al obtener historial de evaluaciones')));
+  }
+
   saveEvaluationForm(patientId: string, data: any): Observable<any> {
     return this.http.post<any>(`${this.backend}/evaluationForm/${patientId}`, data).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al guardar Evaluation Form')));
   }
 
   syncEvaluationFormSistrat(patientId: string): Observable<any> {
     return this.http.post<any>(`${this.backend}/evaluationForm/sync/${patientId}`, {}).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al sincronizar evaluación con SISTRAT')));
+  }
+
+  saveAndSyncEvaluationForm(patientId: string, data: any): Observable<any> {
+    return this.http.post<any>(`${this.backend}/evaluationForm/save-and-sync/${patientId}`, data).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al guardar y sincronizar evaluación con SISTRAT')));
   }
 
   // ─── Social Diagnosis Form (Orange Alert) ───────────────────────────────────

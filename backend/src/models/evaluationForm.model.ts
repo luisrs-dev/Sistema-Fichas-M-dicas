@@ -11,6 +11,9 @@ const EvaluationFormSchema = new Schema<EvaluationForm>(
     trasgresionSocial: { type: String, default: "" },
     saludMental: { type: String, default: "" },
     saludFisica: { type: String, default: "" },
+    status: { type: String, enum: ["borrador", "enviado_sistrat"], default: "borrador" },
+    fechaRegistro: { type: Date, default: Date.now },
+    syncedAt: { type: Date, default: null },
   },
   { timestamps: true, versionKey: false }
 );

@@ -118,4 +118,15 @@ export class AuthService {
     const user = this.getUser();
     return user && user.permissions && user.permissions.some((permission: Permission) => permission.value === permissionValue);
   }
+
+  isTerapeutaOcupacional(): boolean {
+    const user = this.getUser();
+    const profileName = user?.profile?.name?.toLowerCase() || '';
+    return profileName.includes('terapeuta') || profileName.includes('ocupacional');
+  }
+
+  canSyncEvaluation(): boolean {
+    return this.isAdmin() || this.isTerapeutaOcupacional();
+  }
 }
+
