@@ -111,21 +111,51 @@ function callGeminiApi(prompt: string, userText: string): Promise<string> {
 // ─── Métodos del servicio ────────────────────────────────────────────────────
 
 export const createTopForm = async (patientId: string, data: Partial<TopForm>) => {
-  const existing = await TopFormModel.findOne({ patientId: new Types.ObjectId(patientId) });
+  const patientObjectId = new Types.ObjectId(patientId);
 
-  if (existing) {
-    const updated = await TopFormModel.findByIdAndUpdate(existing._id, data, { new: true });
+  // Buscar si existe un borrador pendiente
+  const existingDraft = await TopFormModel.findOne({
+    patientId: patientObjectId,
+    status: "borrador",
+  });
+
+  if (existingDraft) {
+    const updated = await TopFormModel.findByIdAndUpdate(
+      existingDraft._id,
+      { ...data, status: "borrador" },
+      { new: true }
+    );
     return { topForm: updated, updated: true };
   }
 
-  const topForm = new TopFormModel({ patientId: new Types.ObjectId(patientId), ...data });
+  // Si no hay borrador pendiente, crear uno nuevo
+  const topForm = new TopFormModel({
+    patientId: patientObjectId,
+    status: "borrador",
+    fechaRegistro: new Date(),
+    ...data,
+  });
   await topForm.save();
   return { topForm, updated: false };
 };
 
 export const getTopFormByPatient = async (patientId: string) => {
-  const topForm = await TopFormModel.findOne({ patientId: new Types.ObjectId(patientId) });
+  // Retorna solo el borrador activo (si existe)
+  const topForm = await TopFormModel.findOne({
+    patientId: new Types.ObjectId(patientId),
+    status: "borrador",
+  });
   return { topForm };
+};
+
+export const getTopFormHistory = async (patientId: string) => {
+  // Retorna todas las evaluaciones históricas completadas/enviadas (excluyendo solo el borrador activo no enviado)
+  const history = await TopFormModel.find({
+    patientId: new Types.ObjectId(patientId),
+    status: { $ne: "borrador" },
+  }).sort({ createdAt: -1 });
+
+  return { history };
 };
 
 export const parseVoiceWithGemini = async (text: string, section: "section1" | "section2" | "section3") => {
@@ -157,18 +187,26 @@ export const syncTopFormToSistrat = async (patientId: string) => {
   const patient = await PatientModel.findById(patientId);
   if (!patient) throw new Error("Paciente no encontrado");
 
-  const { topForm } = await getTopFormByPatient(patientId);
+  // Buscar borrador o último formulario
+  let { topForm } = await getTopFormByPatient(patientId);
+  if (!topForm) {
+    topForm = await TopFormModel.findOne({ patientId: new Types.ObjectId(patientId) }).sort({ createdAt: -1 });
+  }
   if (!topForm) throw new Error("Formulario TOP no encontrado para el paciente");
 
   const sistrat = new Sistrat();
   await sistrat.syncTopForm(patient, topForm);
-  // Refrescar alertas automáticamente
-  // await sistrat.updateAlerts(patient);
-  return { success: true };
+
+  // Tras sincronizar exitosamente, cambiar estado a enviado_sistrat
+  topForm.status = "enviado_sistrat";
+  topForm.syncedAt = new Date();
+  await topForm.save();
+
+  return { success: true, topForm };
 };
 
 export const saveAndSyncTopForm = async (patientId: string, data: Partial<TopForm>) => {
-  // 1. Guardar/actualizar en FicLin
+  // 1. Guardar/actualizar en FicLin como borrador
   const saveResult = await createTopForm(patientId, data);
 
   // 2. Sincronizar con SISTRAT
@@ -177,5 +215,14 @@ export const saveAndSyncTopForm = async (patientId: string, data: Partial<TopFor
 
   const sistrat = new Sistrat();
   await sistrat.syncTopForm(patient, saveResult.topForm);
-  return { success: true, updated: saveResult.updated };
+
+  // 3. Marcar como enviado_sistrat e inmutable en el historial
+  const finalForm = await TopFormModel.findByIdAndUpdate(
+    saveResult.topForm._id,
+    { status: "enviado_sistrat", syncedAt: new Date() },
+    { new: true }
+  );
+
+  return { success: true, updated: saveResult.updated, topForm: finalForm };
 };
+

@@ -181,6 +181,10 @@ export class PatientService {
     return this.http.get<any>(`${this.backend}/topForm/${patientId}`).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al obtener TOP Form')));
   }
 
+  getTopFormHistory(patientId: string): Observable<any> {
+    return this.http.get<any>(`${this.backend}/topForm/${patientId}/history`).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al obtener historial TOP Form')));
+  }
+
   saveTopForm(patientId: string, data: any): Observable<any> {
     return this.http.post<any>(`${this.backend}/topForm/${patientId}`, data).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al guardar TOP Form')));
   }

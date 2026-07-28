@@ -41,6 +41,24 @@ import Notiflix from 'notiflix';
         <div class="header-badge">TOP En Tratamiento</div>
       </div>
 
+      <!-- Banner de Historial -->
+      <div class="history-banner" *ngIf="!loading() && history().length > 0">
+        <div class="history-banner-info">
+          <mat-icon class="history-banner-icon">history</mat-icon>
+          <div>
+            <div class="history-banner-title">Historial disponible</div>
+            <div class="history-banner-subtitle">
+              Este paciente registra <strong>{{ history().length }} evaluación(es) TOP</strong> previa(s). 
+              Última evaluación: <strong>{{ history()[0].fechaEntrevista || (history()[0].createdAt | date:'dd/MM/yyyy') }}</strong>
+            </div>
+          </div>
+        </div>
+        <button mat-flat-button color="primary" class="view-history-btn" (click)="selectedTabIndex.set(3)">
+          <mat-icon>visibility</mat-icon>
+          Ver Historial ({{ history().length }})
+        </button>
+      </div>
+
       <!-- Meta del formulario -->
       <mat-card class="meta-card" *ngIf="!loading()">
         <form [formGroup]="metaForm" class="meta-form">
@@ -60,7 +78,7 @@ import Notiflix from 'notiflix';
 
       <!-- Secciones TOP via Tabs -->
       <mat-card class="sections-card" *ngIf="!loading()">
-        <mat-tab-group animationDuration="200ms" class="sections-tabs">
+        <mat-tab-group animationDuration="200ms" class="sections-tabs" [selectedIndex]="selectedTabIndex()" (selectedIndexChange)="selectedTabIndex.set($event)">
           <mat-tab label="Sección 1 — Sustancias">
             <div class="tab-content">
               <app-top-section1 #section1></app-top-section1>
@@ -78,6 +96,97 @@ import Notiflix from 'notiflix';
               <app-top-section3 #section3></app-top-section3>
             </div>
           </mat-tab>
+
+          <mat-tab [label]="'Historial de Evaluaciones (' + history().length + ')'">
+            <div class="tab-content history-tab">
+              <div *ngIf="loadingHistory()" class="loading-container">
+                <mat-spinner diameter="36"></mat-spinner>
+                <p>Cargando historial de evaluaciones TOP...</p>
+              </div>
+
+              <div *ngIf="!loadingHistory() && history().length === 0" class="empty-history">
+                <mat-icon class="empty-icon">history</mat-icon>
+                <p>No hay evaluaciones TOP enviadas previamente a SISTRAT para este paciente.</p>
+              </div>
+
+              <div *ngIf="!loadingHistory() && history().length > 0">
+                <div class="history-intro">
+                  <mat-icon class="text-primary mr-2">info</mat-icon>
+                  <span>Mostrando <strong>{{ history().length }}</strong> evaluación(es) TOP guardada(s) / enviadas a SISTRAT.</span>
+                </div>
+
+                <mat-accordion class="history-accordion" multi="false">
+                  <mat-expansion-panel *ngFor="let item of history(); let i = index">
+                    <mat-expansion-panel-header>
+                      <mat-panel-title>
+                        <span class="history-title font-bold">Evaluación TOP #{{ history().length - i }}</span>
+                      </mat-panel-title>
+                      <mat-panel-description class="flex justify-content-between align-items-center w-full">
+                        <span class="history-meta">
+                          Entrevista: <strong>{{ item.fechaEntrevista || 'Sin fecha' }}</strong> | 
+                          Entrevistador: <strong>{{ item.nombreEntrevistador || 'No registrado' }}</strong>
+                        </span>
+                        <span class="synced-badge">
+                          <mat-icon inline>check_circle</mat-icon> Guardado / SISTRAT
+                        </span>
+                      </mat-panel-description>
+                    </mat-expansion-panel-header>
+
+                    <div class="history-details-container">
+                      <div class="history-detail-header">
+                        <div *ngIf="item.createdAt"><strong>Fecha de Registro:</strong> {{ item.createdAt | date:'dd/MM/yyyy HH:mm' }}</div>
+                        <div *ngIf="item.syncedAt"><strong>Sincronizado con SISTRAT:</strong> {{ item.syncedAt | date:'dd/MM/yyyy HH:mm' }}</div>
+                      </div>
+
+                      <!-- Resumen de sustancias -->
+                      <div class="detail-block mt-3">
+                        <h5>Sección 1 — Sustancias Registradas:</h5>
+                        <div class="flex flex-wrap gap-2 mt-1">
+                          <span *ngIf="item.alcohol?.total > 0" class="chip">Alcohol: {{ item.alcohol.total }} tragos</span>
+                          <span *ngIf="item.marihuana?.total > 0" class="chip">Marihuana: {{ item.marihuana.total }} pitos</span>
+                          <span *ngIf="item.pastaBase?.total > 0" class="chip">Pasta Base: {{ item.pastaBase.total }} papelillos</span>
+                          <span *ngIf="item.cocaina?.total > 0" class="chip">Cocaína: {{ item.cocaina.total }} gramos</span>
+                          <span *ngIf="item.sedantes?.total > 0" class="chip">Sedantes: {{ item.sedantes.total }} comp.</span>
+                          <span *ngIf="item.otraSustancia?.nombre" class="chip">{{ item.otraSustancia.nombre }}: {{ item.otraSustancia.total }} {{ item.otraSustancia.unidadMedida || '' }}</span>
+                          <span *ngIf="!item.alcohol?.total && !item.marihuana?.total && !item.pastaBase?.total && !item.cocaina?.total && !item.sedantes?.total && !item.otraSustancia?.nombre" class="chip-empty">Sin consumo reportado / Todos ceros</span>
+                        </div>
+                      </div>
+
+                      <!-- Resumen de transgresiones -->
+                      <div class="detail-block mt-3">
+                        <h5>Sección 2 — Transgresión a la Norma:</h5>
+                        <div class="flex flex-wrap gap-2 mt-1">
+                          <span *ngIf="item.hurto?.si" class="chip-alert">Hurto: Sí</span>
+                          <span *ngIf="item.robo?.si" class="chip-alert">Robo: Sí</span>
+                          <span *ngIf="item.ventaDrogas?.si" class="chip-alert">Venta Drogas: Sí</span>
+                          <span *ngIf="item.rina?.si" class="chip-alert">Riña: Sí</span>
+                          <span *ngIf="item.violenciaIntrafamiliar?.total > 0" class="chip-alert">Violencia Intrafamiliar: {{ item.violenciaIntrafamiliar.total }} días</span>
+                          <span *ngIf="!item.hurto?.si && !item.robo?.si && !item.ventaDrogas?.si && !item.rina?.si && !item.violenciaIntrafamiliar?.total" class="chip-empty">Sin infracciones reportadas</span>
+                        </div>
+                      </div>
+
+                      <!-- Resumen de Salud -->
+                      <div class="detail-block mt-3">
+                        <h5>Sección 3 — Salud y Calidad de Vida:</h5>
+                        <div class="flex flex-wrap gap-2 mt-1">
+                          <span *ngIf="item.saludPsicologica !== null" class="chip">Salud Psicológica: {{ item.saludPsicologica }}/20</span>
+                          <span *ngIf="item.saludFisica !== null" class="chip">Salud Física: {{ item.saludFisica }}/20</span>
+                          <span *ngIf="item.calidadVida !== null" class="chip">Calidad de Vida: {{ item.calidadVida }}/20</span>
+                          <span *ngIf="item.tieneLugarVivir" class="chip">Lugar de Vivir: {{ item.tieneLugarVivir | uppercase }}</span>
+                        </div>
+                      </div>
+
+                      <!-- Observaciones -->
+                      <div class="detail-block mt-3" *ngIf="item.observaciones || item.noDeseaCompletar">
+                        <h5>Observaciones / Comentarios:</h5>
+                        <p class="text-sm text-gray-700 bg-gray-50 p-2 border-round">{{ item.observaciones || 'Sin observaciones adicionales' }}</p>
+                      </div>
+                    </div>
+                  </mat-expansion-panel>
+                </mat-accordion>
+              </div>
+            </div>
+          </mat-tab>
         </mat-tab-group>
       </mat-card>
 
@@ -88,7 +197,7 @@ import Notiflix from 'notiflix';
       </div>
 
       <!-- Acciones -->
-      <div class="actions-bar" *ngIf="!loading()">
+      <div class="actions-bar" *ngIf="!loading() && selectedTabIndex() < 3">
         <button mat-stroked-button (click)="goBack()">Volver</button>
         <div class="actions-right">
           <button mat-raised-button class="sistrat-btn" (click)="onSaveAndSync()" [disabled]="saving()">
@@ -103,7 +212,7 @@ import Notiflix from 'notiflix';
     .top-form-page { max-width: 1100px; margin: 0 auto; padding: 16px; }
 
     .page-header {
-      display: flex; align-items: center; gap: 16px; margin-bottom: 20px;
+      display: flex; align-items: center; gap: 16px; margin-bottom: 16px;
       background: linear-gradient(135deg, #1a3c6e 0%, #2563ab 100%);
       color: white; border-radius: 12px; padding: 16px 20px;
     }
@@ -115,6 +224,16 @@ import Notiflix from 'notiflix';
       background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);
       border-radius: 20px; padding: 4px 14px; font-size: 0.8rem; font-weight: 500;
     }
+
+    .history-banner {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 12px;
+      padding: 12px 16px; margin-bottom: 16px;
+    }
+    .history-banner-info { display: flex; align-items: center; gap: 12px; }
+    .history-banner-icon { color: #3b82f6; font-size: 28px; width: 28px; height: 28px; }
+    .history-banner-title { font-weight: 700; color: #1e3a8a; font-size: 0.95rem; }
+    .history-banner-subtitle { font-size: 0.85rem; color: #374151; }
 
     .meta-card { margin-bottom: 16px; padding: 20px; border-radius: 12px; }
     .meta-form { display: flex; gap: 16px; flex-wrap: wrap; }
@@ -132,6 +251,23 @@ import Notiflix from 'notiflix';
     }
     .actions-right { display: flex; gap: 12px; }
     .sistrat-btn { background: #2e7d32; color: white; }
+
+    .history-tab { padding: 16px 8px; }
+    .history-intro { display: flex; align-items: center; margin-bottom: 16px; font-size: 0.9rem; color: #555; background: #f0f4f9; padding: 10px 14px; border-radius: 8px; }
+    .synced-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #e8f5e9; color: #2e7d32; font-weight: 600;
+      padding: 2px 10px; border-radius: 12px; font-size: 0.75rem;
+    }
+    .history-accordion { margin-top: 12px; }
+    .history-details-container { padding: 12px 0; }
+    .history-detail-header { display: flex; gap: 24px; font-size: 0.85rem; color: #555; flex-wrap: wrap; }
+    .detail-block h5 { margin: 12px 0 4px; font-size: 0.85rem; color: #1a3c6e; font-weight: 600; }
+    .chip { background: #eef2ff; color: #1e40af; padding: 4px 12px; border-radius: 16px; font-size: 0.8rem; font-weight: 500; }
+    .chip-alert { background: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; padding: 4px 12px; border-radius: 16px; font-size: 0.8rem; font-weight: 600; }
+    .chip-empty { background: #f3f4f6; color: #6b7280; padding: 4px 12px; border-radius: 16px; font-size: 0.8rem; }
+    .empty-history { text-align: center; padding: 48px 16px; color: #777; }
+    .empty-icon { font-size: 48px; width: 48px; height: 48px; color: #ccc; margin-bottom: 8px; }
   `]
 })
 export default class TopFormComponent {
@@ -144,6 +280,10 @@ export default class TopFormComponent {
   loading = signal(true);
   saving = signal(false);
   topFormSaved = signal(false);
+  selectedTabIndex = signal(0);
+
+  history = signal<any[]>([]);
+  loadingHistory = signal(false);
 
   patient: Patient | null = null;
   private patientId: string = '';
@@ -170,7 +310,10 @@ export default class TopFormComponent {
     this.patientService.getPatientById(this.patientId).subscribe((response) => {
       this.patient = response.patient;
 
-      // Cargar formulario TOP existente si ya fue guardado
+      // Cargar historial de TOP enviados previamente
+      this.loadHistory();
+
+      // Cargar borrador TOP activo si existe
       this.patientService.getTopForm(this.patientId).subscribe((res) => {
         if (res.topForm) {
           this.topFormSaved.set(true);
@@ -185,38 +328,59 @@ export default class TopFormComponent {
             this.section2?.patchData(res.topForm);
             this.section3?.patchData(res.topForm);
           }, 200);
-        }
-        this.loading.set(false);
-
-        // Si no hay formulario previo, pre-cargar el nombre del entrevistador logueado
-        if (!this.topFormSaved()) {
+        } else {
+          // Si no hay borrador previo, pre-cargar nombre del entrevistador logueado
           const user = this.authService.getUser();
           if (user) {
             this.metaForm.patchValue({ nombreEntrevistador: user.name });
           }
         }
-
+        this.loading.set(false);
         this.cdr.detectChanges();
       });
     });
   }
 
+  loadHistory(): void {
+    this.loadingHistory.set(true);
+    this.patientService.getTopFormHistory(this.patientId).subscribe({
+      next: (res) => {
+        this.history.set(res.history || []);
+        this.loadingHistory.set(false);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.loadingHistory.set(false);
+      }
+    });
+  }
+
+  resetForm(): void {
+    const user = this.authService.getUser();
+    this.metaForm.reset({
+      fechaEntrevista: new Date(),
+      nombreEntrevistador: user ? user.name : '',
+    });
+
+    if (this.section1?.form) this.section1.form.reset();
+    if (this.section2?.form) this.section2.form.reset();
+    if (this.section3?.form) this.section3.form.reset();
+    this.topFormSaved.set(false);
+  }
+
   private formatDateStringToDate(dateString: string): Date | string {
     if (!dateString) return '';
-    // Intentar manejar formato DD/MM/YYYY que es el estándar del proyecto
     const parts = dateString.split("/");
     if (parts.length === 3) {
       const [day, month, year] = parts.map(Number);
       return new Date(year, month - 1, day);
     }
-    // Si viene en otro formato (como YYYY-MM-DD), intentar creación directa
     return new Date(dateString);
   }
 
   private getValidationErrors(): string[] {
     const errors: string[] = [];
 
-    // Validar metadatos obligatorios
     if (!this.metaForm.get('nombreEntrevistador')?.value) {
       errors.push('Nombre del Entrevistador');
     }
@@ -227,18 +391,15 @@ export default class TopFormComponent {
     const noDeseaCompletar = this.section3?.form.get('noDeseaCompletar')?.value;
 
     if (noDeseaCompletar) {
-      // Si no desea completar, solo validamos la Sección 3 (observaciones)
       const emptyS3 = this.section3?.validate() || [];
       errors.push(...emptyS3);
     } else {
-      // Validar todos los campos vacíos de las 3 secciones
       const emptyS1 = this.section1?.validate() || [];
       const emptyS2 = this.section2?.validate() || [];
       const emptyS3 = this.section3?.validate() || [];
       errors.push(...emptyS1, ...emptyS2, ...emptyS3);
     }
 
-    // Validar errores nativos de Angular (ej: maxLength)
     if (this.metaForm.invalid) errors.push('Formulario principal: Revise errores');
     if (!noDeseaCompletar) {
       if (this.section1?.form.invalid) errors.push('Sección 1: Revise errores en los campos');
@@ -256,7 +417,6 @@ export default class TopFormComponent {
   }
 
   onSave(): void {
-    // Validar que se ingrese una observación si no desea completar
     const noDeseaCompletar = this.section3?.form.get('noDeseaCompletar')?.value;
     const observaciones = this.section3?.form.get('observaciones')?.value;
     if (noDeseaCompletar && (!observaciones || observaciones.trim() === '')) {
@@ -282,11 +442,11 @@ export default class TopFormComponent {
       next: (res) => {
         this.saving.set(false);
         this.topFormSaved.set(true);
-        Notiflix.Notify.success(res.message || 'Formulario TOP guardado');
+        Notiflix.Notify.success(res.message || 'Borrador de formulario TOP guardado');
       },
       error: () => {
         this.saving.set(false);
-        Notiflix.Notify.failure('Error al guardar el formulario TOP');
+        Notiflix.Notify.failure('Error al guardar el borrador del formulario TOP');
       }
     });
   }
@@ -294,7 +454,6 @@ export default class TopFormComponent {
   onSaveAndSync(): void {
     if (this.saving()) return;
 
-    // Validar observación obligatoria si no desea completar
     const noDeseaCompletar = this.section3?.form.get('noDeseaCompletar')?.value;
     const observaciones = this.section3?.form.get('observaciones')?.value;
     if (noDeseaCompletar && (!observaciones || observaciones.trim() === '')) {
@@ -315,12 +474,12 @@ export default class TopFormComponent {
 
     Notiflix.Confirm.show(
       '¿Guardar y Enviar a SISTRAT?',
-      'Se guardará el formulario TOP en FicLin y luego se sincronizará automáticamente con SISTRAT.',
+      'Se guardará la evaluación TOP en FicLin, se enviará a SISTRAT y quedará archivada en el historial de este paciente.',
       'Sí, guardar y enviar',
       'Cancelar',
       () => {
         this.saving.set(true);
-        Notiflix.Loading.circle('Guardando en FicLin...');
+        Notiflix.Loading.circle('Guardando y sincronizando con SISTRAT...');
 
         const data = this.buildFormData();
 
@@ -328,12 +487,17 @@ export default class TopFormComponent {
           next: () => {
             Notiflix.Loading.remove();
             this.saving.set(false);
-            this.topFormSaved.set(true);
+
             Notiflix.Report.success(
               '¡Guardado y Sincronizado!',
-              'El formulario TOP se ha guardado en FicLin y se ha sincronizado correctamente con SISTRAT.',
+              'El formulario TOP se ha guardado en FicLin, se ha enviado a SISTRAT y se ha registrado en el Historial del paciente. El formulario ahora está limpio para futuras evaluaciones.',
               'Entendido'
             );
+
+            // Actualizar historial de evaluaciones
+            this.loadHistory();
+            // Limpiar el formulario para nuevo registro
+            this.resetForm();
           },
           error: (error) => {
             Notiflix.Loading.remove();

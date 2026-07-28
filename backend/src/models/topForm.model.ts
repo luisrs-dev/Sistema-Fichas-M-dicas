@@ -80,6 +80,10 @@ const TopFormSchema = new Schema<TopForm>(
     calidadVida: { type: Number, default: null },
     noDeseaCompletar: { type: Boolean, default: null },
     observaciones: { type: String, default: null },
+
+    status: { type: String, enum: ["borrador", "enviado_sistrat"], default: "borrador" },
+    fechaRegistro: { type: Date, default: Date.now },
+    syncedAt: { type: Date, default: null },
   },
   { timestamps: true, versionKey: false }
 );

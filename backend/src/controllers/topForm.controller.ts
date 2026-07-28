@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { handleHttp } from "../utils/error.handle";
-import { createTopForm, getTopFormByPatient, parseVoiceWithGemini } from "../services/topForm.service";
+import { createTopForm, getTopFormByPatient, getTopFormHistory, parseVoiceWithGemini, syncTopFormToSistrat, saveAndSyncTopForm } from "../services/topForm.service";
 
 const getTopForm = async ({ params }: Request, res: Response) => {
   const { patientId } = params;
@@ -9,6 +9,16 @@ const getTopForm = async ({ params }: Request, res: Response) => {
     res.status(200).json({ status: true, ...result });
   } catch (error) {
     handleHttp(res, "ERROR_GET_TOP_FORM", error);
+  }
+};
+
+const getTopHistory = async ({ params }: Request, res: Response) => {
+  const { patientId } = params;
+  try {
+    const result = await getTopFormHistory(patientId);
+    res.status(200).json({ status: true, ...result });
+  } catch (error) {
+    handleHttp(res, "ERROR_GET_TOP_HISTORY", error);
   }
 };
 
@@ -45,8 +55,6 @@ const postParseVoice = async ({ body }: Request, res: Response) => {
   }
 };
 
-import { syncTopFormToSistrat, saveAndSyncTopForm } from "../services/topForm.service";
-
 const syncSistratTop = async ({ params }: Request, res: Response) => {
   const { patientId } = params;
   try {
@@ -64,11 +72,13 @@ const saveAndSyncSistratTop = async ({ params, body }: Request, res: Response) =
     res.status(200).json({
       status: true,
       message: "Formulario TOP guardado en FicLin y sincronizado con SISTRAT.",
+      ...result,
     });
   } catch (error) {
     handleHttp(res, "ERROR_SAVE_AND_SYNC_TOP", error);
   }
 };
 
-export { getTopForm, postTopForm, postParseVoice, syncSistratTop, saveAndSyncSistratTop };
+export { getTopForm, getTopHistory, postTopForm, postParseVoice, syncSistratTop, saveAndSyncSistratTop };
+
 

@@ -60,6 +60,12 @@ export interface TopForm {
   noDeseaCompletar: boolean | null;
   observaciones: string | null;
 
+  _id?: string | Types.ObjectId;
+  status?: "borrador" | "enviado_sistrat";
+  fechaRegistro?: Date | string;
+  syncedAt?: Date | string;
+
   createdAt?: Date;
   updatedAt?: Date;
 }
+
