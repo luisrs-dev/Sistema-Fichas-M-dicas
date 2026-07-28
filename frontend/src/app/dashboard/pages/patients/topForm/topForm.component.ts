@@ -59,6 +59,19 @@ import Notiflix from 'notiflix';
         </button>
       </div>
 
+      <!-- Banner de Borrador Pendiente -->
+      <div class="draft-banner" *ngIf="!loading() && topFormSaved()">
+        <div class="draft-banner-info">
+          <mat-icon class="draft-banner-icon">edit_note</mat-icon>
+          <div>
+            <div class="draft-banner-title">Borrador guardado en FicLin</div>
+            <div class="draft-banner-subtitle">
+              Tienes una evaluación TOP guardada localmente como borrador pendiente. Puedes seguir modificándola o enviarla a SISTRAT cuando lo desees.
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Meta del formulario -->
       <mat-card class="meta-card" *ngIf="!loading()">
         <form [formGroup]="metaForm" class="meta-form">
@@ -200,6 +213,10 @@ import Notiflix from 'notiflix';
       <div class="actions-bar" *ngIf="!loading() && selectedTabIndex() < 3">
         <button mat-stroked-button (click)="goBack()">Volver</button>
         <div class="actions-right">
+          <button mat-stroked-button color="primary" (click)="onSave()" [disabled]="saving()">
+            <mat-icon>save</mat-icon>
+            Guardar Borrador en FicLin
+          </button>
           <button mat-raised-button class="sistrat-btn" (click)="onSaveAndSync()" [disabled]="saving()">
             <mat-icon>cloud_upload</mat-icon>
             {{ saving() ? 'Procesando...' : 'Guardar y Enviar a SISTRAT' }}
@@ -224,6 +241,16 @@ import Notiflix from 'notiflix';
       background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);
       border-radius: 20px; padding: 4px 14px; font-size: 0.8rem; font-weight: 500;
     }
+
+    .draft-banner {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      background: #fff8e1; border: 1px solid #ffe082; border-radius: 12px;
+      padding: 12px 16px; margin-bottom: 16px;
+    }
+    .draft-banner-info { display: flex; align-items: center; gap: 12px; }
+    .draft-banner-icon { color: #f59e0b; font-size: 28px; width: 28px; height: 28px; }
+    .draft-banner-title { font-weight: 700; color: #92400e; font-size: 0.95rem; }
+    .draft-banner-subtitle { font-size: 0.85rem; color: #78350f; }
 
     .history-banner {
       display: flex; align-items: center; justify-content: space-between; gap: 16px;
