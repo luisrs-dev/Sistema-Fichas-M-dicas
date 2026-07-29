@@ -1102,6 +1102,8 @@ class Sistrat {
     console.group(`[Sistrat][completeAdmissionForm] ${patient._id}`);
     await this.logStep(logger, "[Sistrat][completeAdmissionForm] Inicio de formulario");
 
+    const directRecordAdmission = await getEnvironmentConfigValue(this.configKeyAdmission);
+
     let isSubmitting = false;
     let submissionDialogMessage: string | null = null;
     const dialogListener = async (dialog: any) => {
@@ -1110,7 +1112,11 @@ class Sistrat {
       if (isSubmitting) {
         submissionDialogMessage = message;
       }
-      await dialog.dismiss();
+      if (directRecordAdmission) {
+        await dialog.dismiss();
+      } else {
+        console.log('[Sistrat][completeAdmissionForm] directRecordAdmission es falso: Se conserva el popup sin cerrar para inspección manual.');
+      }
     };
     page.on("dialog", dialogListener);
 
@@ -1377,7 +1383,6 @@ class Sistrat {
       await this.logStep(logger, "[Sistrat][completeAdmissionForm] Click en grabar usuario");
       await this.logStep(logger, "[Sistrat][completeAdmissionForm] Esperando antes de enviar formulario");
 
-      const directRecordAdmission = await getEnvironmentConfigValue(this.configKeyAdmission);
       console.log('directRecordAdmission', directRecordAdmission);
 
       const waitMinutesStr = await getEnvironmentConfigValue(this.configKeyWait) || "5";
@@ -1399,7 +1404,7 @@ class Sistrat {
         }
         await this.checkForValidationError(page);
       } else {
-        console.log('Simulación: no registra ficha ingreso. Esperando validación...', directRecordAdmission);
+        console.log('Simulación (directRecordAdmission=falso): no registra ficha ingreso. Esperando validación...', directRecordAdmission);
         await this.scrapper.waitForSeconds(waitSeconds);
       }
       await this.logStep(logger, "[Sistrat][Ficha de ingreso registrada");
