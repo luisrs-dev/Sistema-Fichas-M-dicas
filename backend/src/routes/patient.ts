@@ -20,11 +20,18 @@ import {
   updatePatientActiveStatus,
   fetchCodigoSistrat,
   getActiveSistratPatients,
-  resolveAlertSistrat
+  resolveAlertSistrat,
+  getSistratJobStatusController,
+  getActiveSistratJobController,
+  cancelSistratJobController
 } from "../controllers/patient.controller";
 const router = Router();
 
 router.get("/profile/:profile", getPatientsByProfile);
+
+router.get("/sistrat-job/:jobId", getSistratJobStatusController);
+router.get("/sistrat-job/patient/:patientId/:type", getActiveSistratJobController);
+router.post("/sistrat-job/:jobId/cancel", cancelSistratJobController);
 
 router.get("/demanda/:patientId", getDemand);
 router.get("/rut/:rut/:center", getDataByRut);

@@ -111,7 +111,19 @@ export class PatientService {
 
 
   addFichaIngresoToSistrat(patientId: string): Observable<any> {
-    return this.http.post<any>(`${this.backend}/patient/ficha-ingreso/sistrat`, { patientId }).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al agregar ficha ingreso a SISTRAT')));
+    return this.http.post<any>(`${this.backend}/patient/ficha-ingreso/sistrat`, { patientId }).pipe(catchError((err) => throwError(() => err)));
+  }
+
+  getSistratJobStatus(jobId: string): Observable<{ success: boolean; job: any }> {
+    return this.http.get<{ success: boolean; job: any }>(`${this.backend}/patient/sistrat-job/${jobId}`);
+  }
+
+  getActiveSistratJob(patientId: string, type: string = 'ficha-ingreso'): Observable<{ success: boolean; job: any }> {
+    return this.http.get<{ success: boolean; job: any }>(`${this.backend}/patient/sistrat-job/patient/${patientId}/${type}`);
+  }
+
+  cancelSistratJob(jobId: string): Observable<{ success: boolean; message: string }> {
+    return this.http.post<{ success: boolean; message: string }>(`${this.backend}/patient/sistrat-job/${jobId}/cancel`, {});
   }
 
   saveToSistrat(userId: string): Observable<any> {

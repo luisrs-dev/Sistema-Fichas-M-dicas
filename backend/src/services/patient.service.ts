@@ -163,7 +163,7 @@ const updateAF = async (patientId: string, admissionFormData: any) => {
 
 
 
-const saveAdmissionFormToSistrat = async (patientId: string) => {
+const saveAdmissionFormToSistrat = async (patientId: string, jobId?: string) => {
   try {
     const sistratPlatform = new Sistrat();
 
@@ -171,7 +171,7 @@ const saveAdmissionFormToSistrat = async (patientId: string) => {
     const patient = await PatientModel.findOne({ _id: patientId });
 
     if (patient && admissionForm) {
-      const statusAdmissionFormCreated = await sistratPlatform.registrarFichaIngreso(patient, admissionForm);
+      const statusAdmissionFormCreated = await sistratPlatform.registrarFichaIngreso(patient, admissionForm, jobId);
       return statusAdmissionFormCreated;
     } else {
       throw new Error("Falta información del paciente para registrar su ficha de ingreso");

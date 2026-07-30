@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, inject, signal, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { MaterialModule } from '../../../../angular-material/material.module';
@@ -16,6 +16,7 @@ import { InvalidFormsDialogComponent } from './components/invalidFormsDialog/inv
 import Notiflix from 'notiflix';
 import { AdmissionForm } from '../../../interfaces/admissionForm.interface';
 import { MONDAY_FIRST_DATE_PROVIDERS } from '../../../../shared/date/monday-first-date-adapter';
+import { Subscription, switchMap, timer } from 'rxjs';
 
 @Component({
   selector: 'app-admision-form',
@@ -37,7 +38,7 @@ import { MONDAY_FIRST_DATE_PROVIDERS } from '../../../../shared/date/monday-firs
   templateUrl: './admisionForm.component.html',
   styleUrl: './admisionForm.component.css',
 })
-export default class AdmisionFormComponent {
+export default class AdmisionFormComponent implements OnInit, OnDestroy {
   private activatedRoute = inject(ActivatedRoute);
   private patientService = inject(PatientService);
   private dialog = inject(MatDialog);
@@ -49,6 +50,10 @@ export default class AdmisionFormComponent {
   public admissionForm: AdmissionForm | null = null;
   public admissionFormRegistered: boolean = false;
   public editMode: boolean = false;
+  private jobSubscription?: Subscription;
+  public activeJobId = signal<string | null>(null);
+  public currentJobStep = signal<string>('Iniciando proceso...');
+  public currentJobProgress = signal<number>(0);
 
   @ViewChild(UserIdentificationComponent) userIdentificationComponent!: UserIdentificationComponent;
   @ViewChild(SocioDemographicComponent) socioDemographicComponent!: SocioDemographicComponent;
@@ -78,7 +83,118 @@ export default class AdmisionFormComponent {
         this.editMode = true;
       }
       this.loading.set(false);
+
+      // Verificar si existe una tarea activa de SISTRAT para reanudar el estado
+      this.checkActiveSistratJob();
     });
+  }
+
+  ngOnDestroy(): void {
+    this.stopJobPolling();
+  }
+
+  private checkActiveSistratJob(): void {
+    if (!this.patientId) return;
+    this.patientService.getActiveSistratJob(this.patientId, 'ficha-ingreso').subscribe({
+      next: (res) => {
+        if (res?.job && ['PENDING', 'IN_PROGRESS'].includes(res.job.status)) {
+          console.log('Tarea activa de SISTRAT detectada:', res.job);
+          this.startJobPolling(String(res.job._id));
+        }
+      },
+      error: (err) => {
+        console.log('No hay tarea activa de SISTRAT en ejecución', err);
+      }
+    });
+  }
+
+  private startJobPolling(jobId: string): void {
+    this.stopJobPolling();
+    this.activeJobId.set(jobId);
+
+    this.jobSubscription = timer(0, 3000).pipe(
+      switchMap(() => this.patientService.getSistratJobStatus(jobId))
+    ).subscribe({
+      next: (res) => {
+        if (!res?.job) return;
+        const job = res.job;
+        console.log('[SistratJob Polling]', job);
+
+        this.currentJobStep.set(job.step || 'Procesando en SISTRAT...');
+        this.currentJobProgress.set(job.progress || 0);
+
+        if (job.status === 'COMPLETED') {
+          this.stopJobPolling();
+          this.admissionFormRegistered = true;
+          this.changeDetectorRef.detectChanges();
+          Notiflix.Report.success(
+            '¡Registro Exitoso!',
+            job.result?.message || 'Ficha de ingreso registrada exitosamente en SISTRAT',
+            'Entendido'
+          );
+        } else if (job.status === 'FAILED') {
+          this.stopJobPolling();
+          const errorMessage = job.error || 'Ocurrió un error inesperado al registrar en SISTRAT.';
+
+          if (errorMessage.includes('SISTRAT_VALIDATION_ERROR:')) {
+            const fieldsString = errorMessage.split('SISTRAT_VALIDATION_ERROR:')[1];
+            const fields = fieldsString.split(',').map((f: string) => f.trim()).filter((f: string) => f.length > 0);
+
+            this.dialog.open(InvalidFormsDialogComponent, {
+              data: {
+                invalidForms: [{
+                  title: 'Validación SISTRAT (Campos requeridos)',
+                  fields: fields
+                }]
+              },
+              width: '500px'
+            });
+          } else {
+            Notiflix.Report.failure('Error', errorMessage, 'Cerrar');
+          }
+        }
+      },
+      error: (err) => {
+        console.error('Error en polling de tarea SISTRAT:', err);
+      }
+    });
+  }
+
+  private stopJobPolling(): void {
+    if (this.jobSubscription) {
+      this.jobSubscription.unsubscribe();
+      this.jobSubscription = undefined;
+    }
+    this.activeJobId.set(null);
+    this.currentJobStep.set('');
+    this.currentJobProgress.set(0);
+  }
+
+  public onCancelSistratJob(): void {
+    const jobId = this.activeJobId();
+    if (!jobId) return;
+
+    Notiflix.Confirm.show(
+      '¿Cancelar Proceso SISTRAT?',
+      '¿Está seguro de que desea detener y cancelar el proceso en ejecución en SISTRAT y cerrar el navegador?',
+      'Sí, Cancelar',
+      'No, Continuar',
+      () => {
+        Notiflix.Loading.circle('Cancelando proceso en SISTRAT...');
+        this.patientService.cancelSistratJob(jobId).subscribe({
+          next: () => {
+            this.stopJobPolling();
+            Notiflix.Loading.remove();
+            Notiflix.Report.warning('Proceso Cancelado', 'La tarea en SISTRAT fue cancelada y el navegador se cerró correctamente.', 'Entendido');
+          },
+          error: () => {
+            this.stopJobPolling();
+            Notiflix.Loading.remove();
+            Notiflix.Notify.failure('No se pudo cancelar la tarea.');
+          }
+        });
+      }
+    );
   }
 
   onSave() {
@@ -272,12 +388,14 @@ export default class AdmisionFormComponent {
       'No',
       () => {
         // Success
-        Notiflix.Loading.circle('Registrando Ficha de ingreso en SISTRAT');
+        Notiflix.Notify.info('Iniciando sincronización con SISTRAT...');
 
         this.patientService.addFichaIngresoToSistrat(this.patient!._id!).subscribe({
           next: (response) => {
-            console.log(response);
-            if (response.success) {
+            console.log('Respuesta inicio tarea SISTRAT:', response);
+            if (response.jobId) {
+              this.startJobPolling(response.jobId);
+            } else if (response.success) {
               this.admissionFormRegistered = true;
               Notiflix.Notify.success('Ficha de ingreso registrada en SISTRAT');
             } else {
@@ -287,35 +405,13 @@ export default class AdmisionFormComponent {
                 'Cerrar'
               );
             }
-            Notiflix.Loading.remove();
           },
           error: (err) => {
-            console.error('Error al agregar ficha de ingreso a Sistrat:', err);
+            console.error('Error al iniciar tarea en Sistrat:', err);
             Notiflix.Loading.remove();
-            
-            const errorMessage = typeof err === 'string' ? err : (err.error?.message || err.message || 'Ocurrió un error al registrar en SISTRAT. Por favor, intenta nuevamente.');
 
-            // Si el error indica que faltan campos (detectado por el backend)
-            if (errorMessage.includes('SISTRAT_VALIDATION_ERROR:')) {
-              const fieldsString = errorMessage.split('SISTRAT_VALIDATION_ERROR:')[1];
-              const fields = fieldsString.split(',').map((f: string) => f.trim()).filter((f: string) => f.length > 0);
-
-              this.dialog.open(InvalidFormsDialogComponent, {
-                data: {
-                  invalidForms: [{
-                    title: 'Validación SISTRAT (Campos requeridos)',
-                    fields: fields
-                  }]
-                },
-                width: '500px'
-              });
-            } else {
-              Notiflix.Report.failure(
-                'Error',
-                errorMessage,
-                'Cerrar'
-              );
-            }
+            const errorMessage = typeof err === 'string' ? err : (err.error?.message || err.message || 'Ocurrió un error al conectar con el servidor.');
+            Notiflix.Report.failure('Error', errorMessage, 'Cerrar');
           }
         });
         console.log('Registrar en SISTRAT');
@@ -328,6 +424,4 @@ export default class AdmisionFormComponent {
 
     return;
   }
-
-  // Eliminado: el backend ahora se encarga de parsear el popup de SISTRAT
 }

@@ -219,33 +219,113 @@ const getDataByRut = async (req: Request, res: Response) => {
 
 
 
+import {
+  createSistratJob,
+  findActiveSistratJob,
+  completeSistratJob,
+  failSistratJob,
+  getSistratJobById,
+  cancelSistratJob,
+} from "../services/sistratJob.service";
+import { SistratJobType } from "../interfaces/sistratJob.interface";
+
 const postAdmissionFormSistrat = async ({ body }: Request, res: Response) => {
   const { patientId } = body;
   if (!patientId) {
     return res.status(400).json({ success: false, message: "Usuario no existe para registrar ficha de ingreso en SISTRAT" });
   }
   try {
-    const responseAdmissionForm = await saveAdmissionFormToSistrat(patientId);
-    if(responseAdmissionForm){
-      res.status(201).json({ success: true, message: "Ficha de ingreso creada con éxito" });
-    }else{
-      res.status(400).json({ success: false, message: "No fue posible el registro en SISTRAT" });
+    // 1. Verificar si ya existe una tarea activa en ejecución para este paciente
+    const activeJob = await findActiveSistratJob(patientId, "ficha-ingreso");
+    if (activeJob) {
+      return res.status(200).json({
+        success: true,
+        jobId: activeJob._id,
+        status: activeJob.status,
+        step: activeJob.step,
+        progress: activeJob.progress,
+        message: "Ya hay un registro en proceso para este paciente.",
+      });
     }
+
+    // 2. Crear nueva tarea en BD con estado PENDING
+    const job = await createSistratJob(patientId, "ficha-ingreso");
+    const jobIdStr = String(job._id);
+
+    // 3. Responder de inmediato con HTTP 202 (Accepted)
+    res.status(202).json({
+      success: true,
+      jobId: jobIdStr,
+      status: "PENDING",
+      message: "Registro iniciado en segundo plano.",
+    });
+
+    // 4. Ejecutar el proceso Puppeteer en segundo plano (asíncrono, no bloqueante)
+    (async () => {
+      try {
+        const responseAdmissionForm = await saveAdmissionFormToSistrat(patientId, jobIdStr);
+        if (responseAdmissionForm) {
+          await completeSistratJob(jobIdStr, { message: "Ficha de ingreso registrada exitosamente en SISTRAT" });
+        } else {
+          await failSistratJob(jobIdStr, "No fue posible el registro en SISTRAT");
+        }
+      } catch (error: any) {
+        let errorMessage = error.message || "Error desconocido al registrar en SISTRAT";
+        const match = errorMessage.match(/Error: (.+)$/);
+        if (match) {
+          errorMessage = match[1];
+        }
+        if (errorMessage.includes("SISTRAT_ALERT_ERROR:")) {
+          errorMessage = errorMessage.split("SISTRAT_ALERT_ERROR:")[1].trim();
+        }
+        await failSistratJob(jobIdStr, errorMessage);
+      }
+    })();
+
   } catch (error: any) {
-    // Extraer mensaje de error más limpio
-    let errorMessage = error.message || "Error desconocido al registrar en SISTRAT";
-    
-    // Si el mensaje contiene el wrapper del service, extraer el mensaje original
-    const match = errorMessage.match(/Error: (.+)$/);
-    if (match) {
-      errorMessage = match[1];
+    res.status(500).json({ success: false, message: error.message || "Error interno al iniciar tarea de SISTRAT" });
+  }
+};
+
+const getSistratJobStatusController = async (req: Request, res: Response) => {
+  try {
+    const { jobId } = req.params;
+    if (!jobId) {
+      return res.status(400).json({ success: false, message: "jobId es requerido" });
     }
-    
-    if (errorMessage.includes("SISTRAT_ALERT_ERROR:")) {
-      errorMessage = errorMessage.split("SISTRAT_ALERT_ERROR:")[1].trim();
+    const job = await getSistratJobById(jobId);
+    if (!job) {
+      return res.status(404).json({ success: false, message: "Tarea no encontrada" });
     }
-    
-    res.status(500).json({ success: false, message: errorMessage });
+    res.status(200).json({ success: true, job });
+  } catch (error: any) {
+    handleHttp(res, "ERROR_GET_JOB_STATUS", error);
+  }
+};
+
+const getActiveSistratJobController = async (req: Request, res: Response) => {
+  try {
+    const { patientId, type } = req.params;
+    if (!patientId || !type) {
+      return res.status(400).json({ success: false, message: "patientId y type son requeridos" });
+    }
+    const job = await findActiveSistratJob(patientId, type as SistratJobType);
+    res.status(200).json({ success: true, job });
+  } catch (error: any) {
+    handleHttp(res, "ERROR_GET_ACTIVE_JOB", error);
+  }
+};
+
+const cancelSistratJobController = async (req: Request, res: Response) => {
+  try {
+    const { jobId } = req.params;
+    if (!jobId) {
+      return res.status(400).json({ success: false, message: "jobId es requerido" });
+    }
+    const job = await cancelSistratJob(jobId);
+    res.status(200).json({ success: true, message: "Proceso cancelado exitosamente", job });
+  } catch (error: any) {
+    handleHttp(res, "ERROR_CANCEL_JOB", error);
   }
 };
 
@@ -372,5 +452,8 @@ export {
   updatePatientActiveStatus,
   fetchCodigoSistrat,
   getActiveSistratPatients,
-  resolveAlertSistrat
+  resolveAlertSistrat,
+  getSistratJobStatusController,
+  getActiveSistratJobController,
+  cancelSistratJobController,
 };

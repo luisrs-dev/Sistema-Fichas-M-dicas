@@ -18,11 +18,29 @@
         @if(patient){
         @if(admissionFormRegistered || patient.registeredAdmissionForm){
         <button class="text-white" mat-flat-button type="button" color="accent" 
+          [disabled]="!!activeJobId()"
           (click)="onSaveSistrat()">Subir a SISTRAT<mat-icon>save</mat-icon></button>
         }
         }
       </div>
     </div>
+
+    @if(activeJobId()){
+    <div class="my-2 p-3 surface-card border-1 border-primary-200 border-round shadow-1 w-full">
+      <div class="flex justify-content-between align-items-center mb-2 gap-3 flex-wrap">
+        <div class="flex align-items-center gap-2">
+          <mat-spinner diameter="20" color="accent"></mat-spinner>
+          <span class="font-bold text-900">Sincronización con SISTRAT en curso:</span>
+          <span class="text-700">{{ currentJobStep() }}</span>
+          <span class="font-bold text-primary">({{ currentJobProgress() }}%)</span>
+        </div>
+        <button mat-raised-button color="warn" type="button" (click)="onCancelSistratJob()">
+          <mat-icon>cancel</mat-icon> Detener SISTRAT
+        </button>
+      </div>
+      <mat-progress-bar mode="determinate" [value]="currentJobProgress()" color="accent"></mat-progress-bar>
+    </div>
+    }
 
     <mat-divider></mat-divider>
 

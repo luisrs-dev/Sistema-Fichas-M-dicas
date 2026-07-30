@@ -29,6 +29,8 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatExpansionModule } from '@angular/material/expansion';
 
 
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+
 import {
   MatBottomSheetModule
 } from '@angular/material/bottom-sheet';
@@ -47,6 +49,7 @@ import {
     MatChipsModule,
     MatGridListModule,
     MatProgressSpinnerModule,
+    MatProgressBarModule,
     MatAutocompleteModule,
     MatSelectModule,
     MatSnackBarModule,
