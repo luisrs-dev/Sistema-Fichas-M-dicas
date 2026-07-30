@@ -2286,7 +2286,7 @@ class Sistrat {
           }
         };
         const setRadioGroup = (name: string, val: any) => {
-          if (!val) return;
+          if (val === null || val === undefined || val === '') return;
           const map: any = { si: "1", no: "2", nr: "3" };
           const radioVal = typeof val === 'string' && map[val.toLowerCase()] ? map[val.toLowerCase()] : String(val);
           const r = document.querySelector(`input[name="${name}"][value="${radioVal}"]`) as HTMLInputElement;
