@@ -138,9 +138,9 @@ import Notiflix from 'notiflix';
 
             <mat-card-actions align="end" class="actions-group">
               <button mat-stroked-button color="warn" (click)="goBack()">Volver</button>
-              <button mat-stroked-button color="primary" [disabled]="loading" (click)="saveDraft()">
+              <!-- <button mat-stroked-button color="primary" [disabled]="loading" (click)="saveDraft()">
                 <mat-icon>save</mat-icon> {{ loading ? 'Guardando...' : 'Guardar Borrador en FicLin' }}
-              </button>
+              </button> -->
 
               <button *ngIf="authService.canSyncEvaluation()" mat-flat-button class="sync-button" [disabled]="syncing" (click)="saveAndSync()">
                 <mat-icon>{{ syncing ? 'sync' : 'cloud_upload' }}</mat-icon>

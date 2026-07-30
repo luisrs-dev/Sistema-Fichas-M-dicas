@@ -213,10 +213,10 @@ import Notiflix from 'notiflix';
       <div class="actions-bar" *ngIf="!loading() && selectedTabIndex() < 3">
         <button mat-stroked-button (click)="goBack()">Volver</button>
         <div class="actions-right">
-          <button mat-stroked-button color="primary" (click)="onSave()" [disabled]="saving()">
+          <!-- <button mat-stroked-button color="primary" (click)="onSave()" [disabled]="saving()">
             <mat-icon>save</mat-icon>
             Guardar Borrador en FicLin
-          </button>
+          </button> -->
           <button mat-raised-button class="sistrat-btn" (click)="onSaveAndSync()" [disabled]="saving()">
             <mat-icon>cloud_upload</mat-icon>
             {{ saving() ? 'Procesando...' : 'Guardar y Enviar a SISTRAT' }}
