@@ -194,6 +194,18 @@ import Notiflix from 'notiflix';
                         <h5>Observaciones / Comentarios:</h5>
                         <p class="text-sm text-gray-700 bg-gray-50 p-2 border-round">{{ item.observaciones || 'Sin observaciones adicionales' }}</p>
                       </div>
+
+                      <!-- Acciones del Historial -->
+                      <div class="history-actions">
+                        <button mat-stroked-button color="primary" (click)="loadHistoryItemIntoForm(item)">
+                          <mat-icon>edit_note</mat-icon>
+                          Cargar en Formulario
+                        </button>
+                        <button mat-flat-button class="sistrat-btn" (click)="retrySyncFromHistory(item)" [disabled]="saving()">
+                          <mat-icon>sync</mat-icon>
+                          Reintentar Envío a SISTRAT
+                        </button>
+                      </div>
                     </div>
                   </mat-expansion-panel>
                 </mat-accordion>
@@ -295,6 +307,7 @@ import Notiflix from 'notiflix';
     .chip-empty { background: #f3f4f6; color: #6b7280; padding: 4px 12px; border-radius: 16px; font-size: 0.8rem; }
     .empty-history { text-align: center; padding: 48px 16px; color: #777; }
     .empty-icon { font-size: 48px; width: 48px; height: 48px; color: #ccc; margin-bottom: 8px; }
+    .history-actions { border-top: 1px solid #e2e8f0; padding-top: 14px; margin-top: 16px; display: flex; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }
   `]
 })
 export default class TopFormComponent {
@@ -560,6 +573,105 @@ export default class TopFormComponent {
       ...this.section2?.getFormData(),
       ...this.section3?.getFormData(),
     };
+  }
+
+  loadHistoryItemIntoForm(item: any): void {
+    if (!item) return;
+
+    const dataToPatch = { ...item };
+    if (dataToPatch.fechaEntrevista) {
+      dataToPatch.fechaEntrevista = this.formatDateStringToDate(dataToPatch.fechaEntrevista);
+    }
+    this.metaForm.patchValue({
+      fechaEntrevista: dataToPatch.fechaEntrevista || new Date(),
+      nombreEntrevistador: dataToPatch.nombreEntrevistador || ''
+    });
+
+    setTimeout(() => {
+      this.section1?.patchData(item);
+      this.section2?.patchData(item);
+      this.section3?.patchData(item);
+    }, 100);
+
+    this.selectedTabIndex.set(0);
+
+    Notiflix.Notify.success(
+      `Datos de la evaluación del ${item.fechaEntrevista || 'historial'} cargados en el formulario.`
+    );
+  }
+
+  retrySyncFromHistory(item: any): void {
+    if (!item || this.saving()) return;
+
+    Notiflix.Confirm.show(
+      '¿Reintentar envío a SISTRAT?',
+      `Se volverá a intentar registrar la evaluación TOP (${item.fechaEntrevista || 'sin fecha'}) en SISTRAT.`,
+      'Sí, enviar a SISTRAT',
+      'Cancelar',
+      () => {
+        this.saving.set(true);
+        Notiflix.Loading.circle('Sincronizando evaluación TOP con SISTRAT...');
+
+        const payload = {
+          fechaEntrevista: item.fechaEntrevista,
+          nombreEntrevistador: item.nombreEntrevistador,
+          alcohol: item.alcohol,
+          marihuana: item.marihuana,
+          pastaBase: item.pastaBase,
+          cocaina: item.cocaina,
+          sedantes: item.sedantes,
+          otraSustancia: item.otraSustancia,
+          hurto: item.hurto,
+          robo: item.robo,
+          ventaDrogas: item.ventaDrogas,
+          rina: item.rina,
+          violenciaIntrafamiliar: item.violenciaIntrafamiliar,
+          otraAccion: item.otraAccion,
+          saludPsicologica: item.saludPsicologica,
+          diasTrabajados: item.diasTrabajados,
+          diasEducacion: item.diasEducacion,
+          saludFisica: item.saludFisica,
+          tieneLugarVivir: item.tieneLugarVivir,
+          viviendasCondicionesBasicas: item.viviendasCondicionesBasicas,
+          calidadVida: item.calidadVida,
+          noDeseaCompletar: item.noDeseaCompletar,
+          observaciones: item.observaciones
+        };
+
+        this.patientService.saveAndSyncTopForm(this.patientId, payload).subscribe({
+          next: () => {
+            Notiflix.Loading.remove();
+            this.saving.set(false);
+
+            Notiflix.Report.success(
+              '¡Sincronización Exitosa!',
+              'La evaluación TOP se ha reenviado y registrado correctamente en SISTRAT.',
+              'Entendido'
+            );
+
+            this.loadHistory();
+          },
+          error: (error) => {
+            Notiflix.Loading.remove();
+            this.saving.set(false);
+            console.error('Error al reintentar sincronización TOP:', error);
+
+            let errorMessage = 'Error al ejecutar la automatización';
+            if (error && (error.status === 0 || error.status === 504 || error.status === 502)) {
+              errorMessage = 'La sincronización sigue procesándose en el servidor. Verifique en SISTRAT en unos minutos.';
+            } else {
+              errorMessage = typeof error === 'string' ? error : (error?.error?.message || error?.message || errorMessage);
+            }
+
+            Notiflix.Report.warning(
+              'Reintento Incompleto',
+              `Ocurrió un problema al sincronizar con SISTRAT: ${errorMessage}`,
+              'Cerrar'
+            );
+          }
+        });
+      }
+    );
   }
 
   goBack(): void {
