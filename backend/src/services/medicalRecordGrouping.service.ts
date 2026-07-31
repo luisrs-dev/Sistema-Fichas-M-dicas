@@ -14,14 +14,18 @@ export const getGroupedRecordsByPatientAndMonth = async (patientId: string, mont
     throw new Error("Identificador de paciente inválido");
   }
 
-  const startOfMonth = new Date(year, month - 1, 1);
-  const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
+  const startOfMonth = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
+  const endOfMonth = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+
+  // Ampliar rango +- 24 hrs para no perder fechas por zona horaria
+  const searchStart = new Date(startOfMonth.getTime() - 24 * 60 * 60 * 1000);
+  const searchEnd = new Date(endOfMonth.getTime() + 24 * 60 * 60 * 1000);
 
   const records = await MedicalRecordModel.find({
     patient: new Types.ObjectId(patientId),
     date: {
-      $gte: startOfMonth.toISOString(),
-      $lte: endOfMonth.toISOString(),
+      $gte: searchStart.toISOString(),
+      $lte: searchEnd.toISOString(),
     },
   })
     .populate({ path: "service", select: "description name" })
@@ -29,18 +33,35 @@ export const getGroupedRecordsByPatientAndMonth = async (patientId: string, mont
 
   const grouped: Record<string, number[]> = {};
 
+  const getChileDateParts = (dateInput: string | Date) => {
+    const d = new Date(dateInput);
+    if (Number.isNaN(d.getTime())) return null;
+
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Santiago",
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+    });
+
+    const parts = formatter.formatToParts(d);
+    const day = Number(parts.find((p) => p.type === "day")?.value);
+    const month = Number(parts.find((p) => p.type === "month")?.value);
+    const year = Number(parts.find((p) => p.type === "year")?.value);
+
+    return { day, month, year };
+  };
+
   for (const record of records) {
     const serviceInfo = record.service as any;
     const serviceName = serviceInfo?.description || serviceInfo?.name || "Servicio sin nombre";
 
-    const recordDate = new Date(record.date);
-    if (Number.isNaN(recordDate.getTime())) continue;
+    const dateParts = getChileDateParts(record.date);
+    if (!dateParts) continue;
 
-    const recordMonth = recordDate.getMonth() + 1;
-    const recordYear = recordDate.getFullYear();
-    if (recordMonth !== month || recordYear !== year) continue;
+    if (dateParts.month !== month || dateParts.year !== year) continue;
 
-    const day = recordDate.getDate();
+    const day = dateParts.day;
     if (day < 1 || day > DAYS_IN_MONTH) continue;
 
     if (!grouped[serviceName]) {
