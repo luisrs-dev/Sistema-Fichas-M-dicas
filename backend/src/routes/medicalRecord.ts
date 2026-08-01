@@ -6,6 +6,7 @@ import {
   postMedicalRecordPerMonth,
   medicalRecordsByMonth,
   deleteMedicalRecords,
+  updateMedicalRecords,
   groupedMedicalRecordsByPatient,
   postMedicalRecordPerMonthBulk,
   getMonthlyLogs,
@@ -17,6 +18,7 @@ import {
 const router = Router();
 
 router.get("/", getMedicalRecords);
+router.put("/:id", updateMedicalRecords);
 router.delete("/:id", deleteMedicalRecords);
 router.get("/grouped/:patientId/:year/:month", groupedMedicalRecordsByPatient);
 router.get("/:userId", getAllMedicalRecordsByUser);

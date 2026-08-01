@@ -7,6 +7,7 @@ import {
   allMedicalRecordsUser,
   getRecordsByMonthAndYear,
   deleteRecord,
+  updateRecord,
   postMedicalRecordsPerMonthOnSistrat,
   getGroupedRecordsByPatientAndMonth,
   postMedicalRecordsPerMonthForAllPatients,
@@ -359,6 +360,20 @@ const deleteMedicalRecords = async ({ params }: Request, res: Response) => {
   }
 };
 
+const updateMedicalRecords = async ({ params, body }: Request, res: Response) => {
+  const { id } = params;
+  try {
+    const response = await updateRecord(id, body);
+    res.status(200).json({
+      status: true,
+      message: "Ficha clínica actualizada",
+      medicalRecord: response,
+    });
+  } catch (error) {
+    handleHttp(res, "No fue posible actualizar ficha clínica", error);
+  }
+};
+
 const getMonthlyLogs = async (_req: Request, res: Response) => {
   try {
     const logs = await listMonthlyLogFiles();
@@ -390,6 +405,7 @@ export {
   getPdfMedicalRecordsByPatient,
   getPdfMedicalRecords,
   deleteMedicalRecords,
+  updateMedicalRecords,
   getMonthlyLogs,
   getMonthlyLogContent,
   testBulkEmail,

@@ -319,6 +319,29 @@ const deleteRecord = async (id: string) => {
   }
 };
 
+const updateRecord = async (id: string, updateData: Partial<MedicalRecord>) => {
+  try {
+    const responseUpdate = await MedicalRecordModel.findByIdAndUpdate(id, updateData, { new: true }).populate([
+      { path: 'service' },
+      {
+        path: 'registeredBy', select: 'name profile',
+        populate: {
+          path: 'profile',
+          select: 'name'
+        }
+      }
+    ]);
+    if (!responseUpdate) {
+      throw new Error("No se encontró la ficha médica para actualizar");
+    }
+    console.log("Ficha médica actualizada correctamente");
+    return responseUpdate;
+  } catch (error) {
+    console.error("Error al actualizar la ficha médica:", error);
+    throw new Error(`Error al actualizar la ficha médica: ${error}`);
+  }
+};
+
 const allMedicalRecords = async () => {
   const responseUsers = await MedicalRecordModel.find({}).populate([
     { path: 'service' },
@@ -417,6 +440,7 @@ export {
   allMedicalRecordsUser,
   getRecordsByMonthAndYear,
   deleteRecord,
+  updateRecord,
   postMedicalRecordsPerMonthForAllPatients,
   postMedicalRecordsBulkSistrat,
   sendTestBulkSummaryEmail,

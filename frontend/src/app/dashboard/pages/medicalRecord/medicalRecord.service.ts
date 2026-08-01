@@ -46,6 +46,10 @@ export class MedicalRecordService {
     return this.http.delete<any>(`${this.backend}/medicalRecord/${id}`).pipe(catchError((err) => throwError(() => err.error.message)));
   }
 
+  updateMedicalRecord(id: string, medicalRecord: Partial<MedicalRecord>): Observable<any> {
+    return this.http.put<any>(`${this.backend}/medicalRecord/${id}`, medicalRecord).pipe(catchError((err) => throwError(() => err.error?.message || err)));
+  }
+
   monthRecords(id: string, month: number, year: number, medicalRecordsGrouped: MedicalRecordGrouped[]): Observable<any> {
     return this.http.post<any>(`${this.backend}/medicalRecord/monthRecords/${id}`, { medicalRecordsGrouped, month, year })
     .pipe(

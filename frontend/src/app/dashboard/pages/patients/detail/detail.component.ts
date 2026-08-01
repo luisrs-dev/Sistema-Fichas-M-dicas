@@ -10,7 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import Notiflix from 'notiflix';
 import { MaterialModule } from '../../../../angular-material/material.module';
-import { MedicalRecord } from '../../../interfaces/medicalRecord.interface';
+import { MedicalRecord, Service } from '../../../interfaces/medicalRecord.interface';
 import { Patient } from '../../../interfaces/patient.interface';
 import { MedicalRecordService } from '../../medicalRecord/medicalRecord.service';
 import { PatientService } from '../patient.service';
@@ -22,6 +22,7 @@ import { NonEmptyPipe } from '../../../../shared/pipes/non-empty.pipe';
 import { MedicalRecordGrouped } from '../../medicalRecord/interfaces/medicalRecord-grouped.interface';
 import { AuthService } from '../../../../auth/auth.service';
 import { DataExportComponent } from '../listPatients/components/data-export/data-export.component';
+import { ProfesionalServiceService } from '../../parameters/services/profesionalService.service';
 
 interface State {
   patient: Patient | null;
@@ -63,9 +64,12 @@ export default class DetailComponent implements OnInit {
   private readonly bottomSheet = inject(MatBottomSheet);
   private readonly patientService = inject(PatientService);
   private readonly medicalRecordService = inject(MedicalRecordService);
+  private readonly profesionalServiceService = inject(ProfesionalServiceService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   public readonly authService = inject(AuthService);
+
+  availableServices = signal<Service[]>([]);
 
   private readonly currentYear = new Date().getFullYear();
   private readonly firstAvailableYear = 2023;
@@ -117,6 +121,12 @@ export default class DetailComponent implements OnInit {
   patient = computed(() => this.state().patient);
 
   ngOnInit(): void {
+    if (this.authService.isAdmin()) {
+      this.profesionalServiceService.getProfesionalServices().subscribe({
+        next: (services) => this.availableServices.set(services as Service[]),
+        error: (err) => console.error('Error al obtener prestaciones', err),
+      });
+    }
 
     if (this.showProfessionalTable()) {
       this.buildProfessionalDataMonth(this.selectedMonth(), this.selectedYear());
@@ -127,6 +137,38 @@ export default class DetailComponent implements OnInit {
         this.patientId.set(id);
         this.loadPatientData(id);
       }
+    });
+  }
+
+  onServiceChange(medicalRecord: MedicalRecord, newServiceId: string): void {
+    if (!newServiceId || medicalRecord.service?._id === newServiceId) return;
+
+    const previousService = medicalRecord.service;
+    const selectedService = this.availableServices().find((s) => s._id === newServiceId);
+
+    this.medicalRecordService.updateMedicalRecord(medicalRecord._id, { service: newServiceId as any }).subscribe({
+      next: (response) => {
+        Notiflix.Notify.success('Tipo de atención actualizado');
+        if (selectedService && selectedService._id) {
+          medicalRecord.service = selectedService as Service;
+        } else if (response?.medicalRecord?.service) {
+          medicalRecord.service = response.medicalRecord.service;
+        }
+
+        const month = this.selectedMonth();
+        const year = this.selectedYear();
+        if (this.showTable()) {
+          this.buildDataMonth(month, year);
+        }
+        if (this.showProfessionalTable()) {
+          this.buildProfessionalDataMonth(month, year);
+        }
+      },
+      error: (err) => {
+        medicalRecord.service = previousService;
+        console.error('Error al actualizar el tipo de atención:', err);
+        Notiflix.Notify.failure('Error al actualizar el tipo de atención');
+      },
     });
   }
 
