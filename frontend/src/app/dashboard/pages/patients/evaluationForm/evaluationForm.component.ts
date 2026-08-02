@@ -220,6 +220,17 @@ import Notiflix from 'notiflix';
                         <span class="detail-value" [ngClass]="getBadgeClass(item.saludFisica)">{{ getOptionText(item.saludFisica) }}</span>
                       </div>
                     </div>
+
+                    <div class="history-actions flex justify-content-end gap-2 mt-3 pt-3 border-top-1 border-gray-200">
+                      <button mat-stroked-button color="primary" (click)="loadHistoryItemIntoForm(item)">
+                        <mat-icon>edit_note</mat-icon>
+                        Cargar en Formulario
+                      </button>
+                      <button *ngIf="authService.canSyncEvaluation()" mat-flat-button class="sync-button" (click)="retrySyncFromHistory(item)" [disabled]="syncing">
+                        <mat-icon>sync</mat-icon>
+                        Reintentar Envío a SISTRAT
+                      </button>
+                    </div>
                   </mat-expansion-panel>
                 </mat-accordion>
               </div>
@@ -502,6 +513,78 @@ export default class EvaluationFormComponent implements OnInit {
     if (val === '2') return 'badge-sin-avances';
     if (val === '3') return 'badge-retroceso';
     return '';
+  }
+
+  loadHistoryItemIntoForm(item: any): void {
+    if (!item) return;
+
+    this.form.patchValue({
+      patronConsumo: item.patronConsumo || '',
+      situacionFamiliar: item.situacionFamiliar || '',
+      relacionesInterpersonales: item.relacionesInterpersonales || '',
+      situacionOcupacional: item.situacionOcupacional || '',
+      trasgresionSocial: item.trasgresionSocial || '',
+      saludMental: item.saludMental || '',
+      saludFisica: item.saludFisica || ''
+    });
+
+    this.selectedTabIndex.set(0);
+    this.cdr.detectChanges();
+
+    Notiflix.Notify.success('Datos de la evaluación cargados en el formulario.');
+  }
+
+  retrySyncFromHistory(item: any): void {
+    if (!item || this.syncing) return;
+
+    Notiflix.Confirm.show(
+      '¿Reintentar envío a SISTRAT?',
+      'Se volverá a intentar registrar esta Evaluación Informativa (Verde) en SISTRAT.',
+      'Sí, enviar a SISTRAT',
+      'Cancelar',
+      () => {
+        this.syncing = true;
+        this.cdr.detectChanges();
+        Notiflix.Loading.circle('Sincronizando evaluación verde con SISTRAT...');
+
+        const payload = {
+          patronConsumo: item.patronConsumo,
+          situacionFamiliar: item.situacionFamiliar,
+          relacionesInterpersonales: item.relacionesInterpersonales,
+          situacionOcupacional: item.situacionOcupacional,
+          trasgresionSocial: item.trasgresionSocial,
+          saludMental: item.saludMental,
+          saludFisica: item.saludFisica
+        };
+
+        this.patientService.saveAndSyncEvaluationForm(this.patientId, payload)
+          .pipe(
+            finalize(() => {
+              this.syncing = false;
+              Notiflix.Loading.remove();
+              this.cdr.detectChanges();
+            })
+          )
+          .subscribe({
+            next: () => {
+              Notiflix.Report.success(
+                '¡Sincronización Exitosa!',
+                'La evaluación verde se ha reenviado y registrado correctamente en SISTRAT.',
+                'Entendido'
+              );
+              this.loadHistory();
+            },
+            error: (err) => {
+              console.error('[retrySyncFromHistory][error]', err);
+              Notiflix.Report.warning(
+                'Reintento Incompleto',
+                `Ocurrió un problema al sincronizar con SISTRAT: ${err || 'Error desconocido'}`,
+                'Cerrar'
+              );
+            }
+          });
+      }
+    );
   }
 
   goBack() {
