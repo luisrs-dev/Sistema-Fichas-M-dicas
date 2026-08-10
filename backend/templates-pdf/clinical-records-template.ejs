@@ -58,6 +58,8 @@
         <thead>
           <tr>
             <th colspan="2">Fecha</th>
+            <th colspan="2">Duración</th>
+            <th colspan="2">Modalidad</th>
             <th colspan="3">Intervención</th>
             <th colspan="3">Profesional</th>
           </tr>
@@ -65,27 +67,38 @@
         <tbody>
           <tr>
             <td colspan="2"><%= new Date(record.date).toLocaleDateString('es-CL', { day:'2-digit', month:'2-digit', year:'numeric' }) %></td>
+            <td colspan="2"><%= record.duration ? (record.duration.toString().includes('min') ? record.duration : record.duration + ' minutos') : '60 minutos' %></td>
+            <td colspan="2"><%= record.entryType || 'Presencial' %></td>
             <td colspan="3"><%= record.service.description %> (<%= record.service.code %>)</td>
             <td colspan="3"><%= record.registeredBy.name %></td>
           </tr>
-          <tr><td colspan="8" class="complete-row">Elementos relevantes</td></tr>
-          <tr><td colspan="8"><%= record.relevantElements %></td></tr>
+
+          <% if (record.interventionObjective) { %>
+          <tr><td colspan="12" class="complete-row">Objetivo de la atención</td></tr>
+          <tr><td colspan="12"><%= record.interventionObjective %></td></tr>
+          <% } %>
+
+          <tr><td colspan="12" class="complete-row">Elementos relevantes</td></tr>
+          <tr><td colspan="12"><%= record.relevantElements %></td></tr>
 
           <% if (record.diagnostic) { %>
-          <tr><td colspan="8" class="complete-row">Diagnóstico</td></tr>
-          <tr><td colspan="8"><%= (typeof diagnosticMap !== 'undefined' && diagnosticMap[record.diagnostic]) || record.diagnostic || 'Sin Registro' %></td></tr>
+          <tr><td colspan="12" class="complete-row">Diagnóstico</td></tr>
+          <tr><td colspan="12"><%= (typeof diagnosticMap !== 'undefined' && diagnosticMap[record.diagnostic]) || record.diagnostic || 'Sin Registro' %></td></tr>
           <% } %>
 
           <% if (record.diagnosticMedic) { %>
-          <tr><td colspan="8" class="complete-row">Diagnóstico del profesional</td></tr>
-          <tr><td colspan="8"><%= record.diagnosticMedic || 'Sin Registro' %></td></tr>
+          <tr><td colspan="12" class="complete-row">Diagnóstico del profesional</td></tr>
+          <tr><td colspan="12"><%= record.diagnosticMedic || 'Sin Registro' %></td></tr>
           <% } %>
 
-          <tr><td colspan="5" class="complete-row">Esquema farmacológico</td>
-              <td colspan="3" class="complete-row">Firma Profesional</td></tr>
+          <% if (record.pharmacologicalScheme && record.pharmacologicalScheme.trim()) { %>
+          <tr><td colspan="12" class="complete-row">Esquema farmacológico</td></tr>
+          <tr><td colspan="12"><%= record.pharmacologicalScheme %></td></tr>
+          <% } %>
+
+          <tr><td colspan="12" class="complete-row">Firma Profesional</td></tr>
           <tr>
-            <td colspan="5"><%= record.pharmacologicalScheme || 'Sin Registro' %></td>
-            <td colspan="3">
+            <td colspan="12">
               <% if (record.registeredBy.signature) { %>
                 <div class="signature-container">
                   <img src="<%= record.registeredBy.signature %>" />

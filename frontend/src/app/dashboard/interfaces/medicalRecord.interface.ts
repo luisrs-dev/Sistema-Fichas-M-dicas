@@ -10,6 +10,7 @@ export interface MedicalRecord {
   diagnostic: string;
   diagnosticMedic?: string;
   pharmacologicalScheme: string;
+  duration?: string;
   rescueAction?: string;
   isRemote?: boolean;
   remoteMethod?: string;

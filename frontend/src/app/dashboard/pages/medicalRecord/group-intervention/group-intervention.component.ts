@@ -104,6 +104,7 @@ export default class GroupInterventionComponent implements OnInit {
     date: [new Date(), [Validators.minLength(3), Validators.required]],
     // entryType: [this.setValueEntryType(), [Validators.required]],
     service: ['', [Validators.minLength(3), Validators.required]],
+    duration: ['60'],
     interventionObjective: ['', [Validators.minLength(3), Validators.required]],
     relevantElements: ['', [Validators.required]],
     diagnostic: [''],

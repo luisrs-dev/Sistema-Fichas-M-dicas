@@ -241,6 +241,7 @@ export default class NewMedicalRecord implements OnInit {
     date: [new Date(), [Validators.minLength(3), Validators.required]],
     // entryType: [this.setValueEntryType(), [Validators.required]],
     service: ['', [Validators.minLength(3), Validators.required]],
+    duration: ['60'],
     //typeContact: ['presencial', [Validators.minLength(3), Validators.required]],
     interventionObjective: ['', []],
     relevantElements: ['', []],
