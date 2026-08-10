@@ -14,9 +14,18 @@ puppeteer.use(StealthPlugin());
 class Scrapper {
   protected browser: Browser | null = null;
   private isProduction: boolean;
+  private totalBytesTransferred: number = 0;
 
   constructor() {
     this.isProduction = process.platform === 'linux' || process.env.NODE_ENV === 'production';
+  }
+
+  getTotalBytesTransferred(): number {
+    return this.totalBytesTransferred;
+  }
+
+  resetTotalBytesTransferred(): void {
+    this.totalBytesTransferred = 0;
   }
 
   async getPage(): Promise<Page> {
@@ -36,6 +45,39 @@ class Scrapper {
     page.on("pageerror", (error) => {
       console.error("[Browser::pageerror]", error);
     });
+
+    // Medir consumo de datos transferidos acumulados
+    page.on("response", async (response) => {
+      try {
+        const headers = response.headers();
+        const contentLength = headers["content-length"];
+        if (contentLength) {
+          this.totalBytesTransferred += parseInt(contentLength, 10);
+        } else {
+          const buffer = await response.buffer();
+          this.totalBytesTransferred += buffer.length;
+        }
+      } catch (e) {
+        // Ignorar respuestas que no se pueden leer como buffer (ej: redirecciones o streams)
+      }
+    });
+
+    // Interceptar peticiones para bloquear imágenes, fuentes y multimedia (Ahorro enorme de ancho de banda)
+    try {
+      await page.setRequestInterception(true);
+      page.on("request", (req) => {
+        const resourceType = req.resourceType();
+        const blockedTypes = ["image", "font", "media", "texttrack", "eventsource", "websocket", "manifest", "other"];
+
+        if (blockedTypes.includes(resourceType)) {
+          req.abort();
+        } else {
+          req.continue();
+        }
+      });
+    } catch (err) {
+      console.warn("[Scrapper] No se pudo configurar setRequestInterception:", err);
+    }
 
     // Autenticar proxy solo en producción (donde se usa iProyal)
     // Se agrega _session dinámica para forzar rotación de IP residencial en cada sesión
@@ -104,8 +146,8 @@ class Scrapper {
    */
   async launchBrowser(headless: boolean = false): Promise<Browser> {
 
-    const sessionHash = Date.now().toString();
-    const userDataDir = await this.createCacheDirectory(sessionHash);
+    // Todos los procesos acceden a SISTRAT, usando un perfil compartido de caché estático
+    const userDataDir = await this.createCacheDirectory("shared_sistrat_session");
 
     console.log('[LaunchBrowser] Obteniendo browser...');
     console.log('isProduction', this.isProduction);
@@ -133,6 +175,19 @@ class Scrapper {
           "--disable-features=IsolateOrigins,site-per-process",
           "--window-size=1920,1080",
           "--lang=es-CL,es",
+          "--disable-background-networking",
+          "--disable-background-timer-throttling",
+          "--disable-client-side-phishing-detection",
+          "--disable-default-apps",
+          "--disable-extensions",
+          "--disable-hang-monitor",
+          "--disable-popup-blocking",
+          "--disable-prompt-on-repost",
+          "--disable-sync",
+          "--disable-translate",
+          "--metrics-recording-only",
+          "--no-first-run",
+          "--safebrowsing-disable-auto-update",
         ],
         defaultViewport: { width: 1920, height: 1080 },
         timeout: 0,
@@ -158,6 +213,19 @@ class Scrapper {
           "--disable-dev-shm-usage",
           "--start-maximized",
           "--lang=es-CL,es",
+          "--disable-background-networking",
+          "--disable-background-timer-throttling",
+          "--disable-client-side-phishing-detection",
+          "--disable-default-apps",
+          "--disable-extensions",
+          "--disable-hang-monitor",
+          "--disable-popup-blocking",
+          "--disable-prompt-on-repost",
+          "--disable-sync",
+          "--disable-translate",
+          "--metrics-recording-only",
+          "--no-first-run",
+          "--safebrowsing-disable-auto-update",
         ],
         timeout: 0,
         protocolTimeout: 300000,

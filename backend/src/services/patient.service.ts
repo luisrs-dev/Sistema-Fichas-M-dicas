@@ -5,6 +5,7 @@ import PatientModel from "../models/patient.model";
 import { Demand } from "../interfaces/demand.interface";
 import DemandModel from "../models/demand.model";
 import Sistrat from "./sistrat/sistrat.class";
+import { UserContext } from "../utils/userContext";
 import AdmissionFormModel from "../models/admissionForm.model";
 import UserModel from "../models/user.model";
 import SistratCacheModel from "../models/sistratCache.model";
@@ -109,9 +110,9 @@ const demandByPatient = async (patientId: string) => {
   }
 };
 
-const dataPatientByRut = async (rut: string, center: string) => {
+const dataPatientByRut = async (rut: string, center: string, userContext?: UserContext) => {
   try {
-    const sistratPlatform = new Sistrat();
+    const sistratPlatform = new Sistrat(userContext);
     const dataFromDemand = await sistratPlatform.dataPatientFromDemand(rut, center); // Esta rutina realiza login, lista demandas y carga el formulario
 
     return dataFromDemand;
@@ -163,9 +164,9 @@ const updateAF = async (patientId: string, admissionFormData: any) => {
 
 
 
-const saveAdmissionFormToSistrat = async (patientId: string, jobId?: string) => {
+const saveAdmissionFormToSistrat = async (patientId: string, jobId?: string, userContext?: UserContext) => {
   try {
-    const sistratPlatform = new Sistrat();
+    const sistratPlatform = new Sistrat(userContext);
 
     const admissionForm = await AdmissionFormModel.findOne({ patientId });
     const patient = await PatientModel.findOne({ _id: patientId });
@@ -213,7 +214,7 @@ const updatePatientSistrat = async (patientId: string, demanda: Demand) => {
   }
 };
 
-const recordDemandToSistrat = async (patientId: string): Promise<{ success: boolean }> => {
+const recordDemandToSistrat = async (patientId: string, userContext?: UserContext): Promise<{ success: boolean }> => {
   try {
     const patient = await PatientModel.findOne({ _id: patientId });
     const demand = await DemandModel.findOne({ patientId });
@@ -222,7 +223,7 @@ const recordDemandToSistrat = async (patientId: string): Promise<{ success: bool
       throw new Error(`Paciente con ID ${patientId} no encontrado.`);
     }
 
-    const sistratPlatform = new Sistrat();
+    const sistratPlatform = new Sistrat(userContext);
     const createdDemand = await sistratPlatform.crearDemanda(patient);
     if (createdDemand) {
       // Refrescar alertas automáticamente - Ya se realiza dentro de crearDemanda reutilizando la sesión del navegador
@@ -238,7 +239,7 @@ const recordDemandToSistrat = async (patientId: string): Promise<{ success: bool
   }
 };
 
-const syncCodigoSistrat = async (patientId: string) => {
+const syncCodigoSistrat = async (patientId: string, userContext?: UserContext) => {
   const patient = await PatientModel.findById(patientId);
 
   if (!patient) {
@@ -251,7 +252,7 @@ const syncCodigoSistrat = async (patientId: string) => {
 
   const patientLabel = [patient.name, patient.surname, patient.secondSurname].filter(Boolean).join(" ").trim() || patient.rut || "paciente";
   const logger = new ProcessLogger(patientLabel, "buscar-codigo-sistrat");
-  const sistratPlatform = new Sistrat();
+  const sistratPlatform = new Sistrat(userContext);
 
   try {
     const page = await sistratPlatform.login(patient.sistratCenter, logger);
@@ -274,7 +275,7 @@ const syncCodigoSistrat = async (patientId: string) => {
   }
 };
 
-const activeSistratPatientsByCenter = async (center: string, forceRefresh: boolean = false) => {
+const activeSistratPatientsByCenter = async (center: string, forceRefresh: boolean = false, userContext?: UserContext) => {
   console.log(`activeSistratPatientsByCenter ${center} | forceRefresh: ${forceRefresh}`);
 
   try {
@@ -298,7 +299,7 @@ const activeSistratPatientsByCenter = async (center: string, forceRefresh: boole
     }
 
     const logger = new ProcessLogger(`sistrat-listado-${center}`, "obtener-pacientes-activos-centro");
-    const sistratPlatform = new Sistrat();
+    const sistratPlatform = new Sistrat(userContext);
     const data = await sistratPlatform.getActivePatientsByCenter(center, logger);
     await logger.close();
 
@@ -443,11 +444,11 @@ const findPatient = async (id: string) => {
   return { patient: responsePatient, medicalRecords };
 };
 
-const updateAlertsFromSistrat = async (patientId: string) => {
+const updateAlertsFromSistrat = async (patientId: string, userContext?: UserContext) => {
   try {
     const patient = await PatientModel.findOne({ _id: patientId });
     if (patient) {
-      const sistratPlatform = new Sistrat();
+      const sistratPlatform = new Sistrat(userContext);
 
       const responseUserWithAlerts = await sistratPlatform.updateAlerts(patient);
 
@@ -458,9 +459,9 @@ const updateAlertsFromSistrat = async (patientId: string) => {
   } catch (error) { }
 };
 
-const updateBulkAlertsFromSistrat = async (center: string, patientIds: string[]) => {
+const updateBulkAlertsFromSistrat = async (center: string, patientIds: string[], userContext?: UserContext) => {
   try {
-    const sistratPlatform = new Sistrat();
+    const sistratPlatform = new Sistrat(userContext);
     const logger = new ProcessLogger(`bulk-alerts-${center}`, "actualiza-alertas-masivas");
 
     // Extracción global en 1 sola sesión de Puppeteer
@@ -492,11 +493,11 @@ const updateBulkAlertsFromSistrat = async (center: string, patientIds: string[])
   }
 };
 
-const updateFormCie10 = async (patientId: string, optionSelected: string) => {
+const updateFormCie10 = async (patientId: string, optionSelected: string, userContext?: UserContext) => {
   try {
     const patient = await PatientModel.findOne({ _id: patientId });
     if (patient) {
-      const sistratPlatform = new Sistrat();
+      const sistratPlatform = new Sistrat(userContext);
 
       const responseUserWithAlerts = await sistratPlatform.updateFormCie10(patient, optionSelected);
       // Refrescar alertas automáticamente - Ya se realiza dentro de updateFormCie10 reutilizando la sesión del navegador
@@ -508,11 +509,11 @@ const updateFormCie10 = async (patientId: string, optionSelected: string) => {
   } catch (error) { }
 };
 
-const resolveAlertFromSistrat = async (patientId: string, alertType: string) => {
+const resolveAlertFromSistrat = async (patientId: string, alertType: string, userContext?: UserContext) => {
   try {
     const patient = await PatientModel.findOne({ _id: patientId });
     if (patient) {
-      const sistratPlatform = new Sistrat();
+      const sistratPlatform = new Sistrat(userContext);
       const response = await sistratPlatform.clickAlert(patient, alertType);
       return response;
     } else {

@@ -211,6 +211,13 @@ export const routes: Routes = [
         data: { icon: 'business', parameter: true, forAdmin: true},
         loadComponent: () =>
           import('./dashboard/pages/parameters/sistratCenters/list/sistratCenters.component'),
+      },
+      {
+        path: 'consumo-proxy',
+        title: 'Consumo de Proxy',
+        data: { icon: 'data_usage', parameter: true, forAdmin: true},
+        loadComponent: () =>
+          import('./dashboard/pages/parameters/proxyUsage/list/proxyUsage.component'),
       }
     ],
   },

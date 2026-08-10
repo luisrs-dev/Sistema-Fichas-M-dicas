@@ -13,6 +13,7 @@ import { SocialDiagnosisForm } from "../../interfaces/socialDiagnosisForm.interf
 
 import { getCenterByName } from "../sistratCenter.service";
 import { updateSistratJobStep, registerJobCancelHandler, unregisterJobCancelHandler } from "../sistratJob.service";
+import { recordProxyUsage } from "../proxyUsageLog.service";
 
 interface RowData {
   i: number; // Índice de la fila
@@ -29,14 +30,42 @@ enum Gender {
 class Sistrat {
   scrapper: Scrapper;
   private gender: string | null = null;
+  private userContext?: { userId?: string; userEmail?: string; userName?: string };
   private readonly configKeyDemanda = 'sistrat-direct-record-demanda';
   private readonly configKeyAdmission = 'sistrat-direct-record-admission';
   private readonly configKeyAlerts = 'sistrat-direct-record-alerts';
   private readonly configKeyMassive = 'sistrat-direct-record-massive';
   private readonly configKeyWait = 'sistrat-browser-wait-minutes';
 
-  constructor() {
+  constructor(userContext?: { userId?: string; userEmail?: string; userName?: string }) {
     this.scrapper = new Scrapper(); // Composición: Usa una instancia de Scrapper
+    if (userContext) {
+      this.userContext = userContext;
+    }
+  }
+
+  setUserContext(context?: { userId?: string; userEmail?: string; userName?: string }) {
+    this.userContext = context;
+  }
+
+  private async logProxyUsage(activity: string, center?: string, patientId?: string) {
+    try {
+      const bytes = this.scrapper.getTotalBytesTransferred();
+      if (bytes > 0) {
+        await recordProxyUsage({
+          bytesDownloaded: bytes,
+          activity,
+          userId: this.userContext?.userId,
+          userEmail: this.userContext?.userEmail,
+          userName: this.userContext?.userName,
+          sistratCenter: center,
+          patientId: patientId,
+        });
+        this.scrapper.resetTotalBytesTransferred();
+      }
+    } catch (err) {
+      console.warn("[Sistrat] Error al registrar consumo de proxy:", err);
+    }
   }
 
   // Método para hacer login en Sistrat
@@ -271,6 +300,7 @@ class Sistrat {
       if (page) {
         await this.scrapper.closeBrowser();
       }
+      await this.logProxyUsage("CONSULTA_FONASA", center);
       await logger.close();
       console.groupEnd();
     }
@@ -437,6 +467,7 @@ class Sistrat {
       if (page) {
         await this.scrapper.closeBrowser();
       }
+      await this.logProxyUsage("CREAR_DEMANDA", center, String(patient._id));
       await logger.close();
       console.groupEnd();
     }
@@ -773,6 +804,7 @@ class Sistrat {
       if (page) {
         await this.scrapper.closeBrowser();
       }
+      await this.logProxyUsage("REGISTRO_FICHA_MENSUAL", patient.sistratCenter, String(patient._id));
       console.log("[Sistrat][registrarMedicalRecordsByMonth] Cerrando grupo de logs");
       console.groupEnd();
     }
@@ -1047,6 +1079,7 @@ class Sistrat {
       if (page) {
         await this.scrapper.closeBrowser();
       }
+      await this.logProxyUsage("REGISTRO_FICHA_INGRESO", patient.sistratCenter, String(patient._id));
       await logger.close();
       console.groupEnd();
     }
@@ -1696,6 +1729,7 @@ class Sistrat {
       if (shouldCloseBrowser && page) {
         await this.scrapper.closeBrowser();
       }
+      await this.logProxyUsage("ACTUALIZAR_ALERTAS", patient.sistratCenter, String(patient._id));
     }
   }
 
@@ -2005,6 +2039,7 @@ class Sistrat {
       if (page) {
         await this.scrapper.closeBrowser();
       }
+      await this.logProxyUsage("ACTUALIZAR_FORM_CIE10", patient.sistratCenter, String(patient._id));
       console.groupEnd();
       await logger.close();
     }
@@ -2060,6 +2095,7 @@ class Sistrat {
       if (page) {
         await this.scrapper.closeBrowser();
       }
+      await this.logProxyUsage("OBTENER_PACIENTES_ACTIVOS_CENTRO", center);
       console.groupEnd();
     }
   }

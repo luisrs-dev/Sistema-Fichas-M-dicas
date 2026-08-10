@@ -29,5 +29,12 @@ export const routesParameters: Routes = [
     data: { icon: 'business'},
     loadComponent: () =>
       import('./sistratCenters/list/sistratCenters.component'),
+  },
+  {
+    path: 'proxy-usage',
+    title: 'Consumo de Proxy',
+    data: { icon: 'data_usage'},
+    loadComponent: () =>
+      import('./proxyUsage/list/proxyUsage.component'),
   }
 ];

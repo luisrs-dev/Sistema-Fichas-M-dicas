@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { handleHttp } from "../utils/error.handle";
+import { extractUserContext } from "../utils/userContext";
 import {
   allPatients,
   inerPatient,
@@ -114,8 +115,8 @@ const postDemand = async ({ body }: Request, res: Response) => {
   }
 };
 
-const postDemandToSistrat = async ({ body }: Request, response: Response) => {
-  const { patientId } = body;
+const postDemandToSistrat = async (req: Request, response: Response) => {
+  const { patientId } = req.body;
 
   if (!patientId) {
     return response.status(400).json({ error: "patientId es requerido." });
@@ -123,7 +124,8 @@ const postDemandToSistrat = async ({ body }: Request, response: Response) => {
   
 
   try {
-    const status = await recordDemandToSistrat(patientId);
+    const userContext = extractUserContext(req);
+    const status = await recordDemandToSistrat(patientId, userContext);
     if(status.success){
       response.status(200).json({ message: "Demanda registrada correctamente." }); // Respuesta exitosa
     }
@@ -199,7 +201,8 @@ const getDataByRut = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: "Los parámetros rut y center son requeridos" });
     }
 
-    const data = await dataPatientByRut(rut, center);
+    const userContext = extractUserContext(req);
+    const data = await dataPatientByRut(rut, center, userContext);
     if (!data || (!data.name && !data.surname)) {
       return res
         .status(404)
@@ -229,12 +232,14 @@ import {
 } from "../services/sistratJob.service";
 import { SistratJobType } from "../interfaces/sistratJob.interface";
 
-const postAdmissionFormSistrat = async ({ body }: Request, res: Response) => {
-  const { patientId } = body;
+const postAdmissionFormSistrat = async (req: Request, res: Response) => {
+  const { patientId } = req.body;
   if (!patientId) {
     return res.status(400).json({ success: false, message: "Usuario no existe para registrar ficha de ingreso en SISTRAT" });
   }
   try {
+    const userContext = extractUserContext(req);
+
     // 1. Verificar si ya existe una tarea activa en ejecución para este paciente
     const activeJob = await findActiveSistratJob(patientId, "ficha-ingreso");
     if (activeJob) {
@@ -263,7 +268,7 @@ const postAdmissionFormSistrat = async ({ body }: Request, res: Response) => {
     // 4. Ejecutar el proceso Puppeteer en segundo plano (asíncrono, no bloqueante)
     (async () => {
       try {
-        const responseAdmissionForm = await saveAdmissionFormToSistrat(patientId, jobIdStr);
+        const responseAdmissionForm = await saveAdmissionFormToSistrat(patientId, jobIdStr, userContext);
         if (responseAdmissionForm) {
           await completeSistratJob(jobIdStr, { message: "Ficha de ingreso registrada exitosamente en SISTRAT" });
         } else {
@@ -344,7 +349,8 @@ const updateAlerts = async (req: Request, res: Response) => {
     const { patientId } = req.body;
     console.log(`Paciente id desde update alert controllers: ${patientId}`);
     
-    const responseUserWithAlerts = await updateAlertsFromSistrat(patientId);
+    const userContext = extractUserContext(req);
+    const responseUserWithAlerts = await updateAlertsFromSistrat(patientId, userContext);
     res.send(responseUserWithAlerts);
     
 
@@ -363,7 +369,8 @@ const bulkUpdateAlerts = async (req: Request, res: Response) => {
     
     console.log(`[bulkUpdateAlerts] Procesando ${patientIds.length} pacientes para el centro: ${center}`);
     
-    const response = await updateBulkAlertsFromSistrat(center, patientIds);
+    const userContext = extractUserContext(req);
+    const response = await updateBulkAlertsFromSistrat(center, patientIds, userContext);
     res.status(200).json(response);
   } catch (error) {
     handleHttp(res, "ERROR_BULK_UPDATE_ALERTS", error);
@@ -375,8 +382,8 @@ const formCie10 = async (req: Request, res: Response) => {
     const { patientId, optionSelected } = req.body;
     console.log(`controller: ${optionSelected}`);
     
-    
-    const responseFormCie10 = await updateFormCie10(patientId, optionSelected);
+    const userContext = extractUserContext(req);
+    const responseFormCie10 = await updateFormCie10(patientId, optionSelected, userContext);
     res.send(responseFormCie10);
   
   } catch (error) {
@@ -388,7 +395,8 @@ const formCie10 = async (req: Request, res: Response) => {
 const fetchCodigoSistrat = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const patient = await syncCodigoSistrat(id);
+    const userContext = extractUserContext(req);
+    const patient = await syncCodigoSistrat(id, userContext);
 
     res.status(200).json({
       success: true,
@@ -410,7 +418,8 @@ const getActiveSistratPatients = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: "El parámetro center es requerido" });
     }
 
-    const data = await activeSistratPatientsByCenter(center, forceRefresh);
+    const userContext = extractUserContext(req);
+    const data = await activeSistratPatientsByCenter(center, forceRefresh, userContext);
     res.status(200).json({ success: true, message: "Pacientes recuperados con éxito", data });
   } catch (error) {
     handleHttp(res, "ERROR_GET_SISTRAT_PATIENTS", error);
@@ -424,7 +433,8 @@ const resolveAlertSistrat = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: "patientId y alertType son requeridos" });
     }
     
-    const response = await resolveAlertFromSistrat(patientId, alertType);
+    const userContext = extractUserContext(req);
+    const response = await resolveAlertFromSistrat(patientId, alertType, userContext);
     res.status(200).json({ success: true, message: "Alerta abierta con éxito" });
   } catch (error) {
     handleHttp(res, "ERROR_RESOLVE_ALERT", error);

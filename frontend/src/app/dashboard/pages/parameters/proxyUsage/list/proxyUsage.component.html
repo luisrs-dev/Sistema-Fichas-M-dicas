@@ -1,0 +1,223 @@
+<div class="p-6 max-w-7xl mx-auto space-y-6">
+  <!-- Header con título y accesos rápidos -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+        <mat-icon class="text-indigo-600">data_usage</mat-icon>
+        Reporte de Consumo de Proxy (Scraping)
+      </h1>
+      <p class="text-sm text-gray-500">
+        Monitoreo de tráfico consumido por usuarios y actividades dentro de un rango de fechas.
+      </p>
+    </div>
+
+    <!-- Botones de rangos predefinidos -->
+    <div class="flex flex-wrap gap-2">
+      <button mat-stroked-button (click)="setPresetRange(0)">Hoy</button>
+      <button mat-stroked-button (click)="setPresetRange(7)">7 días</button>
+      <button mat-stroked-button color="primary" (click)="setPresetRange(15)">15 días</button>
+      <button mat-stroked-button (click)="setPresetRange(30)">30 días</button>
+    </div>
+  </div>
+
+  <!-- Barra de Filtros -->
+  <mat-card class="p-4 rounded-xl shadow-sm border border-gray-100">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Fecha Inicio</mat-label>
+        <input matInput type="date" [(ngModel)]="startDate" (change)="onFilter()" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Fecha Fin</mat-label>
+        <input matInput type="date" [(ngModel)]="endDate" (change)="onFilter()" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Filtrar por Usuario (Email)</mat-label>
+        <input matInput type="text" placeholder="ej. usuario@correo.cl" [(ngModel)]="selectedUser" (keyup.enter)="onFilter()" />
+      </mat-form-field>
+
+      <div class="flex gap-2 justify-end">
+        <button mat-raised-button color="primary" (click)="onFilter()" class="w-full md:w-auto">
+          <mat-icon>filter_alt</mat-icon> Filtrar
+        </button>
+        <button mat-button (click)="onResetFilters()">
+          <mat-icon>refresh</mat-icon> Limpiar
+        </button>
+      </div>
+    </div>
+  </mat-card>
+
+  <!-- Tarjetas KPI -->
+  <div *ngIf="reportData" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="p-4 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+      <div class="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
+        <mat-icon class="text-2xl">cloud_download</mat-icon>
+      </div>
+      <div>
+        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Tráfico Total</span>
+        <h3 class="text-2xl font-extrabold text-gray-800">{{ formatMB(reportData.summary.totalMB) }}</h3>
+      </div>
+    </div>
+
+    <div class="p-4 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+      <div class="p-3 bg-emerald-50 text-emerald-600 rounded-lg">
+        <mat-icon class="text-2xl">sync</mat-icon>
+      </div>
+      <div>
+        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Peticiones Totales</span>
+        <h3 class="text-2xl font-extrabold text-gray-800">{{ reportData.summary.totalCount }}</h3>
+      </div>
+    </div>
+
+    <div class="p-4 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+      <div class="p-3 bg-amber-50 text-amber-600 rounded-lg">
+        <mat-icon class="text-2xl">person</mat-icon>
+      </div>
+      <div>
+        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Usuario Principal</span>
+        <h3 class="text-lg font-bold text-gray-800 truncate max-w-[180px]">{{ reportData.summary.topUser }}</h3>
+      </div>
+    </div>
+
+    <div class="p-4 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+      <div class="p-3 bg-rose-50 text-rose-600 rounded-lg">
+        <mat-icon class="text-2xl">category</mat-icon>
+      </div>
+      <div>
+        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Actividad Principal</span>
+        <h3 class="text-lg font-bold text-gray-800 truncate max-w-[180px]">{{ reportData.summary.topActivity }}</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pestañas de Detalle (Por Usuario, Por Actividad, Registros) -->
+  <mat-tab-group *ngIf="reportData" animationDuration="0ms" class="bg-white rounded-xl shadow-sm border border-gray-100 p-2">
+    <!-- Pestaña 1: Consumo por Usuario -->
+    <mat-tab label="Consumo por Usuario">
+      <div class="p-4">
+        <table mat-table [dataSource]="reportData.byUser" class="w-full">
+          <ng-container matColumnDef="userName">
+            <th mat-header-cell *matHeaderCellDef>Usuario</th>
+            <td mat-cell *matCellDef="let element" class="font-medium text-gray-800">{{ element.userName }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="userEmail">
+            <th mat-header-cell *matHeaderCellDef>Email</th>
+            <td mat-cell *matCellDef="let element" class="text-gray-500">{{ element.userEmail }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="totalMB">
+            <th mat-header-cell *matHeaderCellDef>Consumo Total</th>
+            <td mat-cell *matCellDef="let element" class="font-semibold text-indigo-600">{{ formatMB(element.totalMB) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="count">
+            <th mat-header-cell *matHeaderCellDef>Peticiones</th>
+            <td mat-cell *matCellDef="let element">{{ element.count }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="userColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: userColumns;"></tr>
+        </table>
+
+        <div *ngIf="reportData.byUser.length === 0" class="text-center py-8 text-gray-400">
+          No hay registros de usuarios para el rango seleccionado.
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- Pestaña 2: Consumo por Actividad -->
+    <mat-tab label="Consumo por Actividad">
+      <div class="p-4">
+        <table mat-table [dataSource]="reportData.byActivity" class="w-full">
+          <ng-container matColumnDef="activity">
+            <th mat-header-cell *matHeaderCellDef>Actividad</th>
+            <td mat-cell *matCellDef="let element" class="font-medium text-gray-800">{{ element.activity }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="totalMB">
+            <th mat-header-cell *matHeaderCellDef>Consumo Total</th>
+            <td mat-cell *matCellDef="let element" class="font-semibold text-indigo-600">{{ formatMB(element.totalMB) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="count">
+            <th mat-header-cell *matHeaderCellDef>Peticiones</th>
+            <td mat-cell *matCellDef="let element">{{ element.count }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="activityColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: activityColumns;"></tr>
+        </table>
+
+        <div *ngIf="reportData.byActivity.length === 0" class="text-center py-8 text-gray-400">
+          No hay registros de actividades para el rango seleccionado.
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- Pestaña 3: Historial Detallado -->
+    <mat-tab label="Historial de Transacciones">
+      <div class="p-4">
+        <table mat-table [dataSource]="reportData.logs" class="w-full">
+          <ng-container matColumnDef="timestamp">
+            <th mat-header-cell *matHeaderCellDef>Fecha / Hora</th>
+            <td mat-cell *matCellDef="let element" class="text-xs text-gray-500">
+              {{ element.timestamp | date:'dd/MM/yyyy HH:mm:ss' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="userName">
+            <th mat-header-cell *matHeaderCellDef>Usuario</th>
+            <td mat-cell *matCellDef="let element" class="font-medium text-gray-800">
+              {{ element.userName || element.userEmail }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="activity">
+            <th mat-header-cell *matHeaderCellDef>Actividad</th>
+            <td mat-cell *matCellDef="let element">
+              <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-700">
+                {{ element.activity }}
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="sistratCenter">
+            <th mat-header-cell *matHeaderCellDef>Centro SISTRAT</th>
+            <td mat-cell *matCellDef="let element" class="text-xs text-gray-600">
+              {{ element.sistratCenter || 'N/A' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="megabytes">
+            <th mat-header-cell *matHeaderCellDef>Tráfico</th>
+            <td mat-cell *matCellDef="let element" class="font-semibold text-emerald-600">
+              {{ element.megabytes }} MB
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="logColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: logColumns;"></tr>
+        </table>
+
+        <!-- Paginación manual -->
+        <div class="flex items-center justify-between mt-4 px-2">
+          <span class="text-xs text-gray-500">
+            Página {{ reportData.pagination.page }} de {{ reportData.pagination.totalPages }} (Total: {{ reportData.pagination.totalLogs }} registros)
+          </span>
+
+          <div class="flex gap-2">
+            <button mat-icon-button [disabled]="page <= 1" (click)="prevPage()">
+              <mat-icon>chevron_left</mat-icon>
+            </button>
+            <button mat-icon-button [disabled]="page >= reportData.pagination.totalPages" (click)="nextPage()">
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>
