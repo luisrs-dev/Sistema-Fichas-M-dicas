@@ -22,6 +22,9 @@ import puppeteer from "puppeteer";
 import path from "path";
 import fs from "fs";
 import archiver from "archiver"; // para comprimir en zip
+import { randomUUID } from "crypto";
+import { ExportJobStore } from "../utils/exportJobStore";
+import { startExportJob } from "../utils/pdfExportProcessor";
 
 import { findPatient, getAllPatients } from "../services/patient.service";
 import { getBase64Image } from "../utils/base64Image";
@@ -393,6 +396,113 @@ const getMonthlyLogContent = async ({ params }: Request, res: Response) => {
   }
 };
 
+/**
+ * POST /generate-pdf/export/start
+ * Inicia un job de exportación en background y retorna { jobId } de inmediato.
+ * El cliente sigue el progreso en /export/progress/:jobId
+ */
+const startExport = async ({ body }: Request, res: Response) => {
+  try {
+    const { startDate, endDate, centerName } = body;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ message: "startDate y endDate son requeridos." });
+    }
+
+    const jobId = randomUUID();
+    ExportJobStore.create(jobId);
+
+    // Lanzar el proceso en background sin await
+    startExportJob(jobId, { startDate, endDate, centerName });
+
+    res.status(202).json({ jobId });
+  } catch (error) {
+    handleHttp(res, "ERROR_START_EXPORT", error);
+  }
+};
+
+/**
+ * GET /generate-pdf/export/progress/:jobId
+ * Endpoint Server-Sent Events. El cliente recibe eventos de progreso en tiempo real.
+ */
+const getExportProgress = (req: Request, res: Response) => {
+  const { jobId } = req.params;
+  const job = ExportJobStore.get(jobId);
+
+  if (!job) {
+    return res.status(404).json({ message: "Job no encontrado." });
+  }
+
+  // Configurar cabeceras SSE
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no"); // Desactiva buffering en Nginx
+  res.flushHeaders();
+
+  const send = (event: any) => {
+    res.write(`data: ${JSON.stringify(event)}\n\n`);
+  };
+
+  // Si el job ya terminó, enviar el estado final de inmediato
+  if (job.status === "done") {
+    send({ type: "done", message: job.filename });
+    res.end();
+    return;
+  }
+  if (job.status === "error") {
+    send({ type: "error", message: job.error });
+    res.end();
+    return;
+  }
+
+  // Enviar estado actual como primer evento
+  send({ type: "progress", current: job.current, total: job.total, patientName: job.patientName });
+
+  // Suscribirse a futuros eventos
+  ExportJobStore.subscribe(jobId, send);
+
+  // Cleanup cuando el cliente cierra la conexión
+  req.on("close", () => {
+    ExportJobStore.unsubscribe(jobId, send);
+  });
+};
+
+/**
+ * GET /generate-pdf/export/download/:jobId
+ * Descarga el ZIP del job cuando está listo. Limpia el job una vez descargado.
+ */
+const downloadExport = async (req: Request, res: Response) => {
+  const { jobId } = req.params;
+  const job = ExportJobStore.get(jobId);
+
+  if (!job) {
+    return res.status(404).json({ message: "Job no encontrado o ya fue descargado." });
+  }
+  if (job.status !== "done" || !job.outputPath) {
+    return res.status(409).json({ message: `El job no está listo (estado: ${job.status}).` });
+  }
+
+  const zipPath = job.outputPath;
+  const filename = job.filename || "historiales.zip";
+
+  res.setHeader("Content-Type", "application/zip");
+  res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+
+  const fileStream = fs.createReadStream(zipPath);
+  fileStream.pipe(res);
+
+  fileStream.on("end", () => {
+    // Limpiar el job y el archivo temporal tras la descarga
+    ExportJobStore.delete(jobId);
+  });
+
+  fileStream.on("error", (err) => {
+    console.error("[downloadExport] Error al leer el ZIP:", err);
+    res.status(500).json({ message: "Error al descargar el archivo." });
+  });
+};
+
 export {
   postMedicalRecord,
   postMedicalRecordPerMonth,
@@ -409,4 +519,7 @@ export {
   getMonthlyLogs,
   getMonthlyLogContent,
   testBulkEmail,
+  startExport,
+  getExportProgress,
+  downloadExport,
 };

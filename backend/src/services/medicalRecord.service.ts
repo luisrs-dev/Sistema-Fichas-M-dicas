@@ -381,20 +381,19 @@ const allMedicalRecordsUser = async (userId: string, startDate?: string, endDate
   }
 
 
-  for (const record of medicalRecords) {
-    const registeredBy = record.registeredBy;
-
-    if (registeredBy?.signature) {
-      // Normalizar la ruta: quitar '/uploads/' o 'uploads/' si están al inicio
-      // para que getBase64Image pueda resolverlo correctamente
-      let relativePath = registeredBy.signature.replace(/^(\/)?uploads\//, "");
-      
-      const signatureBase64 = await getBase64Image(relativePath, "png");
-      if (signatureBase64) {
-        registeredBy.signature = signatureBase64;
+  // Convertir firmas a base64 en paralelo (era un bucle serial que bloqueaba por cada firma)
+  await Promise.all(
+    medicalRecords.map(async (record: any) => {
+      const registeredBy = record.registeredBy;
+      if (registeredBy?.signature) {
+        const relativePath = registeredBy.signature.replace(/^(\/)?uploads\//, "");
+        const signatureBase64 = await getBase64Image(relativePath, "png");
+        if (signatureBase64) {
+          registeredBy.signature = signatureBase64;
+        }
       }
-    }
-  }
+    })
+  );
 
   // Ordenar por fecha de la más antigua a la más reciente (ascendente)
   medicalRecords.sort((a: any, b: any) => {

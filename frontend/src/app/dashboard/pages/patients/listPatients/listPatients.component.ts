@@ -17,6 +17,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { FormCie10Component } from './components/formCie10/formCie10.component';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { DataExportComponent } from './components/data-export/data-export.component';
+import { ExportProgressDialogComponent } from './components/export-progress-dialog/export-progress-dialog.component';
 import Notiflix from 'notiflix';
 
 @Component({
@@ -108,10 +109,43 @@ export default class ListPatientsComponent implements OnInit {
       this.dataSource.sort = this.sort;
       this.dataSource.paginator = this.paginator;
       this.dataSource.data = this.patients;
-      //this.paginator.pageSize = 10; // Define el número de elementos por página
     });
 
     this.patientService.updatePatients(this.programsIds);
+
+    // Reconexión automática: si hay un job activo guardado en localStorage (ej: tras un refresh)
+    this.checkAndResumeExportJob();
+  }
+
+  /**
+   * Verifica si hay un job de exportación activo en localStorage.
+   * Si existe, reabre el diálogo de progreso automáticamente para que el usuario
+   * pueda ver el estado y descargar el archivo cuando esté listo.
+   */
+  private checkAndResumeExportJob(): void {
+    const savedJob = ExportProgressDialogComponent.getSavedJob();
+    if (!savedJob) return;
+
+    // Verificar si el job sigue siendo válido en el servidor
+    fetch(`${(this.patientService as any).backend}/generate-pdf/export/progress/${savedJob.jobId}`, {
+      headers: { 'Accept': 'text/event-stream' },
+    }).then(res => {
+      if (res.ok) {
+        res.body?.cancel(); // cerrar el stream de la verificación
+        // Job válido: reabrir el diálogo
+        this.dialog.open(ExportProgressDialogComponent, {
+          data: savedJob,
+          width: '480px',
+          disableClose: false,
+        });
+      } else {
+        // Job expiró o no existe: limpiar localStorage
+        ExportProgressDialogComponent.clearSavedJob();
+      }
+    }).catch(() => {
+      // No se pudo verificar (servidor caído), limpiar para no molestar
+      ExportProgressDialogComponent.clearSavedJob();
+    });
   }
 
   filterByProgram(program: any) {
@@ -363,29 +397,20 @@ export default class ListPatientsComponent implements OnInit {
     const ref = this.bottomSheet.open(DataExportComponent);
     ref.afterDismissed().subscribe((result) => {
       if (result) {
-        Notiflix.Loading.circle('Generando Documentos PDFs');
         const { startDate, endDate, centerName } = result;
 
-        this.patientService.getPdfByProgram(startDate, endDate, centerName).subscribe({
-          next: (blob) => {
-            // Crear URL temporal para el ZIP
-            const url = window.URL.createObjectURL(blob);
-
-            // Crear enlace de descarga oculto
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `historiales_${startDate}_${endDate}.zip`; // nombre sugerido
-            document.body.appendChild(a);
-            a.click();
-
-            // Liberar recursos
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-            Notiflix.Loading.remove();
+        // 1. Iniciar el job de exportación en background
+        this.patientService.startExportJob(startDate, endDate, centerName).subscribe({
+          next: ({ jobId }) => {
+            // 2. Abrir el diálogo de progreso SSE (se conecta automáticamente al stream)
+            this.dialog.open(ExportProgressDialogComponent, {
+              data: { jobId, downloadFilename: `historiales_${startDate}_${endDate}.zip` },
+              width: '480px',
+              disableClose: false,
+            });
           },
           error: (error) => {
-            Notiflix.Loading.remove();
-            const message = error?.error?.message || 'Error al generar los documentos';
+            const message = error?.error?.message || 'Error al iniciar la exportación';
             Notiflix.Notify.failure(message);
           }
         });

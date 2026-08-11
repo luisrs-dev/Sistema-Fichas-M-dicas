@@ -1,0 +1,60 @@
+<h2 mat-dialog-title>
+  <mat-icon class="dialog-icon">picture_as_pdf</mat-icon>
+  Exportando Registros
+</h2>
+
+<mat-dialog-content>
+  <!-- Estado: Procesando -->
+  @if (status === 'connecting' || status === 'processing') {
+    <div class="progress-content">
+      <mat-progress-bar
+        [mode]="progressMode"
+        [value]="progressPercent"
+        color="primary"
+        class="progress-bar"
+      ></mat-progress-bar>
+
+      <div class="progress-info">
+        @if (total > 0) {
+          <span class="progress-count">{{ current }} de {{ total }} pacientes</span>
+          <span class="progress-percent">{{ progressPercent }}%</span>
+        } @else {
+          <span class="progress-count">Preparando exportación...</span>
+        }
+      </div>
+
+      <div class="patient-name">
+        <mat-icon class="name-icon">person</mat-icon>
+        {{ patientName }}
+      </div>
+
+      <p class="helper-text">
+        Puedes seguir trabajando mientras se genera el archivo. La descarga comenzará automáticamente.
+      </p>
+    </div>
+  }
+
+  <!-- Estado: Completado -->
+  @if (status === 'done') {
+    <div class="done-content">
+      <mat-icon class="done-icon">check_circle</mat-icon>
+      <h3>¡Exportación completada!</h3>
+      <p>El archivo ZIP se está descargando automáticamente.</p>
+    </div>
+  }
+
+  <!-- Estado: Error -->
+  @if (status === 'error') {
+    <div class="error-content">
+      <mat-icon class="error-icon">error_outline</mat-icon>
+      <h3>Error al exportar</h3>
+      <p>{{ errorMessage }}</p>
+    </div>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">
+    {{ status === 'done' || status === 'error' ? 'Cerrar' : 'Cerrar' }}
+  </button>
+</mat-dialog-actions>

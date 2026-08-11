@@ -1,0 +1,129 @@
+:host {
+  display: block;
+}
+
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dialog-icon {
+  color: #1976d2;
+}
+
+.progress-content {
+  min-width: 380px;
+  padding: 8px 0;
+}
+
+.progress-bar {
+  border-radius: 4px;
+  height: 8px;
+  margin-bottom: 12px;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.progress-count {
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+}
+
+.progress-percent {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1976d2;
+}
+
+.patient-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #6b7280;
+  background: #f3f4f6;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  min-height: 36px;
+  word-break: break-word;
+}
+
+.name-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.helper-text {
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 0;
+  text-align: center;
+}
+
+/* Done state */
+.done-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+  text-align: center;
+}
+
+.done-icon {
+  font-size: 56px;
+  width: 56px;
+  height: 56px;
+  color: #16a34a;
+  margin-bottom: 8px;
+}
+
+.done-content h3 {
+  margin: 0 0 4px;
+  color: #15803d;
+}
+
+.done-content p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Error state */
+.error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 56px;
+  width: 56px;
+  height: 56px;
+  color: #dc2626;
+  margin-bottom: 8px;
+}
+
+.error-content h3 {
+  margin: 0 0 4px;
+  color: #b91c1c;
+}
+
+.error-content p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+  max-width: 320px;
+}

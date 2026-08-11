@@ -22,6 +22,7 @@ import { NonEmptyPipe } from '../../../../shared/pipes/non-empty.pipe';
 import { MedicalRecordGrouped } from '../../medicalRecord/interfaces/medicalRecord-grouped.interface';
 import { AuthService } from '../../../../auth/auth.service';
 import { DataExportComponent } from '../listPatients/components/data-export/data-export.component';
+import { ExportProgressDialogComponent } from '../listPatients/components/export-progress-dialog/export-progress-dialog.component';
 import { ProfesionalServiceService } from '../../parameters/services/profesionalService.service';
 
 interface State {
@@ -281,10 +282,14 @@ export default class DetailComponent implements OnInit {
     });
     ref.afterDismissed().subscribe((result) => {
       if (result) {
-        Notiflix.Loading.circle('Generando PDF...');
         const { startDate, endDate } = result;
+        const patientId = this.patientId();
 
-        this.patientService.getPdfByPatientId(this.patientId()!, startDate, endDate).subscribe({
+        if (!patientId) return;
+
+        // Usar el endpoint de paciente individual (síncrono, es rápido para un solo paciente)
+        Notiflix.Loading.circle('Generando PDF...');
+        this.patientService.getPdfByPatientId(patientId, startDate, endDate).subscribe({
           next: (blob) => {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');

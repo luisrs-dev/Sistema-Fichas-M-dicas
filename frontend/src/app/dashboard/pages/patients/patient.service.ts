@@ -44,6 +44,11 @@ export class PatientService {
     );
   }
 
+  /** Inicia un job de exportación asíncrona. Retorna { jobId } de inmediato. */
+  startExportJob(startDate: string, endDate: string, centerName?: string): Observable<{ jobId: string }> {
+    return this.http.post<{ jobId: string }>(`${this.backend}/generate-pdf/export/start`, { startDate, endDate, centerName });
+  }
+
   getPdfByPatientId(id: string, startDate?: string, endDate?: string): Observable<any> {
     let params = new HttpParams();
     if (startDate) params = params.set('startDate', startDate);
@@ -56,6 +61,7 @@ export class PatientService {
       }
     );
   }
+
 
 
   getPatientsByProfile(profile: string): Observable<Patient[]> {
