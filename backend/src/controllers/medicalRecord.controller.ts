@@ -309,7 +309,7 @@ const getPdfMedicalRecords = async ({ body }: Request, res: Response) => {
     for (const program of Object.keys(patientsByProgram)) {
       for (const patient of patientsByProgram[program]) {
         // Obtener fichas del paciente en el rango
-        const clinicalRecordsPatient = await allMedicalRecordsUser(patient._id, start, end);
+        const clinicalRecordsPatient = await allMedicalRecordsUser(patient._id, startDate, endDate);
 
         const clinicalRecords = (clinicalRecordsPatient || []).sort(
           (a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()

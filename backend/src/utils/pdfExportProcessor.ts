@@ -163,7 +163,7 @@ const runExportJob = async (
         });
 
         // Obtener fichas del paciente en el rango (firmas ya en parallel/Promise.all)
-        const clinicalRecordsPatient = await allMedicalRecordsUser(patient._id.toString(), start, end);
+        const clinicalRecordsPatient = await allMedicalRecordsUser(patient._id.toString(), startDate, endDate);
         const clinicalRecords = (clinicalRecordsPatient || []).sort(
           (a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()
         );

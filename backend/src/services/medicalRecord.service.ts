@@ -8,7 +8,7 @@ import { getBase64Image } from "../utils/base64Image";
 import { getGroupedRecordsByPatientAndMonth } from "./medicalRecordGrouping.service";
 import ProcessLogger from "../utils/processLogger";
 import { promises as fs } from "fs";
-import { normalizeDateRange } from "../utils/utilities";
+import { normalizeDateRange, getChileYMD } from "../utils/utilities";
 import path from "path";
 import { BulkMonthlyProcessSummary, BulkMonthlyRecordResult } from "../interfaces/bulkMonthlyRecord.interface";
 import { Patient } from "../interfaces/patient.interface";
@@ -361,7 +361,7 @@ const allMedicalRecordsUser = async (userId: string, startDate?: string, endDate
   let medicalRecords = [];
 
   if (startDate && endDate) {
-    const { start, end } = normalizeDateRange(startDate, endDate);
+    const { start, end, startYMD, endYMD } = normalizeDateRange(startDate, endDate);
     medicalRecords = await MedicalRecordModel.find({
       patient: userId,
       date: { $gte: start, $lte: end },
@@ -370,6 +370,14 @@ const allMedicalRecordsUser = async (userId: string, startDate?: string, endDate
       .populate('patient')
       .populate('registeredBy')
       .lean();
+
+    if (startYMD && endYMD) {
+      medicalRecords = medicalRecords.filter((record: any) => {
+        const recordYMD = getChileYMD(record.date);
+        if (!recordYMD) return true;
+        return recordYMD >= startYMD && recordYMD <= endYMD;
+      });
+    }
   } else {
     medicalRecords = await MedicalRecordModel.find({
       patient: userId,
