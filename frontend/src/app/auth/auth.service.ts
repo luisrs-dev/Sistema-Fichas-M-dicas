@@ -125,8 +125,14 @@ export class AuthService {
     return profileName.includes('terapeuta') || profileName.includes('ocupacional');
   }
 
+  isTrabajadoraSocial(): boolean {
+    const user = this.getUser();
+    const profileName = user?.profile?.name?.toLowerCase() || '';
+    return profileName.includes('trabajadora') || profileName.includes('social') || profileName.includes('trabajadora social');
+  }
+
   canSyncEvaluation(): boolean {
-    return this.isAdmin() || this.isTerapeutaOcupacional();
+    return this.isAdmin() || this.isTerapeutaOcupacional() || this.isTrabajadoraSocial();
   }
 }
 
