@@ -274,7 +274,12 @@ const syncCodigoSistrat = async (patientId: string) => {
   }
 };
 
-const activeSistratPatientsByCenter = async (center: string, forceRefresh: boolean = false) => {
+const activePatientsRefreshes = new Map<string, Promise<any[]>>();
+const alertRefreshes = new Map<string, Promise<Record<string, any>>>();
+const lastForcedRefresh = new Map<string, number>();
+const FORCE_REFRESH_COOLDOWN_MS = Number(process.env.SISTRAT_FORCE_REFRESH_COOLDOWN_MS || 300_000);
+
+const fetchActiveSistratPatientsByCenter = async (center: string, forceRefresh: boolean = false) => {
   console.log(`activeSistratPatientsByCenter ${center} | forceRefresh: ${forceRefresh}`);
 
   try {
@@ -341,6 +346,52 @@ const activeSistratPatientsByCenter = async (center: string, forceRefresh: boole
     console.error(`Error obteniendo pacientes activos para ${center} desde SISTRAT:`, error);
     throw error;
   }
+};
+
+const activeSistratPatientsByCenter = async (center: string, forceRefresh: boolean = false) => {
+  const key = center.trim().toLowerCase();
+  const running = activePatientsRefreshes.get(key);
+  if (running) {
+    console.log(`[activeSistratPatientsByCenter] Reutilizando actualización en curso para ${center}`);
+    const staleCache = await SistratCacheModel.findOne({ center }).lean();
+    return staleCache?.patients || running;
+  }
+
+  let effectiveForceRefresh = String(forceRefresh) === "true";
+  if (effectiveForceRefresh) {
+    const lastRefresh = lastForcedRefresh.get(key) || 0;
+    if (Date.now() - lastRefresh < FORCE_REFRESH_COOLDOWN_MS) {
+      console.log(`[activeSistratPatientsByCenter] forceRefresh omitido por cooldown para ${center}`);
+      effectiveForceRefresh = false;
+    } else {
+      lastForcedRefresh.set(key, Date.now());
+    }
+  }
+
+  // Si hay datos vencidos, responder inmediatamente y renovarlos en segundo
+  // plano. Una caída del proxy no deja al usuario sin el último resultado útil.
+  if (!effectiveForceRefresh) {
+    const cachedData = await SistratCacheModel.findOne({ center }).lean();
+    const ttlHours = Math.max(1, Number(process.env.SISTRAT_CACHE_TTL_HOURS) || 6);
+    if (cachedData) {
+      const ageHours = (Date.now() - cachedData.lastUpdated.getTime()) / 36e5;
+      if (ageHours >= ttlHours) {
+        const backgroundRefresh = fetchActiveSistratPatientsByCenter(center, true)
+          .catch((error) => {
+            console.error(`[activeSistratPatientsByCenter] Renovación en segundo plano falló para ${center}:`, error);
+            return cachedData.patients;
+          })
+          .finally(() => activePatientsRefreshes.delete(key));
+        activePatientsRefreshes.set(key, backgroundRefresh);
+        return cachedData.patients;
+      }
+    }
+  }
+
+  const refresh = fetchActiveSistratPatientsByCenter(center, effectiveForceRefresh)
+    .finally(() => activePatientsRefreshes.delete(key));
+  activePatientsRefreshes.set(key, refresh);
+  return refresh;
 };
 
 const getAllPatients = async () => {
@@ -464,8 +515,29 @@ const updateBulkAlertsFromSistrat = async (center: string, patientIds: string[])
     const logger = new ProcessLogger(`bulk-alerts-${center}`, "actualiza-alertas-masivas");
 
     // Extracción global en 1 sola sesión de Puppeteer
-    const alertsDict = await sistratPlatform.bulkUpdateAlertsByCenter(center, logger);
+    const alertKey = center.trim().toLowerCase();
+    let alertRefresh = alertRefreshes.get(alertKey);
+    if (!alertRefresh) {
+      alertRefresh = sistratPlatform.bulkUpdateAlertsByCenter(center, logger)
+        .finally(() => alertRefreshes.delete(alertKey));
+      alertRefreshes.set(alertKey, alertRefresh);
+    } else {
+      console.log(`[updateBulkAlertsFromSistrat] Reutilizando descarga en curso para ${center}`);
+    }
+    const alertsDict = await alertRefresh;
     await logger.close();
+
+    // La misma descarga contiene las alertas de todo el centro. Persistirlas
+    // evita volver a consultar SISTRAT para consumidores de la caché.
+    const cachedCenter = await SistratCacheModel.findOne({ center });
+    if (cachedCenter) {
+      cachedCenter.patients = cachedCenter.patients.map((cachedPatient: any) => ({
+        ...cachedPatient,
+        ...(alertsDict[cachedPatient.codigoSistrat] || {}),
+      }));
+      cachedCenter.lastUpdated = new Date();
+      await cachedCenter.save();
+    }
 
     // Obtener y actualizar los pacientes solicitados simultáneamente
     const patients = await PatientModel.find({ _id: { $in: patientIds } });

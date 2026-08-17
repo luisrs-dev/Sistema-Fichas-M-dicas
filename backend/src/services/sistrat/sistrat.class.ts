@@ -1788,15 +1788,11 @@ class Sistrat {
       await this.logStep(logger, `[Sistrat][clickAlert] Error: ${error}`);
       throw error;
     } finally {
-      // 🚨 Para dejar el navegador abierto de manera indefinida
-      // SIN colgar la petición HTTP del usuario, simplemente 
-      // omitimos cerrar el navegador en el bloque finally.
-      // Así el usuario (tú) puedes usar la ventana de Chrome mientras
-      // el backend le responde al frontend de inmediato.
-      // 
-      // if (page) {
-      //   await this.scrapper.closeBrowser();
-      // }
+      // En producción el navegador es headless: mantenerlo abierto filtra
+      // procesos y puede seguir generando tráfico por polling/keep-alives.
+      if (page && process.env.SCRAPER_KEEP_ALERT_BROWSER_OPEN !== "true") {
+        await this.scrapper.closeBrowser();
+      }
 
       console.groupEnd();
       await logger.close();

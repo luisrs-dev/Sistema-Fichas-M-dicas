@@ -14,6 +14,7 @@ puppeteer.use(StealthPlugin());
 class Scrapper {
   protected browser: Browser | null = null;
   private isProduction: boolean;
+  private traffic = { requests: 0, blocked: 0, receivedBytes: 0 };
 
   constructor() {
     this.isProduction = process.platform === 'linux' || process.env.NODE_ENV === 'production';
@@ -24,6 +25,8 @@ class Scrapper {
     console.log("[Scrapper] Browser obtenido");
 
     const page: Page = await browser.newPage();
+
+    await this.configureTrafficSaving(page);
 
     console.log("[Scrapper] Página obtenida");
 
@@ -40,8 +43,7 @@ class Scrapper {
     // Autenticar proxy solo en producción (donde se usa iProyal)
     // Se agrega _session dinámica para forzar rotación de IP residencial en cada sesión
     if (this.isProduction) {
-      const proxyUser = process.env.PROXY_USER || "4y0YVHAHmRvZMtOx";
-      const baseProxyPass = process.env.PROXY_PASS || "ZuVPtBuURBDDI6C9_country-cl_city-talca";
+      const { proxyUser, baseProxyPass } = this.getProxyCredentials();
       const sessionId = `sess${Date.now()}`;
       const proxyPass = `${baseProxyPass}_session-${sessionId}_lifetime-10m`;
       console.log(`[Scrapper] Proxy session ID: ${sessionId}`);
@@ -174,11 +176,12 @@ class Scrapper {
     if (this.browser) {
       await this.browser.close();
       this.browser = null;
+      console.log(`[Scrapper][Traffic] requests=${this.traffic.requests} blocked=${this.traffic.blocked} receivedBytes=${this.traffic.receivedBytes}`);
     }
   }
 
   // Método para manejar la navegación con reintentos automáticos ante fallos de proxy
-  async navigateToPage(page: Page, url: string, retries: number = 3): Promise<void> {
+  async navigateToPage(page: Page, url: string, retries: number = Math.max(1, Number(process.env.SCRAPER_MAX_RETRIES) || 2)): Promise<void> {
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
         await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
@@ -197,8 +200,7 @@ class Scrapper {
 
           // Rotar sesión de proxy para obtener nueva IP
           if (this.isProduction) {
-            const proxyUser = process.env.PROXY_USER || "4y0YVHAHmRvZMtOx";
-            const baseProxyPass = process.env.PROXY_PASS || "ZuVPtBuURBDDI6C9_country-cl_city-talca";
+            const { proxyUser, baseProxyPass } = this.getProxyCredentials();
             const newSessionId = `retry${Date.now()}`;
             const proxyPass = `${baseProxyPass}_session-${newSessionId}_lifetime-10m`;
             console.log(`[Scrapper] Rotando proxy con nueva sesión: ${newSessionId}`);
@@ -342,6 +344,40 @@ class Scrapper {
     console.log({ userDataDir });
 
     return userDataDir;
+  }
+
+  private getProxyCredentials(): { proxyUser: string; baseProxyPass: string } {
+    const proxyUser = process.env.PROXY_USER;
+    const baseProxyPass = process.env.PROXY_PASS;
+    if (!proxyUser || !baseProxyPass) {
+      throw new Error("PROXY_USER y PROXY_PASS son obligatorios en producción");
+    }
+    return { proxyUser, baseProxyPass };
+  }
+
+  private async configureTrafficSaving(page: Page): Promise<void> {
+    const enabled = process.env.SCRAPER_BLOCK_RESOURCES !== "false";
+    const blockedTypes = new Set(["image", "font", "media"]);
+
+    if (enabled) {
+      await page.setRequestInterception(true);
+      page.on("request", (request) => {
+        this.traffic.requests++;
+        if (blockedTypes.has(request.resourceType())) {
+          this.traffic.blocked++;
+          void request.abort();
+        } else {
+          void request.continue();
+        }
+      });
+    } else {
+      page.on("request", () => this.traffic.requests++);
+    }
+
+    page.on("response", (response) => {
+      const contentLength = Number(response.headers()["content-length"] || 0);
+      if (Number.isFinite(contentLength)) this.traffic.receivedBytes += contentLength;
+    });
   }
 
 }
