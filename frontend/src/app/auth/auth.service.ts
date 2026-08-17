@@ -131,8 +131,14 @@ export class AuthService {
     return profileName.includes('trabajadora') || profileName.includes('social') || profileName.includes('trabajadora social');
   }
 
+  isPsicologo(): boolean {
+    const user = this.getUser();
+    const profileName = user?.profile?.name?.toLowerCase() || '';
+    return profileName.includes('psicólog') || profileName.includes('psicolog') || profileName.includes('psicólog');
+  }
+
   canSyncEvaluation(): boolean {
-    return this.isAdmin() || this.isTerapeutaOcupacional() || this.isTrabajadoraSocial();
+    return this.isAdmin() || this.isTerapeutaOcupacional() || this.isTrabajadoraSocial() || this.isPsicologo();
   }
 }
 
