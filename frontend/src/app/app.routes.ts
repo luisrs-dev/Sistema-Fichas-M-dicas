@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { isAuthenticatedGuard } from './auth/guards/isAuthenticated.guard';
+import { isAdminGuard } from './auth/guards/isAdmin.guard';
 
 export const routes: Routes = [
   {
@@ -62,6 +63,14 @@ export const routes: Routes = [
         data: { icon: 'group', child: false, forAdmin: true  },
         loadComponent: () =>
           import('./dashboard/pages/healthCheck/healthCheck.component'),
+      },
+      {
+        path: 'informes-pacientes',
+        title: 'Informes de Pacientes',
+        data: { icon: 'table_view', child: false, forAdmin: true },
+        canActivate: [isAdminGuard],
+        loadComponent: () =>
+          import('./dashboard/pages/patients/reports/patient-report.component'),
       },
       {
         path: 'patients/nuevo',

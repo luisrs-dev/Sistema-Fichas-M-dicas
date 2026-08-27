@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable, catchError, tap, throwError } from 'rxjs';
+import { HttpResponse } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { MedicalRecord } from '../../interfaces/medicalRecord.interface';
 import { Patient } from '../../interfaces/patient.interface';
@@ -47,6 +48,26 @@ export class PatientService {
   /** Inicia un job de exportación asíncrona. Retorna { jobId } de inmediato. */
   startExportJob(startDate: string, endDate: string, centerName?: string): Observable<{ jobId: string }> {
     return this.http.post<{ jobId: string }>(`${this.backend}/generate-pdf/export/start`, { startDate, endDate, centerName });
+  }
+
+  downloadPatientReport(filters: {
+    programs?: string[];
+    active?: 'true' | 'false' | 'all';
+    sistratCenter?: string;
+    includeWithoutCode?: boolean;
+  }): Observable<HttpResponse<Blob>> {
+    let params = new HttpParams()
+      .set('active', filters.active || 'true')
+      .set('includeWithoutCode', String(filters.includeWithoutCode !== false));
+
+    if (filters.programs?.length) params = params.set('programs', filters.programs.join(','));
+    if (filters.sistratCenter) params = params.set('sistratCenter', filters.sistratCenter);
+
+    return this.http.get(`${this.backend}/patient/reports/referrals.xlsx`, {
+      params,
+      observe: 'response',
+      responseType: 'blob',
+    });
   }
 
   getPdfByPatientId(id: string, startDate?: string, endDate?: string): Observable<any> {

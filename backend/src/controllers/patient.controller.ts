@@ -23,6 +23,44 @@ import {
   activeSistratPatientsByCenter,
   resolveAlertFromSistrat
 } from "../services/patient.service";
+import { generatePatientReport } from "../services/patientReport.service";
+
+const downloadPatientReport = async (req: Request, res: Response) => {
+  try {
+    const programs = typeof req.query.programs === "string"
+      ? req.query.programs.split(",").map((value) => value.trim()).filter(Boolean)
+      : [];
+    const active = ["true", "false", "all"].includes(String(req.query.active))
+      ? String(req.query.active) as "true" | "false" | "all"
+      : "true";
+    const sistratCenter = typeof req.query.sistratCenter === "string"
+      ? req.query.sistratCenter.trim()
+      : "";
+    const includeWithoutCode = req.query.includeWithoutCode !== "false";
+
+    const { buffer, total } = await generatePatientReport({
+      programs,
+      active,
+      sistratCenter,
+      includeWithoutCode,
+    });
+    const date = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Santiago",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename="informe_pacientes_${date}.xlsx"`);
+    res.setHeader("Content-Length", buffer.length.toString());
+    res.setHeader("X-Total-Records", total.toString());
+    res.setHeader("Access-Control-Expose-Headers", "Content-Disposition, X-Total-Records");
+    res.send(buffer);
+  } catch (error) {
+    handleHttp(res, "ERROR_GENERATE_PATIENT_REPORT", error);
+  }
+};
 
 const getPatientsById = async ({ params }: Request, res: Response) => {
   try {
@@ -432,6 +470,7 @@ const resolveAlertSistrat = async (req: Request, res: Response) => {
 };
 
 export {
+  downloadPatientReport,
   postPatient,
   updatePatient,
   postDemand,

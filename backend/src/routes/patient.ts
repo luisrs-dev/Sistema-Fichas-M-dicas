@@ -23,9 +23,13 @@ import {
   resolveAlertSistrat,
   getSistratJobStatusController,
   getActiveSistratJobController,
-  cancelSistratJobController
+  cancelSistratJobController,
+  downloadPatientReport
 } from "../controllers/patient.controller";
+import { checkAdmin } from "../middleware/checkJwt";
 const router = Router();
+
+router.get("/reports/referrals.xlsx", checkAdmin, downloadPatientReport);
 
 router.get("/profile/:profile", getPatientsByProfile);
 
@@ -55,4 +59,3 @@ router.patch("/:id/active", updatePatientActiveStatus);
 router.put("/:id", updatePatient);
 
 export { router };
-

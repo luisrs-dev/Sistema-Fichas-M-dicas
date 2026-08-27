@@ -1,0 +1,71 @@
+<div class="report-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Administración</p>
+      <h1>Informes de pacientes</h1>
+      <p class="subtitle">
+        Genera un archivo Excel con código SISTRAT, nombre, RUN y centro de derivación.
+      </p>
+    </div>
+  </header>
+
+  <mat-card class="report-card">
+    <mat-card-header>
+      <mat-card-title>Informe de pacientes derivados</mat-card-title>
+      <mat-card-subtitle>Selecciona los filtros que se aplicarán al documento.</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      @if (loadingOptions()) {
+        <div class="loading-state">
+          <mat-spinner diameter="36"></mat-spinner>
+          <span>Cargando opciones...</span>
+        </div>
+      } @else {
+        <form [formGroup]="reportForm" class="report-form">
+          <mat-form-field appearance="outline">
+            <mat-label>Programas</mat-label>
+            <mat-select formControlName="programs" multiple>
+              @for (program of programs(); track program._id) {
+                <mat-option [value]="program._id">{{ program.name }}</mat-option>
+              }
+            </mat-select>
+            <mat-hint>Sin selección incluye todos los programas</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Estado del paciente</mat-label>
+            <mat-select formControlName="active">
+              <mat-option value="true">Activos</mat-option>
+              <mat-option value="false">Inactivos</mat-option>
+              <mat-option value="all">Todos</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Centro SISTRAT</mat-label>
+            <mat-select formControlName="sistratCenter">
+              <mat-option value="">Todos los centros</mat-option>
+              @for (center of centers(); track center._id || center.name) {
+                <mat-option [value]="center.name">{{ center.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-checkbox formControlName="includeWithoutCode">
+            Incluir pacientes sin código SISTRAT
+          </mat-checkbox>
+        </form>
+      }
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+      <button mat-flat-button color="primary"
+        (click)="generateReport()"
+        [disabled]="loadingOptions() || generating()">
+        <mat-icon>download</mat-icon>
+        {{ generating() ? 'Generando...' : 'Generar Excel' }}
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>
