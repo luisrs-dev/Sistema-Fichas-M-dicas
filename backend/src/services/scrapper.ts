@@ -332,14 +332,13 @@ class Scrapper {
   }
 
   private async createCacheDirectory(sessionHash: string): Promise<string> {
-    const baseDir = "./cache";
+    // Mantener el perfil de Chrome dentro de backend/cache sin depender del
+    // directorio desde el cual se haya iniciado el proceso de Node.
+    const baseDir = path.resolve(__dirname, "../../cache");
     const userDataDir = path.join(baseDir, sessionHash);
 
-    try {
-      await fs.access(userDataDir);
-    } catch (error) {
-      await fs.mkdir(userDataDir, { recursive: true });
-    }
+    await fs.mkdir(baseDir, { recursive: true });
+    await fs.mkdir(userDataDir, { recursive: true });
 
     console.log({ userDataDir });
 

@@ -679,10 +679,18 @@ class Sistrat {
       await page.waitForSelector(".tabla_mensual", { timeout: 5000 });
 
       await page.evaluate((medicalRecordsGrouped) => {
-        // Buscar la tabla donde están los registros mensuales
-        //const table = document.querySelector(".tabla_mensual") as HTMLTableElement | null;
-        // En la página hay varias tablas con esa clase, tomamos la segunda (índice 2) que corresponde a "Ejecuciones en Centro"
-        const table = document.getElementsByClassName("tabla_mensual")[2] as HTMLTableElement | null;
+        const monthlyTables = Array.from(
+          document.getElementsByClassName("tabla_mensual")
+        ) as HTMLTableElement[];
+        const visibleMonthlyTables = monthlyTables.filter(
+          (monthlyTable) => !monthlyTable.classList.contains("ocultar-pr")
+        );
+
+        // Con cuatro tablas visibles se conserva la tercera (Ejecución en Centro).
+        // Cuando el centro solo presenta dos, los registros se ingresan en la primera visible.
+        const table = visibleMonthlyTables.length === 2
+          ? visibleMonthlyTables[0]
+          : visibleMonthlyTables[2];
 
         if (!table) {
           console.error("No se encontró la tabla mensual");
@@ -698,30 +706,29 @@ class Sistrat {
           input.dispatchEvent(new Event("change", { bubbles: true }));
         });
 
+        const normalizeServiceName = (serviceName?: string) => (serviceName || "")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .trim()
+          .replace(/\s+/g, " ")
+          .toLowerCase();
+        const excludedServices = new Set(["informacion", "no se presenta"]);
+        const serviceAliases: Record<string, string> = {
+          "psiocodiagnostico": "psicodiagnostico",
+        };
+
         // Iterar sobre los registros que mandas desde Node
         medicalRecordsGrouped.forEach((recordFiclin: any) => {
+          const serviceFiclin = normalizeServiceName(recordFiclin.service);
+          if (excludedServices.has(serviceFiclin)) return;
+          const normalizedServiceFiclin = serviceAliases[serviceFiclin] || serviceFiclin;
+
           // Buscar la fila cuyo servicio coincida con el nombre (columna 0)
           for (let i = 1; i < table.rows.length; i++) {
             const row = table.rows[i];
-            const serviceNameOnTableSistrat = row.cells[0]?.innerText.trim().toLowerCase();
-
-            const mappedServicesSISTRAT = {
-              "consulta de salud mental": "consulta de salud mental",
-              "intervenci?n psicosocial de grupo": "intervención psicosocial de grupo",
-              "visita domiciliaria": "visita domiciliaria",
-              "consulta m?dica": "consulta médica",
-              "consulta psicol?gica": "consulta psicológica",
-              "consulta psiqui?trica": "consulta psiquiátrica",
-              "psicoterapia individual": "psicoterapia individual",
-              "psicoterapia grupal": "psicoterapia grupal",
-              "psiocodiagn?stico": "psicodiagnóstico",
-              "consultor?a de salud mental": "consulta de salud mental",
-              "intervenci?n familiar": "intervención familiar",
-            };
-
-            const normalizedServiceOnSistrat = mappedServicesSISTRAT[serviceNameOnTableSistrat];
-
-            const normalizedServiceFiclin = recordFiclin.service.trim().toLowerCase();
+            const serviceNameOnTableSistrat = normalizeServiceName(row.cells[0]?.innerText);
+            const normalizedServiceOnSistrat = serviceAliases[serviceNameOnTableSistrat]
+              || serviceNameOnTableSistrat;
 
             if (normalizedServiceOnSistrat === normalizedServiceFiclin) {
 
@@ -863,41 +870,48 @@ class Sistrat {
       console.log("IMPORTANTE medicalRecordsGrouped", medicalRecordsGrouped);
 
       await page.evaluate((medicalRecordsGrouped) => {
-        // Buscar la tabla donde están los registros mensuales
-        //const table = document.querySelector(".tabla_mensual") as HTMLTableElement | null;
-        // En la página hay varias tablas con esa clase, tomamos la segunda (índice 2) que corresponde a "Ejecuciones en Centro"
-        const table = document.getElementsByClassName("tabla_mensual")[2] as HTMLTableElement | null;
+        const monthlyTables = Array.from(
+          document.getElementsByClassName("tabla_mensual")
+        ) as HTMLTableElement[];
+        const visibleMonthlyTables = monthlyTables.filter(
+          (monthlyTable) => !monthlyTable.classList.contains("ocultar-pr")
+        );
+
+        // Con cuatro tablas visibles se conserva la tercera (Ejecución en Centro).
+        // Cuando el centro solo presenta dos, los registros se ingresan en la primera visible.
+        const table = visibleMonthlyTables.length === 2
+          ? visibleMonthlyTables[0]
+          : visibleMonthlyTables[2];
 
         if (!table) {
           console.error("No se encontró la tabla mensual");
           return;
         }
 
+        const normalizeServiceName = (serviceName?: string) => (serviceName || "")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .trim()
+          .replace(/\s+/g, " ")
+          .toLowerCase();
+        const excludedServices = new Set(["informacion", "no se presenta"]);
+        const serviceAliases: Record<string, string> = {
+          "psiocodiagnostico": "psicodiagnostico",
+        };
+
         // Iterar sobre los registros que mandas desde Node
         medicalRecordsGrouped.forEach((recordFiclin: any) => {
+          const serviceFiclin = normalizeServiceName(recordFiclin.service);
+          if (excludedServices.has(serviceFiclin)) return;
+          const normalizedServiceFiclin = serviceAliases[serviceFiclin] || serviceFiclin;
+
           // Buscar la fila cuyo servicio coincida con el nombre (columna 0)
           for (let i = 1; i < table.rows.length; i++) {
             const row = table.rows[i];
-            const serviceNameOnTableSistrat = row.cells[0]?.innerText.trim().toLowerCase();
-
-            const mappedServicesSISTRAT = {
-              "consulta de salud mental": "consulta de salud mental",
-              "intervenci?n psicosocial de grupo": "intervención psicosocial de grupo",
-              "visita domiciliaria": "visita domiciliaria",
-              "consulta m?dica": "consulta médica",
-              "consulta psicol?gica": "consulta psicológica",
-              "consulta psiqui?trica": "consulta psiquiátrica",
-              "psicoterapia individual": "psicoterapia individual",
-              "psicoterapia grupal": "psicoterapia grupal",
-              "psiocodiagn?stico": "psicodiagnóstico",
-              "consultor?a de salud mental": "consulta de salud mental",
-              "intervenci?n familiar": "intervención familiar",
-            };
-
-            const normalizedServiceOnSistrat = mappedServicesSISTRAT[serviceNameOnTableSistrat];
+            const serviceNameOnTableSistrat = normalizeServiceName(row.cells[0]?.innerText);
+            const normalizedServiceOnSistrat = serviceAliases[serviceNameOnTableSistrat]
+              || serviceNameOnTableSistrat;
             console.log("normalizedServiceOnSistrat", normalizedServiceOnSistrat);
-
-            const normalizedServiceFiclin = recordFiclin.service.trim().toLowerCase();
 
             if (normalizedServiceOnSistrat === normalizedServiceFiclin) {
               console.log("IGUALES");
@@ -2132,8 +2146,27 @@ class Sistrat {
 
           // Rellenar tabla
           await page.evaluate((medicalRecordsGrouped) => {
-            const table = document.getElementsByClassName("tabla_mensual")[2] as HTMLTableElement | null;
+            const monthlyTables = Array.from(
+              document.getElementsByClassName("tabla_mensual")
+            ) as HTMLTableElement[];
+            const visibleMonthlyTables = monthlyTables.filter(
+              (monthlyTable) => !monthlyTable.classList.contains("ocultar-pr")
+            );
+            const table = visibleMonthlyTables.length === 2
+              ? visibleMonthlyTables[0]
+              : visibleMonthlyTables[2];
             if (!table) return;
+
+            const normalizeServiceName = (serviceName?: string) => (serviceName || "")
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+              .trim()
+              .replace(/\s+/g, " ")
+              .toLowerCase();
+            const excludedServices = new Set(["informacion", "no se presenta"]);
+            const serviceAliases: Record<string, string> = {
+              "psiocodiagnostico": "psicodiagnostico",
+            };
 
             table.querySelectorAll("input").forEach((inputEl) => {
               const input = inputEl as HTMLInputElement;
@@ -2143,24 +2176,17 @@ class Sistrat {
             });
 
             medicalRecordsGrouped.forEach((recordFiclin: any) => {
+              const serviceFiclin = normalizeServiceName(recordFiclin.service);
+              if (excludedServices.has(serviceFiclin)) return;
+              const normalizedServiceFiclin = serviceAliases[serviceFiclin] || serviceFiclin;
+
               for (let i = 1; i < table.rows.length; i++) {
                 const row = table.rows[i];
-                const serviceSistrat = row.cells[0]?.innerText.trim().toLowerCase();
-                const mappedRules: any = {
-                  "consulta de salud mental": "consulta de salud mental",
-                  "intervenci?n psicosocial de grupo": "intervención psicosocial de grupo",
-                  "visita domiciliaria": "visita domiciliaria",
-                  "consulta m?dica": "consulta médica",
-                  "consulta psicol?gica": "consulta psicológica",
-                  "consulta psiqui?trica": "consulta psiquiátrica",
-                  "psicoterapia individual": "psicoterapia individual",
-                  "psicoterapia grupal": "psicoterapia grupal",
-                  "psiocodiagn?stico": "psicodiagnóstico",
-                  "consultor?a de salud mental": "consulta de salud mental",
-                  "intervenci?n familiar": "intervención familiar",
-                };
+                const serviceSistrat = normalizeServiceName(row.cells[0]?.innerText);
+                const normalizedServiceOnSistrat = serviceAliases[serviceSistrat]
+                  || serviceSistrat;
 
-                if (mappedRules[serviceSistrat] === recordFiclin.service.trim().toLowerCase()) {
+                if (normalizedServiceOnSistrat === normalizedServiceFiclin) {
                   recordFiclin.days.forEach((val: number, dayIndex: number) => {
                     if (val > 0) {
                       const inpt = row.cells[dayIndex + 1]?.querySelector("input") as HTMLInputElement;
