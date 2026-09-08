@@ -24,4 +24,4 @@ npx tsc
 echo "🔄 Recargando app-ficlin en PM2..."
 pm2 startOrReload ecosystem.config.js --env production
 
-echo "✅ Despliegue de app-ficlin completado con éxito."
+echo "✅ Despliegue de app-ficlin completado con éxito."a

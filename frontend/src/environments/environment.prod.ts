@@ -1,5 +1,5 @@
 export const environment = {
-  baseUrl: 'http://ficlin.cl/api',
+  baseUrl: '/api',
   production: true,
   userDefault: {
     email: "",
