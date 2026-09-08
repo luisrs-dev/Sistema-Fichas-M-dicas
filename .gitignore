@@ -62,4 +62,6 @@ Thumbs.db
 cache
 ecosystem.config.js
 .env
+.env.*
+!.env.example
 backend/uploads/*

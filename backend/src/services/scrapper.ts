@@ -40,16 +40,12 @@ class Scrapper {
       console.error("[Browser::pageerror]", error);
     });
 
-    // Autenticar proxy solo en producción (donde se usa iProyal)
-    // Se agrega _session dinámica para forzar rotación de IP residencial en cada sesión
+    // Autenticar DataImpulse con el usuario y la contraseña configurados.
     if (this.isProduction) {
       const { proxyUser, baseProxyPass } = this.getProxyCredentials();
-      const sessionId = `sess${Date.now()}`;
-      const proxyPass = `${baseProxyPass}_session-${sessionId}_lifetime-10m`;
-      console.log(`[Scrapper] Proxy session ID: ${sessionId}`);
       await page.authenticate({
         username: proxyUser,
-        password: proxyPass,
+        password: baseProxyPass,
       });
     }
 
@@ -118,7 +114,7 @@ class Scrapper {
     if (this.isProduction) {
       console.log('[LaunchBrowser] Entorno Producción detectado (VPS)');
 
-      const proxyHost = process.env.PROXY_HOST || "geo.iproyal.com:12321";
+      const proxyHost = process.env.PROXY_HOST || "gw.dataimpulse.com:823";
 
       this.browser = await puppeteer.launch({
         headless: true,
@@ -198,13 +194,10 @@ class Scrapper {
           console.warn(`[Scrapper] Proxy falló en navegación (intento ${attempt}/${retries}): ${msg}. Reintentando en ${attempt * 5}s...`);
           await this.waitForSeconds(attempt * 5); // Backoff incremental: 5s, 10s
 
-          // Rotar sesión de proxy para obtener nueva IP
+          // Reautenticar sin modificar la contraseña de DataImpulse.
           if (this.isProduction) {
             const { proxyUser, baseProxyPass } = this.getProxyCredentials();
-            const newSessionId = `retry${Date.now()}`;
-            const proxyPass = `${baseProxyPass}_session-${newSessionId}_lifetime-10m`;
-            console.log(`[Scrapper] Rotando proxy con nueva sesión: ${newSessionId}`);
-            await page.authenticate({ username: proxyUser, password: proxyPass });
+            await page.authenticate({ username: proxyUser, password: baseProxyPass });
           }
           continue;
         }
