@@ -1,3 +1,5 @@
+import { isCareStatus } from "../utils/careStatus";
+import { startDemandJob, getDemandJob } from "../services/demandJob.service";
 import { Request, Response } from "express";
 import { handleHttp } from "../utils/error.handle";
 import {
@@ -5,7 +7,6 @@ import {
   inerPatient,
   inerDemand,
   updatePatientSistrat,
-  recordDemandToSistrat,
   PatientsByProfile,
   findPatient,
   admisionFormmByPatient,
@@ -77,14 +78,17 @@ const getPatientsById = async ({ params }: Request, res: Response) => {
 
 const getPatients = async (req: Request, res: Response) => {
   try {
-    const { programs, active } = req.query;
+    const { programs, active, careStatus } = req.query;
+    if (careStatus !== undefined && !isCareStatus(careStatus)) {
+      return res.status(400).json({ message: "Estado de atención inválido" });
+    }
 
     // Asegúrate de que `programs` sea un array, incluso si se pasa un solo valor
     const programsArray = Array.isArray(programs) ? programs : [programs];
     const validProgramsArray = programsArray.filter((p): p is string => typeof p === "string");
 
     const activeFilter = typeof active === "string" ? active : undefined;
-    const responseItems = await allPatients(validProgramsArray, activeFilter);
+    const responseItems = await allPatients(validProgramsArray, activeFilter, isCareStatus(careStatus) ? careStatus : undefined);
     res.send(responseItems);
   } catch (error) {
     handleHttp(res, "ERROR_GET_ITEMS", error);
@@ -153,25 +157,11 @@ const postDemand = async ({ body }: Request, res: Response) => {
 };
 
 const postDemandToSistrat = async ({ body }: Request, response: Response) => {
-  const { patientId } = body;
-
-  if (!patientId) {
-    return response.status(400).json({ error: "patientId es requerido." });
-  }
-  
-
   try {
-    const status = await recordDemandToSistrat(patientId);
-    if(status.success){
-      response.status(200).json({ message: "Demanda registrada correctamente." }); // Respuesta exitosa
-    }
-    else {
-      return response.status(500).json({ message: "No se pudo registrar la demanda en Sistrat." });
-    }
-
+    const job = await startDemandJob(body.patientId, body.alertsOnly === true, body.verifyOnly === true);
+    response.status(202).json({ jobId: job._id, job, message: 'Registro iniciado' });
   } catch (error: any) {
-    console.error("Error en postDemandToSistrat:", error);
-    response.status(500).json({ error: error.message || "Error interno del servidor." }); // Respuesta de error
+    response.status(400).json({ error: error.message || 'No se pudo iniciar el registro' });
   }
 };
 
@@ -186,7 +176,7 @@ const updateAdmissionForm = async ({ body }: Request, res: Response) => {
   }
   try {
     const responseAdmissionForm = await updateAF(patientId, dataAdmissionForm);
-    res.status(200).json({ success: true, message: "Ficha de ingreso actualizada con éxito" });
+    res.status(200).json({ success: true, patient: responseAdmissionForm, message: "Ficha de ingreso actualizada con éxito" });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -331,7 +321,8 @@ const getSistratJobStatusController = async (req: Request, res: Response) => {
     if (!jobId) {
       return res.status(400).json({ success: false, message: "jobId es requerido" });
     }
-    const job = await getSistratJobById(jobId);
+    let job = await getSistratJobById(jobId);
+    if (job?.type === "demanda") { await getDemandJob(String(job.patientId)); job = await getSistratJobById(jobId); }
     if (!job) {
       return res.status(404).json({ success: false, message: "Tarea no encontrada" });
     }
@@ -347,7 +338,7 @@ const getActiveSistratJobController = async (req: Request, res: Response) => {
     if (!patientId || !type) {
       return res.status(400).json({ success: false, message: "patientId y type son requeridos" });
     }
-    const job = await findActiveSistratJob(patientId, type as SistratJobType);
+    const job = type === 'demanda' ? await getDemandJob(patientId) : await findActiveSistratJob(patientId, type as SistratJobType);
     res.status(200).json({ success: true, job });
   } catch (error: any) {
     handleHttp(res, "ERROR_GET_ACTIVE_JOB", error);
@@ -360,6 +351,8 @@ const cancelSistratJobController = async (req: Request, res: Response) => {
     if (!jobId) {
       return res.status(400).json({ success: false, message: "jobId es requerido" });
     }
+    const existing = await getSistratJobById(jobId);
+    if (existing?.type === 'demanda') return res.status(409).json({ message: 'El registro de demanda no puede cancelarse después de iniciado; espere su resultado.' });
     const job = await cancelSistratJob(jobId);
     res.status(200).json({ success: true, message: "Proceso cancelado exitosamente", job });
   } catch (error: any) {
@@ -448,8 +441,8 @@ const getActiveSistratPatients = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: "El parámetro center es requerido" });
     }
 
-    const data = await activeSistratPatientsByCenter(center, forceRefresh);
-    res.status(200).json({ success: true, message: "Pacientes recuperados con éxito", data });
+    const result = await activeSistratPatientsByCenter(center, forceRefresh);
+    res.status(200).json({ success: true, message: "Pacientes recuperados con éxito", ...result });
   } catch (error) {
     handleHttp(res, "ERROR_GET_SISTRAT_PATIENTS", error);
   }

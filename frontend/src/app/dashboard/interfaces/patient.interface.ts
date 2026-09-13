@@ -1,8 +1,11 @@
+export type CareStatus = 'waiting' | 'active' | 'discharged';
+
 export interface Patient {
   _id?: string;
   createdAt?: string;
   updatedAt?: string;
   admissionDate: string;
+  careStatus?: CareStatus | null;
   program: {
     _id?: string,
     name: string

@@ -3,6 +3,10 @@ import { SistratJob } from "../interfaces/sistratJob.interface";
 
 const SistratJobSchema = new Schema<SistratJob>(
   {
+    demandAttemptKey: { type: String, unique: true, sparse: true },
+    activeDemand: { type: Boolean },
+    leaseUntil: { type: Date },
+    history: { type: [{ step: String, progress: Number, at: Date }], default: [] },
     patientId: {
       type: Schema.Types.ObjectId,
       ref: "patient",
@@ -52,6 +56,11 @@ const SistratJobSchema = new Schema<SistratJob>(
 );
 
 SistratJobSchema.index({ patientId: 1, type: 1, status: 1 });
+SistratJobSchema.index({ patientId: 1, type: 1, createdAt: -1, _id: -1 });
+
+SistratJobSchema.index({ patientId: 1, type: 1, activeDemand: 1 }, {
+  unique: true, partialFilterExpression: { activeDemand: true }, name: "unique_active_demand"
+});
 
 const SistratJobModel = model<SistratJob>("sistrat_jobs", SistratJobSchema);
 

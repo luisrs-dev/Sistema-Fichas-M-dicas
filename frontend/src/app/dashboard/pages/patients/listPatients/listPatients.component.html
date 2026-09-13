@@ -1,14 +1,14 @@
 <div class="container p-4">
-  <h1>Pacientes</h1>
+  <h1>{{ listTitle }}</h1>
   <div class="buttons mb-4">
     <div>
       @if(canCreateUser || isAdmin){
-      <button [routerLink]="['nuevo']" mat-flat-button color="primary"
+      <button [routerLink]="['/dashboard/patients/nuevo']" mat-flat-button color="primary"
         class="border-round-xl ml-1 mr-2 my-auto mat-elevation-z2 text-white">
         <mat-icon>person</mat-icon>
         Nuevo Paciente
       </button>
-      <button [routerLink]="['intervencion-grupal']" mat-flat-button color="primary"
+      <button [routerLink]="['/dashboard/patients/intervencion-grupal']" mat-flat-button color="primary"
         class="border-round-xl ml-1 mr-2 my-auto mat-elevation-z2 text-white">
         <mat-icon>person</mat-icon>
         Intervención Grupal
@@ -21,7 +21,7 @@
       }
     </div>
     <div>
-      <button mat-icon-button color="primary" matTooltip="Actualizar transacciones" matTooltipPosition="above"
+      <button mat-icon-button color="primary" matTooltip="Actualizar pacientes" (click)="reloadPatients()" matTooltipPosition="above"
         class="mr-2 mat-elevation-z2">
         <mat-icon>refresh</mat-icon>
       </button>
@@ -56,15 +56,6 @@
 
   <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z1">
 
-    @if(authService.isAdmin()){
-    <ng-container matColumnDef="active">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Activo</th>
-      <td class="text-center" mat-cell *matCellDef="let element">
-        <mat-slide-toggle [checked]="element.active !== false" (change)="onToggleActive(element, $event.checked)"
-          [disabled]="togglingActive[element._id || '']"></mat-slide-toggle>
-      </td>
-    </ng-container>
-    }
     <ng-container matColumnDef="codigoSistrat">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Codigo Usuario</th>
       <td class="text-center" mat-cell *matCellDef="let element">
@@ -191,7 +182,7 @@
             <mat-icon class="pulse-icon">block</mat-icon>
           </button>
         } @else {
-          <button mat-icon-button matTooltip="Fichas Clínicas" [routerLink]="['/dashboard/patient', element._id]"
+          <button mat-icon-button matTooltip="Fichas Clínicas" [routerLink]="['/dashboard/patient', element._id]" [queryParams]="{ list: careStatus }"
             color="primary" style="font-size: 12px !important">
             <mat-icon>medical_information</mat-icon>
           </button>
@@ -228,7 +219,9 @@
 
     <!-- Row shown when there is no matching data. -->
     <tr class="mat-row" *matNoDataRow>
-      <td class="mat-cell" colspan="4">No data matching the filter "{{ input.value }}"</td>
+      <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+        {{ loading ? 'Cargando pacientes…' : loadError ? 'No se pudo cargar la lista. Vuelve a intentarlo.' : 'No hay pacientes que coincidan con esta lista y sus filtros.' }}
+      </td>
     </tr>
   </table>
   <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]" pageSize="10" aria-label="Select page of users"></mat-paginator>

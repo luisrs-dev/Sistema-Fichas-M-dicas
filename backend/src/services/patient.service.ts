@@ -1,4 +1,6 @@
 import mongoose, { Types } from "mongoose";
+import moment from "moment";
+import { resolveCareStatus, hasIntegratedDemand, isReceptionProgram, CareStatus } from "../utils/careStatus";
 import { Patient } from "../interfaces/patient.interface";
 import MedicalRecordModel from "../models/medicalRecord.model";
 import PatientModel from "../models/patient.model";
@@ -17,7 +19,7 @@ import SocialDiagnosisFormModel from "../models/socialDiagnosisForm.model";
 
 
 const inerPatient = async (Patient: Patient) => {
-  const responseInsert = await PatientModel.create({ ...Patient, registeredOnFiclin: true });
+  const responseInsert = await PatientModel.create({ ...Patient, historicalSync: undefined, careStatus: "waiting", registeredOnFiclin: true });
   console.log("Paciente registrado");
   console.log({ responseInsert });
   return responseInsert;
@@ -31,16 +33,18 @@ const saveAdmissionForm = async (patientId: string, admissionFormData: any) => {
       throw new Error("Usuario no encontrado");
     }
 
-    const admissionForm = { patientId, ...admissionFormData };
-    const responseInsert = await AdmissionFormModel.create(admissionForm);
+    const { _id, patientId: ignoredPatientId, ...fields } = admissionFormData;
+    const responseInsert = await AdmissionFormModel.findOneAndUpdate(
+      { patientId }, { $set: fields }, { upsert: true, new: true, runValidators: true }
+    );
     if (!responseInsert) {
       throw new Error("No fue posible registrar ficha de ingreso");
     }
 
-    patient.registeredAdmissionForm = true;
-    patient.save();
+    await PatientModel.updateOne({ _id: patientId }, { $set: { registeredAdmissionForm: true } });
+    await PatientModel.updateOne({ _id: patientId, careStatus: { $ne: "discharged" } }, { $set: { careStatus: "active" } });
 
-    return patient;
+    return PatientModel.findById(patientId);
   } catch (error) {
     throw new Error(`error admissionForm registrado: ${error}`);
   }
@@ -49,10 +53,13 @@ const saveAdmissionForm = async (patientId: string, admissionFormData: any) => {
 
 
 const update = async (id: string, patient: Patient) => {
+  const editablePatient = Object.fromEntries(Object.entries(patient).filter(
+    ([key]) => key !== 'careStatus' && key !== 'historicalSync' && !key.startsWith('$') && !key.includes('.')
+  ));
   const updatedPatient = await PatientModel.findByIdAndUpdate(
     id,
     {
-      ...patient,
+      ...editablePatient,
       registeredOnFiclin: true,
     },
     { new: true } // Devuelve el documento actualizado
@@ -145,17 +152,18 @@ const updateAF = async (patientId: string, admissionFormData: any) => {
     const admissionForm = await AdmissionFormModel.findOne({ patientId });
     console.log({ admissionForm });
 
-    const updatedAdmissionForm = await AdmissionFormModel.updateOne({ _id: admissionForm!._id }, admissionFormData);
+    if (!admissionForm) throw new Error("Formulario de admisión no encontrado");
+    const { _id, patientId: ignoredPatientId, ...fields } = admissionFormData;
+    const updatedAdmissionForm = await AdmissionFormModel.updateOne({ _id: admissionForm._id }, { $set: fields });
 
-    if (!updatedAdmissionForm) {
+    if (!updatedAdmissionForm.matchedCount) {
       throw new Error("Formulario de admisión no encontrado");
     }
 
-    patient.registeredAdmissionForm = true;
-    patient.save();
+    await PatientModel.updateOne({ _id: patientId }, { $set: { registeredAdmissionForm: true } });
+    await PatientModel.updateOne({ _id: patientId, careStatus: { $ne: "discharged" } }, { $set: { careStatus: "active" } });
 
-    // Retorna el formulario actualizado
-    return patient;
+    return PatientModel.findById(patientId);
   } catch (error) {
     throw new Error(`Error al actualizar ficha de ingreso: ${error}`);
   }
@@ -188,11 +196,17 @@ const inerDemand = async (patientId: string, dataSistrat: Demand) => {
       throw new Error(`Error al registrar demanda: usuario no existe`);
     }
 
-    const responseInsert = await DemandModel.create({ ...dataSistrat, patientId });
+    const { _id, patientId: ignoredPatientId, ...fields } = dataSistrat as any;
+    await DemandModel.findOneAndUpdate({ patientId }, { $set: fields }, { upsert: true, new: true, runValidators: true });
     patient.registeredDemand = true;
     await patient.save();
+    const hasAdmission = await AdmissionFormModel.exists({ patientId });
+    await PatientModel.updateOne(
+      { _id: patientId, careStatus: { $nin: ["active", "discharged"] } },
+      { $set: { careStatus: hasAdmission ? "active" : "waiting" } }
+    );
 
-    return patient;
+    return PatientModel.findById(patientId);
   } catch (error) {
     throw new Error(`Error al registrar demanda: ${error}`);
   }
@@ -203,7 +217,7 @@ const updatePatientSistrat = async (patientId: string, demanda: Demand) => {
   try {
     const responseUpdate = await PatientModel.findByIdAndUpdate(
       patientId,
-      { $set: demanda },
+      { $set: Object.fromEntries(Object.entries(demanda).filter(([key]) => key !== "careStatus" && key !== "historicalSync" && !key.startsWith("$") && !key.includes("."))) },
       { new: true, runValidators: true }
     );
     return responseUpdate;
@@ -274,10 +288,8 @@ const syncCodigoSistrat = async (patientId: string) => {
   }
 };
 
-const activePatientsRefreshes = new Map<string, Promise<any[]>>();
+const activePatientsRefreshes = new Map<string, Promise<{ data: any[]; source: 'sistrat'; lastUpdated: Date }>>();
 const alertRefreshes = new Map<string, Promise<Record<string, any>>>();
-const lastForcedRefresh = new Map<string, number>();
-const FORCE_REFRESH_COOLDOWN_MS = Number(process.env.SISTRAT_FORCE_REFRESH_COOLDOWN_MS || 300_000);
 
 const fetchActiveSistratPatientsByCenter = async (center: string, forceRefresh: boolean = false) => {
   console.log(`activeSistratPatientsByCenter ${center} | forceRefresh: ${forceRefresh}`);
@@ -349,46 +361,29 @@ const fetchActiveSistratPatientsByCenter = async (center: string, forceRefresh: 
 };
 
 const activeSistratPatientsByCenter = async (center: string, forceRefresh: boolean = false) => {
-  const key = center.trim().toLowerCase();
+  const result = await cachedActiveSistratPatientsByCenter(center, forceRefresh);
+  const historical = await PatientModel.find({ sistratCenter: center, careStatus: 'discharged' }).select('codigoSistrat').lean();
+  const codes = new Set(historical.map(p => (p.codigoSistrat || '').trim().toUpperCase()));
+  return { ...result, data: result.data.filter(p => !codes.has((p.codigoSistrat || '').trim().toUpperCase())) };
+};
+
+const cachedActiveSistratPatientsByCenter = async (center: string, forceRefresh: boolean = false) => {
+  const key = center;
   const running = activePatientsRefreshes.get(key);
-  if (running) {
-    console.log(`[activeSistratPatientsByCenter] Reutilizando actualización en curso para ${center}`);
-    const staleCache = await SistratCacheModel.findOne({ center }).lean();
-    return staleCache?.patients || running;
-  }
+  if (running) return running;
 
-  let effectiveForceRefresh = String(forceRefresh) === "true";
-  if (effectiveForceRefresh) {
-    const lastRefresh = lastForcedRefresh.get(key) || 0;
-    if (Date.now() - lastRefresh < FORCE_REFRESH_COOLDOWN_MS) {
-      console.log(`[activeSistratPatientsByCenter] forceRefresh omitido por cooldown para ${center}`);
-      effectiveForceRefresh = false;
-    } else {
-      lastForcedRefresh.set(key, Date.now());
-    }
-  }
-
-  // Si hay datos vencidos, responder inmediatamente y renovarlos en segundo
-  // plano. Una caída del proxy no deja al usuario sin el último resultado útil.
-  if (!effectiveForceRefresh) {
-    const cachedData = await SistratCacheModel.findOne({ center }).lean();
+  if (!forceRefresh) {
+    const cached = await SistratCacheModel.findOne({ center }).lean();
     const ttlHours = Math.max(1, Number(process.env.SISTRAT_CACHE_TTL_HOURS) || 6);
-    if (cachedData) {
-      const ageHours = (Date.now() - cachedData.lastUpdated.getTime()) / 36e5;
-      if (ageHours >= ttlHours) {
-        const backgroundRefresh = fetchActiveSistratPatientsByCenter(center, true)
-          .catch((error) => {
-            console.error(`[activeSistratPatientsByCenter] Renovación en segundo plano falló para ${center}:`, error);
-            return cachedData.patients;
-          })
-          .finally(() => activePatientsRefreshes.delete(key));
-        activePatientsRefreshes.set(key, backgroundRefresh);
-        return cachedData.patients;
-      }
+    if (cached && Date.now() - cached.lastUpdated.getTime() < ttlHours * 3600000) {
+      return { data: cached.patients, source: 'cache' as const, lastUpdated: cached.lastUpdated };
     }
   }
-
-  const refresh = fetchActiveSistratPatientsByCenter(center, effectiveForceRefresh)
+  // Una consulta concurrente pudo empezar mientras se leía la caché.
+  const pending = activePatientsRefreshes.get(key);
+  if (pending) return pending;
+  const refresh = fetchActiveSistratPatientsByCenter(center, true)
+    .then(data => ({ data, source: 'sistrat' as const, lastUpdated: new Date() }))
     .finally(() => activePatientsRefreshes.delete(key));
   activePatientsRefreshes.set(key, refresh);
   return refresh;
@@ -401,7 +396,7 @@ const getAllPatients = async () => {
 
 
 
-const allPatients = async (programs: string[], active?: string) => {
+const allPatients = async (programs: string[], active?: string, careStatus?: CareStatus) => {
   const programArray = programs
     .flatMap((program) => (program ? program.split(",") : []))
     .filter(Boolean);
@@ -426,11 +421,13 @@ const allPatients = async (programs: string[], active?: string) => {
   const patientIds = patients.map(p => p._id);
 
   // Buscar qué pacientes tienen formularios de alertas registrados en FicLin
-  const [topForms, socialForms, evaluationForms, socialDiagnosisForms] = await Promise.all([
+  const [topForms, socialForms, evaluationForms, socialDiagnosisForms, admissionForms, demands] = await Promise.all([
     TopFormModel.find({ patientId: { $in: patientIds } }).select('patientId').lean(),
     SocialFormModel.find({ patientId: { $in: patientIds } }).select('patientId').lean(),
     EvaluationFormModel.find({ patientId: { $in: patientIds } }).select('patientId').lean(),
     SocialDiagnosisFormModel.find({ patientId: { $in: patientIds } }).select('patientId').lean(),
+    AdmissionFormModel.find({ patientId: { $in: patientIds } }).select('patientId').lean(),
+    DemandModel.find({ patientId: { $in: patientIds } }).select('patientId').lean(),
   ]);
 
   // Convertir a sets para búsqueda rápida O(1)
@@ -439,15 +436,18 @@ const allPatients = async (programs: string[], active?: string) => {
   const evalSet = new Set(evaluationForms.map(f => f.patientId.toString()));
   const diagSet = new Set(socialDiagnosisForms.map(f => f.patientId.toString()));
 
+  const admissionSet = new Set(admissionForms.map(f => f.patientId.toString()));
+  const demandSet = new Set(demands.map(f => f.patientId.toString()));
   const responsePatients = patients.map(patient => ({
     ...patient,
+    careStatus: resolveCareStatus(patient.careStatus, admissionSet.has(patient._id.toString()), demandSet.has(patient._id.toString()) || hasIntegratedDemand(patient) || isReceptionProgram(patient.program)),
     hasTopForm: topSet.has(patient._id.toString()),
     hasSocialForm: socialSet.has(patient._id.toString()),
     hasEvaluationForm: evalSet.has(patient._id.toString()),
     hasSocialDiagnosisForm: diagSet.has(patient._id.toString()),
   }));
 
-  return responsePatients;
+  return careStatus ? responsePatients.filter(patient => patient.careStatus === careStatus) : responsePatients;
 };
 
 const updateActiveStatus = async (id: string, active: boolean) => {
@@ -471,6 +471,15 @@ const PatientsByProfile = async (profile: string) => {
 
 const findPatient = async (id: string) => {
   const responsePatient = await PatientModel.findOne({ _id: id }).populate("program");
+  const admissionForm = responsePatient
+    ? await AdmissionFormModel.findOne({ patientId: id }).select("txtfecha_ingreso_tratamiento")
+    : null;
+  // La fecha pertenece a la ficha de ingreso, no al documento del paciente.
+  const admissionDate = moment(
+    admissionForm?.txtfecha_ingreso_tratamiento?.trim() || "",
+    ["DD/MM/YYYY", "D/M/YYYY", "DD-MM-YYYY", moment.ISO_8601],
+    true
+  );
   const medicalRecords = await MedicalRecordModel.find({
     patient: new Types.ObjectId(id),
   }).populate([
@@ -491,7 +500,13 @@ const findPatient = async (id: string) => {
       },
     },
   ]);
-  return { patient: responsePatient, medicalRecords };
+  return {
+    patient: responsePatient ? {
+      ...responsePatient.toObject(),
+      admissionDate: admissionDate.isValid() ? admissionDate.format("DD/MM/YYYY") : "",
+    } : null,
+    medicalRecords,
+  };
 };
 
 const updateAlertsFromSistrat = async (patientId: string) => {

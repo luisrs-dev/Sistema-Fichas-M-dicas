@@ -1,3 +1,5 @@
+import { ViewChild } from '@angular/core';
+import { DemandProgressComponent } from '../components/demand-progress/demand-progress.component';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
 import { MaterialModule } from '../../../../angular-material/material.module';
@@ -14,13 +16,22 @@ import { MONDAY_FIRST_DATE_PROVIDERS } from '../../../../shared/date/monday-firs
 @Component({
   selector: 'app-demand',
   standalone: true,
-  imports: [CommonModule, MaterialModule, ReactiveFormsModule, FormsModule],
+  imports: [DemandProgressComponent, CommonModule, MaterialModule, ReactiveFormsModule, FormsModule],
   providers: [...MONDAY_FIRST_DATE_PROVIDERS],
 
   templateUrl: './demand.component.html',
   //changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class DemandComponent {
+  @ViewChild(DemandProgressComponent) demandProgress?: DemandProgressComponent;
+  public demandSyncBusy = false;
+  refreshAfterDemand() {
+    if (!this.patient?._id) return;
+    this.patientService.getPatientById(this.patient._id).subscribe(response => {
+      this.patient = response.patient;
+      this.changeDetectorRef.detectChanges();
+    });
+  }
   private fb = inject(FormBuilder);
   private patientService = inject(PatientService);
   private activatedRoute = inject(ActivatedRoute);
@@ -98,38 +109,7 @@ export default class DemandComponent {
   }
 
   onSaveDemandOnSistrat() {
-    Notiflix.Loading.circle('Registrando Demanda en SISTRAT');
-
-    this.patientService.addFichaDemandaToSistrat(this.patient._id!).subscribe(
-      {
-        next: (response) => {
-          console.log('response on addFichaDemandaToSistrat');
-          console.log({ response });
-
-          // Aquí puedes manejar la respuesta como necesites
-          if (response.message === "Demanda registrada correctamente.") {
-            Notiflix.Notify.success('Demanda registrada exitosamente.');
-          }
-
-          // Eliminar el loading solo después de manejar la respuesta
-          Notiflix.Loading.remove();
-        },
-        error: (error) => {
-          console.error('Error registrando en SISTRAT:', error);
-
-          // Eliminar el loading en caso de error
-          Notiflix.Loading.remove();
-          Notiflix.Notify.failure('Error registrando demanda en SISTRAT');
-        },
-      }
-
-      //  (response) =>
-      //  {
-      //  console.log('response on addFichaDemandaToSistrat');
-      //  Notiflix.Loading.remove();
-      //  console.log({ response });
-      //}
-    );
+    this.demandProgress?.start();
   }
 
   private delay(ms: number) {

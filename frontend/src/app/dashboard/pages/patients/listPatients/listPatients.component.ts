@@ -1,14 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, ViewChild, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, ViewChild, inject, DestroyRef } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { RouterLink } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { firstValueFrom, Subject, switchMap, startWith, catchError, of } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MaterialModule } from '../../../../angular-material/material.module';
-import { Patient } from '../../../interfaces/patient.interface';
+import { Patient, CareStatus } from '../../../interfaces/patient.interface';
 import { PatientService } from '../patient.service';
 import { AuthService } from '../../../../auth/auth.service';
 import { User } from '../../../../auth/interfaces/login-response.interface';
@@ -37,6 +38,15 @@ export default class ListPatientsComponent implements OnInit {
   public dialog = inject(MatDialog);
   public bottomSheet = inject(MatBottomSheet);
   private cdr = inject(ChangeDetectorRef);
+  private route = inject(ActivatedRoute);
+  private destroyRef = inject(DestroyRef);
+  private refresh = new Subject<void>();
+  public careStatus: CareStatus = 'active';
+  public listTitle = 'Pacientes activos';
+  public loading = true;
+  public loadError = false;
+
+  reloadPatients(): void { this.refresh.next(); }
 
 
 
@@ -47,7 +57,6 @@ export default class ListPatientsComponent implements OnInit {
   public programsIds: string[];
   public programs: Parameter[] = [];
   public selectedOptionToExport: string | null = null;
-  public togglingActive: Record<string, boolean> = {};
   public fetchingCodigo: Record<string, boolean> = {};
   public isUpdatingAlerts: boolean = false;
 
@@ -62,7 +71,7 @@ export default class ListPatientsComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.authService.isAdmin()) {
-      this.displayedColumns = ['active', 'codigoSistrat', 'name', 'program', 'phone', 'fonasa', 'alertas', 'actions'];
+      this.displayedColumns = ['codigoSistrat', 'name', 'program', 'phone', 'fonasa', 'alertas', 'actions'];
     }
     this.dataSource.filterPredicate = (data: any, filter: string) => {
       let searchTerms: any;
@@ -104,14 +113,35 @@ export default class ListPatientsComponent implements OnInit {
     this.user = this.authService.getUser();
     this.programsIds = this.user.programs.map((program) => program._id);
 
-    this.patientService.patients.subscribe((patients) => {
-      this.patients = this.sortPatients(patients ?? []);
+    this.route.data.pipe(
+      switchMap(data => {
+        this.careStatus = data['careStatus'] as CareStatus;
+        this.listTitle = this.careStatus === 'waiting' ? 'Lista de espera' :
+          this.careStatus === 'discharged' ? 'Pacientes históricos' : 'Pacientes activos';
+        return this.refresh.pipe(startWith(undefined), switchMap(() => {
+          this.loading = true;
+          this.loadError = false;
+          this.dataSource.data = [];
+          this.cdr.markForCheck();
+          return this.patientService.getPatients(this.programsIds, { careStatus: this.careStatus }).pipe(
+            catchError(() => {
+              this.loadError = true;
+              Notiflix.Notify.failure('No se pudo cargar la lista de pacientes');
+              return of([] as Patient[]);
+            })
+          );
+        }));
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(patients => {
+      this.patients = this.sortPatients(patients);
+      this.dataSource.data = this.patients;
       this.dataSource.sort = this.sort;
       this.dataSource.paginator = this.paginator;
-      this.dataSource.data = this.patients;
+      this.paginator?.firstPage();
+      this.loading = false;
+      this.cdr.markForCheck();
     });
-
-    this.patientService.updatePatients(this.programsIds);
 
     // Reconexión automática: si hay un job activo guardado en localStorage (ej: tras un refresh)
     this.checkAndResumeExportJob();
@@ -173,7 +203,7 @@ export default class ListPatientsComponent implements OnInit {
     this.patientService.updateAlertSistrat(patientId).subscribe({
       next: () => {
         Notiflix.Loading.remove();
-        this.patientService.updatePatients(this.programsIds);
+        this.reloadPatients();
       },
       error: () => {
         Notiflix.Loading.remove();
@@ -324,7 +354,7 @@ export default class ListPatientsComponent implements OnInit {
         Notiflix.Notify.success(message);
         Notiflix.Loading.remove();
         this.fetchingCodigo[patient._id!] = false;
-        this.patientService.updatePatients(this.programsIds);
+        this.reloadPatients();
         this.cdr.markForCheck();
       },
       error: (error) => {
@@ -348,39 +378,8 @@ export default class ListPatientsComponent implements OnInit {
 
   }
 
-  onToggleActive(patient: Patient, isActive: boolean): void {
-    if (!patient._id) {
-      return;
-    }
-
-    const previousValue = patient.active !== false;
-    this.togglingActive[patient._id] = true;
-    patient.active = isActive;
-    this.cdr.markForCheck();
-
-    this.patientService.updateActiveStatus(patient._id, isActive).subscribe({
-      next: () => {
-        this.togglingActive[patient._id!] = false;
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        patient.active = previousValue;
-        this.togglingActive[patient._id!] = false;
-        this.cdr.markForCheck();
-        Notiflix.Report.failure('Error', 'No se pudo actualizar el estado del paciente', 'Entendido');
-      },
-    });
-  }
-
   private sortPatients(patients: Patient[]): Patient[] {
     return [...patients].sort((firstPatient, secondPatient) => {
-      const firstActiveWeight = firstPatient.active === false ? 1 : 0;
-      const secondActiveWeight = secondPatient.active === false ? 1 : 0;
-
-      if (firstActiveWeight !== secondActiveWeight) {
-        return firstActiveWeight - secondActiveWeight;
-      }
-
       const firstCreatedAt = firstPatient.createdAt ? new Date(firstPatient.createdAt).getTime() : 0;
       const secondCreatedAt = secondPatient.createdAt ? new Date(secondPatient.createdAt).getTime() : 0;
 

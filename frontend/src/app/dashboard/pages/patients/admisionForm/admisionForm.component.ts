@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MaterialModule } from '../../../../angular-material/material.module';
 import { Patient } from '../../../interfaces/patient.interface';
 import { PatientService } from '../patient.service';
@@ -24,6 +24,7 @@ import { Subscription, switchMap, timer } from 'rxjs';
   providers: [...MONDAY_FIRST_DATE_PROVIDERS],
   imports: [
     CommonModule,
+    RouterLink,
     MaterialModule,
     FormsModule,
     ReactiveFormsModule,
@@ -79,7 +80,8 @@ export default class AdmisionFormComponent implements OnInit, OnDestroy {
       console.log('admissionForm', this.admissionForm);
       // if(this.patient && this.admissionForm)
       
-      if (this.patient && this.patient.registeredAdmissionForm) {
+      if (this.patient && this.admissionForm) {
+        this.admissionFormRegistered = true;
         this.editMode = true;
       }
       this.loading.set(false);
@@ -273,14 +275,17 @@ export default class AdmisionFormComponent implements OnInit, OnDestroy {
     if (this.editMode) {
       
       this.patientService.updateFichaIngreso(this.patient!._id!, dataAdmidssonForm).subscribe((response) => {
-        Notiflix.Notify.success('Ficha de ingreso actualizda');
+        this.patient = response.patient;
+        this.admissionFormRegistered = true;
+        Notiflix.Notify.success('Ficha de ingreso actualizada');
       });
     }
 
     if (!this.editMode) {
       this.patientService.addFichaIngreso(this.patient!._id!, dataAdmidssonForm).subscribe((response) => {
         if (response.patient.registeredAdmissionForm) {
-          Notiflix.Notify.success('Ficha de ingreso registrada');
+          this.patient = response.patient;
+          Notiflix.Notify.success(response.patient.careStatus === 'discharged' ? 'Ficha de ingreso registrada' : 'Ficha de ingreso registrada. Paciente activo.');
 
           this.admissionFormRegistered = true;
           this.editMode = true;

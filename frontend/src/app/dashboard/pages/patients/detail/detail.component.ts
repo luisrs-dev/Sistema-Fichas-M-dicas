@@ -213,6 +213,12 @@ export default class DetailComponent implements OnInit {
     });
   }
 
+  get patientListPath(): string {
+    const status = this.route.snapshot.queryParamMap.get('list') || this.patient()?.careStatus;
+    const suffix = status === 'waiting' ? 'lista-espera' : status === 'discharged' ? 'historicos' : 'activos';
+    return `/dashboard/patients/${suffix}`;
+  }
+
   openClinicalInfo() {
     const patient = this.state().patient;
     console.log('[openClinicalInfo][latestMedicalRecordWithScheme]', this.latestMedicalRecordWithScheme);
@@ -542,7 +548,7 @@ export default class DetailComponent implements OnInit {
 
   get treatmentTime(): string {
     if (!this.state().patient?.admissionDate) {
-      return 'Ficha ingreso no registrada';
+      return 'Fecha de ingreso no registrada';
     }
 
     const [day, month, year] = this.state().patient!.admissionDate.split('/').map(Number);

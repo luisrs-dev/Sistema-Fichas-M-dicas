@@ -105,6 +105,13 @@ const PatientSchema = new Schema<Patient>(
       type: Boolean,
       default: false
     },
+    historicalSync: { source: String, syncedAt: Date, jobId: String },
+    careStatus: {
+      type: String,
+      enum: ["waiting", "active", "discharged", null],
+      default: null,
+      index: true,
+    },
     active: {
       type: Boolean,
       default: true,

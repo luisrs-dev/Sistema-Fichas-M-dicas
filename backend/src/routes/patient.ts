@@ -1,3 +1,4 @@
+import * as historicalSync from '../controllers/historicalSync.controller';
 import { Router } from "express";
 import {
   getPatients,
@@ -28,6 +29,9 @@ import {
 } from "../controllers/patient.controller";
 import { checkAdmin } from "../middleware/checkJwt";
 const router = Router();
+router.post('/sistrat/historical-sync', checkAdmin, historicalSync.start);
+router.get('/sistrat/historical-sync/center/:center', checkAdmin, historicalSync.latest);
+router.get('/sistrat/historical-sync/:id', checkAdmin, historicalSync.status);
 
 router.get("/reports/referrals.xlsx", checkAdmin, downloadPatientReport);
 

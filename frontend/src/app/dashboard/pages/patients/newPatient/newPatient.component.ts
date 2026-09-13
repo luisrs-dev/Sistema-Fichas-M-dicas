@@ -1,3 +1,4 @@
+import { DemandProgressComponent } from '../components/demand-progress/demand-progress.component';
 import { CommonModule, formatDate } from '@angular/common';
 import { ChangeDetectorRef, Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -20,7 +21,7 @@ import { ViewChild } from '@angular/core';
 @Component({
   selector: 'app-new-patient',
   standalone: true,
-  imports: [CommonModule, MaterialModule, FormsModule, ReactiveFormsModule, RouterModule],
+  imports: [DemandProgressComponent, CommonModule, MaterialModule, FormsModule, ReactiveFormsModule, RouterModule],
   providers: [...MONDAY_FIRST_DATE_PROVIDERS],
   templateUrl: './newPatient.component.html',
   styleUrl: './newPatient.component.css',
@@ -31,6 +32,16 @@ export default class NewPatientComponent {
   private patientService = inject(PatientService);
   private authService = inject(AuthService);
   private userService = inject(UserService);
+  @ViewChild(DemandProgressComponent) demandProgress?: DemandProgressComponent;
+  public demandSyncBusy = false;
+  refreshAfterDemand() {
+    if (!this.patient?._id) return;
+    this.patientService.getPatientById(this.patient._id).subscribe(response => {
+      this.patient = response.patient;
+      this.userForm.patchValue({ codigoSistrat: this.patient.codigoSistrat });
+      this.changeDetectorRef.detectChanges();
+    });
+  }
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private changeDetectorRef = inject(ChangeDetectorRef);
@@ -275,6 +286,11 @@ export default class NewPatientComponent {
     }
   }
 
+  get patientListPath(): string {
+    const status = this.patient?.careStatus;
+    return `/dashboard/patients/${status === 'discharged' ? 'historicos' : status === 'active' ? 'activos' : 'lista-espera'}`;
+  }
+
   async onSave() {
     if (this.userForm.invalid) {
       const controls = this.userForm.controls;
@@ -294,7 +310,7 @@ export default class NewPatientComponent {
       this.patient = patient;
       this.changeDetectorRef.detectChanges();
       Notiflix.Loading.remove();
-      Report.success('Registro exitoso', 'Ahora es posible registrar su ficha demanda', 'Entendido');
+      Report.success('Registro exitoso', 'El paciente quedó en la lista de espera. Puede continuar con su ficha de demanda.', 'Entendido');
       //this.router.navigate(['dashboard/patient/demand', this.patient._id]);
     });
   }
@@ -321,22 +337,7 @@ export default class NewPatientComponent {
   }
 
   onSaveDemandOnSistrat() {
-    Notiflix.Loading.circle('Registrando Demanda en SISTRAT');
-
-    this.patientService.addFichaDemandaToSistrat(this.patient._id!).subscribe({
-      next: (response) => {
-        if (response.message === 'Demanda registrada correctamente.') {
-          Notiflix.Notify.success('Demanda registrada exitosamente.');
-        }
-        Notiflix.Loading.remove();
-      },
-      error: (error) => {
-        console.error('Error registrando en SISTRAT:', error);
-
-        Notiflix.Loading.remove();
-        Notiflix.Notify.failure('Error registrando demanda en SISTRAT');
-      },
-    });
+    this.demandProgress?.start();
   }
 
   isValidField(field: string): boolean {
