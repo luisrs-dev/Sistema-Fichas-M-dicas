@@ -367,6 +367,16 @@ class Sistrat {
       await this.scrapper.clickButton(page, "#traeDatoFonasa", 50000);
       // Espera la respuesta del servicio PHP
       const fonasaResponse = await fonasaResponsePromise;
+      if (!fonasaResponse.ok()) {
+        throw new Error('No se pudieron consultar los datos del RUT en SISTRAT');
+      }
+      // La respuesta HTTP puede llegar antes de que SISTRAT actualice el formulario.
+      await fonasaResponse.text();
+      await page.waitForFunction(() => {
+        const name = document.querySelector<HTMLInputElement>('#txtnombre_usuario');
+        const surname = document.querySelector<HTMLInputElement>('#txtapellido_usuario');
+        return Boolean(name?.value.trim() && surname?.value.trim());
+      }, { timeout: 15000 });
 
       await this.scrapper.setSelectValue(page, "#selregion", patient.region);
       await this.scrapper.waitForSeconds(2);
@@ -402,6 +412,29 @@ class Sistrat {
       const waitSeconds = parseInt(waitMinutesStr as string, 10) * 60;
 
       console.log(`[Sistrat][crearDemanda] Valor de configuración para registro directo de demanda: ${directRecordDemanda}`);
+
+      // Fonasa puede omitir el apellido materno aunque esté registrado en Ficlin.
+      // Revisarlo al terminar el llenado evita enviar un campo obligatorio vacío.
+      const maternalSurnameStatus = await page.evaluate((secondSurname) => {
+        const input = document.querySelector<HTMLInputElement>('#txtapellido2_usuario');
+        if (!input) return 'not-found';
+        if (input.value.trim()) return 'existing';
+        if (!secondSurname) return 'missing';
+        input.value = secondSurname;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        return input.value.trim() ? 'completed' : 'missing';
+      }, (patient.secondSurname || '').trim());
+
+      if (maternalSurnameStatus === 'not-found') {
+        throw new Error('No se encontró el campo Apellido Materno en el formulario de demanda de SISTRAT');
+      }
+      if (maternalSurnameStatus === 'missing') {
+        throw new Error('SISTRAT_VALIDATION_ERROR: Apellido Materno. Complete el apellido materno del paciente en Ficlin antes de reenviar.');
+      }
+      if (maternalSurnameStatus === 'completed') {
+        await this.logStep(logger, '[Sistrat][crearDemanda] Apellido materno completado desde Ficlin');
+      }
 
       if (directRecordDemanda) {
         await this.scrapper.clickButton(page, "#mysubmit");
