@@ -245,6 +245,7 @@ export default class NewMedicalRecord implements OnInit {
     //typeContact: ['presencial', [Validators.minLength(3), Validators.required]],
     interventionObjective: ['', []],
     relevantElements: ['', []],
+    sessionConclusion: [''],
     diagnosticMedic: [''],
     diagnostic: [''],
     pharmacologicalScheme: [''],

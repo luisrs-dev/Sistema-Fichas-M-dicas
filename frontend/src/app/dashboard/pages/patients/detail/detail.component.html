@@ -186,6 +186,10 @@
             <div class="record-item" *ngIf="medicalRecord.interventionObjective | nonEmpty">
               <strong>Objetivo intervención:</strong> {{ medicalRecord.interventionObjective }}
             </div>
+            <div class="record-item" *ngIf="medicalRecord.sessionConclusion | nonEmpty">
+              <strong>Conclusión o acuerdos tomados en sesión:</strong>
+              <div class="session-conclusion">{{ medicalRecord.sessionConclusion }}</div>
+            </div>
             <div class="record-item" *ngIf="medicalRecord.diagnosticMedic | nonEmpty"><strong>Diagnóstico del
                 profesional:</strong> {{ medicalRecord.diagnosticMedic }}</div>
             <div class="record-item" *ngIf="medicalRecord.diagnostic | nonEmpty"><strong>Diagnóstico:</strong> {{

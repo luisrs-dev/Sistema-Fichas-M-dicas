@@ -16,13 +16,11 @@
         @for (item of menuItems; track item.path) {
           @if(!item.forAdmin || isAdmin) {
             @if(item.path === 'patients' || item.path === 'registro-masivo') {
-              <button class="nav-row group-trigger" type="button" (click)="toggleGroup(item.path!)"
-                [attr.aria-expanded]="openGroup() === item.path" [attr.aria-controls]="'submenu-' + item.path">
+              <div class="nav-row group-heading" [id]="'heading-' + item.path">
                 <mat-icon>{{ item.icon }}</mat-icon>
                 <span class="nav-label">{{ item.title }}</span>
-                <span class="chevron" [class.expanded]="openGroup() === item.path" aria-hidden="true"></span>
-              </button>
-              <div class="submenu" [id]="'submenu-' + item.path" [hidden]="openGroup() !== item.path">
+              </div>
+              <div class="submenu" role="group" [attr.aria-labelledby]="'heading-' + item.path">
                 @for(child of item.path === 'patients' ? patientMenuItems : bulkMenuItems; track child.path) {
                   <a class="nav-row" [routerLink]="child.path" routerLinkActive="nav-active" ariaCurrentWhenActive="page" (click)="closeMobileMenu()">
                     <mat-icon>{{ child.icon }}</mat-icon><span class="nav-label">{{ child.title }}</span>

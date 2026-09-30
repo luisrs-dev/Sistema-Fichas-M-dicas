@@ -14,6 +14,8 @@
 .nav-row:hover { background: #f1f5f9; }
 .nav-row:focus-visible { outline: 2px solid #1976d2; outline-offset: -2px; }
 .group-trigger { font-weight: 600; }
+.group-heading { font-weight: 600; cursor: default; }
+.group-heading:hover { background: transparent; }
 .chevron { flex: 0 0 7px; width: 7px; height: 7px; margin: 0 4px 4px 6px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); }
 .chevron.expanded { transform: rotate(225deg); margin-bottom: -3px; }
 .submenu { margin: 2px 0 8px 20px; padding-left: 8px; border-left: 1px solid #dfe6ee; }

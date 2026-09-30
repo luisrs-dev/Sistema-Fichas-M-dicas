@@ -40,9 +40,7 @@ export default class DashboardComponent implements OnInit {
 
   private revealCurrentGroup() {
     const path = this.router.url.split('?')[0];
-    const group = path.startsWith('/dashboard/registro-masivo') ? 'registro-masivo'
-      : path.startsWith('/dashboard/patient') ? 'patients'
-      : this.menuParameters.some(item => path.startsWith('/dashboard/' + item.path)) ? 'parameters' : null;
+    const group = this.menuParameters.some(item => path.startsWith('/dashboard/' + item.path)) ? 'parameters' : null;
     this.openGroup.set(group);
   }
 

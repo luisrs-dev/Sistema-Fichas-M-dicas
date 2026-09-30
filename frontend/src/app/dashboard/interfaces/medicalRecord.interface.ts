@@ -6,6 +6,7 @@ export interface MedicalRecord {
   entryType: string;
   service: Service;
   relevantElements: string;
+  sessionConclusion?: string;
   interventionObjective: string;
   diagnostic: string;
   diagnosticMedic?: string;
