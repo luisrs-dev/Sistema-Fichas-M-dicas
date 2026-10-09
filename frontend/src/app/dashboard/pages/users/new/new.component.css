@@ -14,3 +14,11 @@
   margin-top: 10px;
   display: block; /* Asegura que la imagen sea un elemento de bloque */
 }
+.permission-description {
+  display: block;
+  margin: 4px 0 0 40px;
+  max-width: 440px;
+  color: #5f6368;
+  font-size: 13px;
+  line-height: 1.5;
+}

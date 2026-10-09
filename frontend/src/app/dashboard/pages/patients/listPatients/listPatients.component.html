@@ -8,15 +8,18 @@
         <mat-icon>person</mat-icon>
         Nuevo Paciente
       </button>
-      <button [routerLink]="['/dashboard/patients/intervencion-grupal']" mat-flat-button color="primary"
-        class="border-round-xl ml-1 mr-2 my-auto mat-elevation-z2 text-white">
-        <mat-icon>person</mat-icon>
-        Intervención Grupal
-      </button>
+
       <button mat-flat-button (click)="exportData()" color="primary"
         class="border-round-xl ml-1 mr-2 my-auto mat-elevation-z2 text-white">
         <mat-icon>person</mat-icon>
         Exportar datos
+      </button>
+      }
+      @if(isAdmin || authService.hasPermission('agregar-entrada')){
+      <button [routerLink]="['/dashboard/patients/intervencion-grupal']" mat-flat-button color="primary"
+        class="border-round-xl ml-1 mr-2 my-auto mat-elevation-z2 text-white">
+        <mat-icon>person</mat-icon>
+        Intervención Grupal
       </button>
       }
     </div>

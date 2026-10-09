@@ -65,6 +65,11 @@
               [checked]="isParameterSelected(permission._id, permissionUser)">{{
               permission.name
               }}</mat-slide-toggle>
+            @if (permission.value === 'agregar-entrada') {
+              <span class="permission-description">
+                Permite registrar atenciones en la ficha clínica, incluidas intervenciones grupales. No habilita la creación ni edición de pacientes o profesionales.
+              </span>
+            }
           </p>
           } } @else{ Cargando... }
         </div>
@@ -78,6 +83,7 @@
               [checked]="isParameterSelected(program._id, programsUser)">{{
               program.name
               }}</mat-slide-toggle>
+
           </p>
           } } @else{ Cargando... }
         </div>
