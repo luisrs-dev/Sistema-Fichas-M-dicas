@@ -127,7 +127,7 @@ export default class ListPatientsComponent implements OnInit {
           this.dataSource.data = [];
           this.cdr.markForCheck();
           return this.userService.getUserById(this.user._id).pipe(
-            switchMap(user => {
+            switchMap(({ user }) => {
               if (!user || typeof user !== 'object' || !user._id) throw new Error('Profesional no encontrado');
               this.user = user;
               this.authService.setUser(user);

@@ -100,3 +100,32 @@ test('patient filter matches only active alerts allowed by the cargo', () => {
   assert.equal(instance.dataSource.filterPredicate({}, filter), false);
   assert.equal(instance.dataSource.filterPredicate({ alertDiagnosticoSocial: false }, filter), false);
 });
+
+test('patient loading unwraps the user API response before querying patients', () => {
+  const rx = require('../../frontend/node_modules/rxjs');
+  const user = { _id: 'professional', profile: { name: 'Trabajador social', visibleAlerts: ['integracionSocial'] }, programs: [{ _id: 'program' }] };
+  let savedUser;
+  let requestedPrograms;
+  const auth = { isAdmin: () => false, canCreateUser: () => false, getUser: () => user, setUser: value => { savedUser = value; } };
+  const Component = load('../../frontend/src/app/dashboard/pages/patients/listPatients/listPatients.component.ts', {
+    '@angular/core': { Component: () => target => target, ViewChild: () => () => {}, inject: token => token,
+      ChangeDetectionStrategy: { OnPush: 0 }, ChangeDetectorRef: { markForCheck() {} } },
+    '@angular/material/table': { MatTableDataSource: class { constructor(data) { this.data = data; } } },
+    '@angular/router': { ActivatedRoute: { data: rx.of({ careStatus: 'active' }) } },
+    rxjs: rx,
+    '@angular/core/rxjs-interop': { takeUntilDestroyed: () => rx.tap() },
+    '../../../../auth/auth.service': { AuthService: auth },
+    '../../users/user.service': { UserService: { getUserById: id => { assert.equal(id, user._id); return rx.of({ user }); } } },
+    '../patient.service': { PatientService: { getPatients: programs => { requestedPrograms = programs; return rx.of([]); } } },
+    '../../../utils/alert-visibility': visibility
+  }).default;
+  const instance = new Component();
+  instance.checkAndResumeExportJob = () => {};
+  instance.ngOnInit();
+  assert.equal(savedUser, user);
+  assert.equal(requestedPrograms[0], 'program');
+  assert.equal(instance.loadError, false);
+  assert.equal(instance.loading, false);
+  assert.equal(instance.canViewAlertType('integracionSocial'), true);
+  assert.equal(instance.canViewAlertType('diagnosticoSocial'), false);
+});
