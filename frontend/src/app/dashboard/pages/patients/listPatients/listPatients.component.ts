@@ -20,6 +20,8 @@ import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { DataExportComponent } from './components/data-export/data-export.component';
 import { ExportProgressDialogComponent } from './components/export-progress-dialog/export-progress-dialog.component';
 import Notiflix from 'notiflix';
+import { canViewAlert, AlertType } from '../../../utils/alert-visibility';
+import { UserService } from '../../users/user.service';
 
 @Component({
   selector: 'app-list-patients',
@@ -34,6 +36,7 @@ export default class ListPatientsComponent implements OnInit {
   //displayedColumns: string[] = ['codigoSistrat', 'name', 'program', 'phone', 'admissionDate', 'fonasa', 'alertas', 'actions'];
   dataSource = new MatTableDataSource<Patient>([]);
   private patientService = inject(PatientService);
+  private userService = inject(UserService);
   public authService = inject(AuthService);
   public dialog = inject(MatDialog);
   public bottomSheet = inject(MatBottomSheet);
@@ -97,10 +100,10 @@ export default class ListPatientsComponent implements OnInit {
       const matchAlerts = searchTerms.alerts ? !!(
         (data.alertCie10 && this.canViewAzul(data)) ||
         (data.alertConsentimiento && this.canViewNegra(data)) ||
-        (data.alertIntegracionSocial && this.canViewAmarillaONaranja()) ||
+        (data.alertIntegracionSocial && this.canViewAlertType('integracionSocial')) ||
         (data.alertEvaluacion && this.canViewVerde(data)) ||
         (data.alertEgreso && this.canViewRoja()) ||
-        (data.alertDiagnosticoSocial && this.canViewAmarillaONaranja())
+        (data.alertDiagnosticoSocial && this.canViewAlertType('diagnosticoSocial'))
       ) : true;
 
       return matchSearch && matchProgram && matchAlerts;
@@ -123,7 +126,17 @@ export default class ListPatientsComponent implements OnInit {
           this.loadError = false;
           this.dataSource.data = [];
           this.cdr.markForCheck();
-          return this.patientService.getPatients(this.programsIds, { careStatus: this.careStatus }).pipe(
+          return this.userService.getUserById(this.user._id).pipe(
+            switchMap(user => {
+              if (!user || typeof user !== 'object' || !user._id) throw new Error('Profesional no encontrado');
+              this.user = user;
+              this.authService.setUser(user);
+              this.isAdmin = this.authService.isAdmin();
+              this.programsIds = user.programs.map((program: Parameter) => program._id);
+              this.canCreateUser = this.authService.canCreateUser();
+              this.dataSource.filter = JSON.stringify(this.filters);
+              return this.patientService.getPatients(this.programsIds, { careStatus: this.careStatus });
+            }),
             catchError(() => {
               this.loadError = true;
               Notiflix.Notify.failure('No se pudo cargar la lista de pacientes');
@@ -212,39 +225,14 @@ export default class ListPatientsComponent implements OnInit {
     });
   }
 
-  canViewNegra(element: any): boolean {
-    if (this.isAdmin) return true;
-    const profileName = this.user?.profile?.name?.toLowerCase() || '';
-    const isPsicologo = profileName.includes('psicólog') || profileName.includes('psicolog');
-    const isPAI = element.program?.name?.toUpperCase().includes('PAI');
-    return isPsicologo || isPAI;
+  canViewAlertType(alert: AlertType, element?: Patient): boolean {
+    return canViewAlert(alert, this.user?.profile, this.isAdmin, element?.program?.name);
   }
 
-  canViewVerde(element: any): boolean {
-    if (this.isAdmin) return true;
-    const profileName = this.user?.profile?.name?.toLowerCase() || '';
-    const isPsicologo = profileName.includes('psicólog') || profileName.includes('psicolog');
-    const isPAI = element.program?.name?.toUpperCase().includes('PAI');
-    const isTerapeuta = profileName.includes('terapeuta') || profileName.includes('ocupacional');
-    const isPR = element.program?.name?.toUpperCase().includes('PR');
-    return isPsicologo || isPAI || isTerapeuta || isPR;
-  }
-
-  canViewAmarillaONaranja(): boolean {
-    if (this.isAdmin) return true;
-    const profileName = this.user?.profile?.name?.toLowerCase() || '';
-    return profileName.includes('trabajador') || profileName.includes('social');
-  }
-
-  canViewRoja(): boolean {
-    return this.isAdmin;
-  }
-
-  canViewAzul(element: any): boolean {
-    if (this.isAdmin) return true;
-    const profileName = this.user?.profile?.name?.toLowerCase() || '';
-    return profileName.includes('médico') || profileName.includes('medico');
-  }
+  canViewNegra(element: Patient): boolean { return this.canViewAlertType('consentimiento', element); }
+  canViewVerde(element: Patient): boolean { return this.canViewAlertType('evaluacion', element); }
+  canViewRoja(): boolean { return this.canViewAlertType('egreso'); }
+  canViewAzul(element: Patient): boolean { return this.canViewAlertType('cie10', element); }
 
   hasRegisteredForm(element: Patient): boolean {
     return !!(

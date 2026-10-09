@@ -4,6 +4,7 @@ const connectToDatabase = async (retries = 5) => {
   while (retries > 0) {
     try {
       await mongoose.connect(process.env.DB_URI as string);
+      // await mongoose.connect("mongodb://ceadt_app:f1cl1n-pl4tf0rm@localhost:27017/ceadt?authSource=admin");
       console.log("Conectado a MongoDB con Mongoose");
       return;
     } catch (error) {

@@ -131,7 +131,7 @@
           <mat-icon class="custom-icon-black">circle</mat-icon>
         </button>
         }
-        @if(element.alertIntegracionSocial && canViewAmarillaONaranja()){
+        @if(element.alertIntegracionSocial && canViewAlertType('integracionSocial')){
         <button mat-icon-button [routerLink]="['/dashboard/patient/social', element._id]"
           matTooltip="Integración Social">
           <mat-icon class="custom-icon-yellow">circle</mat-icon>
@@ -148,7 +148,7 @@
           <mat-icon class="custom-icon-red">circle</mat-icon>
         </button>
         }
-        @if(element.alertDiagnosticoSocial && canViewAmarillaONaranja()){
+        @if(element.alertDiagnosticoSocial && canViewAlertType('diagnosticoSocial')){
         <button mat-icon-button [routerLink]="['/dashboard/patient/social-diagnosis', element._id]"
           matTooltip="Diagnóstico de Integración Social">
           <mat-icon class="custom-icon-orange">circle</mat-icon>

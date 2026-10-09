@@ -21,12 +21,12 @@ export class ProfesionalRoleService {
     return this.http.get<any>(`${this.backend}/profesional-role/${id}`);
   }
 
-  add(name: string, services: string[]): Observable<any>{
-    return this.http.post<any>(`${this.backend}/profesional-role`, {name, services});
+  add(name: string, services: string[], visibleAlerts: string[]): Observable<any>{
+    return this.http.post<any>(`${this.backend}/profesional-role`, {name, services, visibleAlerts});
   }
 
-  update(id: string, services: string[]): Observable<any>{
-    return this.http.put<any>(`${this.backend}/profesional-role`, {id, services});
+  update(id: string, services?: string[], visibleAlerts?: string[]): Observable<any>{
+    return this.http.put<any>(`${this.backend}/profesional-role`, {id, services, visibleAlerts});
   }
 
 }
