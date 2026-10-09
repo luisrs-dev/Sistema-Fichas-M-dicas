@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon --exec ts-node ./src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev-no-watch": "npx ts-node src/index.ts"
+    "dev-no-watch": "npx ts-node src/index.ts",
+    "test:demanda": "node --test tests/demand-progress.test.cjs"
   },
   "keywords": [],
   "author": "",

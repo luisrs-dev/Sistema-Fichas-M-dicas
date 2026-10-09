@@ -5,10 +5,13 @@ import {
   Component,
   ViewChild,
   inject,
+  signal,
+  DestroyRef,
   type OnInit,
 } from '@angular/core';
 import { MatSidenav } from '@angular/material/sidenav';
-import { RouterModule } from '@angular/router';
+import { Router, NavigationEnd, RouterModule } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MaterialModule } from '../angular-material/material.module';
 import { routes } from '../app.routes';
 import { AuthService } from './../auth/auth.service';
@@ -27,6 +30,33 @@ export default class DashboardComponent implements OnInit {
   @ViewChild(MatSidenav)
   public sidenav!: MatSidenav;
   public isMobile: boolean = true;
+  public openGroup = signal<string | null>(null);
+  private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
+
+  toggleGroup(group: string) {
+    this.openGroup.update(current => current === group ? null : group);
+  }
+
+  private revealCurrentGroup() {
+    const path = this.router.url.split('?')[0];
+    const group = this.menuParameters.some(item => path.startsWith('/dashboard/' + item.path)) ? 'parameters' : null;
+    this.openGroup.set(group);
+  }
+
+  closeMobileMenu() {
+    if (this.isMobile) void this.sidenav.close();
+  }
+  public bulkMenuItems = [
+    { path: '/dashboard/registro-masivo/atenciones', title: 'Atenciones', icon: 'event_note' },
+    { path: '/dashboard/registro-masivo/alertas', title: 'Alertas', icon: 'notifications' },
+    { path: '/dashboard/registro-masivo/historicos', title: 'Históricos', icon: 'history' },
+  ];
+  public patientMenuItems = [
+    { path: '/dashboard/patients/lista-espera', title: 'Lista de espera', icon: 'pending_actions' },
+    { path: '/dashboard/patients/activos', title: 'Pacientes activos', icon: 'people' },
+    { path: '/dashboard/patients/historicos', title: 'Pacientes históricos', icon: 'history' },
+  ];
 
   public authService = inject(AuthService);
   private observer = inject(BreakpointObserver);
@@ -37,9 +67,13 @@ export default class DashboardComponent implements OnInit {
   ngOnInit() {
     this.isAdmin = this.authService.isAdmin();
     this.user = this.authService.getUser();
+    this.revealCurrentGroup();
+    this.router.events.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(event => {
+      if (event instanceof NavigationEnd) this.revealCurrentGroup();
+    });
     
     
-    this.observer.observe(['(max-width: 800px)']).subscribe((screenSize) => {
+    this.observer.observe(['(max-width: 800px)']).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((screenSize) => {
       this.mobileService.setMobileState(screenSize.matches);
       this.isMobile = screenSize.matches;
     });

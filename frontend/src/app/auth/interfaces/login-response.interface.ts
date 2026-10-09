@@ -30,6 +30,7 @@ export interface Profile {
     _id: string;
     name: string;
     services: string[];
+    visibleAlerts?: string[];
     __v: number;
 }
 

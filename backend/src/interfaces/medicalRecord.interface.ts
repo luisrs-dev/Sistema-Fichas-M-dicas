@@ -5,6 +5,7 @@ export interface MedicalRecord {
   entryType: string;
   service: Types.ObjectId;
   relevantElements: string;
+  sessionConclusion?: string;
   interventionObjective: string;
   diagnostic: string;
   diagnosticMedic: string;

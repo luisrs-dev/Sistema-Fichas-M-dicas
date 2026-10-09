@@ -1,3 +1,4 @@
+import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -6,7 +7,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subscription, timer, exhaustMap, takeWhile } from 'rxjs';
+import { HistoricalSyncJob } from '../../../interfaces/historical-sync.interface';
 import Notiflix from 'notiflix';
 import { Patient } from '../../../interfaces/patient.interface';
 import { MedicalRecordService } from '../medicalRecord.service';
@@ -30,9 +32,93 @@ import { SistratCenter, SistratCenterService } from '../../../services/sistratCe
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class AttentionsComponent {
+  readonly action: 'atenciones' | 'alertas' | 'historicos' = inject(ActivatedRoute).snapshot.data['bulkAction'] || 'atenciones';
+  readonly pageTitle = { atenciones: 'Atenciones', alertas: 'Alertas', historicos: 'Históricos' }[this.action];
+  readonly pageDescription = {
+    atenciones: 'Registra las atenciones mensuales de los pacientes seleccionados en SISTRAT.',
+    alertas: 'Actualiza las alertas de los pacientes seleccionados desde SISTRAT.',
+    historicos: 'Sincroniza los pacientes históricos del centro desde SISTRAT hacia Ficlin.',
+  }[this.action];
   private readonly patientService = inject(PatientService);
   private readonly medicalRecordService = inject(MedicalRecordService);
   private readonly sistratCenterService = inject(SistratCenterService);
+
+  patientsLoading = signal(false);
+  patientsLoaded = signal(false);
+  patientsLoadError = signal(false);
+  patientsSource = signal<'cache' | 'sistrat' | null>(null);
+  patientsUpdatedAt = signal<string | null>(null);
+  operationBusy = computed(() => this.patientsLoading() || this.historicalBusy() || this.bulkLoading() || this.isUpdatingAlerts() || !!this.historicalJob()?.active);
+
+  historicalJob = signal<HistoricalSyncJob | null>(null);
+  historicalBusy = signal(false);
+  historicalConnectionError = signal(false);
+  private historicalSubscription?: Subscription;
+  private destroyed = false;
+
+  ngOnDestroy() {
+    this.destroyed = true;
+    this.historicalSubscription?.unsubscribe();
+  }
+
+  async resumeHistoricalSync(center: string) {
+    this.historicalSubscription?.unsubscribe();
+    this.historicalJob.set(null);
+    this.historicalConnectionError.set(false);
+    this.historicalBusy.set(true);
+    try {
+      const response = await firstValueFrom(this.patientService.latestHistoricalSync(center));
+      if (this.destroyed || this.selectedCenter() !== center) return;
+      this.historicalJob.set(response.job);
+      this.historicalBusy.set(!!response.job?.active);
+      if (response.job?.active) this.watchHistoricalSync(response.job);
+    } catch {
+      if (this.destroyed || this.selectedCenter() !== center) return;
+      this.historicalBusy.set(false);
+      this.historicalConnectionError.set(true);
+    }
+  }
+
+  async syncHistoricalPatients() {
+    const center = this.selectedCenter();
+    if (!center || this.operationBusy()) return;
+    this.historicalBusy.set(true);
+    this.historicalConnectionError.set(false);
+    try {
+      const response = await firstValueFrom(this.patientService.startHistoricalSync(center));
+      if (this.destroyed) return;
+      this.historicalJob.set(response.job);
+      this.watchHistoricalSync(response.job);
+    } catch (error: any) {
+      this.historicalBusy.set(false);
+      Notiflix.Notify.failure(error?.error?.message || 'No se pudo iniciar la sincronización');
+    }
+  }
+
+  private watchHistoricalSync(job: HistoricalSyncJob) {
+    this.historicalSubscription?.unsubscribe();
+    this.historicalSubscription = timer(0, 2000).pipe(
+      exhaustMap(() => this.patientService.getHistoricalSync(job._id)),
+      takeWhile(response => response.job.active, true)
+    ).subscribe({
+      next: ({ job: updated }) => {
+        this.historicalJob.set(updated);
+        this.historicalBusy.set(updated.active);
+        if (!updated.active) {
+          const codes = new Set([...(updated.result?.updated || []), ...(updated.result?.alreadyHistorical || [])]);
+          this.centerPatients.update(patients => patients.filter(p => !codes.has((p.codigoSistrat || '').trim().toUpperCase())));
+          const selected = { ...this.selectedPatients() };
+          const remaining = new Set(this.centerPatients().map(p => p._id));
+          Object.keys(selected).forEach(id => { if (!remaining.has(id)) delete selected[id]; });
+          this.selectedPatients.set(selected);
+        }
+      },
+      error: () => {
+        this.historicalConnectionError.set(true);
+        this.historicalBusy.set(false);
+      }
+    });
+  }
 
   private readonly currentYear = new Date().getFullYear();
   private readonly firstAvailableYear = 2023;
@@ -70,7 +156,7 @@ export default class AttentionsComponent {
     Object.values(this.selectedPatients()).filter(Boolean).length
   );
   isAllSelected = computed(() => {
-    const patients = this.centerPatients();
+    const patients = this.centerPatients().filter(patient => patient._id && patient.codigoSistrat);
     if (!patients.length) {
       return false;
     }
@@ -85,8 +171,20 @@ export default class AttentionsComponent {
   }
 
   onCenterChange(center: string) {
+    this.historicalSubscription?.unsubscribe();
+    this.historicalJob.set(null);
+    this.historicalConnectionError.set(false);
+    this.historicalBusy.set(false);
     this.selectedCenter.set(center);
-    this.loadPatientsForCenter(center);
+    this.centerPatients.set([]);
+    this.selectedPatients.set({});
+    this.registrationStatus.set({});
+    this.registrationMessages.set({});
+    this.patientsLoaded.set(false);
+    this.patientsLoadError.set(false);
+    this.patientsSource.set(null);
+    this.patientsUpdatedAt.set(null);
+    if (center && this.action === 'historicos') void this.resumeHistoricalSync(center);
   }
 
   togglePatientSelection(patientId: string, checked: boolean) {
@@ -99,7 +197,7 @@ export default class AttentionsComponent {
     const shouldSelectAll = !this.isAllSelected();
     const updatedSelections = { ...this.selectedPatients() };
     this.centerPatients().forEach((patient) => {
-      if (patient._id) {
+      if (patient._id && patient.codigoSistrat) {
         updatedSelections[patient._id] = shouldSelectAll;
       }
     });
@@ -107,6 +205,7 @@ export default class AttentionsComponent {
   }
 
   async onBulkSistratRecord() {
+    if (this.operationBusy() || !this.patientsLoaded()) return;
     const center = this.selectedCenter();
     if (!center) {
       Notiflix.Notify.failure('Selecciona un centro');
@@ -204,6 +303,7 @@ export default class AttentionsComponent {
   }
 
   async onBulkUpdateAlerts() {
+    if (this.operationBusy() || !this.patientsLoaded()) return;
     const center = this.selectedCenter();
     if (!center) {
       Notiflix.Notify.failure('Selecciona un centro');
@@ -272,9 +372,14 @@ export default class AttentionsComponent {
     }
   }
 
+  recoverPatients() {
+    const center = this.selectedCenter();
+    if (center && !this.operationBusy()) void this.loadPatientsForCenter(center);
+  }
+
   forceLoadPatientsForCenter() {
     const center = this.selectedCenter();
-    if (center) {
+    if (center && !this.operationBusy()) {
       this.loadPatientsForCenter(center, true);
     }
   }
@@ -288,11 +393,20 @@ export default class AttentionsComponent {
       return;
     }
 
-    Notiflix.Loading.standard('Cargando pacientes desde SISTRAT...');
+    this.patientsLoading.set(true);
+    this.patientsLoadError.set(false);
+    this.patientsLoaded.set(false);
+    this.patientsSource.set(null);
+    this.patientsUpdatedAt.set(null);
+    this.centerPatients.set([]);
+    this.selectedPatients.set({});
 
     try {
       const response = await firstValueFrom(this.patientService.getActiveSistratPatients(center, forceRefresh));
-      const patientsFromSistrat = response.data || [];
+      if (this.destroyed || this.selectedCenter() !== center) return;
+      const historical = this.historicalJob();
+      const removedCodes = new Set([...(historical?.result?.updated || []), ...(historical?.result?.alreadyHistorical || [])]);
+      const patientsFromSistrat = (response.data || []).filter(p => !removedCodes.has((p.codigoSistrat || '').trim().toUpperCase()));
 
       const filtered = patientsFromSistrat.sort((a, b) => {
         const aName = a.name.trim();
@@ -308,6 +422,9 @@ export default class AttentionsComponent {
       } as Patient));
 
       this.centerPatients.set(filtered);
+      this.patientsLoaded.set(true);
+      this.patientsSource.set(response.source);
+      this.patientsUpdatedAt.set(response.lastUpdated);
       const selected: Record<string, boolean> = {};
       filtered.forEach((p) => {
         if (p._id) {
@@ -318,6 +435,8 @@ export default class AttentionsComponent {
       this.registrationStatus.set({});
       this.registrationMessages.set({});
     } catch (error) {
+      if (this.destroyed || this.selectedCenter() !== center) return;
+      this.patientsLoadError.set(true);
       console.error('Error cargando pacientes desde SISTRAT:', error);
       Notiflix.Notify.failure('Fallo al obtener pacientes de SISTRAT');
       this.centerPatients.set([]);
@@ -325,7 +444,7 @@ export default class AttentionsComponent {
       this.registrationStatus.set({});
       this.registrationMessages.set({});
     } finally {
-      Notiflix.Loading.remove();
+      this.patientsLoading.set(false);
     }
   }
 

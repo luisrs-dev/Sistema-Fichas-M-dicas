@@ -1,10 +1,11 @@
+import { HistoricalSyncJob } from '../../interfaces/historical-sync.interface';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable, catchError, tap, throwError } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { MedicalRecord } from '../../interfaces/medicalRecord.interface';
-import { Patient } from '../../interfaces/patient.interface';
+import { Patient, CareStatus } from '../../interfaces/patient.interface';
 import { Demand, DemandResponse } from '../../interfaces/demand.interface';
 import { AuthService } from '../../../auth/auth.service';
 
@@ -31,6 +32,18 @@ export class PatientService {
     return this._patient.asObservable();
   }
 
+
+  startHistoricalSync(center: string) {
+    return this.http.post<{ job: HistoricalSyncJob }>(`${this.backend}/patient/sistrat/historical-sync`, { center });
+  }
+
+  getHistoricalSync(id: string) {
+    return this.http.get<{ job: HistoricalSyncJob }>(`${this.backend}/patient/sistrat/historical-sync/${id}`);
+  }
+
+  latestHistoricalSync(center: string) {
+    return this.http.get<{ job: HistoricalSyncJob | null }>(`${this.backend}/patient/sistrat/historical-sync/center/${encodeURIComponent(center)}`);
+  }
 
   getPatientById(id: string): Observable<{ patient: Patient; medicalRecords: MedicalRecord[] }> {
     return this.http.get<{ patient: Patient; medicalRecords: MedicalRecord[] }>(`${this.backend}/patient/${id}`
@@ -114,8 +127,8 @@ export class PatientService {
     return this.http.get<DemandResponse>(`${this.backend}/patient/demanda/${patientId}`).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al obtener ficha demanda')));
   }
 
-  addFichaDemandaToSistrat(patientId: string): Observable<any> {
-    return this.http.post<any>(`${this.backend}/patient/demanda/sistrat`, { patientId }).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al agregar ficha demanda a SISTRAT')));
+  addFichaDemandaToSistrat(patientId: string, alertsOnly = false, verifyOnly = false): Observable<any> {
+    return this.http.post<any>(`${this.backend}/patient/demanda/sistrat`, { patientId, alertsOnly, verifyOnly }).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al agregar ficha demanda a SISTRAT')));
   }
 
   getDataWithRut(rut: string, center: string): Observable<any> {
@@ -161,7 +174,7 @@ export class PatientService {
     return this.http.post<any>(`${this.backend}/patient/sistrat/alerts`, { patientId }).pipe(catchError((err) => throwError(() => err.error?.error || err.error?.message || 'Error al actualizar alertas de SISTRAT')));
   }
 
-  getPatients(programsIds: string[], options?: { active?: boolean }): Observable<Patient[]> {
+  getPatients(programsIds: string[], options?: { active?: boolean; careStatus?: CareStatus }): Observable<Patient[]> {
     let params = new HttpParams();
 
     if (programsIds.length > 0) {
@@ -172,15 +185,14 @@ export class PatientService {
       params = params.set('active', String(options.active));
     }
 
-    return this.http.get<Patient[]>(`${this.backend}/patient`, { params }).pipe(
-      tap(patients => {
-        this.patientsSubject.next(patients) // Actualizamos el BehaviorSubject
-      })
-    );
+    if (options?.careStatus) {
+      params = params.set('careStatus', options.careStatus);
+    }
+    return this.http.get<Patient[]>(`${this.backend}/patient`, { params });
   }
 
-  updatePatients(programsIds: string[], options?: { active?: boolean }): void {
-    this.getPatients(programsIds, options).subscribe(); // Actualiza automáticamente el BehaviorSubject
+  updatePatients(programsIds: string[], options?: { active?: boolean; careStatus?: CareStatus }): void {
+    this.getPatients(programsIds, options).subscribe(patients => this.patientsSubject.next(patients)); // Actualiza automáticamente el BehaviorSubject
   }
 
   updateActiveStatus(patientId: string, active: boolean): Observable<Patient> {
@@ -191,8 +203,8 @@ export class PatientService {
     return this.http.post<any>(`${this.backend}/patient/sistrat/bulk-alerts`, { center, patientIds });
   }
 
-  getActiveSistratPatients(center: string, forceRefresh: boolean = false): Observable<{ success: boolean; data: any[]; message?: string }> {
-    return this.http.get<{ success: boolean; data: any[]; message?: string }>(
+  getActiveSistratPatients(center: string, forceRefresh: boolean = false): Observable<{ success: boolean; data: any[]; source: 'cache' | 'sistrat'; lastUpdated: string; message?: string }> {
+    return this.http.get<{ success: boolean; data: any[]; source: 'cache' | 'sistrat'; lastUpdated: string; message?: string }>(
       `${this.backend}/patient/sistrat/patients/${center}?forceRefresh=${forceRefresh}`
     );
   }

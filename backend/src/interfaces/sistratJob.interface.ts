@@ -4,6 +4,10 @@ export type SistratJobType = "ficha-ingreso" | "demanda" | "top" | "social" | "e
 export type SistratJobStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "FAILED";
 
 export interface SistratJob {
+  demandAttemptKey?: string;
+  activeDemand?: boolean;
+  leaseUntil?: Date;
+  history?: { step: string; progress: number; at: Date }[];
   _id?: Types.ObjectId | string;
   patientId: Types.ObjectId | string;
   type: SistratJobType;

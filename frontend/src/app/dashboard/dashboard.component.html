@@ -1,72 +1,58 @@
-<mat-toolbar color="primary">
-  <!-- Barra superior -->
-  <button mat-icon-button (click)="toggleMenu()">
-    <mat-icon style="color: white" class="mat-18">menu</mat-icon>
+<mat-toolbar color="primary" class="app-toolbar">
+  <button mat-icon-button (click)="toggleMenu()" aria-label="Abrir o cerrar menú">
+    <mat-icon>menu</mat-icon>
   </button>
   <h1>FICLIN-A</h1>
-  <!-- <img src="../../assets/images/logo-blanco.png" height="40" alt="" /> -->
   <span class="spacer"></span>
-
   @if (!isMobile) {
-  <button class="text-white" mat-button>
-    <mat-icon>account_circle</mat-icon>
-    {{ user.name }}
-  </button>
+    <span class="account-name"><mat-icon>account_circle</mat-icon>{{ user.name }}</span>
   }
 </mat-toolbar>
-<mat-sidenav-container class="example-container" autosize>
-  <mat-sidenav #sidenav [ngStyle]="{ width: '250px', height: '100%' }" [mode]="isMobile ? 'over' : 'side'"
-    [opened]="isMobile ? 'false' : 'true'">
-    <mat-toolbar>
-      <span>Menú</span>
-      <span class="spacer"></span>
-      <!--<button mat-icon-button (click)="sidenav.toggle()">
-        <mat-icon class="mat-18">arrow_back</mat-icon>
-      </button>-->
-    </mat-toolbar>
-
-    <mat-nav-list>
-      @for (menuItem of menuItems; track $index) {
-
-      <!-- Items sólo para admins -->
-      @if(isAdmin && menuItem.forAdmin){
-      <mat-list-item [routerLink]="menuItem.path" (click)="isMobile ? sidenav.toggle() : false">
-        <mat-icon matListItemIcon class="mat-18">{{ menuItem.icon }}</mat-icon>
-        {{ menuItem.title }}
-      </mat-list-item>
-      }
-      @else{
-      <!-- Items para profesionales no admins -->
-      @if(!menuItem.forAdmin){
-      <mat-list-item [routerLink]="menuItem.path" (click)="isMobile ? sidenav.toggle() : false">
-        <mat-icon matListItemIcon class="mat-18">{{ menuItem.icon }}</mat-icon>
-        {{ menuItem.title }}
-      </mat-list-item>
-      }
-      }
-      }
-      @if(isAdmin){
-      <mat-toolbar>
-        <span>Parámetros</span>
-        <span class="spacer"></span>
-      </mat-toolbar>
-
-      @for (menuParameter of menuParameters; track $index) {
-      <mat-list-item [routerLink]="menuParameter.path" (click)="isMobile ? sidenav.toggle() : false">
-        <mat-icon matListItemIcon class="mat-18">{{
-          menuParameter.icon
-          }}</mat-icon>
-        {{ menuParameter.title }}
-      </mat-list-item>
-      } }
-
-      <mat-list-item (click)="onLogout()">
-        <mat-icon matListItemIcon class="mat-18">logout</mat-icon>
-        Cerrar sesión
-      </mat-list-item>
-    </mat-nav-list>
+<mat-sidenav-container class="example-container">
+  <mat-sidenav #sidenav class="sidebar" [mode]="isMobile ? 'over' : 'side'" [opened]="!isMobile">
+    <div class="sidebar-layout">
+      <div class="sidebar-caption">Menú principal</div>
+      <nav class="sidebar-nav" aria-label="Menú principal">
+        @for (item of menuItems; track item.path) {
+          @if(!item.forAdmin || isAdmin) {
+            @if(item.path === 'patients' || item.path === 'registro-masivo') {
+              <div class="nav-row group-heading" [id]="'heading-' + item.path">
+                <mat-icon>{{ item.icon }}</mat-icon>
+                <span class="nav-label">{{ item.title }}</span>
+              </div>
+              <div class="submenu" role="group" [attr.aria-labelledby]="'heading-' + item.path">
+                @for(child of item.path === 'patients' ? patientMenuItems : bulkMenuItems; track child.path) {
+                  <a class="nav-row" [routerLink]="child.path" routerLinkActive="nav-active" ariaCurrentWhenActive="page" (click)="closeMobileMenu()">
+                    <mat-icon>{{ child.icon }}</mat-icon><span class="nav-label">{{ child.title }}</span>
+                  </a>
+                }
+              </div>
+            } @else {
+              <a class="nav-row" [routerLink]="'/dashboard/' + item.path" routerLinkActive="nav-active" ariaCurrentWhenActive="page" (click)="closeMobileMenu()">
+                <mat-icon>{{ item.icon }}</mat-icon><span class="nav-label">{{ item.title }}</span>
+              </a>
+            }
+          }
+        }
+        @if(isAdmin) {
+          <button class="nav-row group-trigger parameters-trigger" type="button" (click)="toggleGroup('parameters')"
+            [attr.aria-expanded]="openGroup() === 'parameters'" aria-controls="submenu-parameters">
+            <mat-icon>settings</mat-icon><span class="nav-label">Parámetros</span>
+            <span class="chevron" [class.expanded]="openGroup() === 'parameters'" aria-hidden="true"></span>
+          </button>
+          <div id="submenu-parameters" class="submenu" [hidden]="openGroup() !== 'parameters'">
+            @for(item of menuParameters; track item.path) {
+              <a class="nav-row" [routerLink]="'/dashboard/' + item.path" routerLinkActive="nav-active" ariaCurrentWhenActive="page" (click)="closeMobileMenu()">
+                <mat-icon>{{ item.icon }}</mat-icon><span class="nav-label">{{ item.title }}</span>
+              </a>
+            }
+          </div>
+        }
+      </nav>
+      <div class="sidebar-footer">
+        <button class="nav-row" type="button" (click)="onLogout()"><mat-icon>logout</mat-icon><span class="nav-label">Cerrar sesión</span></button>
+      </div>
+    </div>
   </mat-sidenav>
-  <mat-sidenav-content class="p-4">
-    <router-outlet></router-outlet>
-  </mat-sidenav-content>
+  <mat-sidenav-content class="page-content"><router-outlet></router-outlet></mat-sidenav-content>
 </mat-sidenav-container>

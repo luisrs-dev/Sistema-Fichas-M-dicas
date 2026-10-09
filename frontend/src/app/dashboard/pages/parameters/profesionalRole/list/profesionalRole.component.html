@@ -20,7 +20,7 @@
 
     <!-- Services Column -->
     <ng-container matColumnDef="services">
-      <th mat-header-cell *matHeaderCellDef>Servicios</th>
+      <th mat-header-cell *matHeaderCellDef>Prestaciones</th>
       <td mat-cell *matCellDef="let element">
         <div *ngFor="let service of element.services">
           {{ service.description }} ({{ service.code }})
@@ -28,18 +28,29 @@
       </td>
     </ng-container>
 
-    <!-- Services Column -->
+    <ng-container matColumnDef="visibleAlerts">
+      <th mat-header-cell *matHeaderCellDef>Alertas visibles</th>
+      <td mat-cell *matCellDef="let element">
+        @if (element.visibleAlerts === undefined) {
+          <span>Reglas actuales (sin configurar)</span>
+        } @else {
+          @for (label of alertLabels(element); track label) { <div>{{ label }}</div> }
+          @if (element.visibleAlerts.length === 0) { <span>Ninguna</span> }
+        }
+      </td>
+    </ng-container>
+
     <ng-container matColumnDef="actions">
       <th mat-header-cell *matHeaderCellDef></th>
       <td mat-cell *matCellDef="let element">
-         <button
-            class="mb-4"
-            mat-raised-button
-            color="warn"
-            (click)="onEditProfesionalRole(element._id)"
-          >
-            Editar
-          </button>
+        <div class="flex flex-wrap gap-2 py-2">
+          <button mat-stroked-button color="primary"
+            [attr.aria-label]="'Editar prestaciones de ' + element.name"
+            (click)="onEditProfesionalRole(element._id, 'services')">Prestaciones</button>
+          <button mat-stroked-button color="primary"
+            [attr.aria-label]="'Editar alertas de ' + element.name"
+            (click)="onEditProfesionalRole(element._id, 'alerts')">Alertas</button>
+        </div>
       </td>
     </ng-container>
 

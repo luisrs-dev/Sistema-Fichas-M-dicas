@@ -1,5 +1,5 @@
 <div *ngIf="patient() as p">
-  <button mat-stroked-button color="primary" class="mb-2" [routerLink]="['/dashboard/patients']">
+  <button mat-stroked-button color="primary" class="mb-2" [routerLink]="[patientListPath]">
     <mat-icon>arrow_back</mat-icon>
     Volver
   </button>
@@ -185,6 +185,10 @@
                 relevantes:</strong> {{ medicalRecord.relevantElements }}</div>
             <div class="record-item" *ngIf="medicalRecord.interventionObjective | nonEmpty">
               <strong>Objetivo intervención:</strong> {{ medicalRecord.interventionObjective }}
+            </div>
+            <div class="record-item" *ngIf="medicalRecord.sessionConclusion | nonEmpty">
+              <strong>Conclusión o acuerdos tomados en sesión:</strong>
+              <div class="session-conclusion">{{ medicalRecord.sessionConclusion }}</div>
             </div>
             <div class="record-item" *ngIf="medicalRecord.diagnosticMedic | nonEmpty"><strong>Diagnóstico del
                 profesional:</strong> {{ medicalRecord.diagnosticMedic }}</div>

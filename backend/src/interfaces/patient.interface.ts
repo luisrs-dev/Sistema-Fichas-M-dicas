@@ -29,7 +29,9 @@ export interface Patient extends Auth {
   alertEgreso: boolean;
   alertDiagnosticoSocial: boolean;
   alertTreatment?: boolean;
+  historicalSync?: { source: string; syncedAt: Date; jobId: string };
   active: boolean;
+  careStatus?: "waiting" | "active" | "discharged" | null;
   mainSubstance: string;
   previousTreatments: string;
   atentionRequestDate: string;

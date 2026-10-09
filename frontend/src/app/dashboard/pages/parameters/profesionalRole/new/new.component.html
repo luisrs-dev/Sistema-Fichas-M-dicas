@@ -1,50 +1,57 @@
 <form [formGroup]="serviceForm" (ngSubmit)="onSave()">
-<h2 mat-dialog-title>
-  @if(editMode()){
-    Editar
-  }@else{
-    Nuevo
-  }
-  cargo</h2>
-<mat-dialog-content>
-    <div class="pt-2">
-      <mat-form-field class="w-full" appearance="outline">
-        <mat-label>Cargo</mat-label>
-        <input matInput placeholder="Agregar nuevo..."
-        formControlName="name"
-        
-        />
-      </mat-form-field>
-    </div>
-
-      <div class="grid">
-        <div class="col">
-          <h1>Prestaciones</h1>
-          <div>
-            @if(services$ | async; as services){
-              @for (service of services; track $index) {
-                <p>
-                  <mat-slide-toggle 
-                  [checked]="isRoleAssigned(service._id)"
-                  (change)="onPermissionChange(service, $event)">{{ service.description }}</mat-slide-toggle>
-                </p>
-              }  
-            }
-            @else{ 
-              Cargando...
-            }
-          </div>
-        </div>
+  <h2 mat-dialog-title>
+    @if (editMode()) {
+      {{ showAlerts ? 'Editar alertas' : 'Editar prestaciones' }}
+    } @else {
+      Nuevo cargo
+    }
+  </h2>
+  <mat-dialog-content>
+    @if (editMode()) {
+      <p><strong>{{ profesionalRoleUser || 'Cargando cargo…' }}</strong></p>
+    } @else {
+      <div class="pt-2">
+        <mat-form-field class="w-full" appearance="outline">
+          <mat-label>Cargo</mat-label>
+          <input matInput placeholder="Agregar nuevo..." formControlName="name" />
+        </mat-form-field>
       </div>
-    <!-- <div>
-      <button mat-button>Cerrar</button>
-      <button mat-flat-button color="primary" type="submit">Guardar</button>
-    </div> -->
+    }
+
+    @if (showServices) {
+      @if (!editMode()) { <h2>Prestaciones</h2> }
+      @if (services$ | async; as services) {
+        @for (service of services; track service._id) {
+          <p>
+            <mat-slide-toggle [checked]="isRoleAssigned(service._id)"
+              [disabled]="loadingRole || saving"
+              (change)="onPermissionChange(service, $event)">{{ service.description }}</mat-slide-toggle>
+          </p>
+        }
+      } @else {
+        <p>Cargando prestaciones…</p>
+      }
+    }
+
+    @if (showAlerts) {
+      @if (!editMode()) { <h2>Alertas visibles</h2> }
+      <p>Los profesionales con este cargo verán las alertas seleccionadas cuando estén activas en el paciente. Los administradores ven todas.</p>
+      @if (unconfiguredAlerts) {
+        <p>Este cargo usa las reglas anteriores. Al guardar, solo se mostrarán las alertas seleccionadas, sin excepciones por programa.</p>
+      }
+      <p>Esta selección no modifica los bloqueos para registrar atenciones.</p>
+      @for (alert of alertOptions; track alert.value) {
+        <p>
+          <mat-slide-toggle [checked]="visibleAlerts.includes(alert.value)"
+            [disabled]="loadingRole || saving"
+            (change)="onAlertChange(alert.value, $event.checked)">{{ alert.label }}</mat-slide-toggle>
+        </p>
+      }
+    }
   </mat-dialog-content>
-  <mat-dialog-actions>
-    <button mat-button mat-dialog-close>Cancel</button>
-    <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
-    <button mat-button color="primary" type="submit" >Registrar</button>
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close type="button" [disabled]="saving">Cancelar</button>
+    <button mat-flat-button color="primary" type="submit"
+      [disabled]="loadingRole || saving || serviceForm.invalid">{{ saving ? 'Guardando…' : 'Guardar' }}</button>
   </mat-dialog-actions>
-  
 </form>

@@ -1,17 +1,17 @@
 import ProfesionalRoleModel from "../models/parameters/profesionalRole.model";
-import { ProfesionalRole } from './../interfaces/parameters/parameter.interface';
+import { ProfesionalRole, VisibleAlertType } from './../interfaces/parameters/parameter.interface';
 
 const insertProfesionalRole = async (profesionalRole: ProfesionalRole) => {
   const responseInsert = await ProfesionalRoleModel.create(profesionalRole);
   return responseInsert;
 };
 
-const updateProfesionalRole = async (id: string, services: string[]) => {
+const updateProfesionalRole = async (id: string, services?: string[], visibleAlerts?: VisibleAlertType[]) => {
   
   const responseUpdate = await ProfesionalRoleModel.findByIdAndUpdate(
     id,
-    { services }, // aquí actualizamos el campo que contiene el array
-    { new: true } // retorna el documento actualizado
+    { ...(services !== undefined ? { services } : {}), ...(visibleAlerts !== undefined ? { visibleAlerts } : {}) },
+    { new: true, runValidators: true } // retorna el documento actualizado
   );
 
   return responseUpdate;

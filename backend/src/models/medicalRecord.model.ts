@@ -18,6 +18,9 @@ const MedicalRecordSchema = new Schema<MedicalRecord>(
     interventionObjective: {
       type: String,
     },
+    sessionConclusion: {
+      type: String,
+    },
     relevantElements: {
       type: String,
     },

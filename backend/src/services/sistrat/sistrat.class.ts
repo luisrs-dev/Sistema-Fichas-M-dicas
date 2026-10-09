@@ -325,7 +325,7 @@ class Sistrat {
   }
 
 
-  async crearDemanda(patient: Patient) {
+  async crearDemanda(patient: Patient, report: (step: string, progress: number, result?: Record<string, any>) => Promise<void> = async () => {}) {
     const center = patient.sistratCenter;
     const cleanedRut = this.cleanPatientRut(patient.rut);
     this.gender = patient.sex;
@@ -338,6 +338,10 @@ class Sistrat {
 
     try {
       await this.logStep(logger, `[Sistrat][crearDemanda] Inicio flujo centro ${center}`);
+      const required = ['rut', 'sistratCenter', 'region', 'comuna', 'phone', 'phoneFamily', 'mainSubstance', 'previousTreatments', 'typeContact', 'whoRequest', 'whoDerives'];
+      const missing = required.filter(key => patient[key] === undefined || patient[key] === null || patient[key] === '');
+      if (missing.length) throw new Error(`Faltan datos requeridos: ${missing.join(', ')}`);
+      await report('Conectando con SISTRAT', 10);
       page = await this.login(center, logger);
       console.log("[Sistrat][crearDemanda] Login exitoso, avanzando a creación de demanda");
       await this.logStep(logger, "[Sistrat][crearDemanda] Login completado");
@@ -354,8 +358,8 @@ class Sistrat {
       await this.scrapper.clickButton(page, "#crea_demanda", 15000);
       console.log("Creando demanda en SISTRAT. RUT: ", cleanedRut);
       await this.logStep(logger, "[Sistrat][crearDemanda] Formulario de creación abierto");
+      await report("Consultando datos del RUT", 20);
       await this.scrapper.waitAndType(page, "#txtrut", cleanedRut);
-      await this.scrapper.waitForSeconds(2);
       // Se da click en botón "Traer datos con rut"
       // Se autocompletan campos nombre, apellidos, birthdate y sexo
 
@@ -364,9 +368,10 @@ class Sistrat {
         return url.includes("php/conv1/ajaxs/checar.php") && response.request().method() === "GET";
       });
 
-      await this.scrapper.clickButton(page, "#traeDatoFonasa", 50000);
-      // Espera la respuesta del servicio PHP
-      const fonasaResponse = await fonasaResponsePromise;
+      const [fonasaResponse] = await Promise.all([
+        fonasaResponsePromise,
+        page.waitForSelector('#traeDatoFonasa', { visible: true, timeout: 15000 }).then(() => page!.click('#traeDatoFonasa'))
+      ]);
       if (!fonasaResponse.ok()) {
         throw new Error('No se pudieron consultar los datos del RUT en SISTRAT');
       }
@@ -377,9 +382,13 @@ class Sistrat {
         const surname = document.querySelector<HTMLInputElement>('#txtapellido_usuario');
         return Boolean(name?.value.trim() && surname?.value.trim());
       }, { timeout: 15000 });
+      await report('Completando la demanda', 35);
 
       await this.scrapper.setSelectValue(page, "#selregion", patient.region);
-      await this.scrapper.waitForSeconds(2);
+      await page.waitForFunction((comuna) => {
+        const select = document.querySelector<HTMLSelectElement>('#selcomuna');
+        return select && Array.from(select.options).some(option => option.value === comuna);
+      }, { timeout: 15000 }, String(patient.comuna));
       await this.scrapper.setSelectValue(page, "#selcomuna", patient.comuna);
 
       await this.scrapper.waitAndType(page, "#int_telefono", patient.phone);
@@ -437,30 +446,56 @@ class Sistrat {
       }
 
       if (directRecordDemanda) {
-        await this.scrapper.clickButton(page, "#mysubmit");
-        await this.checkForValidationError(page);
+        await report('Enviando y verificando el registro', 50, { submitted: true });
+        await page.waitForSelector('#mysubmit', { visible: true, timeout: 15000 });
+        await page.click('#mysubmit');
+        await page.waitForFunction(() => {
+          const popup = document.getElementById('popup_container');
+          return !document.getElementById('mysubmit') ||
+            (popup && window.getComputedStyle(popup).display !== 'none');
+        }, { timeout: 30000 });
+        try {
+          await this.checkForValidationError(page, false);
+        } catch (error: any) {
+          if (error.message?.includes('SISTRAT_VALIDATION_ERROR:')) {
+            await report('Corrija los datos requeridos por SISTRAT', 50, { submitted: false });
+          }
+          throw error;
+        }
         console.log("[Sistrat][crearDemanda] Formulario enviado, refrescando listado para validar creación");
         await this.logStep(logger, "[Sistrat][crearDemanda] Formulario enviado");
       } else {
         console.log(`[Sistrat][crearDemanda] Registro directo deshabilitado: manteniendo navegador abierto por ${waitSeconds} segundos para revisión manual`);
         await this.logStep(logger, "[Sistrat][crearDemanda] Envío omitido por configuración");
+        await report("Pendiente de revisión manual en SISTRAT", 45, { submitted: true, manualReview: true });
         await this.scrapper.waitForSeconds(waitSeconds);
-        return true;
+        throw new Error("Revisión manual: el envío automático está deshabilitado. Verifique el registro en SISTRAT antes de continuar.");
       }
 
       //await this.scrapper.waitForSeconds(90);
-      await this.listActiveDemands(page, logger);
-      await this.setCodeAlertSistrat(page, patient, logger);
-      console.log("[Sistrat][crearDemanda] Datos sincronizados correctamente");
-      await this.logStep(logger, "[Sistrat][crearDemanda] Datos sincronizados");
-
+      await report('Sincronizando código SISTRAT', 65);
+      const foundPatient = await this.setCodeAlertSistrat(page, patient, logger);
+      if (!foundPatient?.codigoSistrat) throw new Error('No se pudo confirmar el registro en el listado de SISTRAT. Verifique antes de reenviar.');
+      await report('Extrayendo y guardando alertas', 80, { registered: true });
+      // setCodeAlertSistrat guarda en otra instancia del modelo: recargar el código
+      // antes de extraer alertas para una demanda recién registrada.
       try {
+        const syncedPatient = await PatientModel.findById(patient._id);
+        if (!syncedPatient?.codigoSistrat) {
+          throw new Error("No se pudo obtener el código SISTRAT del paciente");
+        }
         console.log("[Sistrat][crearDemanda] Extrayendo nuevas alertas aprovechando el navegador actual antes de cerrarlo...");
-        await this.updateAlerts(patient, page);
+        const updatedPatient = await this.updateAlerts(syncedPatient, page);
+        if (!updatedPatient || typeof updatedPatient === "string") {
+          throw new Error("No se pudieron sincronizar las alertas del paciente");
+        }
       } catch (alertErr) {
-        console.log("[Sistrat][crearDemanda] Error actualizando alertas silenciosamente", alertErr);
+        throw new Error(`La demanda fue registrada en SISTRAT, pero no se completó la actualización de alertas. Actualice las alertas sin volver a registrar la demanda. Detalle: ${alertErr}`);
       }
 
+      console.log("[Sistrat][crearDemanda] Proceso completado: datos y alertas sincronizados correctamente");
+      await this.logStep(logger, "[Sistrat][crearDemanda] Datos y alertas sincronizados correctamente");
+      await report("Finalizando", 95);
       return true;
     } catch (error) {
       console.error("Error en crearDemanda", error);
@@ -475,12 +510,36 @@ class Sistrat {
     }
   }
 
+  async verifyDemand(patient: Patient, report: (step: string, progress: number, result?: Record<string, any>) => Promise<void>) {
+    let page: Page | null = null;
+    const logger = new ProcessLogger(this.getPatientLabel(patient), 'verificar-demanda');
+    try {
+      await report('Verificando registro existente en SISTRAT', 20);
+      page = await this.login(patient.sistratCenter, logger);
+      const found = await this.setCodeAlertSistrat(page, patient, logger);
+      if (!found?.codigoSistrat) {
+        // A successful search in both lists with no match permits a corrected submission.
+        if (found === null) await report('No se encontró la demanda en SISTRAT', 40, { submitted: false });
+        throw new Error('No se pudo confirmar la demanda en SISTRAT. Revise los datos del paciente.');
+      }
+      await report('Extrayendo y guardando alertas', 80, { registered: true });
+      const fresh = await PatientModel.findById(patient._id);
+      const updated = await this.updateAlerts(fresh, page);
+      if (!updated || typeof updated === 'string') throw new Error('Registro confirmado, pero no se pudieron actualizar las alertas');
+      await report('Finalizando', 95);
+    } finally {
+      try { if (page) await this.scrapper.closeBrowser(); }
+      finally { await logger.close(); }
+    }
+  }
+
   async setCodeAlertSistrat(page: Page, patient: Patient, logger?: ProcessLogger) {
     await this.listActiveDemands(page, logger);
     console.group(`[Sistrat][setCodeAlertSistrat] ${patient._id}`);
     await this.logStep(logger, `[Sistrat][setCodeAlertSistrat] Buscando ${patient._id}`);
     console.log("[Sistrat][setCodeAlertSistrat] Refrescando listado para buscar paciente");
 
+    let matchedPatient: any = null;
     try {
       console.log("[Sistrat][setCodeAlertSistrat] Esperando tabla de pacientes");
       await page.waitForSelector("#table_pacientes", { visible: true });
@@ -583,6 +642,7 @@ class Sistrat {
           return null;
         }
 
+        matchedPatient = patientOnActiveUsers;
         if (patientOnActiveUsers?.codigoSistrat) {
           const patientEntity = await PatientModel.findOne({ _id: patient._id });
           if (patientEntity) {
@@ -599,6 +659,7 @@ class Sistrat {
           }
         }
       } else {
+        matchedPatient = patientOnSistrat;
         console.log("[Sistrat][setCodeAlertSistrat] Paciente encontrado, sincronizando campos locales");
         await this.logStep(logger, "[Sistrat][setCodeAlertSistrat] Paciente encontrado, actualizando datos");
         if (patientOnSistrat?.codigoSistrat) {
@@ -617,6 +678,7 @@ class Sistrat {
           }
         }
       }
+      return matchedPatient;
     } catch (error) {
       await this.logStep(logger, `[Sistrat][setCodeAlertSistrat] Error: ${error}`);
       throw new Error(`Error al setear datos desde SISTRAT. Error: ${error}`);
@@ -1498,9 +1560,9 @@ class Sistrat {
     }
   }
 
-  private async checkForValidationError(page: Page): Promise<void> {
+  private async checkForValidationError(page: Page, waitForPopup = true): Promise<void> {
     try {
-      await this.scrapper.waitForSeconds(2); // Esperar un momento para que el popup aparezca
+      if (waitForPopup) await this.scrapper.waitForSeconds(2);
       
       const popupError = await page.evaluate(() => {
         const popup = document.getElementById('popup_container');
@@ -1512,6 +1574,9 @@ class Sistrat {
       });
 
       if (popupError) {
+        if (!waitForPopup && !popupError.includes('Complete los siguientes campos')) {
+          throw new Error('No se pudo confirmar la respuesta de SISTRAT. Verifique el registro antes de reenviar.');
+        }
         // Parsear los campos faltantes
         let content = popupError.replace(/<br\s*\/?>/gi, '\n') // Br a saltos de línea
           .replace(/<[^>]+>/g, '')       // Quitar etiquetas
@@ -1527,7 +1592,7 @@ class Sistrat {
         }
       }
     } catch (e: any) {
-      if (e.message.includes('SISTRAT_VALIDATION_ERROR')) {
+      if (!waitForPopup || e.message.includes('SISTRAT_VALIDATION_ERROR')) {
         throw e;
       }
       console.log("[Sistrat] No se pudo verificar validación o no hubo error");
@@ -1539,11 +1604,13 @@ class Sistrat {
     await this.logStep(logger, "[Sistrat][listActiveDemands] Apertura de menú de demandas activas");
     try {
       console.log("[Sistrat][listActiveDemands] Esperando menú principal");
-      await this.scrapper.waitForSeconds(2);
-      await this.scrapper.clickButton(page, "#flyout2");
+      await page.waitForSelector("#flyout2", { visible: true, timeout: 15000 });
+      await page.click("#flyout2");
       console.log("[Sistrat][listActiveDemands] Menú flyout2 abierto, navegando a listado");
-      await this.scrapper.waitForSeconds(2);
-      await this.scrapper.clickButton(page, 'a[href="php/conv1/listado_demanda.php"].ui-corner-all');
+      const link = 'a[href="php/conv1/listado_demanda.php"].ui-corner-all';
+      await page.waitForSelector(link, { visible: true, timeout: 15000 });
+      await page.click(link);
+      await page.waitForSelector('#table_pacientes', { visible: true, timeout: 30000 });
       console.log("[Sistrat][listActiveDemands] Listado de demandas solicitado");
       await this.logStep(logger, "[Sistrat][listActiveDemands] Listado solicitado correctamente");
     } catch (error) {

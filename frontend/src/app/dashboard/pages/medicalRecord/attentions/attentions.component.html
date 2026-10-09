@@ -1,60 +1,78 @@
 <div class="container">
   <div class="header">
     <div>
-      <h2>Atenciones</h2>
-      <p class="subtitle">Registro masivo de fichas mensuales por centro.</p>
+      <p class="subtitle">Registro masivo</p>
+      <h2>{{ pageTitle }}</h2>
+      <p class="subtitle">{{ pageDescription }}</p>
     </div>
   </div>
 
   <div class="filters">
     <mat-form-field appearance="outline">
       <mat-label>Centro</mat-label>
-      <mat-select required [value]="selectedCenter()" (selectionChange)="onCenterChange($event.value)">
+      <mat-select required [disabled]="operationBusy()" [value]="selectedCenter()" (selectionChange)="onCenterChange($event.value)">
         <mat-option value="">Selecciona</mat-option>
         <mat-option *ngFor="let center of sistratCenters()" [value]="center.name">{{ 'CEADT ' + (center.name | titlecase) }}</mat-option>
       </mat-select>
     </mat-form-field>
 
+  </div>
+
+  @if(action !== 'historicos') {
+  <section class="monthly-attentions">
+    <div class="filters">
+      <button mat-flat-button color="primary" (click)="recoverPatients()" [disabled]="!selectedCenter() || operationBusy()">Recuperar pacientes</button>
+      <button mat-stroked-button color="primary" (click)="forceLoadPatientsForCenter()" [disabled]="!selectedCenter() || operationBusy()">Actualizar desde SISTRAT</button>
+    </div>
+    <div aria-live="polite">
+      @if(patientsLoading()) { <p>Recuperando pacientes…</p><mat-spinner diameter="24"></mat-spinner> }
+      @if(patientsSource()) {
+        <p>Origen: {{ patientsSource() === 'cache' ? 'Datos guardados del centro' : 'SISTRAT' }} · Actualizado: {{ patientsUpdatedAt() | date:'dd/MM/yyyy HH:mm' }}</p>
+      }
+      @if(patientsLoadError()) { <p role="alert">No se pudieron recuperar los pacientes. Vuelve a intentarlo.</p> }
+    </div>
+    <div class="filters">
+    @if(action === 'atenciones') {
     <mat-form-field appearance="outline">
       <mat-label>Mes</mat-label>
-      <mat-select required [value]="selectedMonth()" (selectionChange)="selectedMonth.set($event.value)">
+      <mat-select required [disabled]="operationBusy()" [value]="selectedMonth()" (selectionChange)="selectedMonth.set($event.value)">
         <mat-option *ngFor="let month of months" [value]="month.value">{{ month.label }}</mat-option>
       </mat-select>
     </mat-form-field>
 
     <mat-form-field appearance="outline">
       <mat-label>Año</mat-label>
-      <mat-select required [value]="selectedYear()" (selectionChange)="selectedYear.set($event.value)">
+      <mat-select required [disabled]="operationBusy()" [value]="selectedYear()" (selectionChange)="selectedYear.set($event.value)">
         <mat-option *ngFor="let year of years" [value]="year">{{ year }}</mat-option>
       </mat-select>
     </mat-form-field>
 
-    <button mat-flat-button color="primary" class="text-white" [disabled]="bulkLoading() || isUpdatingAlerts()"
+    <button mat-flat-button color="primary" class="text-white" [disabled]="operationBusy() || !patientsLoaded() || !selectedCount()"
       (click)="onBulkSistratRecord()">
-      Registrar
+      Registrar atenciones
     </button>
-    <button mat-flat-button color="accent" class="text-white ml-2" [disabled]="bulkLoading() || isUpdatingAlerts()"
+    } @else {
+    <button mat-flat-button color="accent" class="text-white ml-2" [disabled]="operationBusy() || !patientsLoaded() || !selectedCount()"
       (click)="onBulkUpdateAlerts()">
-      Actualizar Alertas
+      Actualizar alertas
     </button>
+    }
   </div>
 
   <div class="summary" *ngIf="centerPatients().length > 0">
     <span>{{ centerPatients().length }} pacientes</span>
     <span>Seleccionados: {{ selectedCount() }}</span>
-    <button mat-stroked-button color="primary" (click)="toggleSelectAllPatients()" [disabled]="bulkLoading()">
+    <button mat-stroked-button color="primary" (click)="toggleSelectAllPatients()" [disabled]="operationBusy()">
       {{ isAllSelected() ? 'Deseleccionar todos' : 'Seleccionar todos' }}
     </button>
-    <button mat-flat-button color="accent" style="margin-left: 16px;" (click)="forceLoadPatientsForCenter()" [disabled]="bulkLoading()">
-      <mat-icon>sync</mat-icon> Forzar Sincronización
-    </button>
+
   </div>
 
   <div class="patient-list" *ngIf="centerPatients().length > 0">
     <div *ngFor="let patientItem of centerPatients()" class="patient-item">
       <mat-checkbox [checked]="selectedPatients()[patientItem._id || '']"
         (change)="togglePatientSelection(patientItem._id || '', $event.checked)"
-        [disabled]="bulkLoading() || !patientItem._id || !patientItem.codigoSistrat">
+        [disabled]="operationBusy() || !patientItem._id || !patientItem.codigoSistrat">
         <span class="patient-name">{{ patientItem.name | uppercase}}</span>
         <span *ngIf="patientItem.codigoSistrat" class="text-muted ml-2">
           (Cód. Sistrat: {{ patientItem.codigoSistrat }})
@@ -88,11 +106,42 @@
     </div>
   </div>
 
-  <div *ngIf="selectedCenter() && centerPatients().length === 0" class="empty">
+  <div *ngIf="patientsLoaded() && centerPatients().length === 0" class="empty">
     No hay pacientes para el centro seleccionado.
   </div>
 
   <div *ngIf="!selectedCenter()" class="empty">
     Selecciona un centro para cargar pacientes.
   </div>
+  @if(selectedCenter() && !patientsLoaded() && !patientsLoading() && !patientsLoadError()) {
+    <p>Presiona «Recuperar pacientes» para cargar el listado del centro.</p>
+  }
+  </section>
+
+  }
+  @if(action === 'historicos') {
+  <section class="historical-sync" aria-live="polite">
+    <p>Consulta los históricos de SISTRAT del centro seleccionado y actualiza los pacientes correspondientes en Ficlin. La sincronización incluye a todos los pacientes históricos del centro seleccionado.</p>
+    <button mat-flat-button color="primary" (click)="syncHistoricalPatients()"
+      [disabled]="!selectedCenter() || operationBusy() || historicalConnectionError()">
+      Sincronizar pacientes históricos
+    </button>
+    @if(historicalConnectionError()) {
+      <p>No se pudo consultar el avance. El proceso puede seguir ejecutándose en el servidor.</p>
+      <button mat-stroked-button (click)="resumeHistoricalSync(selectedCenter())">Reconectar</button>
+    }
+    @if(historicalJob(); as job) {
+      <p>{{ job.center }}: {{ job.step }} ({{ job.progress }}%)</p>
+      @if(job.active) { <mat-spinner diameter="24"></mat-spinner> }
+      @if(job.error) { <p role="alert">{{ job.error }}</p> }
+      @if(job.result; as result) {
+        <p>Códigos únicos: {{ result.total }} · Actualizados: {{ result.updated.length }} · Ya históricos: {{ result.alreadyHistorical.length }} · No encontrados: {{ result.notFound.length }} · Ambiguos: {{ result.ambiguous.length }} · Errores: {{ result.errors.length }}</p>
+        @if(result.notFound.length) { <details><summary>Códigos no encontrados</summary>{{ result.notFound.join(', ') }}</details> }
+        @if(result.ambiguous.length) { <details><summary>Coincidencias ambiguas</summary>{{ result.ambiguous.join(', ') }}</details> }
+        @if(result.errors.length) { <details><summary>Códigos con error de actualización</summary>{{ result.errors.join(', ') }}</details> }
+      }
+    }
+  </section>
+  }
+
 </div>

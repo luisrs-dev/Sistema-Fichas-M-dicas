@@ -59,3 +59,5 @@
   color: #9ca3af;
   font-style: italic;
 }
+
+.historical-sync { margin: 20px 0; padding: 16px; border: 1px solid #ddd; border-radius: 8px; overflow-wrap: anywhere; }

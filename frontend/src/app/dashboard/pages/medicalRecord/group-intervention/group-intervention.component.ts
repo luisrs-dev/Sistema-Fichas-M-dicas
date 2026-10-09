@@ -84,11 +84,11 @@ export default class GroupInterventionComponent implements OnInit {
         this.programs.set(userPrograms);
         const programsIds = userPrograms.map( (program: any) => program._id);
         
-        return this.patientService.getPatients(programsIds)
+        return this.patientService.getPatients(programsIds, { careStatus: 'active' })
       })
     ).subscribe(patients => {
     console.log('[patients]', patients);    
-      const activePatients = patients.filter((patient) => patient.active === true);
+      const activePatients = patients.filter((patient) => patient.active !== false);
       this.allPatients.set(activePatients);
       this.applyProgramFilter(this.programFilter.value);
     } 

@@ -1,4 +1,7 @@
 <div class="container">
+  <app-demand-progress *ngIf="patient?._id" [patientId]="patient._id!"
+    (busyChange)="demandSyncBusy = $event" (completed)="refreshAfterDemand()"></app-demand-progress>
+
   <mat-tab-group mat-stretch-tabs="false" mat-align-tabs="start" dynamicHeight>
     <mat-tab label="{{ title }}">
 
@@ -8,7 +11,7 @@
       </mat-card>
       } -->
 
-      <form [formGroup]="userForm" autocomplete="off" (ngSubmit)="onSubmit()">
+      <form [attr.inert]="demandSyncBusy ? '' : null" [attr.aria-busy]="demandSyncBusy" [formGroup]="userForm" autocomplete="off" (ngSubmit)="onSubmit()">
         <mat-stepper [linear]="true" #stepper class="mt-2">
 
           <!-- PASO 1: RECUPERAR NOMBRE CON RUT -->
@@ -71,7 +74,7 @@
             </div>
 
             <div class="flex justify-content-start p-2">
-              <button mat-stroked-button color="primary" [routerLink]="['/dashboard/patients']" type="button">
+              <button mat-stroked-button color="primary" [routerLink]="[patientListPath]" type="button">
                 <mat-icon>arrow_back</mat-icon> Volver al Listado
               </button>
             </div>
@@ -411,7 +414,7 @@
                   </button>
 
                   @if(registeredOnFiclin()){
-                  <button mat-flat-button type="button" color="accent" (click)="onSaveDemandOnSistrat()">
+                  <button mat-flat-button type="button" color="accent" [disabled]="demandSyncBusy || demandProgress?.preventResubmit" (click)="onSaveDemandOnSistrat()">
                     <mat-icon>cloud_upload</mat-icon> Sincronizar SISTRAT
                   </button>
                   }
