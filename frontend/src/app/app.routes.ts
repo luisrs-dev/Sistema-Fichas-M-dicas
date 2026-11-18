@@ -104,6 +104,12 @@ export const routes: Routes = [
           import('./dashboard/pages/healthCheck/healthCheck.component'),
       },
       {
+        path: 'prestaciones-profesional',
+        title: 'Prestaciones por profesional',
+        data: { icon: 'assessment', child: false },
+        loadComponent: () => import('./dashboard/pages/medicalRecord/professional-report/professional-report.component'),
+      },
+      {
         path: 'informes-pacientes',
         title: 'Informes de Pacientes',
         data: { icon: 'table_view', child: false, forAdmin: true },

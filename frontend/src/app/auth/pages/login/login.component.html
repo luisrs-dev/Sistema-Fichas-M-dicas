@@ -4,6 +4,16 @@
       <form [formGroup]="myForm" (submit)="onSubmit()">
         <img src="../../assets/images/logo.png" width="60%" />
 
+        @if (showServerStatus) {
+        <div class="server-status" role="status" aria-live="polite">
+          <span class="server-status-dot"
+            [class.ready]="serverState === 'ready'"
+            [class.unavailable]="serverState === 'unavailable'"
+            aria-hidden="true"></span>
+          <span>{{ serverMessage }}</span>
+        </div>
+        }
+
         <mat-form-field class="mt-4">
           <mat-label>Usuario</mat-label>
           <input
@@ -30,7 +40,7 @@
           type="submit"
           class="button width-custom"
           color="accent"
-          [disabled]="myForm.invalid"
+          [disabled]="myForm.invalid || loading || serverState !== 'ready'"
         >
           Iniciar sesión
           <mat-icon class="mat-18">login</mat-icon>

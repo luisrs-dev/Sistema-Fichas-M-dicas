@@ -2,6 +2,9 @@ import { Types } from "mongoose";
 import MedicalRecordModel from "../models/medicalRecord.model";
 
 const DAYS_IN_MONTH = 31;
+const chileDateFormatter = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'America/Santiago', year: 'numeric', month: 'numeric', day: 'numeric',
+});
 
 export interface MedicalRecordGroupedByDay {
   service: string;
@@ -28,6 +31,7 @@ export const getGroupedRecordsByPatientAndMonth = async (patientId: string, mont
       $lte: searchEnd.toISOString(),
     },
   })
+    .select('date service')
     .populate({ path: "service", select: "description name" })
     .lean();
 
@@ -37,14 +41,7 @@ export const getGroupedRecordsByPatientAndMonth = async (patientId: string, mont
     const d = new Date(dateInput);
     if (Number.isNaN(d.getTime())) return null;
 
-    const formatter = new Intl.DateTimeFormat("en-US", {
-      timeZone: "America/Santiago",
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-    });
-
-    const parts = formatter.formatToParts(d);
+    const parts = chileDateFormatter.formatToParts(d);
     const day = Number(parts.find((p) => p.type === "day")?.value);
     const month = Number(parts.find((p) => p.type === "month")?.value);
     const year = Number(parts.find((p) => p.type === "year")?.value);

@@ -4,6 +4,7 @@ import { environment } from '../../../../environments/environment';
 import { Observable, catchError, retry, throwError } from 'rxjs';
 import { MedicalRecord } from '../../interfaces/medicalRecord.interface';
 import { MedicalRecordGrouped } from './interfaces/medicalRecord-grouped.interface';
+import { AttentionBatchJob } from '../../interfaces/attention-batch-job.interface';
 
 @Injectable({
   providedIn: 'root',
@@ -57,9 +58,16 @@ export class MedicalRecordService {
       catchError((err) => throwError(() => err.error.message)));
   }
 
-  monthRecordsBulkCenter(center: string, month: number, year: number, patientIds: string[]): Observable<any> {
-    return this.http.post<any>(`${this.backend}/medicalRecord/monthRecords/bulk-center`, { center, month, year, patientIds })
-      .pipe(catchError((err) => throwError(() => err.error.message || err)));
+  monthRecordsBulkCenter(center: string, month: number, year: number, patientIds: string[]): Observable<{ job: AttentionBatchJob }> {
+    return this.http.post<{ job: AttentionBatchJob }>(`${this.backend}/medicalRecord/monthRecords/bulk-center`, { center, month, year, patientIds });
+  }
+
+  attentionBatchJob(id: string): Observable<{ job: AttentionBatchJob }> {
+    return this.http.get<{ job: AttentionBatchJob }>(`${this.backend}/medicalRecord/monthRecords/bulk-jobs/${encodeURIComponent(id)}`);
+  }
+
+  latestAttentionBatchJob(center: string): Observable<{ job: AttentionBatchJob | null }> {
+    return this.http.get<{ job: AttentionBatchJob | null }>(`${this.backend}/medicalRecord/monthRecords/bulk-jobs/center/${encodeURIComponent(center)}`);
   }
 
   getMonthlyLogs(): Observable<MonthlyLogListResponse> {

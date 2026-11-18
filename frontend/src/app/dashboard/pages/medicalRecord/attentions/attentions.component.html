@@ -19,6 +19,20 @@
   </div>
 
   @if(action !== 'historicos') {
+  @if(action === 'atenciones') {
+    <div aria-live="polite">
+      @if(attentionJob(); as job) {
+        <p>{{ job.center | titlecase }} · {{ job.month }}/{{ job.year }} · {{ job.step }}</p>
+        <p>Procesados: {{ job.processed }} de {{ job.patientIds.length }} · Grupos de {{ job.batchSize }} pacientes</p>
+        @if(job.error) { <p role="alert">{{ job.error }}</p> }
+        @if(job.status === 'COMPLETED_WITH_ERRORS') { <p role="alert">Hay pacientes con errores. Revisa los resultados antes de reenviar.</p> }
+      }
+      @if(attentionConnectionError()) {
+        <p role="alert">No se pudo consultar el avance. El proceso puede seguir ejecutándose; evita reenviar.</p>
+        <button mat-stroked-button (click)="resumeAttentionBatch(selectedCenter())">Consultar nuevamente</button>
+      }
+    </div>
+  }
   <section class="monthly-attentions">
     <div class="filters">
       <button mat-flat-button color="primary" (click)="recoverPatients()" [disabled]="!selectedCenter() || operationBusy()">Recuperar pacientes</button>

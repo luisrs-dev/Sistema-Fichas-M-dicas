@@ -1,0 +1,12 @@
+[Unit]
+Description=Ejecutar FICLIN cada jueves a medianoche en Chile
+
+[Timer]
+OnCalendar=Thu *-*-* 00:00:00 America/Santiago
+AccuracySec=1s
+# No enviar fuera del horario previsto al recuperar una ejecución perdida.
+Persistent=false
+Unit=ficlin-attentions.service
+
+[Install]
+WantedBy=timers.target

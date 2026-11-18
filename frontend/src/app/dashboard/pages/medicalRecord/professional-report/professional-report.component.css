@@ -1,0 +1,17 @@
+:host { display: block; }
+.report { padding: 24px; max-width: 1440px; margin: auto; }
+h1 { margin-bottom: 8px; } h2 { font-size: 19px; margin-top: 24px; }
+.intro { color: #53616b; max-width: 900px; line-height: 1.6; }
+.filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; margin: 24px 0 8px; }
+mat-form-field { width: 225px; } .year { width: 125px; }
+.filters button { margin-top: 8px; min-height: 44px; }
+.summary { display: flex; gap: 16px; flex-wrap: wrap; }
+.summary > div { padding: 20px 28px; background: #eef7f5; border-radius: 12px; min-width: 160px; display: grid; gap: 8px; }
+.summary strong { font-size: 28px; color: #176754; }
+.services { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.services li { background: #f3f5f7; border-radius: 8px; padding: 12px; } .services strong { margin-left: 12px; }
+.table-scroll { overflow-x: auto; } table { width: 100%; } td, th { white-space: nowrap; }
+.error { color: #a12323; padding: 16px; background: #fff0f0; border-radius: 8px; }
+.empty { padding: 28px; background: #f5f7f8; border-radius: 10px; }
+.loading { display: flex; gap: 12px; align-items: center; padding: 24px; }
+@media (max-width: 600px) { .report { padding: 16px; } mat-form-field, .year { width: 100%; } .filters { gap: 0; } .filters button { width: 100%; margin: 0 0 20px; } .summary > div { flex: 1; min-width: 100px; padding: 16px; } }

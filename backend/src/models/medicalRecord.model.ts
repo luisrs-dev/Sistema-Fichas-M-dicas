@@ -54,5 +54,8 @@ const MedicalRecordSchema = new Schema<MedicalRecord>(
   { timestamps: true, versionKey: false }
 );
 
+MedicalRecordSchema.index({ registeredBy: 1, date: 1 });
+MedicalRecordSchema.index({ patient: 1, date: 1 });
+
 const MedicalRecordModel = model("medicalRecords", MedicalRecordSchema);
 export default MedicalRecordModel;

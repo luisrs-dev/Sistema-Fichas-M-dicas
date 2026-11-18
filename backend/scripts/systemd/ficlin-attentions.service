@@ -1,0 +1,13 @@
+[Unit]
+Description=Registro semanal de atenciones FICLIN por centro
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/repositories/ficlin/backend
+Environment=NODE_ENV=production
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+ExecStart=/bin/bash /home/repositories/ficlin/backend/scripts/run-monthly-attentions.sh --execute
+TimeoutStartSec=infinity
+UMask=0077

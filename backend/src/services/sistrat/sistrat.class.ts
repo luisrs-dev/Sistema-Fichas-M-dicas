@@ -1,3 +1,4 @@
+import { openMonthlySheetButton, MONTHLY_SHEET_BLOCKED_MESSAGE } from './monthlySheetButton';
 import { Page } from "puppeteer";
 import { Patient } from "../../interfaces/patient.interface";
 import PatientModel from "../../models/patient.model";
@@ -726,48 +727,8 @@ class Sistrat {
       const normalizedTarget = this.normalizeName(patientName);
       const patientCode = patient.codigoSistrat?.trim() || null;
 
-      const result = await page.evaluate(
-        (normalizedTarget, patientCodeEval) => {
-          const normalize = (name?: string) => {
-            if (!name) return "";
-            return name
-              .normalize("NFD")
-              .replace(/[\u0300-\u036f]/g, "")
-              .replace(/\s+/g, "")
-              .toLowerCase();
-          };
-
-          const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
-          if (!table) return 'NOT_FOUND';
-
-          let foundPatient = false;
-          for (let i = 1; i < table.rows.length; i++) {
-            const objCells = table.rows.item(i)?.cells;
-            if (objCells) {
-              const patientInSistrat = {
-                id: objCells.item(0)?.innerText || "",
-                name: objCells.item(1)?.innerText?.toLowerCase() || "",
-                codigoSistrat: objCells.item(2)?.innerText?.trim() || "",
-              };
-
-              const matchesName = normalize(patientInSistrat.name) === normalizedTarget;
-              const matchesCode = patientCodeEval ? patientInSistrat.codigoSistrat === patientCodeEval : false;
-
-              if (matchesCode || matchesName) {
-                foundPatient = true;
-                const button = objCells.item(5)?.querySelector("span[name='fmensual']") as HTMLElement;
-                if (button) {
-                  button.click();
-                  return 'SUCCESS';
-                }
-              }
-            }
-          }
-          return foundPatient ? 'BUTTON_NOT_FOUND' : 'NOT_FOUND';
-        },
-        normalizedTarget,
-        patientCode
-      );
+      const result = await page.evaluate(openMonthlySheetButton, normalizedTarget, patientCode);
+      if (result === 'BLOCKED') throw new Error(MONTHLY_SHEET_BLOCKED_MESSAGE);
 
       if (result === 'NOT_FOUND') throw new Error("Paciente no encontrado en SISTRAT (Pacientes Activos).");
       if (result === 'BUTTON_NOT_FOUND') throw new Error("Paciente encontrado en SISTRAT, pero no tiene el botón de Ficha Mensual disponible.");
@@ -908,49 +869,8 @@ class Sistrat {
       const normalizedTarget = this.normalizeName(patientName);
       const patientCode = patient.codigoSistrat?.trim() || null;
 
-      const result = await page.evaluate(
-        (normalizedTarget, patientCodeEval) => {
-          const normalize = (name?: string) => {
-            if (!name) return "";
-            return name
-              .normalize("NFD")
-              .replace(/[\u0300-\u036f]/g, "")
-              .replace(/\s+/g, "")
-              .toLowerCase();
-          };
-
-          const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
-          if (!table) return 'NOT_FOUND';
-
-          let foundPatient = false;
-          for (let i = 1; i < table.rows.length; i++) {
-            const objCells = table.rows.item(i)?.cells;
-            if (objCells) {
-              const patientInSistrat = {
-                id: objCells.item(0)?.innerText || "",
-                name: objCells.item(1)?.innerText?.toLowerCase() || "",
-                codigoSistrat: objCells.item(2)?.innerText?.trim() || "",
-              };
-
-              const matchesName = normalize(patientInSistrat.name) === normalizedTarget;
-              const matchesCode = patientCodeEval ? patientInSistrat.codigoSistrat === patientCodeEval : false;
-
-              if (matchesCode || matchesName) {
-                foundPatient = true;
-                const button = objCells.item(5)?.querySelector("span[name='fmensual']") as HTMLElement;
-
-                if (button) {
-                  button.click();
-                  return 'SUCCESS';
-                }
-              }
-            }
-          }
-          return foundPatient ? 'BUTTON_NOT_FOUND' : 'NOT_FOUND';
-        },
-        normalizedTarget,
-        patientCode
-      );
+      const result = await page.evaluate(openMonthlySheetButton, normalizedTarget, patientCode);
+      if (result === 'BLOCKED') throw new Error(MONTHLY_SHEET_BLOCKED_MESSAGE);
 
       if (result === 'NOT_FOUND') {
         throw new Error("Paciente no encontrado en SISTRAT (Pacientes Activos).");
@@ -2175,7 +2095,7 @@ class Sistrat {
   }
 
   // O(1) bulk fetch and fill month records for same center
-  async bulkRecordMonthlySheets(recordsData: { patient: Patient, records: any[] }[], center: string, month: number, year: number) {
+  async bulkRecordMonthlySheets(recordsData: { patient: Patient, records: any[] }[], center: string, month: number, year: number, requireAutomaticSaving = false) {
     if (!recordsData || recordsData.length === 0) return [];
 
     console.log(`[bulkRecordMonthlySheets] Iniciando registro O(1) de ${recordsData.length} pacientes para el centro: ${center}`);
@@ -2204,43 +2124,15 @@ class Sistrat {
           const normalizedTarget = this.normalizeName(patientName);
           const patientCode = item.patient.codigoSistrat?.trim() || null;
 
-          const rowPatientSistrat: any = await page.evaluate(
-            (normalizedTarget, patientCodeEval) => {
-              const normalize = (n?: string) => (n || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "").toLowerCase();
-
-              const table = document.getElementById("table_pacientes") as HTMLTableElement | null;
-              if (table) {
-                for (let i = 1; i < table.rows.length; i++) {
-                  const objCells = table.rows.item(i)?.cells;
-                  if (objCells) {
-                    const patient = {
-                      id: objCells.item(0)?.innerText || "",
-                      name: objCells.item(1)?.innerText?.toLowerCase() || "",
-                      codigoSistrat: objCells.item(2)?.innerText?.trim() || "",
-                    };
-                    if (normalize(patient.name) === normalizedTarget || (patientCodeEval && patient.codigoSistrat === patientCodeEval)) {
-                      const btn = objCells.item(5)?.querySelector("span[name='fmensual']") as HTMLElement;
-                      if (btn) {
-                        btn.click();
-                        return patient;
-                      }
-                    }
-                  }
-                }
-              }
-              return null;
-            },
-            normalizedTarget,
-            patientCode
-          );
-
-          if (!rowPatientSistrat) {
-            throw new Error("No encontrado en listado activo SISTRAT");
-          }
+          const monthlyButton = await page.evaluate(openMonthlySheetButton, normalizedTarget, patientCode);
+          if (monthlyButton === 'BLOCKED') throw new Error(MONTHLY_SHEET_BLOCKED_MESSAGE);
+          if (monthlyButton === 'BUTTON_NOT_FOUND')
+            throw new Error('Paciente encontrado en SISTRAT, pero no tiene el botón de Ficha Mensual disponible.');
+          if (monthlyButton === 'NOT_FOUND') throw new Error('No encontrado en listado activo SISTRAT');
 
           console.log('----------------------------2 Esperando Tabla Mensual----------------------------');
 
-          this.scrapper.waitForSeconds(2);
+          await this.scrapper.waitForSeconds(2);
           // Esperando tabla con calendario para registrar atenciones mensuales
           await page.waitForSelector(".tabla_mensual", { timeout: 10000 });
 
@@ -2304,6 +2196,8 @@ class Sistrat {
           }, item.records);
 
           const directMassive = await getEnvironmentConfigValue(this.configKeyMassive);
+          if (requireAutomaticSaving && directMassive !== true)
+            throw new Error('Guardado automático deshabilitado; no se envió la planilla');
           const waitMinutesStr = await getEnvironmentConfigValue(this.configKeyWait) || "5";
           const waitSeconds = (parseInt(waitMinutesStr as string, 10) || 5) * 60;
 
@@ -2331,7 +2225,9 @@ class Sistrat {
       console.log(`Fallo Critico Masivo: ${e}`);
       throw new Error(`Fallo de conexión Sistrat Masivo: ${e.message}`);
     } finally {
-      if (page) await this.scrapper.closeBrowser();
+      // login puede abrir Chrome y fallar antes de devolver la página.
+      // Cerrar también en ese caso para no acumular navegadores entre centros.
+      await this.scrapper.closeBrowser();
     }
 
     return results;

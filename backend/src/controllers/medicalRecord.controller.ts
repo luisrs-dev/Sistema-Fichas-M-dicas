@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { handleHttp } from "../utils/error.handle";
+import { MONTHLY_SHEET_BLOCKED_MESSAGE } from '../services/sistrat/monthlySheetButton';
 import { normalizeDateRange } from "../utils/utilities";
 import {
   allMedicalRecords,
@@ -11,7 +12,6 @@ import {
   postMedicalRecordsPerMonthOnSistrat,
   getGroupedRecordsByPatientAndMonth,
   postMedicalRecordsPerMonthForAllPatients,
-  postMedicalRecordsBulkSistrat,
   listMonthlyLogFiles,
   readMonthlyLogFile,
   sendTestBulkSummaryEmail,
@@ -83,6 +83,9 @@ const postMedicalRecordPerMonth = async ({ params, body }: Request, res: Respons
 
     res.send({ status: true, message: "Registro de Ficha mensual en Sistrat completado", data: responsepostMedicalRecordsPerMonthOnSistrat });
   } catch (error) {
+    if (error instanceof Error && error.message.includes(MONTHLY_SHEET_BLOCKED_MESSAGE)) {
+      return res.status(422).json({ status: false, error: 'MONTHLY_SHEET_BLOCKED', message: MONTHLY_SHEET_BLOCKED_MESSAGE });
+    }
     handleHttp(res, "ERROR_MEDICAL_RECORDS_PER_MONTH", error);
   }
 };
@@ -108,23 +111,6 @@ const postMedicalRecordPerMonthBulk = async ({ body }: Request, res: Response) =
     });
   } catch (error) {
     handleHttp(res, "ERROR_BULK_MEDICAL_RECORDS_PER_MONTH", error);
-  }
-};
-
-const postMedicalRecordPerMonthBulkCenter = async ({ body }: Request, res: Response) => {
-  const { center, patientIds, month, year } = body;
-  if (!center || !Array.isArray(patientIds) || patientIds.length === 0) {
-    return res.status(400).json({ success: false, message: "Parámetros insuficientes o inválidos" });
-  }
-
-  const m = Number(month) || new Date().getMonth() + 1;
-  const y = Number(year) || new Date().getFullYear();
-
-  try {
-    const results = await postMedicalRecordsBulkSistrat(center, patientIds, m, y);
-    res.status(200).json({ status: true, message: "Bulk O(1) Completado", results });
-  } catch (error) {
-    handleHttp(res, "ERROR_BULK_CENTER_MEDICAL_RECORDS", error);
   }
 };
 
@@ -510,7 +496,6 @@ export {
   getMedicalRecords,
   getAllMedicalRecordsByUser,
   medicalRecordsByMonth,
-  postMedicalRecordPerMonthBulkCenter,
   groupedMedicalRecordsByPatient,
   getPdfMedicalRecordsByPatient,
   getPdfMedicalRecords,

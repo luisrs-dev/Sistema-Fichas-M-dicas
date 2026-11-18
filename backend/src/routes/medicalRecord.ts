@@ -1,4 +1,6 @@
 import { Request, Response, Router } from "express";
+import * as attentionBatches from '../controllers/attentionBatchJob.controller';
+import { checkAdmin } from '../middleware/checkJwt';
 import {
   getMedicalRecords,
   getAllMedicalRecordsByUser,
@@ -12,7 +14,6 @@ import {
   getMonthlyLogs,
   getMonthlyLogContent,
   testBulkEmail,
-  postMedicalRecordPerMonthBulkCenter,
 } from "../controllers/medicalRecord.controller";
 // import { logMiddleware } from "../middleware/log";
 const router = Router();
@@ -24,7 +25,9 @@ router.get("/grouped/:patientId/:year/:month", groupedMedicalRecordsByPatient);
 router.get("/:userId", getAllMedicalRecordsByUser);
 router.post("/", postMedicalRecord);
 router.post("/ monthRecords/bulk/test-email", testBulkEmail);
-router.post("/monthRecords/bulk-center", postMedicalRecordPerMonthBulkCenter);
+router.post("/monthRecords/bulk-center", checkAdmin, attentionBatches.start);
+router.get('/monthRecords/bulk-jobs/center/:center', checkAdmin, attentionBatches.latest);
+router.get('/monthRecords/bulk-jobs/:id', checkAdmin, attentionBatches.status);
 router.post("/monthRecords/bulk", postMedicalRecordPerMonthBulk);
 router.post("/monthRecords/:patientId", postMedicalRecordPerMonth);
 router.get("/monthRecords/logs", getMonthlyLogs);

@@ -7,7 +7,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
-import { firstValueFrom, Subscription, timer, exhaustMap, takeWhile } from 'rxjs';
+import { firstValueFrom, Subscription, timer, exhaustMap, takeWhile, catchError, of } from 'rxjs';
+import { AttentionBatchJob } from '../../../interfaces/attention-batch-job.interface';
 import { HistoricalSyncJob } from '../../../interfaces/historical-sync.interface';
 import Notiflix from 'notiflix';
 import { Patient } from '../../../interfaces/patient.interface';
@@ -54,10 +55,14 @@ export default class AttentionsComponent {
   historicalBusy = signal(false);
   historicalConnectionError = signal(false);
   private historicalSubscription?: Subscription;
+  private attentionSubscription?: Subscription;
+  attentionJob = signal<AttentionBatchJob | null>(null);
+  attentionConnectionError = signal(false);
   private destroyed = false;
 
   ngOnDestroy() {
     this.destroyed = true;
+    this.attentionSubscription?.unsubscribe();
     this.historicalSubscription?.unsubscribe();
   }
 
@@ -171,6 +176,10 @@ export default class AttentionsComponent {
   }
 
   onCenterChange(center: string) {
+    this.attentionSubscription?.unsubscribe();
+    this.attentionJob.set(null);
+    this.attentionConnectionError.set(false);
+    this.bulkLoading.set(false);
     this.historicalSubscription?.unsubscribe();
     this.historicalJob.set(null);
     this.historicalConnectionError.set(false);
@@ -184,6 +193,7 @@ export default class AttentionsComponent {
     this.patientsLoadError.set(false);
     this.patientsSource.set(null);
     this.patientsUpdatedAt.set(null);
+    if (center && this.action === 'atenciones') void this.resumeAttentionBatch(center);
     if (center && this.action === 'historicos') void this.resumeHistoricalSync(center);
   }
 
@@ -204,101 +214,94 @@ export default class AttentionsComponent {
     this.selectedPatients.set(updatedSelections);
   }
 
+  async resumeAttentionBatch(center: string) {
+    this.attentionSubscription?.unsubscribe();
+    this.bulkLoading.set(true);
+    this.attentionConnectionError.set(false);
+    try {
+      const { job } = await firstValueFrom(this.medicalRecordService.latestAttentionBatchJob(center));
+      if (this.destroyed || this.selectedCenter() !== center) return;
+      this.attentionJob.set(job);
+      this.bulkLoading.set(!!job?.active);
+      if (job) {
+        this.applyAttentionBatch(job);
+        if (job.active) this.watchAttentionBatch(job);
+      }
+    } catch {
+      if (this.destroyed || this.selectedCenter() !== center) return;
+      // No permitir reenviar si no se pudo verificar el estado del proceso anterior.
+      this.attentionConnectionError.set(true);
+    }
+  }
+
+  private applyAttentionBatch(job: AttentionBatchJob) {
+    this.attentionJob.set(job);
+    this.bulkLoading.set(job.active);
+    const statuses = { ...this.registrationStatus() };
+    const messages = { ...this.registrationMessages() };
+    for (const id of job.patientIds) {
+      statuses[id] = job.active ? 'queued' : 'warning';
+      messages[id] = job.active ? 'Esperando procesamiento' : 'Sin resultado confirmado. Verifica SISTRAT antes de reenviar.';
+    }
+    if (job.active && job.currentBatch > 0) {
+      const offset = (job.currentBatch - 1) * job.batchSize;
+      for (const id of job.patientIds.slice(offset, offset + job.batchSize)) {
+        statuses[id] = 'pending';
+        messages[id] = 'Procesando lote actual';
+      }
+    }
+    for (const result of job.results) {
+      statuses[result.patientId] = result.status;
+      messages[result.patientId] = result.message || '';
+    }
+    this.registrationStatus.set(statuses);
+    this.registrationMessages.set(messages);
+    if (job.active) {
+      this.selectedMonth.set(job.month);
+      this.selectedYear.set(job.year);
+    }
+  }
+
+  private watchAttentionBatch(job: AttentionBatchJob) {
+    this.attentionSubscription?.unsubscribe();
+    this.attentionSubscription = timer(0, 3000).pipe(
+      exhaustMap(() => this.medicalRecordService.attentionBatchJob(job._id).pipe(
+        catchError(() => { this.attentionConnectionError.set(true); return of(null); })
+      )),
+      takeWhile(response => !response || response.job.active, true)
+    ).subscribe(response => {
+      if (!response || this.destroyed || this.selectedCenter() !== job.center) return;
+      this.attentionConnectionError.set(false);
+      this.applyAttentionBatch(response.job);
+      if (!response.job.active) {
+        if (response.job.status === 'COMPLETED') Notiflix.Notify.success('Registro de atenciones finalizado');
+        else Notiflix.Notify.warning('Registro finalizado con incidencias. Revisa los resultados antes de reenviar.');
+      }
+    });
+  }
+
   async onBulkSistratRecord() {
     if (this.operationBusy() || !this.patientsLoaded()) return;
     const center = this.selectedCenter();
-    if (!center) {
-      Notiflix.Notify.failure('Selecciona un centro');
+    const ids = Object.entries(this.selectedPatients()).filter(([, checked]) => checked).map(([id]) => id);
+    if (!center || !ids.length) {
+      Notiflix.Notify.failure('Selecciona un centro y al menos un paciente');
       return;
     }
-
-    const month = this.selectedMonth();
-    const year = this.selectedYear();
-    const selectedIds = Object.entries(this.selectedPatients())
-      .filter(([, checked]) => checked)
-      .map(([id]) => id);
-
-    if (!selectedIds.length) {
-      Notiflix.Notify.failure('Selecciona al menos un paciente para enviar atenciones masivas');
-      return;
-    }
-
     this.bulkLoading.set(true);
-    Notiflix.Notify.info(`Enviando registro de atenciones mensuales para ${selectedIds.length} pacientes...`);
-
-    const statuses: Record<string, 'queued' | 'pending' | 'success' | 'error' | 'warning'> = {
-      ...this.registrationStatus(),
-    };
-    const messages = { ...this.registrationMessages() };
-
-    selectedIds.forEach((id) => {
-      statuses[id] = 'pending';
-      messages[id] = 'Registro masivo O(1) en background...';
-    });
-    this.registrationStatus.set(statuses);
-    this.registrationMessages.set(messages);
-
+    this.attentionConnectionError.set(false);
     try {
-      const response = await firstValueFrom(
-        this.medicalRecordService.monthRecordsBulkCenter(center, month, year, selectedIds)
-      );
-
-      const bulkResults = response.results || [];
-      const updatedStatuses = { ...this.registrationStatus() };
-      const updatedMessages = { ...this.registrationMessages() };
-
-      // Si no devolvió nada extra, todos a error por defecto o validamos los results:
-      selectedIds.forEach((id) => {
-        const resItem = bulkResults.find((r: any) => String(r.patientId) === String(id));
-        if (resItem) {
-          updatedStatuses[id] = resItem.status; // success, error, warning
-          updatedMessages[id] = resItem.message || '';
-        } else {
-          updatedStatuses[id] = 'warning';
-          updatedMessages[id] = 'No procesado (El paciente no tiene fichas médicas registradas en el mes)';
-        }
-      });
-
-      this.registrationStatus.set(updatedStatuses);
-      this.registrationMessages.set(updatedMessages);
-
-      Notiflix.Notify.success('Operación masiva de registro en SISTRAT finalizada');
+      const { job } = await firstValueFrom(this.medicalRecordService.monthRecordsBulkCenter(
+        center, this.selectedMonth(), this.selectedYear(), ids
+      ));
+      if (this.destroyed) return;
+      this.applyAttentionBatch(job);
+      this.watchAttentionBatch(job);
+      Notiflix.Notify.info('Registro iniciado. Puedes salir de esta pantalla y volver a consultar el avance.');
     } catch (error: any) {
-      console.error('Error registrando atenciones mensuales masivas SISTRAT:', error);
-
-      let errorMessage = 'Ocurrió un error en el registro masivo';
-      if (typeof error === 'string') errorMessage = error;
-      else if (error?.error?.message) errorMessage = error.error.message;
-      else if (error?.message) errorMessage = error.message;
-
-      // Detectar timeout del navegador o proxy
-      const isTimeout = error && (error.status === 0 || error.status === 504 || error.status === 502);
-      if (isTimeout) {
-        errorMessage = 'El proceso de registro masivo toma varios minutos debido a la cantidad de pacientes. El navegador cerró la conexión por límite de tiempo (timeout), pero la sincronización continúa ejecutándose en segundo plano en el servidor. Puedes verificar el avance de cada paciente en la sección de Logs o actualizar la lista en unos minutos.';
-      }
-
-      const updatedStatuses = { ...this.registrationStatus() };
-      const updatedMessages = { ...this.registrationMessages() };
-
-      selectedIds.forEach((id) => {
-        updatedStatuses[id] = isTimeout ? 'pending' : 'error';
-        updatedMessages[id] = errorMessage;
-      });
-
-      this.registrationStatus.set(updatedStatuses);
-      this.registrationMessages.set(updatedMessages);
-
-      if (isTimeout) {
-        Notiflix.Report.info(
-          'Sincronización en Segundo Plano',
-          errorMessage,
-          'Entendido'
-        );
-      } else {
-        Notiflix.Notify.failure(errorMessage);
-      }
-    } finally {
-      this.bulkLoading.set(false);
+      Notiflix.Notify.failure(error?.error?.message || 'No se pudo confirmar el inicio. Consultando el estado.');
+      // Una respuesta perdida no prueba que el backend haya rechazado el envío.
+      await this.resumeAttentionBatch(center);
     }
   }
 
@@ -434,6 +437,8 @@ export default class AttentionsComponent {
       this.selectedPatients.set(selected);
       this.registrationStatus.set({});
       this.registrationMessages.set({});
+      const job = this.attentionJob();
+      if (job && this.action === 'atenciones') this.applyAttentionBatch(job);
     } catch (error) {
       if (this.destroyed || this.selectedCenter() !== center) return;
       this.patientsLoadError.set(true);

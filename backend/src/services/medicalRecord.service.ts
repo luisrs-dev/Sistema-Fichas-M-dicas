@@ -213,7 +213,32 @@ const postMedicalRecordsPerMonthForAllPatients = async (month: number, year: num
   return summaryPayload;
 };
 
-const postMedicalRecordsBulkSistrat = async (center: string, patientIds: string[], month: number, year: number) => {
+type BulkOptions = {
+  batchSize?: number; pauseSeconds?: number;
+  beforeBatch?: (batch: number, total: number) => Promise<void>;
+  onBatch?: (results: any[]) => Promise<void>;
+};
+
+const postMedicalRecordsBulkSistrat = async (center: string, patientIds: string[], month: number, year: number, options: BulkOptions = {}) => {
+  if (!center || !Array.isArray(patientIds) || !patientIds.length) throw new Error('Selección inválida');
+  const batchSize = options.batchSize ?? 10;
+  const pauseSeconds = options.pauseSeconds ?? 5;
+  if (!Number.isInteger(batchSize) || batchSize < 1 || batchSize > 100 || !Number.isFinite(pauseSeconds) || pauseSeconds < 0 || pauseSeconds > 300)
+    throw new Error('Configuración de lotes inválida');
+  const ids = [...new Set(patientIds)];
+  const results: any[] = [];
+  for (let offset = 0; offset < ids.length; offset += batchSize) {
+    await options.beforeBatch?.(Math.floor(offset / batchSize) + 1, Math.ceil(ids.length / batchSize));
+    const batch = await postMedicalRecordsSistratSingleBatch(center, ids.slice(offset, offset + batchSize), month, year);
+    results.push(...batch);
+    await options.onBatch?.(batch);
+    if (offset + batchSize < ids.length && pauseSeconds)
+      await new Promise(resolve => setTimeout(resolve, pauseSeconds * 1000));
+  }
+  return results;
+};
+
+const postMedicalRecordsSistratSingleBatch = async (center: string, patientIds: string[], month: number, year: number) => {
   if (!center || !Array.isArray(patientIds) || patientIds.length === 0) {
     throw new Error("Parámetros insuficientes para el bulk por centro");
   }
@@ -240,6 +265,8 @@ const postMedicalRecordsBulkSistrat = async (center: string, patientIds: string[
       continue;
     }
 
+    if (patient.sistratCenter !== center) throw new Error('El paciente no pertenece al centro solicitado');
+
     const records = await getGroupedRecordsByPatientAndMonth(patientId, month, year);
     if (records.length > 0) {
       recordsData.push({ patient, records });
@@ -254,7 +281,7 @@ const postMedicalRecordsBulkSistrat = async (center: string, patientIds: string[
 
   // Ahora levantamos Sistrat 1 vez
   const sistratPlatform = new Sistrat();
-  const results = await sistratPlatform.bulkRecordMonthlySheets(recordsData, center, month, year);
+  const results = await sistratPlatform.bulkRecordMonthlySheets(recordsData, center, month, year, true);
   return [...results, ...skippedResults];
 };
 

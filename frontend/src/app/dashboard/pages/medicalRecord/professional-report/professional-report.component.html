@@ -1,0 +1,65 @@
+<section class="report">
+  <h1>Prestaciones por profesional</h1>
+  <p class="intro">Consulta las atenciones registradas por cada profesional, según su fecha de atención en Chile. Cada registro por paciente cuenta como una prestación.</p>
+  @if (professionalsError()) {
+    <p role="alert" class="error">{{ professionalsError() }} <button mat-button (click)="loadProfessionals()">Reintentar</button></p>
+  }
+  <form class="filters" (ngSubmit)="consult()">
+    <mat-form-field appearance="outline"><mat-label>Profesional</mat-label>
+      <input matInput #professionalInput name="professional" [ngModel]="professionalSelection"
+        (ngModelChange)="onProfessionalChange($event)" [matAutocomplete]="professionalOptions"
+        (focus)="professionalInput.select()" [disabled]="loadingProfessionals()"
+        placeholder="Escribe para buscar por nombre" required autocomplete="off">
+      @if (professionalSelection && !loadingProfessionals()) {
+        <button mat-icon-button matSuffix type="button" aria-label="Limpiar profesional" (click)="onProfessionalChange(null); professionalInput.focus()"><mat-icon>close</mat-icon></button>
+      }
+      <mat-autocomplete #professionalOptions="matAutocomplete" [displayWith]="displayProfessional">
+        @for (professional of filteredProfessionals(); track professional._id) {
+          <mat-option [value]="professional">{{ professional.name }}{{ professional.active === false ? ' (Inactivo)' : '' }}</mat-option>
+        } @empty {
+          <mat-option disabled>No se encontraron profesionales</mat-option>
+        }
+      </mat-autocomplete>
+    </mat-form-field>
+    <mat-form-field appearance="outline"><mat-label>Mes</mat-label><mat-select name="month" [(ngModel)]="month" (selectionChange)="invalidate()">
+      @for (label of months; track label; let index = $index) { <mat-option [value]="index + 1">{{ label }}</mat-option> }
+    </mat-select></mat-form-field>
+    <mat-form-field appearance="outline" class="year"><mat-label>Año</mat-label><input matInput type="number" name="year" min="1900" max="9999" step="1" required [(ngModel)]="year" (ngModelChange)="invalidate()"></mat-form-field>
+    <mat-form-field appearance="outline"><mat-label>Paciente o RUT</mat-label><input matInput name="search" maxlength="100" [(ngModel)]="search" (ngModelChange)="invalidate()" placeholder="Todos los pacientes"></mat-form-field>
+    <mat-form-field appearance="outline"><mat-label>Orden por fecha</mat-label><mat-select name="order" [(ngModel)]="order" (selectionChange)="invalidate()"><mat-option value="desc">Más recientes primero</mat-option><mat-option value="asc">Más antiguas primero</mat-option></mat-select></mat-form-field>
+    <button mat-flat-button color="primary" type="submit" [disabled]="loading() || loadingProfessionals() || !professionalId">Consultar</button>
+  </form>
+  @if (loading() || loadingProfessionals()) { <div class="loading" role="status"><mat-spinner diameter="32"></mat-spinner><span>Cargando…</span></div> }
+  @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+  @if (result(); as report) {
+    <button mat-stroked-button color="primary" type="button" (click)="downloadPdf()" [disabled]="exporting() || !report.summary.total">
+      <mat-icon>picture_as_pdf</mat-icon> {{ exporting() ? 'Generando PDF…' : 'Descargar PDF completo' }}
+    </button>
+    @if (exportError()) { <p class="error" role="alert">{{ exportError() }}</p> }
+    <div class="summary" aria-live="polite">
+      <div><strong>{{ report.summary.total }}</strong><span>Prestaciones</span></div>
+      <div><strong>{{ report.summary.patients }}</strong><span>Pacientes distintos</span></div>
+    </div>
+    @if (search.trim()) { <p>Resumen y detalle filtrados por paciente o RUT: «{{ search.trim() }}».</p> }
+    @if (report.services.length) {
+      <h2>Por tipo de prestación</h2>
+      <ul class="services">@for (service of report.services; track service._id) { <li>{{ service.description || service.code || 'Prestación no disponible' }} <strong>{{ service.total }}</strong></li> }</ul>
+    }
+    @if (!report.summary.total) { <p class="empty" role="status">No hay prestaciones para el profesional, período y filtros seleccionados.</p> }
+    @else {
+      <h2>Detalle de atenciones</h2>
+      <div class="table-scroll">
+        <table mat-table [dataSource]="report.records">
+          <ng-container matColumnDef="date"><th mat-header-cell *matHeaderCellDef>Fecha</th><td mat-cell *matCellDef="let row">{{ row.date }}</td></ng-container>
+          <ng-container matColumnDef="patient"><th mat-header-cell *matHeaderCellDef>Paciente</th><td mat-cell *matCellDef="let row">{{ row.patientName || 'Paciente no disponible' }}</td></ng-container>
+          <ng-container matColumnDef="rut"><th mat-header-cell *matHeaderCellDef>RUT</th><td mat-cell *matCellDef="let row">{{ row.rut || '—' }}</td></ng-container>
+          <ng-container matColumnDef="service"><th mat-header-cell *matHeaderCellDef>Prestación</th><td mat-cell *matCellDef="let row">{{ row.service || row.serviceCode || 'Prestación no disponible' }}</td></ng-container>
+          <ng-container matColumnDef="duration"><th mat-header-cell *matHeaderCellDef>Duración</th><td mat-cell *matCellDef="let row">{{ row.duration ? row.duration + ' min' : '—' }}</td></ng-container>
+          <ng-container matColumnDef="actions"><th mat-header-cell *matHeaderCellDef>Ficha</th><td mat-cell *matCellDef="let row">@if (row.patientId) { <a mat-button color="primary" [routerLink]="['/dashboard/patient', row.patientId]">Ver paciente</a> }</td></ng-container>
+          <tr mat-header-row *matHeaderRowDef="columns"></tr><tr mat-row *matRowDef="let row; columns: columns"></tr>
+        </table>
+      </div>
+      <mat-paginator [length]="report.summary.total" [pageIndex]="page" [pageSize]="pageSize" [pageSizeOptions]="[10,25,50]" (page)="changePage($event)" aria-label="Páginas de prestaciones"></mat-paginator>
+    }
+  } @else if (!loading() && !loadingProfessionals() && !error()) { <p class="empty">Selecciona los filtros y presiona Consultar para ver las prestaciones.</p> }
+</section>
